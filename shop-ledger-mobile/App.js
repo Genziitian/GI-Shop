@@ -84,6 +84,17 @@ const server = http.createServer((req, res) => {
   });
 });
 
+// Handle EADDRINUSE cleanly without unhandled error crash
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`[GI-Shop] Notice: Port ${PORT} is occupied in this environment. Exiting cleanly.`);
+    process.exit(0);
+  } else {
+    console.error('[GI-Shop Server Error]', err);
+    process.exit(1);
+  }
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`Server running on port ${PORT}`);
 });
