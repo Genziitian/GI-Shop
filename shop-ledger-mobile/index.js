@@ -1,7 +1,8 @@
-import { registerRootComponent } from 'expo';
-import App from './App';
-
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Dual Entry: Handles both Hostinger Node.js Web Server and React Native / Expo Mobile App
+if (typeof process !== 'undefined' && process.versions && process.versions.node && !process.env.REACT_NATIVE_PACKAGER) {
+  require('./server.js');
+} else {
+  const { registerRootComponent } = require('expo');
+  const App = require('./App').default;
+  registerRootComponent(App);
+}
