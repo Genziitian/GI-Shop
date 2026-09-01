@@ -37,30 +37,50 @@ let firebaseAdminInitialized = false;
 let firebaseAuth = null;
 let firebaseMessaging = null;
 
-const serviceAccountPaths = [
-  path.join(__dirname, 'serviceAccountKey.json'),
-  path.join(__dirname, 'serviceAccountKey.json.json'),
-  path.join(__dirname, '..', 'serviceAccountKey.json'),
-  path.join(__dirname, '..', '..', 'serviceAccountKey.json'),
-  path.join(__dirname, '..', '..', 'serviceAccountKey.json.json')
-];
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
+    const serviceAccount = raw.startsWith('{') ? JSON.parse(raw) : JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
+    const fbApp = admin.initializeApp({
+      credential: admin.cert(serviceAccount)
+    });
+    const { getAuth } = require('firebase-admin/auth');
+    const { getMessaging } = require('firebase-admin/messaging');
+    firebaseAuth = getAuth(fbApp);
+    firebaseMessaging = getMessaging(fbApp);
+    firebaseAdminInitialized = true;
+    console.log('[Firebase Admin] Successfully initialized from FIREBASE_SERVICE_ACCOUNT env variable');
+  } catch (e) {
+    console.error('[Firebase Admin] Error initializing from env var:', e.message);
+  }
+}
 
-for (const saPath of serviceAccountPaths) {
-  if (fs.existsSync(saPath)) {
-    try {
-      const serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
-      const fbApp = admin.initializeApp({
-        credential: admin.cert(serviceAccount)
-      });
-      const { getAuth } = require('firebase-admin/auth');
-      const { getMessaging } = require('firebase-admin/messaging');
-      firebaseAuth = getAuth(fbApp);
-      firebaseMessaging = getMessaging(fbApp);
-      firebaseAdminInitialized = true;
-      console.log('[Firebase Admin] Successfully initialized with service account from:', saPath);
-      break;
-    } catch (e) {
-      console.error('[Firebase Admin] Error initializing with:', saPath, e.message);
+if (!firebaseAdminInitialized) {
+  const serviceAccountPaths = [
+    path.join(__dirname, 'serviceAccountKey.json'),
+    path.join(__dirname, 'serviceAccountKey.json.json'),
+    path.join(__dirname, '..', 'serviceAccountKey.json'),
+    path.join(__dirname, '..', '..', 'serviceAccountKey.json'),
+    path.join(__dirname, '..', '..', 'serviceAccountKey.json.json')
+  ];
+
+  for (const saPath of serviceAccountPaths) {
+    if (fs.existsSync(saPath)) {
+      try {
+        const serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
+        const fbApp = admin.initializeApp({
+          credential: admin.cert(serviceAccount)
+        });
+        const { getAuth } = require('firebase-admin/auth');
+        const { getMessaging } = require('firebase-admin/messaging');
+        firebaseAuth = getAuth(fbApp);
+        firebaseMessaging = getMessaging(fbApp);
+        firebaseAdminInitialized = true;
+        console.log('[Firebase Admin] Successfully initialized with service account from:', saPath);
+        break;
+      } catch (e) {
+        console.error('[Firebase Admin] Error initializing with:', saPath, e.message);
+      }
     }
   }
 }
