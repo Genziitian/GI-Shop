@@ -40,7 +40,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                     <Receipt size={28} color={colors.primary} />
                   </View>
                   <Text style={styles.storeName}>
-                    {receipt.shopName || 'Gupta Kirana & General Store'}
+                    {receipt.shopName || 'Store Receipt'}
                   </Text>
                   {receipt.shopAddress && (
                     <Text style={styles.storeAddress}>{receipt.shopAddress}</Text>

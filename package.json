@@ -5,6 +5,7 @@
   "scripts": {
     "postinstall": "npm --prefix shop-ledger install",
     "build": "npm --prefix shop-ledger install && npm --prefix shop-ledger run build && node -e \"require('fs').cpSync('shop-ledger/dist', 'dist', {recursive:true, force:true})\"",
-    "start": "node server.js"
+    "start": "node server.js",
+    "create-admin": "node shop-ledger/server/create-admin.js"
   }
 }

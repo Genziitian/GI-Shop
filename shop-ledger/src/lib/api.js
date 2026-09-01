@@ -20,9 +20,11 @@ const request = async (endpoint, options = {}) => {
 
 // Auth & Profile
 export const login = (data) => request('/login', { method: 'POST', body: JSON.stringify(data) });
+export const googleLogin = (data) => request('/auth/google', { method: 'POST', body: JSON.stringify(data) });
 export const register = (data) => request('/register', { method: 'POST', body: JSON.stringify(data) });
 export const getMe = () => request('/me');
 export const updateUserProfile = (data) => request('/user/profile', { method: 'PUT', body: JSON.stringify(data) });
+export const registerNotificationToken = (token, platform = 'web') => request('/notifications/register-token', { method: 'POST', body: JSON.stringify({ token, platform }) });
 
 // Discovery
 export const getCities = () => request('/cities');

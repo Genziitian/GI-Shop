@@ -12,6 +12,7 @@ import {
   Tag, ArrowRight, AlertTriangle, Printer, FileText, Download, Key, Lock, User,
   MessageCircle, BookOpen
 } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 export default function Customer() {
   const navigate = useNavigate();
@@ -521,21 +522,30 @@ export default function Customer() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
       {/* Top Header */}
       <div className="nav-bar" style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
-        <div 
-          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}
-          onClick={handleOpenProfileModal}
-          title="Click to view/edit profile & PIN"
-        >
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <UserCheck size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
+            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#15803d', letterSpacing: '-0.02em' }}>GI SHOP</span>
           </div>
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              {currentUser?.name || 'Customer'}
-              <span style={{ fontSize: '0.7rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #bfdbfe', fontWeight: '600' }}>✏️ Profile</span>
+
+          <div style={{ height: '24px', width: '1px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
+
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '3px 8px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}
+            onClick={handleOpenProfileModal}
+            title="Click to view/edit profile & PIN"
+          >
+            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UserCheck size={18} />
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong> • {currentUser?.phone}
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {currentUser?.name || 'Customer'}
+                <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.1rem 0.35rem', borderRadius: '4px', border: '1px solid #bfdbfe', fontWeight: '600' }}>✏️ Profile</span>
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong> • {currentUser?.phone}
+              </div>
             </div>
           </div>
         </div>

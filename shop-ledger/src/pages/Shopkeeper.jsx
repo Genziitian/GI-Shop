@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
+import logoImg from '../assets/logo.png';
 
 export default function Shopkeeper() {
   const navigate = useNavigate();
@@ -313,35 +314,45 @@ export default function Shopkeeper() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
       {/* Top Header */}
       <div className="nav-bar">
-        <div 
-          onClick={handleOpenShopDetails}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.75rem', 
-            cursor: 'pointer', 
-            padding: '0.35rem 0.6rem', 
-            borderRadius: '8px', 
-            transition: 'all 0.15s ease',
-            border: '1px solid transparent'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-          title="Click to view and edit shop details"
-        >
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Store size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
+            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#15803d', letterSpacing: '-0.02em' }}>GI SHOP</span>
           </div>
-          <div>
-            <div style={{ fontWeight: '700', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              {currentShop?.shopName || 'Shop Dashboard'}
-              <span className="badge" style={{ background: isOwner ? '#eff6ff' : '#f5f3ff', color: isOwner ? 'var(--primary)' : '#7c3aed', fontSize: '0.75rem' }}>
-                {isOwner ? 'Owner' : 'Cashier'}
-              </span>
-              <Info size={14} color="var(--text-muted)" />
+
+          <div style={{ height: '24px', width: '1px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
+
+          <div 
+            onClick={handleOpenShopDetails}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.6rem', 
+              cursor: 'pointer', 
+              padding: '0.25rem 0.6rem', 
+              borderRadius: '8px', 
+              transition: 'all 0.15s ease',
+              border: '1px solid transparent',
+              background: '#f8fafc'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
+            title="Click to view and edit shop details"
+          >
+            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Store size={18} />
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Shop ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId || 'shp'}</strong> • User: {currentUser?.name} ({currentUser?.shortId})
+            <div>
+              <div style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {currentShop?.shopName || 'Shop Dashboard'}
+                <span className="badge" style={{ background: isOwner ? '#eff6ff' : '#f5f3ff', color: isOwner ? 'var(--primary)' : '#7c3aed', fontSize: '0.72rem' }}>
+                  {isOwner ? 'Owner' : 'Cashier'}
+                </span>
+                <Info size={13} color="var(--text-muted)" />
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Shop ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId || 'shp'}</strong> • User: {currentUser?.name} ({currentUser?.shortId})
+              </div>
             </div>
           </div>
         </div>
@@ -870,7 +881,7 @@ export default function Shopkeeper() {
               <input 
                 className="input" 
                 style={{ margin: 0, flex: 1 }} 
-                placeholder="Customer Short ID (e.g. ayu32) or Phone" 
+                placeholder="Customer Short ID or Phone number" 
                 value={staffIdentifier} 
                 onChange={e => setStaffIdentifier(e.target.value)} 
                 required 

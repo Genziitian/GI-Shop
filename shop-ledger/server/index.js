@@ -3,20 +3,133 @@ const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 const path = require('path');
+const admin = require('firebase-admin');
+
+// Load environment variables from .env if present
+const envFiles = [
+  path.join(__dirname, '.env'),
+  path.join(__dirname, '..', '.env'),
+  path.join(__dirname, '..', '..', '.env')
+];
+for (const envPath of envFiles) {
+  if (fs.existsSync(envPath)) {
+    try {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      envContent.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+          const idx = trimmed.indexOf('=');
+          const key = trimmed.slice(0, idx).trim();
+          const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      });
+    } catch (e) {}
+  }
+}
+
+// Initialize Firebase Admin SDK
+let firebaseAdminInitialized = false;
+let firebaseAuth = null;
+let firebaseMessaging = null;
+
+const serviceAccountPaths = [
+  path.join(__dirname, 'serviceAccountKey.json'),
+  path.join(__dirname, 'serviceAccountKey.json.json'),
+  path.join(__dirname, '..', 'serviceAccountKey.json'),
+  path.join(__dirname, '..', '..', 'serviceAccountKey.json'),
+  path.join(__dirname, '..', '..', 'serviceAccountKey.json.json')
+];
+
+for (const saPath of serviceAccountPaths) {
+  if (fs.existsSync(saPath)) {
+    try {
+      const serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
+      const fbApp = admin.initializeApp({
+        credential: admin.cert(serviceAccount)
+      });
+      const { getAuth } = require('firebase-admin/auth');
+      const { getMessaging } = require('firebase-admin/messaging');
+      firebaseAuth = getAuth(fbApp);
+      firebaseMessaging = getMessaging(fbApp);
+      firebaseAdminInitialized = true;
+      console.log('[Firebase Admin] Successfully initialized with service account from:', saPath);
+      break;
+    } catch (e) {
+      console.error('[Firebase Admin] Error initializing with:', saPath, e.message);
+    }
+  }
+}
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = 'super-secret-key-shop-ledger';
+const PORT = Number(process.env.PORT) || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'gi-shop-secure-jwt-production-secret';
+const DB_FILE = process.env.DATABASE_PATH 
+  ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
+  : path.join(__dirname, 'database.sqlite');
 
-const db = new sqlite3.Database(path.join(__dirname, 'database.sqlite'), (err) => {
-  if (err) console.error('DB Error:', err);
-  else console.log('Connected to SQLite DB');
+const db = new sqlite3.Database(DB_FILE, (err) => {
+  if (err) console.error('[GI-Shop DB] Database connection error:', err);
+  else console.log('[GI-Shop DB] Connected to real SQLite database at:', DB_FILE);
 });
 
-// Predefined Cities
+// Helper: Push Notification Sender
+async function sendPushNotification(userIds, { title, body, data = {} }) {
+  if (!firebaseAdminInitialized || !firebaseMessaging) {
+    console.log(`[Push Notification (Mock / No Firebase Admin)] Target: ${JSON.stringify(userIds)} | ${title} - ${body}`);
+    return;
+  }
+  const idList = (Array.isArray(userIds) ? userIds : [userIds]).filter(Boolean);
+  if (idList.length === 0) return;
+
+  const placeholders = idList.map(() => '?').join(',');
+  db.all(`SELECT token FROM UserFCMTokens WHERE userId IN (${placeholders})`, idList, async (err, rows) => {
+    if (err || !rows || rows.length === 0) {
+      console.log(`[FCM] No registered devices found for user(s): ${idList.join(', ')}`);
+      return;
+    }
+    const tokens = [...new Set(rows.map(r => r.token).filter(Boolean))];
+    if (tokens.length === 0) return;
+
+    try {
+      const message = {
+        notification: { title, body },
+        data: {
+          ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
+          title,
+          body
+        },
+        tokens
+      };
+      const response = await firebaseMessaging.sendEachForMulticast(message);
+      console.log(`[FCM] Sent notification to ${tokens.length} token(s). Success: ${response.successCount}, Failures: ${response.failureCount}`);
+      
+      // Clean up dead/unregistered tokens
+      if (response.failureCount > 0) {
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            const error = resp.error;
+            if (error && (error.code === 'messaging/invalid-registration-token' || error.code === 'messaging/registration-token-not-registered')) {
+              const deadToken = tokens[idx];
+              db.run(`DELETE FROM UserFCMTokens WHERE token = ?`, [deadToken], () => {});
+            }
+          }
+        });
+      }
+    } catch (fcmErr) {
+      console.error('[FCM] Error sending multicast notification:', fcmErr);
+    }
+  });
+}
+
+// Predefined Platform Baseline Cities
 const CITIES = [
   'Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 
   'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'
@@ -33,8 +146,9 @@ function generateShortId(prefix = 'usr') {
   return `${cleanPrefix}${rand}${Math.floor(10 + Math.random() * 90)}`;
 }
 
-// Initialize DB schema and seed default data
+// Initialize real DB schema and performance indexes
 db.serialize(async () => {
+  // 1. Platform Cities
   db.run(`CREATE TABLE IF NOT EXISTS Cities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
@@ -47,6 +161,7 @@ db.serialize(async () => {
     db.run(`INSERT OR IGNORE INTO Cities (name, status, createdAt) VALUES (?, 'ACTIVE', ?)`, [cName, new Date().toISOString()]);
   });
 
+  // 2. Users Table
   db.run(`CREATE TABLE IF NOT EXISTS Users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shortId TEXT UNIQUE,
@@ -64,6 +179,7 @@ db.serialize(async () => {
 
   db.run(`ALTER TABLE Users ADD COLUMN pin TEXT DEFAULT '1234'`, () => {});
 
+  // 3. Shops Table
   db.run(`CREATE TABLE IF NOT EXISTS Shops (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shortId TEXT UNIQUE,
@@ -78,6 +194,7 @@ db.serialize(async () => {
     createdAt TEXT
   )`);
 
+  // 4. ShopStaff Table
   db.run(`CREATE TABLE IF NOT EXISTS ShopStaff (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shopId INTEGER,
@@ -91,6 +208,7 @@ db.serialize(async () => {
     respondedAt TEXT
   )`);
 
+  // 5. Items Table
   db.run(`CREATE TABLE IF NOT EXISTS Items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shopId INTEGER,
@@ -99,6 +217,7 @@ db.serialize(async () => {
     unit TEXT
   )`);
 
+  // 6. Orders Table
   db.run(`CREATE TABLE IF NOT EXISTS Orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     orderNumber TEXT UNIQUE,
@@ -124,6 +243,7 @@ db.serialize(async () => {
   db.run(`ALTER TABLE Orders ADD COLUMN collectionStatus TEXT`, () => {});
   db.run(`ALTER TABLE Orders ADD COLUMN collectedAt TEXT`, () => {});
 
+  // 7. Shop Blocked Customers Table
   db.run(`CREATE TABLE IF NOT EXISTS ShopBlockedCustomers (
     shopId INTEGER,
     customerPhone TEXT,
@@ -132,6 +252,7 @@ db.serialize(async () => {
     PRIMARY KEY(shopId, customerPhone)
   )`);
 
+  // 8. Sales Table
   db.run(`CREATE TABLE IF NOT EXISTS Sales (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shopId INTEGER,
@@ -147,6 +268,7 @@ db.serialize(async () => {
     date TEXT
   )`);
 
+  // 9. Settlements Table
   db.run(`CREATE TABLE IF NOT EXISTS Settlements (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     shopId INTEGER,
@@ -156,6 +278,7 @@ db.serialize(async () => {
     date TEXT
   )`);
 
+  // 10. Shop Customers Table
   db.run(`CREATE TABLE IF NOT EXISTS ShopCustomers (
     shopId INTEGER,
     customerPhone TEXT,
@@ -165,133 +288,62 @@ db.serialize(async () => {
     PRIMARY KEY(shopId, customerPhone)
   )`);
 
-  // Seed default demo accounts
-  const passwordHash = await bcrypt.hash('password123', 10);
-  const now = new Date().toISOString();
+  // 11. User FCM Tokens Table (Push Notifications)
+  db.run(`CREATE TABLE IF NOT EXISTS UserFCMTokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    platform TEXT DEFAULT 'web',
+    updatedAt TEXT
+  )`);
 
-  // 1. Super Manager
-  db.get(`SELECT id FROM Users WHERE email = 'admin@test.com'`, (err, user) => {
-    if (!user) {
-      db.run(`INSERT INTO Users (shortId, name, email, phone, password, role, city, address, status, createdAt)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['adm01', 'Platform Administrator', 'admin@test.com', '9999999999', passwordHash, 'SuperManager', 'Delhi', 'HQ Central Tower', 'ACTIVE', now]);
-    }
-  });
+  // Performance Indexes
+  db.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON Users(email)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_users_phone ON Users(phone)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_users_shortId ON Users(shortId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shops_ownerId ON Shops(ownerId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shops_city ON Shops(city)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_items_shopId ON Items(shopId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_orders_shopId ON Orders(shopId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_orders_customerId ON Orders(customerId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_sales_shopId ON Sales(shopId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_sales_customerPhone ON Sales(customerPhone)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_settlements_shopId ON Settlements(shopId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_settlements_customerPhone ON Settlements(customerPhone)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shopstaff_shopId ON ShopStaff(shopId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_shopstaff_userId ON ShopStaff(userId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_fcm_userId ON UserFCMTokens(userId)`);
 
-  // 2. Demo Shopkeeper & Shop
-  db.get(`SELECT id FROM Users WHERE email = 'shop@test.com'`, (err, user) => {
-    if (!user) {
-      db.run(`INSERT INTO Users (shortId, name, email, phone, password, role, city, address, status, createdAt)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['ram84', 'Ramesh Gupta', 'shop@test.com', '9876543210', passwordHash, 'Shopkeeper', 'Delhi', 'Shop #4, Main Market, City Center', 'ACTIVE', now], function(err) {
-          if (!err) {
-            const shopkeeperId = this.lastID;
-            db.run(`INSERT INTO Shops (shortId, ownerId, shopName, shopPhone, city, shopAddress, timings, isOpen, status, createdAt)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              ['shp49', shopkeeperId, 'Gupta Kirana & General Store', '9876543210', 'Delhi', 'Shop #4, Main Market, City Center', '08:00 AM - 10:00 PM', 1, 'ACTIVE', now], function(err) {
-                const shopId = this.lastID;
-                console.log('Seeded Gupta Kirana Shop with ID:', shopId);
-
-                // Seed sample products
-                const sampleItems = [
-                  ['Milk (Amul Taaza)', 65.0, 'Litre'],
-                  ['Rice (Basmati)', 75.0, 'Kilo'],
-                  ['Kurkure Masala Munch', 20.0, 'Piece'],
-                  ['Sugar (Premium)', 44.0, 'Kilo'],
-                  ['Atta (Aashirvaad 5kg)', 240.0, 'Piece'],
-                  ['Mustard Oil (Fortune)', 160.0, 'Litre'],
-                  ['Maggie 2-Min Noodles', 14.0, 'Piece'],
-                  ['Tata Tea Gold (250g)', 140.0, 'Piece'],
-                  ['Toor Dal', 160.0, 'Kilo']
-                ];
-                sampleItems.forEach(([name, price, unit]) => {
-                  db.run(`INSERT INTO Items (shopId, name, price, unit) VALUES (?, ?, ?, ?)`, [shopId, name, price, unit]);
-                });
-
-                // Pre-enroll Customers
-                db.run(`INSERT OR IGNORE INTO ShopCustomers (shopId, customerPhone, name, address, status) VALUES (?, ?, ?, ?, 'ACTIVE')`,
-                  [shopId, '9123456789', 'Amit Sharma', 'Flat 402, Green Valley Apts']);
-                db.run(`INSERT OR IGNORE INTO ShopCustomers (shopId, customerPhone, name, address, status) VALUES (?, ?, ?, ?, 'ACTIVE')`,
-                  [shopId, '9811223344', 'Priya Verma', 'B-12, Sector 4']);
-
-                // Seed sales & ledger
-                const sampleSaleItems = JSON.stringify([
-                  { item: { id: 1, name: 'Milk (Amul Taaza)', price: 65, unit: 'Litre' }, qty: 2, rate: 65, amount: 130 },
-                  { item: { id: 2, name: 'Rice (Basmati)', price: 75, unit: 'Kilo' }, qty: 1.5, rate: 75, amount: 112.5 }
-                ]);
-                db.run(`INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                  [shopId, '9123456789', 'ayu32', sampleSaleItems, 242.5, 2.5, 240.0, 'Add to Book', 'Packed well', 'Ramesh Gupta', new Date(Date.now() - 86400000 * 2).toISOString()]);
-
-                db.run(`INSERT INTO Settlements (shopId, customerPhone, amount, method, date) VALUES (?, ?, ?, ?, ?)`,
-                  [shopId, '9123456789', 100.0, 'UPI', new Date(Date.now() - 86400000).toISOString()]);
-
-                const priyaSaleItems = JSON.stringify([
-                  { item: { id: 5, name: 'Atta (Aashirvaad 5kg)', price: 240, unit: 'Piece' }, qty: 1, rate: 240, amount: 240 },
-                  { item: { id: 6, name: 'Mustard Oil (Fortune)', price: 160, unit: 'Litre' }, qty: 1, rate: 160, amount: 160 }
-                ]);
-                db.run(`INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                  [shopId, '9811223344', 'pri12', priyaSaleItems, 400.0, 0.0, 400.0, 'Add to Book', 'First order', 'Ramesh Gupta', new Date().toISOString()]);
-            });
-          }
-        });
-    }
-  });
-
-  // 3. Second Shop in Delhi (for discovery demo)
-  db.get(`SELECT id FROM Users WHERE email = 'shop2@test.com'`, (err, user) => {
-    if (!user) {
-      db.run(`INSERT INTO Users (shortId, name, email, phone, password, role, city, address, status, createdAt)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['raj92', 'Rajesh Sharma', 'shop2@test.com', '9877771122', passwordHash, 'Shopkeeper', 'Delhi', 'Plot 18, Connaught Place', 'ACTIVE', now], function(err) {
-          if (!err) {
-            const shopkeeperId = this.lastID;
-            db.run(`INSERT INTO Shops (shortId, ownerId, shopName, shopPhone, city, shopAddress, timings, isOpen, status, createdAt)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              ['shp92', shopkeeperId, 'Rajesh Organic & Supermart', '9877771122', 'Delhi', 'Plot 18, Connaught Place', '09:00 AM - 11:00 PM', 1, 'ACTIVE', now], function(err) {
-                const sId = this.lastID;
-                db.run(`INSERT INTO Items (shopId, name, price, unit) VALUES (?, ?, ?, ?)`, [sId, 'Organic Honey (500g)', 280.0, 'Piece']);
-                db.run(`INSERT INTO Items (shopId, name, price, unit) VALUES (?, ?, ?, ?)`, [sId, 'Almonds (California)', 450.0, 'Kilo']);
-                db.run(`INSERT INTO Items (shopId, name, price, unit) VALUES (?, ?, ?, ?)`, [sId, 'Cold Pressed Coconut Oil', 220.0, 'Litre']);
-            });
-          }
-        });
-    }
-  });
-
-  // 4. Demo Customer
-  db.get(`SELECT id FROM Users WHERE email = 'customer@test.com'`, (err, user) => {
-    if (!user) {
-      db.run(`INSERT INTO Users (shortId, name, email, phone, password, role, city, address, status, createdAt)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['ayu32', 'Amit Sharma', 'customer@test.com', '9123456789', passwordHash, 'Customer', 'Delhi', 'Flat 402, Green Valley Apts', 'ACTIVE', now]);
-    }
-  });
-
-  // 5. Demo Customer 2 (who can be invited as Cashier)
-  db.get(`SELECT id FROM Users WHERE email = 'rahul@test.com'`, (err, user) => {
-    if (!user) {
-      db.run(`INSERT INTO Users (shortId, name, email, phone, password, role, city, address, status, createdAt)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['rah55', 'Rahul Verma', 'rahul@test.com', '9888844444', passwordHash, 'Customer', 'Delhi', 'House 55, Model Town', 'ACTIVE', now]);
-    }
-  });
-
-  // Auto-heal any existing orders with 0 or missing estimatedTotal
-  db.all(`SELECT id, itemsJSON, estimatedTotal FROM Orders WHERE estimatedTotal IS NULL OR estimatedTotal = 0`, (err, rows) => {
-    if (!err && rows) {
-      rows.forEach(r => {
+  // Optional Super Administrator Bootstrap from Environment Variables
+  const superAdminEmail = process.env.SUPERADMIN_EMAIL;
+  if (superAdminEmail) {
+    db.get(`SELECT id FROM Users WHERE email = ? OR role = 'SuperManager'`, [superAdminEmail], async (err, existingAdmin) => {
+      if (!err && !existingAdmin) {
         try {
-          const items = JSON.parse(r.itemsJSON || '[]');
-          const sum = items.reduce((acc, it) => acc + (it.amount || (it.rate * it.qty) || ((it.item?.price || 0) * (it.qty || 1)) || 0), 0);
-          if (sum > 0) {
-            db.run(`UPDATE Orders SET estimatedTotal = ? WHERE id = ?`, [sum, r.id]);
-          }
-        } catch (e) {}
-      });
-    }
-  });
+          const superAdminPassword = process.env.SUPERADMIN_PASSWORD || 'adminPassword123!';
+          const hash = await bcrypt.hash(superAdminPassword, 10);
+          const shortId = generateShortId('adm');
+          const name = process.env.SUPERADMIN_NAME || 'Platform Administrator';
+          const phone = process.env.SUPERADMIN_PHONE || '9999999999';
+          const pin = process.env.SUPERADMIN_PIN || '1234';
+          const city = process.env.SUPERADMIN_CITY || 'Delhi';
+          const now = new Date().toISOString();
+
+          db.run(
+            `INSERT INTO Users (shortId, name, email, phone, password, pin, role, city, address, status, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?, 'SuperManager', ?, 'HQ Central', 'ACTIVE', ?)`,
+            [shortId, name, superAdminEmail, phone, hash, pin, city, now],
+            (insertErr) => {
+              if (insertErr) console.error('[GI-Shop DB] Failed to bootstrap SuperAdmin:', insertErr.message);
+              else console.log(`[GI-Shop DB] Initial SuperManager bootstrapped (${superAdminEmail}, ID: ${shortId})`);
+            }
+          );
+        } catch (e) {
+          console.error('[GI-Shop DB] SuperAdmin bootstrap error:', e);
+        }
+      }
+    });
+  }
 });
 
 // Middleware: Authenticate & Context Injection
@@ -527,6 +579,144 @@ app.post('/api/login', (req, res) => {
   });
 });
 
+// --- GOOGLE SIGN-IN & FIREBASE AUTH ENDPOINT ---
+app.post('/api/auth/google', async (req, res) => {
+  const { idToken, role = 'Customer', city = 'Delhi', shopName, shopAddress, timings } = req.body;
+  if (!idToken) return res.status(400).json({ error: 'Google ID Token is required' });
+
+  try {
+    let decodedToken;
+    if (firebaseAdminInitialized && firebaseAuth) {
+      decodedToken = await firebaseAuth.verifyIdToken(idToken);
+    } else {
+      return res.status(500).json({ error: 'Firebase Admin authentication is not configured on server' });
+    }
+
+    const { email, name, uid } = decodedToken;
+    if (!email) return res.status(400).json({ error: 'Google account does not provide an email address' });
+
+    // Check if user already exists
+    db.get(`SELECT * FROM Users WHERE email = ?`, [email], async (err, existingUser) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+
+      if (existingUser) {
+        if (existingUser.status === 'TERMINATED') {
+          return res.status(403).json({ error: 'Your account has been deactivated by the platform administrator.' });
+        }
+
+        // Existing user login
+        if (existingUser.role === 'Shopkeeper') {
+          db.get(`SELECT * FROM Shops WHERE ownerId = ?`, [existingUser.id], (err, shop) => {
+            if (shop && shop.status === 'TERMINATED') {
+              return res.status(403).json({ error: 'This shop has been deactivated by the platform administrator.' });
+            }
+            const token = jwt.sign({ id: existingUser.id, role: existingUser.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET);
+            return res.json({ token, user: existingUser, shop, isStaff: false });
+          });
+        } else {
+          db.get(`SELECT ShopStaff.*, Shops.shopName, Shops.city, Shops.isOpen FROM ShopStaff 
+                  JOIN Shops ON ShopStaff.shopId = Shops.id 
+                  WHERE ShopStaff.userId = ? AND ShopStaff.status = 'ACCEPTED' AND Shops.status = 'ACTIVE'`, [existingUser.id], (err, staffRole) => {
+            const token = jwt.sign({ 
+              id: existingUser.id, 
+              role: existingUser.role, 
+              phone: existingUser.phone, 
+              shopId: staffRole ? staffRole.shopId : null,
+              staffRole: staffRole ? staffRole.role : null
+            }, JWT_SECRET);
+            return res.json({ token, user: existingUser, staffRole: staffRole || null });
+          });
+        }
+      } else {
+        // Create new user with Google account
+        const targetRole = (role === 'Shopkeeper' || role === 'Customer') ? role : 'Customer';
+        const userShortId = generateShortId(name ? name.slice(0, 3) : 'usr');
+        const userCity = city || 'Delhi';
+        const dummyPassword = await bcrypt.hash(uid + Date.now(), 10);
+        const now = new Date().toISOString();
+
+        db.run(
+          `INSERT INTO Users (shortId, name, email, phone, password, pin, role, city, address, status, createdAt)
+           VALUES (?, ?, ?, ?, ?, '1234', ?, ?, '', 'ACTIVE', ?)`,
+          [userShortId, name || 'Google User', email, null, dummyPassword, targetRole, userCity, now],
+          function(err) {
+            if (err) return res.status(500).json({ error: 'Failed to create user account: ' + err.message });
+            const newUserId = this.lastID;
+            const newUser = {
+              id: newUserId,
+              shortId: userShortId,
+              name: name || 'Google User',
+              email,
+              phone: null,
+              role: targetRole,
+              city: userCity,
+              status: 'ACTIVE',
+              createdAt: now
+            };
+
+            if (targetRole === 'Shopkeeper') {
+              const shopShortId = generateShortId('shp');
+              const finalShopName = shopName || `${name || 'My'}'s Grocery`;
+              const finalTimings = timings || '08:00 AM - 10:00 PM';
+              const finalAddress = shopAddress || userCity;
+
+              db.run(
+                `INSERT INTO Shops (shortId, ownerId, shopName, shopPhone, city, shopAddress, timings, isOpen, status, createdAt)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'ACTIVE', ?)`,
+                [shopShortId, newUserId, finalShopName, '', userCity, finalAddress, finalTimings, now],
+                function(shopErr) {
+                  const newShopId = this ? this.lastID : null;
+                  const newShop = {
+                    id: newShopId,
+                    shortId: shopShortId,
+                    ownerId: newUserId,
+                    shopName: finalShopName,
+                    shopPhone: '',
+                    city: userCity,
+                    shopAddress: finalAddress,
+                    timings: finalTimings,
+                    isOpen: 1,
+                    status: 'ACTIVE'
+                  };
+                  const token = jwt.sign({ id: newUserId, role: targetRole, shopId: newShopId, staffRole: 'Owner' }, JWT_SECRET);
+                  return res.json({ token, user: newUser, shop: newShop, isStaff: false, isNewUser: true });
+                }
+              );
+            } else {
+              const token = jwt.sign({ id: newUserId, role: targetRole, phone: null, shopId: null, staffRole: null }, JWT_SECRET);
+              return res.json({ token, user: newUser, staffRole: null, isNewUser: true });
+            }
+          }
+        );
+      }
+    });
+  } catch (verifyErr) {
+    console.error('[Google Auth] Token verification failed:', verifyErr);
+    return res.status(401).json({ error: 'Invalid Google credentials: ' + (verifyErr.message || 'Verification failed') });
+  }
+});
+
+// --- PUSH NOTIFICATION TOKEN REGISTRATION ---
+app.post('/api/notifications/register-token', authenticate, (req, res) => {
+  const { token, platform = 'web' } = req.body;
+  if (!token) return res.status(400).json({ error: 'FCM Token is required' });
+
+  const now = new Date().toISOString();
+  db.run(
+    `INSERT INTO UserFCMTokens (userId, token, platform, updatedAt) 
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(token) DO UPDATE SET userId = excluded.userId, platform = excluded.platform, updatedAt = excluded.updatedAt`,
+    [req.user.id, token, platform, now],
+    (err) => {
+      if (err) {
+        console.error('[UserFCMTokens] Failed to register token:', err);
+        return res.status(500).json({ error: 'Failed to save notification token' });
+      }
+      res.json({ success: true, message: 'Notification token registered successfully' });
+    }
+  );
+});
+
 app.get('/api/me', authenticate, (req, res) => {
   db.get(`SELECT id, shortId, name, email, phone, role, city, address, status FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
@@ -571,12 +761,22 @@ app.post('/api/shop/staff/invite', authenticate, (req, res) => {
       const now = new Date().toISOString();
       if (existing) {
         db.run(`UPDATE ShopStaff SET status = 'INVITED', invitedAt = ? WHERE id = ?`, [now, existing.id], () => {
+          sendPushNotification(customer.id, {
+            title: '💼 Staff Invitation',
+            body: `You received an invitation to join as Cashier!`,
+            data: { type: 'STAFF_INVITE', shopId: String(req.user.shopId) }
+          });
           res.json({ success: true, message: `Invite re-sent to ${customer.name} (${customer.shortId})` });
         });
       } else {
         db.run(`INSERT INTO ShopStaff (shopId, userId, userShortId, userName, userPhone, role, status, invitedAt)
                 VALUES (?, ?, ?, ?, ?, 'Cashier', 'INVITED', ?)`,
           [req.user.shopId, customer.id, customer.shortId, customer.name, customer.phone, now], function() {
+            sendPushNotification(customer.id, {
+              title: '💼 Staff Invitation',
+              body: `You received an invitation to join as Cashier!`,
+              data: { type: 'STAFF_INVITE', shopId: String(req.user.shopId) }
+            });
             res.json({ success: true, message: `Invite sent to ${customer.name} (${customer.shortId})` });
         });
       }
@@ -695,7 +895,28 @@ app.post('/api/orders', authenticate, (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
           [orderNumber, shopId, req.user.id, cust.shortId, cust.name, cust.phone, cust.address || '', JSON.stringify(items), calculatedTotal, now], function(err) {
             if (err) return res.status(500).json({ error: 'Failed to place order' });
-            res.json({ success: true, orderId: this.lastID, orderNumber, message: 'Order sent to shopkeeper!' });
+            const newOrderId = this.lastID;
+
+            // Notify Shopkeeper and Staff via Push Notification
+            db.get(`SELECT ownerId FROM Shops WHERE id = ?`, [shopId], (err, sRow) => {
+              if (sRow && sRow.ownerId) {
+                db.all(`SELECT userId FROM ShopStaff WHERE shopId = ? AND status = 'ACCEPTED'`, [shopId], (err, staffRows) => {
+                  const targetUserIds = [sRow.ownerId, ...(staffRows ? staffRows.map(s => s.userId) : [])];
+                  sendPushNotification(targetUserIds, {
+                    title: '🛒 New Order Received!',
+                    body: `Order #${orderNumber} from ${cust.name || 'Customer'} (₹${calculatedTotal.toFixed(0)})`,
+                    data: {
+                      type: 'NEW_ORDER',
+                      orderId: String(newOrderId),
+                      orderNumber,
+                      shopId: String(shopId)
+                    }
+                  });
+                });
+              }
+            });
+
+            res.json({ success: true, orderId: newOrderId, orderNumber, message: 'Order sent to shopkeeper!' });
         });
       });
     });
@@ -829,16 +1050,39 @@ app.post('/api/shop/orders/:id/accept', authenticate, (req, res) => {
       return res.status(400).json({ error: 'Order expired! 45-minute acceptance window has elapsed and the order was auto-cancelled.' });
     }
 
+    const packingMins = parseInt(packingMinutes) || 15;
     db.run(`UPDATE Orders SET status = 'PACKING', packingMinutes = ?, acceptedAt = ? WHERE id = ? AND shopId = ?`,
-      [parseInt(packingMinutes) || 15, now.toISOString(), req.params.id, shopId], () => res.json({ success: true, status: 'PACKING' }));
+      [packingMins, now.toISOString(), req.params.id, shopId], () => {
+        if (order.customerId) {
+          sendPushNotification(order.customerId, {
+            title: '📦 Order is Packing!',
+            body: `The shop is packing your order #${order.orderNumber}. Estimated time: ~${packingMins} mins.`,
+            data: { type: 'ORDER_PACKING', orderId: String(order.id), orderNumber: order.orderNumber }
+          });
+        }
+        res.json({ success: true, status: 'PACKING' });
+      });
   });
 });
 
 app.post('/api/shop/orders/:id/decline', authenticate, (req, res) => {
   const shopId = req.user.shopId;
   const { reason } = req.body;
-  db.run(`UPDATE Orders SET status = 'DECLINED', declineReason = ? WHERE id = ? AND shopId = ?`,
-    [reason || 'Item unavailable', req.params.id, shopId], () => res.json({ success: true, status: 'DECLINED' }));
+  const finalReason = reason || 'Item unavailable';
+  
+  db.get(`SELECT * FROM Orders WHERE id = ? AND shopId = ?`, [req.params.id, shopId], (err, order) => {
+    db.run(`UPDATE Orders SET status = 'DECLINED', declineReason = ? WHERE id = ? AND shopId = ?`,
+      [finalReason, req.params.id, shopId], () => {
+        if (order && order.customerId) {
+          sendPushNotification(order.customerId, {
+            title: '❌ Order Declined',
+            body: `Order #${order.orderNumber} was declined by the shop (${finalReason}).`,
+            data: { type: 'ORDER_DECLINED', orderId: String(order.id), orderNumber: order.orderNumber }
+          });
+        }
+        res.json({ success: true, status: 'DECLINED' });
+      });
+  });
 });
 
 app.post('/api/shop/orders/:id/complete', authenticate, (req, res) => {
@@ -852,6 +1096,13 @@ app.post('/api/shop/orders/:id/complete', authenticate, (req, res) => {
       return res.status(400).json({ error: 'This order is already finalized.' });
     }
     db.run(`UPDATE Orders SET status = 'READY' WHERE id = ? AND shopId = ?`, [req.params.id, shopId], () => {
+      if (order.customerId) {
+        sendPushNotification(order.customerId, {
+          title: '✅ Order Ready for Pickup!',
+          body: `Your grocery order #${order.orderNumber} is packed and ready for pickup at the store!`,
+          data: { type: 'ORDER_READY', orderId: String(order.id), orderNumber: order.orderNumber }
+        });
+      }
       res.json({ success: true, status: 'READY' });
     });
   });
@@ -1241,4 +1492,4 @@ app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
   });
 });
 
-app.listen(3001, () => console.log('Backend server running with full feature set on port 3001'));
+app.listen(PORT, () => console.log(`[GI-Shop] Backend server running on port ${PORT}`));

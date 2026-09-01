@@ -105,7 +105,7 @@ export default function PinLockScreen() {
         ) : errorMsg ? (
           <Text style={styles.errorText}>{errorMsg}</Text>
         ) : (
-          <Text style={styles.hintText}>Default demo PIN: 1234</Text>
+          <Text style={styles.hintText}>Enter your 4-digit security PIN to unlock</Text>
         )}
       </View>
 

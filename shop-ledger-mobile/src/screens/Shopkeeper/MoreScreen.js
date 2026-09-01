@@ -662,7 +662,7 @@ export default function MoreScreen({ navigation }) {
               <View style={styles.sectionCard}>
                 <Text style={styles.formTitle}>Invite Cashier</Text>
                 <Text style={styles.formSub}>
-                  Enter customer's Short ID (e.g. ayu32) or Phone number to add them as a cashier.
+                  Enter customer's Short ID or Phone number to add them as a cashier.
                 </Text>
 
                 <View style={styles.inviteInputRow}>

@@ -32,6 +32,17 @@ android/build
 .env.*.local
 *.local
 
+# Database & SQLite files
+*.sqlite
+*.sqlite3
+*.db
+database.sqlite
+
+# Firebase & Cloud Service Keys
+*serviceAccountKey*.json
+serviceAccountKey.json
+serviceAccountKey.json.json
+
 # Logs
 logs
 *.log

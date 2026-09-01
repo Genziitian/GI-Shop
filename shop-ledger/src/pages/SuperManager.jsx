@@ -5,6 +5,7 @@ import {
   terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin
 } from '../lib/api';
 import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 export default function SuperManager() {
   const navigate = useNavigate();
@@ -129,12 +130,10 @@ export default function SuperManager() {
       {/* Admin Top Navigation */}
       <div className="nav-bar" style={{ background: '#1e1b4b', color: '#fff', borderBottom: '1px solid #312e81' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ padding: '0.4rem', background: '#4338ca', borderRadius: '8px', color: '#fff' }}>
-            <Shield size={20} />
-          </div>
+          <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }} />
           <div>
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>Super Manager Portal</h3>
-            <div style={{ fontSize: '0.75rem', color: '#a5b4fc' }}>Platform Administration & Governance</div>
+            <div style={{ fontSize: '0.75rem', color: '#a5b4fc' }}>GI SHOP • Platform Governance</div>
           </div>
         </div>
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, register, getCities } from '../lib/api';
+import { login, register, googleLogin, getCities } from '../lib/api';
+import { signInWithGoogle } from '../lib/firebase';
 import { Store, User, Shield, ArrowRight, MapPin, Clock } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ export default function Auth() {
   const [cities, setCities] = useState(['Delhi', 'Mumbai', 'Bengaluru', 'Jaipur', 'Lucknow', 'Pune']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -30,11 +33,20 @@ export default function Auth() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleQuickLogin = async (demoEmail, demoPassword) => {
+  const handleGoogleSignIn = async () => {
     setError('');
-    setLoading(true);
+    setGoogleLoading(true);
     try {
-      const res = await login({ email: demoEmail, password: demoPassword });
+      const { idToken } = await signInWithGoogle();
+      const res = await googleLogin({
+        idToken,
+        role,
+        city: formData.city || 'Delhi',
+        shopName: formData.shopName,
+        shopAddress: formData.shopAddress || formData.city,
+        timings: formData.timings
+      });
+
       localStorage.setItem('token', res.token);
       localStorage.setItem('userRole', res.user.role);
       localStorage.setItem('userData', JSON.stringify(res.user));
@@ -44,9 +56,10 @@ export default function Auth() {
       else if (res.user.role === 'Shopkeeper') navigate('/shop');
       else navigate('/customer');
     } catch (err) {
-      setError(err.message || 'Login failed');
+      console.error('[Google Sign-In Error]', err);
+      setError(err.message || 'Google Sign-In failed');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -87,61 +100,22 @@ export default function Auth() {
         
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', marginBottom: '0.75rem' }}>
-            <Store size={26} />
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <img 
+              src={logoImg} 
+              alt="GI SHOP Logo" 
+              style={{ 
+                width: '72px', 
+                height: '72px', 
+                borderRadius: '16px', 
+                objectFit: 'contain',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }} 
+            />
           </div>
           <h2 className="title" style={{ margin: '0 0 0.25rem 0' }}>GI SHOP</h2>
           <p className="subtitle" style={{ margin: 0 }}>Smart Billing, Khata, Orders & City Grocery Discovery</p>
         </div>
-
-        {/* Quick Demo Logins */}
-        {isLogin && (
-          <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
-              ⚡ 1-Click Demo Logins
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem' }}>
-              <button
-                type="button"
-                className="btn btn-outline"
-                style={{ padding: '0.5rem', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: '#fff' }}
-                onClick={() => handleQuickLogin('shop@test.com', 'password123')}
-                disabled={loading}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '600', color: 'var(--primary)' }}>
-                  <Store size={14} /> Shop
-                </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: shp49</div>
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline"
-                style={{ padding: '0.5rem', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: '#fff' }}
-                onClick={() => handleQuickLogin('customer@test.com', 'password123')}
-                disabled={loading}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '600', color: 'var(--success)' }}>
-                  <User size={14} /> Customer
-                </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: ayu32</div>
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-outline"
-                style={{ padding: '0.5rem', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', background: '#fff' }}
-                onClick={() => handleQuickLogin('admin@test.com', 'password123')}
-                disabled={loading}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: '600', color: '#7c3aed' }}>
-                  <Shield size={14} /> Admin
-                </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>ID: adm01</div>
-              </button>
-            </div>
-          </div>
-        )}
 
         <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
           {isLogin ? 'Sign In' : 'Create an Account'}
@@ -173,6 +147,47 @@ export default function Auth() {
             </button>
           </div>
         )}
+        {/* Google Sign-In Button */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading || loading}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            padding: '0.75rem 1rem',
+            background: '#ffffff',
+            color: '#374151',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            fontSize: '0.95rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            marginBottom: '1.25rem',
+            transition: 'background 0.15s, border-color 0.15s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          {googleLoading ? 'Connecting to Google...' : (isLogin ? 'Continue with Google' : `Sign up as ${role} with Google`)}
+        </button>
+
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', margin: '1rem 0 1.25rem 0', color: '#9ca3af', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
+          <span style={{ padding: '0 0.75rem', fontWeight: 500 }}>or with credentials</span>
+          <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }}></div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           {!isLogin && (
@@ -191,7 +206,7 @@ export default function Auth() {
             <input 
               name="email" 
               className="input" 
-              placeholder={isLogin ? "e.g. shop@test.com, 9876543210, or ayu32" : "name@example.com"} 
+              placeholder={isLogin ? "Enter email, 10-digit phone, or User ID" : "name@example.com"} 
               value={formData.email} 
               onChange={handleChange} 
               required 

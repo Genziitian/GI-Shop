@@ -36,17 +36,6 @@ export default function AuthScreen() {
   const [address, setAddress] = useState('');
   const [pin, setPin] = useState('1234');
 
-  const handleQuickLogin = async (demoEmail, demoPassword) => {
-    setLoading(true);
-    try {
-      await login(demoEmail, demoPassword);
-    } catch (err) {
-      Alert.alert('Login Failed', err.message || 'Could not connect to backend.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert('Required Fields', 'Please enter both email and password.');
@@ -152,45 +141,9 @@ export default function AuthScreen() {
               <Text style={styles.brandSubtitle}>Smart Billing, Khata, Orders & Grocery Discovery</Text>
             </View>
 
-            {/* 1-Click Quick Demo Login */}
-            {isLogin && (
-              <View style={styles.demoSection}>
-                <Text style={styles.demoSectionHeader}>⚡ 1-Click Quick Demo Login</Text>
-                <View style={styles.demoGrid}>
-                  <TouchableOpacity
-                    style={styles.demoCard}
-                    onPress={() => handleQuickLogin('shop@test.com', 'password123')}
-                    disabled={loading}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.demoCardHeader}>
-                      <Store size={16} color={colors.primary} />
-                      <Text style={styles.demoRoleShop}>Shopkeeper</Text>
-                    </View>
-                    <Text style={styles.demoEmail}>shop@test.com</Text>
-                    <Text style={styles.demoPass}>password123</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.demoCard}
-                    onPress={() => handleQuickLogin('customer@test.com', 'password123')}
-                    disabled={loading}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.demoCardHeader}>
-                      <User size={16} color={colors.success} />
-                      <Text style={styles.demoRoleCust}>Customer</Text>
-                    </View>
-                    <Text style={styles.demoEmail}>customer@test.com</Text>
-                    <Text style={styles.demoPass}>password123</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
             {/* Mode Title */}
             <Text style={styles.formTitle}>
-              {isLogin ? 'Sign In with Email' : 'Create an Account'}
+              {isLogin ? 'Sign In' : 'Create an Account'}
             </Text>
 
             {/* Role Switcher for Registration */}
@@ -242,7 +195,7 @@ export default function AuthScreen() {
                 <Text style={styles.label}>Full Name</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Ramesh Gupta"
+                  placeholder="e.g. Ramesh Kumar"
                   value={name}
                   onChangeText={setName}
                 />
@@ -266,7 +219,7 @@ export default function AuthScreen() {
                 <Text style={styles.label}>10-Digit Mobile Number</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. 9876543210"
+                  placeholder="e.g. 9812345678"
                   keyboardType="phone-pad"
                   value={phone}
                   onChangeText={setPhone}
@@ -322,7 +275,7 @@ export default function AuthScreen() {
                   <Text style={styles.label}>Shop Name</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="e.g. Gupta Kirana & General Store"
+                    placeholder="e.g. Central Supermarket"
                     value={shopName}
                     onChangeText={setShopName}
                   />
@@ -472,62 +425,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     marginTop: 2,
-    textAlign: 'center',
-  },
-  demoSection: {
-    backgroundColor: colors.background,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  demoSectionHeader: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    color: colors.textMuted,
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  demoGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  demoCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  demoCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 4,
-  },
-  demoRoleShop: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  demoRoleCust: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.success,
-  },
-  demoEmail: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  demoPass: {
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
   formTitle: {
     fontSize: 16,
     fontWeight: '700',

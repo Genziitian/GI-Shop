@@ -86,12 +86,13 @@ shop-ledger-mobile/
 
 ---
 
-## 🔑 Default Test Credentials
+## 🔑 Account Registration & Roles
 
-| Role | Email | Password | Phone | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **🏪 Shopkeeper** | `shop@test.com` | `password123` | `9876543210` | Ramesh Gupta (*Gupta Kirana & General Store*) |
-| **👤 Customer** | `customer@test.com` | `password123` | `9123456789` | Amit Sharma (Active customer with ledger balance) |
+The system supports role-based onboarding for real users:
+- **🏪 Shopkeeper:** Register a store owner account with your shop name, contact number, and address to start POS billing, inventory management, and khata tracking.
+- **👤 Customer:** Register as a customer to browse nearby shops, track your store receipts, place order requests, and monitor your khata ledger.
+- **💼 Cashier:** Shop owners can invite registered customers to join as cashiers using their unique Short ID or phone number.
+- **🛡️ Platform Administrator:** Bootstrap initial platform manager using `SUPERADMIN_EMAIL` and `SUPERADMIN_PASSWORD` environment variables in `server/.env`.
 
 ---
 
