@@ -42,7 +42,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
     const serviceAccount = raw.startsWith('{') ? JSON.parse(raw) : JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
     const fbApp = admin.initializeApp({
-      credential: admin.cert(serviceAccount)
+      credential: admin.credential.cert(serviceAccount)
     });
     const { getAuth } = require('firebase-admin/auth');
     const { getMessaging } = require('firebase-admin/messaging');
@@ -69,7 +69,7 @@ if (!firebaseAdminInitialized) {
       try {
         const serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
         const fbApp = admin.initializeApp({
-          credential: admin.cert(serviceAccount)
+          credential: admin.credential.cert(serviceAccount)
         });
         const { getAuth } = require('firebase-admin/auth');
         const { getMessaging } = require('firebase-admin/messaging');
@@ -1546,8 +1546,8 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-if (require.main === module) {
-  app.listen(PORT, '0.0.0.0', () => console.log(`[GI-Shop] Backend & Frontend server running on port ${PORT}`));
-}
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[GI-Shop] Backend & Frontend server running on port ${PORT}`);
+});
 
 module.exports = app;
