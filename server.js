@@ -2,8 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-let port = parseInt(process.env.PORT, 10) || 3000;
-const host = '0.0.0.0';
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = '0.0.0.0';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
@@ -45,6 +45,7 @@ const publicDir = getPublicDir();
 const server = http.createServer((req, res) => {
   const urlPath = req.url.split('?')[0];
 
+  // Favicon handler
   if (urlPath === '/favicon.ico' || urlPath === '/favicon.svg') {
     const favPath = path.join(publicDir, 'favicon.svg');
     if (fs.existsSync(favPath)) {
@@ -56,10 +57,12 @@ const server = http.createServer((req, res) => {
   let safePath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
   let filePath = path.join(publicDir, safePath);
 
+  // If directory, serve index.html
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
     filePath = path.join(filePath, 'index.html');
   }
 
+  // SPA fallback to index.html
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
     filePath = path.join(publicDir, 'index.html');
   }
@@ -81,27 +84,6 @@ const server = http.createServer((req, res) => {
   });
 });
 
-function startServer(currentPort) {
-  server.removeAllListeners('error');
-  server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.warn(`[GI-Shop Warning] Port ${currentPort} in use, trying port ${currentPort + 1}...`);
-      if (currentPort < 3050) {
-        setTimeout(() => startServer(currentPort + 1), 200);
-      } else {
-        server.listen(0, host, () => {
-          console.log(`Server running on ${server.address().port}`);
-        });
-      }
-    } else {
-      console.error('[GI-Shop Server Error]', err);
-    }
-  });
-
-  server.listen(currentPort, host, () => {
-    console.log(`Server running on ${currentPort}`);
-    console.log(`[GI-Shop Production Server] Serving from ${publicDir} on http://${host}:${currentPort}`);
-  });
-}
-
-startServer(port);
+server.listen(PORT, HOST, () => {
+  console.log(`Server running on port ${PORT}`);
+});
