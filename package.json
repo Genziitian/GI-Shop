@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:web": "npm --prefix shop-ledger install",
-    "build:web": "npm --prefix shop-ledger run build",
-    "build": "npm --prefix shop-ledger install && npm --prefix shop-ledger run build && cp -r shop-ledger/dist ./dist",
+    "postinstall": "npm --prefix shop-ledger install",
+    "build": "npm --prefix shop-ledger install && npm --prefix shop-ledger run build && node -e \"require('fs').cpSync('shop-ledger/dist', 'dist', {recursive:true, force:true})\"",
     "start": "node server.js"
   }
 }
