@@ -13,13 +13,13 @@
   "license": "ISC",
   "type": "commonjs",
   "engines": {
-    "node": "20.x"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "firebase-admin": "^14.3.0",
+    "firebase-admin": "^13.6.0",
     "jsonwebtoken": "^9.0.3",
     "sqlite3": "^6.0.1"
   }
