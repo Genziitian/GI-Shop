@@ -27,6 +27,7 @@ import {
   cancelCustomerOrder,
   updateOrderCollection,
 } from '../../api/client';
+import { useFocusEffect } from '@react-navigation/native';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
 
@@ -37,14 +38,35 @@ export default function CustomerOrdersScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateFilter, setDateFilter] = useState('All');
+  const [nowTick, setNowTick] = useState(Date.now());
 
   // Digital Receipt Modal
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
+  useEffect(() => {
+    const timer = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getAutoCancelCountdown = (createdAt) => {
+    if (!createdAt) return null;
+    const createdTime = new Date(createdAt).getTime();
+    const expiryTime = createdTime + 45 * 60 * 1000;
+    const diffMs = expiryTime - Date.now();
+    if (diffMs <= 0) return 'Expired';
+    const totalSec = Math.floor(diffMs / 1000);
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+  };
+
   const loadData = useCallback(async () => {
     try {
       const [ordersData, historyData] = await Promise.all([
-        getCustomerOrders().catch(() => []),
+        getCustomerOrders().catch((e) => {
+          console.warn('Orders fetch error:', e);
+          return [];
+        }),
         getCustomerHistory().catch(() => ({ sales: [] })),
       ]);
       setOrders(Array.isArray(ordersData) ? ordersData : []);
@@ -57,9 +79,11 @@ export default function CustomerOrdersScreen({ navigation }) {
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const handleCancelOrder = async (orderId) => {
     Alert.alert(
@@ -238,6 +262,8 @@ export default function CustomerOrdersScreen({ navigation }) {
                             ? { backgroundColor: '#ffedd5' }
                             : order.status === 'READY'
                             ? { backgroundColor: '#dcfce7' }
+                            : order.status === 'AUTO_CANCELLED_EXPIRED'
+                            ? { backgroundColor: '#fee2e2' }
                             : { backgroundColor: '#f1f5f9' },
                         ]}
                       >
@@ -250,19 +276,42 @@ export default function CustomerOrdersScreen({ navigation }) {
                               ? { color: '#c2410c' }
                               : order.status === 'READY'
                               ? { color: '#15803d' }
+                              : order.status === 'AUTO_CANCELLED_EXPIRED'
+                              ? { color: '#b91c1c' }
                               : { color: '#475569' },
                           ]}
                         >
-                          {order.status === 'PENDING' && '⏳ PENDING'}
+                          {order.status === 'PENDING' && `⏳ PENDING (${getAutoCancelCountdown(order.createdAt)})`}
                           {order.status === 'PACKING' && `⏳ PACKING (~${order.packingMinutes || 15}m)`}
                           {order.status === 'READY' && '✓ READY FOR PICKUP'}
                           {order.status === 'COLLECTED' && '✓ COLLECTED'}
                           {order.status === 'NOT_COLLECTED' && '✗ NOT COLLECTED'}
                           {order.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED'}
+                          {order.status === 'AUTO_CANCELLED_EXPIRED' && '⛔ EXPIRED (45m)'}
                           {order.status === 'DECLINED' && '❌ DECLINED'}
                         </Text>
                       </View>
                     </View>
+
+                    {/* Auto-cancel 45-min live timer banner */}
+                    {order.status === 'PENDING' && (
+                      <View style={styles.autoCancelBox}>
+                        <Clock size={13} color="#b45309" />
+                        <Text style={styles.autoCancelText}>
+                          Acceptance Window: <Text style={{ fontWeight: '700' }}>Auto-cancels in {getAutoCancelCountdown(order.createdAt)}</Text> if not accepted by shopkeeper
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Auto-cancelled expired alert */}
+                    {order.status === 'AUTO_CANCELLED_EXPIRED' && (
+                      <View style={styles.expiredBox}>
+                        <AlertTriangle size={13} color="#b91c1c" />
+                        <Text style={styles.expiredText}>
+                          Order auto-cancelled: Shopkeeper did not accept within 45 minutes.
+                        </Text>
+                      </View>
+                    )}
 
                     {/* Items Box */}
                     <View style={styles.itemsBox}>
@@ -513,6 +562,41 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 10,
     fontWeight: '800',
+  },
+  autoCancelBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fffbeb',
+    borderColor: '#fef08a',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    marginTop: 6,
+    gap: 6,
+  },
+  autoCancelText: {
+    fontSize: 11,
+    color: '#92400e',
+    flex: 1,
+  },
+  expiredBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    marginTop: 6,
+    gap: 6,
+  },
+  expiredText: {
+    fontSize: 11,
+    color: '#b91c1c',
+    fontWeight: '600',
+    flex: 1,
   },
   itemsBox: {
     backgroundColor: '#f8fafc',

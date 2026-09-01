@@ -110,12 +110,19 @@ db.serialize(async () => {
     customerAddress TEXT,
     itemsJSON TEXT,
     estimatedTotal REAL,
-    status TEXT DEFAULT 'PENDING', -- 'PENDING', 'ACCEPTED', 'PACKING', 'READY', 'DECLINED', 'COMPLETED'
+    status TEXT DEFAULT 'PENDING', -- 'PENDING', 'ACCEPTED', 'PACKING', 'READY', 'DECLINED', 'COMPLETED', 'AUTO_CANCELLED_EXPIRED'
     packingMinutes INTEGER DEFAULT 0,
     acceptedAt TEXT,
     declineReason TEXT,
+    cancelledAt TEXT,
+    collectionStatus TEXT,
+    collectedAt TEXT,
     createdAt TEXT
   )`);
+
+  db.run(`ALTER TABLE Orders ADD COLUMN cancelledAt TEXT`, () => {});
+  db.run(`ALTER TABLE Orders ADD COLUMN collectionStatus TEXT`, () => {});
+  db.run(`ALTER TABLE Orders ADD COLUMN collectedAt TEXT`, () => {});
 
   db.run(`CREATE TABLE IF NOT EXISTS ShopBlockedCustomers (
     shopId INTEGER,
@@ -695,11 +702,54 @@ app.post('/api/orders', authenticate, (req, res) => {
   });
 });
 
+// --- 45-MINUTE AUTO-CANCEL FOR PENDING ORDERS ---
+const autoCancelExpiredOrders = (callback) => {
+  const nowMs = Date.now();
+  const cutoffMs = nowMs - 45 * 60 * 1000;
+  const nowStr = new Date().toISOString();
+
+  db.all(`SELECT id, createdAt FROM Orders WHERE status = 'PENDING'`, (err, rows) => {
+    if (err || !rows || rows.length === 0) {
+      if (callback) return callback(null);
+      return;
+    }
+    const expiredIds = rows
+      .filter((r) => {
+        const createdMs = new Date(r.createdAt).getTime();
+        return !isNaN(createdMs) && createdMs <= cutoffMs;
+      })
+      .map((r) => r.id);
+
+    if (expiredIds.length === 0) {
+      if (callback) return callback(null);
+      return;
+    }
+
+    const placeholders = expiredIds.map(() => '?').join(',');
+    db.run(
+      `UPDATE Orders 
+       SET status = 'AUTO_CANCELLED_EXPIRED', 
+           declineReason = 'Auto-cancelled: Shopkeeper did not accept within 45 minutes',
+           cancelledAt = ?
+       WHERE id IN (${placeholders})`,
+      [nowStr, ...expiredIds],
+      (err) => {
+        if (callback) callback(err);
+      }
+    );
+  });
+};
+
+// Periodic background check every 30 seconds
+setInterval(autoCancelExpiredOrders, 30000);
+
 app.get('/api/customer/orders', authenticate, (req, res) => {
-  db.all(`SELECT Orders.*, Shops.shortId as shopShortId, Shops.shopName, Shops.shopPhone, Shops.shopAddress, Shops.city as shopCity, Shops.timings as shopTimings FROM Orders 
-          JOIN Shops ON Orders.shopId = Shops.id 
-          WHERE Orders.customerId = ? ORDER BY Orders.id DESC`, [req.user.id], (err, rows) => {
-    res.json(rows || []);
+  autoCancelExpiredOrders(() => {
+    db.all(`SELECT Orders.*, Shops.shortId as shopShortId, Shops.shopName, Shops.shopPhone, Shops.shopAddress, Shops.city as shopCity, Shops.timings as shopTimings FROM Orders 
+            JOIN Shops ON Orders.shopId = Shops.id 
+            WHERE Orders.customerId = ? ORDER BY Orders.id DESC`, [req.user.id], (err, rows) => {
+      res.json(rows || []);
+    });
   });
 });
 
@@ -712,7 +762,7 @@ app.post('/api/customer/orders/:id/cancel', authenticate, (req, res) => {
   db.get(`SELECT * FROM Orders WHERE id = ? AND customerId = ?`, [orderId, customerId], (err, order) => {
     if (err || !order) return res.status(404).json({ error: 'Order not found' });
     
-    if (['COLLECTED', 'NOT_COLLECTED', 'CANCELLED_BY_CUSTOMER', 'DECLINED'].includes(order.status)) {
+    if (['COLLECTED', 'NOT_COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(order.status)) {
       return res.status(400).json({ error: 'This order is finalized and cannot be modified or cancelled.' });
     }
 
@@ -736,7 +786,7 @@ app.post('/api/customer/orders/:id/collection', authenticate, (req, res) => {
   db.get(`SELECT * FROM Orders WHERE id = ? AND customerId = ?`, [orderId, customerId], (err, order) => {
     if (err || !order) return res.status(404).json({ error: 'Order not found' });
 
-    if (['COLLECTED', 'NOT_COLLECTED', 'CANCELLED_BY_CUSTOMER', 'DECLINED'].includes(order.status)) {
+    if (['COLLECTED', 'NOT_COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(order.status)) {
       return res.status(400).json({ error: 'Order status has already been finalized and locked.' });
     }
 
@@ -752,15 +802,36 @@ app.post('/api/customer/orders/:id/collection', authenticate, (req, res) => {
 app.get('/api/shop/orders', authenticate, (req, res) => {
   const shopId = req.user.shopId;
   if (!shopId) return res.status(403).json({ error: 'No shop context' });
-  db.all(`SELECT * FROM Orders WHERE shopId = ? ORDER BY id DESC`, [shopId], (err, rows) => res.json(rows || []));
+  autoCancelExpiredOrders(() => {
+    db.all(`SELECT * FROM Orders WHERE shopId = ? ORDER BY id DESC`, [shopId], (err, rows) => res.json(rows || []));
+  });
 });
 
 app.post('/api/shop/orders/:id/accept', authenticate, (req, res) => {
   const shopId = req.user.shopId;
   const { packingMinutes } = req.body;
-  const now = new Date().toISOString();
-  db.run(`UPDATE Orders SET status = 'PACKING', packingMinutes = ?, acceptedAt = ? WHERE id = ? AND shopId = ?`,
-    [parseInt(packingMinutes) || 15, now, req.params.id, shopId], () => res.json({ success: true, status: 'PACKING' }));
+  const now = new Date();
+
+  db.get(`SELECT * FROM Orders WHERE id = ? AND shopId = ?`, [req.params.id, shopId], (err, order) => {
+    if (err || !order) return res.status(404).json({ error: 'Order not found' });
+    
+    if (order.status !== 'PENDING') {
+      return res.status(400).json({ error: `Order cannot be accepted because it is already ${order.status}` });
+    }
+
+    // Check if 45 minutes elapsed
+    const createdTime = new Date(order.createdAt).getTime();
+    if (Date.now() - createdTime > 45 * 60 * 1000) {
+      db.run(
+        `UPDATE Orders SET status = 'AUTO_CANCELLED_EXPIRED', declineReason = 'Auto-cancelled: Shopkeeper did not accept within 45 minutes', cancelledAt = ? WHERE id = ?`,
+        [now.toISOString(), order.id]
+      );
+      return res.status(400).json({ error: 'Order expired! 45-minute acceptance window has elapsed and the order was auto-cancelled.' });
+    }
+
+    db.run(`UPDATE Orders SET status = 'PACKING', packingMinutes = ?, acceptedAt = ? WHERE id = ? AND shopId = ?`,
+      [parseInt(packingMinutes) || 15, now.toISOString(), req.params.id, shopId], () => res.json({ success: true, status: 'PACKING' }));
+  });
 });
 
 app.post('/api/shop/orders/:id/decline', authenticate, (req, res) => {

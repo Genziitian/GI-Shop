@@ -35,6 +35,7 @@ export default function OrdersScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   // Modal State
   const [selectedOrderForAction, setSelectedOrderForAction] = useState(null);
@@ -42,6 +43,23 @@ export default function OrdersScreen({ navigation }) {
   const [packingMinutes, setPackingMinutes] = useState(15);
   const [declineReason, setDeclineReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getAutoCancelCountdown = (createdAt) => {
+    if (!createdAt) return null;
+    const createdTime = new Date(createdAt).getTime();
+    const expiryTime = createdTime + 45 * 60 * 1000;
+    const diffMs = expiryTime - Date.now();
+    if (diffMs <= 0) return 'Expired';
+    const totalSec = Math.floor(diffMs / 1000);
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+  };
 
   const loadOrders = useCallback(async () => {
     try {
@@ -184,10 +202,12 @@ export default function OrdersScreen({ navigation }) {
                           styles.orderStatusPillText,
                           (ord.status === 'READY' || ord.status === 'COMPLETED') && { color: '#0369a1' },
                           ord.status === 'COLLECTED' && { color: '#15803d' },
-                          (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'DECLINED') && { color: '#b91c1c' },
+                          (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'AUTO_CANCELLED_EXPIRED' || ord.status === 'DECLINED') && { color: '#b91c1c' },
                         ]}
                       >
-                        {ord.status === 'PACKING'
+                        {ord.status === 'PENDING'
+                          ? `⏳ Pending (${getAutoCancelCountdown(ord.createdAt)})`
+                          : ord.status === 'PACKING'
                           ? `⏳ Packing (${ord.packingMinutes}m)`
                           : (ord.status === 'READY' || ord.status === 'COMPLETED')
                           ? '📦 Ready (Waiting Customer)'
@@ -197,10 +217,31 @@ export default function OrdersScreen({ navigation }) {
                           ? '✗ Marked Not Collected'
                           : ord.status === 'CANCELLED_BY_CUSTOMER'
                           ? '🚫 Cancelled by Customer'
+                          : ord.status === 'AUTO_CANCELLED_EXPIRED'
+                          ? '⛔ Auto-cancelled (45m Expired)'
                           : ord.status}
                       </Text>
                     </View>
                   </View>
+
+                  {/* Auto-cancel warning banner for Shopkeeper */}
+                  {ord.status === 'PENDING' && (
+                    <View style={styles.autoCancelWarningBox}>
+                      <Clock size={13} color="#b45309" />
+                      <Text style={styles.autoCancelWarningText}>
+                        ⚠️ <Text style={{ fontWeight: '700' }}>Accept within {getAutoCancelCountdown(ord.createdAt)}</Text> or order will be automatically cancelled.
+                      </Text>
+                    </View>
+                  )}
+
+                  {ord.status === 'AUTO_CANCELLED_EXPIRED' && (
+                    <View style={styles.expiredWarningBox}>
+                      <XCircle size={13} color="#b91c1c" />
+                      <Text style={styles.expiredWarningText}>
+                        Order automatically cancelled because 45 minutes elapsed without acceptance.
+                      </Text>
+                    </View>
+                  )}
 
                   {/* Order Items */}
                   <View style={styles.orderItemsList}>
@@ -513,6 +554,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: colors.primary,
+  },
+  autoCancelWarningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fffbeb',
+    borderColor: '#fef08a',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 8,
+    gap: 6,
+  },
+  autoCancelWarningText: {
+    fontSize: 11,
+    color: '#92400e',
+    flex: 1,
+  },
+  expiredWarningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginBottom: 8,
+    gap: 6,
+  },
+  expiredWarningText: {
+    fontSize: 11,
+    color: '#b91c1c',
+    fontWeight: '600',
+    flex: 1,
   },
   orderActionsRow: {
     flexDirection: 'row',

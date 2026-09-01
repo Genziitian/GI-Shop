@@ -404,25 +404,38 @@ export default function Shopkeeper() {
                           : (order.status === 'PACKING' ? '#fef3c7' 
                           : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
                           : (order.status === 'COLLECTED' ? '#dcfce7' 
-                          : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
+                          : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
                         color: order.status === 'PENDING' ? 'var(--primary)' 
                           : (order.status === 'PACKING' ? '#b45309' 
                           : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
                           : (order.status === 'COLLECTED' ? '#15803d' 
-                          : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
+                          : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
                         borderColor: 'transparent',
                         padding: '0.35rem 0.65rem',
                         fontWeight: '700'
                       }}>
-                        {order.status === 'PENDING' && '🕒 PENDING'}
+                        {order.status === 'PENDING' && '🕒 PENDING ACCEPTANCE (45m Window)'}
                         {order.status === 'PACKING' && `⏳ PACKING (~${order.packingMinutes}m)`}
                         {(order.status === 'COMPLETED' || order.status === 'READY') && '📦 READY (WAITING FOR CUSTOMER)'}
                         {order.status === 'COLLECTED' && '✓ CUSTOMER COLLECTED'}
                         {order.status === 'NOT_COLLECTED' && '✗ CUSTOMER MARKED NOT COLLECTED'}
                         {order.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED BY CUSTOMER'}
+                        {order.status === 'AUTO_CANCELLED_EXPIRED' && '⛔ AUTO-CANCELLED (45m EXPIRED)'}
                         {order.status === 'DECLINED' && `❌ DECLINED (${order.declineReason || 'Unavailable'})`}
                       </span>
                     </div>
+
+                    {order.status === 'PENDING' && (
+                      <div style={{ background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
+                        ⚠️ <strong>Action Required:</strong> Please accept & set packing time within 45 minutes or this order will be automatically cancelled.
+                      </div>
+                    )}
+
+                    {order.status === 'AUTO_CANCELLED_EXPIRED' && (
+                      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#b91c1c' }}>
+                        ⛔ This order was automatically cancelled because 45 minutes elapsed without acceptance.
+                      </div>
+                    )}
 
                     <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
                       {items.map((entry, idx) => (
