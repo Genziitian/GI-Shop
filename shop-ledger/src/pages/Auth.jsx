@@ -285,6 +285,24 @@ export default function Auth() {
           <button type="submit" className="btn" style={{ width: '100%', marginTop: '0.5rem', padding: '0.85rem' }} disabled={loading}>
             {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Register Account')} <ArrowRight size={16} />
           </button>
+
+          {/* Privacy & Terms Consent Disclaimer */}
+          <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.85rem 0 0 0', lineHeight: '1.4' }}>
+            By continuing, you agree to our{' '}
+            <span
+              style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '500' }}
+              onClick={() => navigate('/privacy')}
+            >
+              Privacy Policy
+            </span>{' '}
+            and{' '}
+            <span
+              style={{ color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline', fontWeight: '500' }}
+              onClick={() => navigate('/terms')}
+            >
+              Terms &amp; Conditions
+            </span>.
+          </p>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
@@ -296,6 +314,41 @@ export default function Auth() {
             {isLogin ? 'Sign up' : 'Log in'}
           </span>
         </p>
+
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '1.5rem', 
+          paddingTop: '1rem', 
+          borderTop: '1px solid var(--border)', 
+          fontSize: '0.78rem', 
+          color: 'var(--text-muted)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.65rem'
+        }}>
+          <span 
+            style={{ color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => navigate('/privacy')}
+          >
+            Privacy Policy
+          </span>
+          <span>•</span>
+          <span 
+            style={{ color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => navigate('/terms')}
+          >
+            Terms &amp; Conditions
+          </span>
+          <span>•</span>
+          <span 
+            style={{ color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => navigate('/delete')}
+          >
+            Account Deletion
+          </span>
+        </div>
       </div>
     </div>
   );

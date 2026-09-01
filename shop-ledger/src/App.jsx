@@ -4,6 +4,9 @@ import Auth from './pages/Auth';
 import Shopkeeper from './pages/Shopkeeper';
 import Customer from './pages/Customer';
 import SuperManager from './pages/SuperManager';
+import DeleteAccount from './pages/DeleteAccount';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
 import { requestNotificationPermissionAndToken, listenForForegroundMessages } from './lib/firebase';
 import { registerNotificationToken } from './lib/api';
 import { Bell, X } from 'lucide-react';
@@ -125,6 +128,13 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/delete" element={<DeleteAccount />} />
+        <Route path="/delete-account" element={<DeleteAccount />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/terms-and-conditions" element={<TermsConditions />} />
+        <Route path="/terms-of-service" element={<TermsConditions />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

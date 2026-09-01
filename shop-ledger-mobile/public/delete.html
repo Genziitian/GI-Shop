@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Deletion Request - GI SHOP</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-color: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem 1rem;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      max-width: 640px;
+      width: 100%;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      color: #475569;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      transition: all 0.15s ease;
+    }
+    .back-btn:hover { background: #f1f5f9; }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .logo {
+      width: 76px;
+      height: 76px;
+      border-radius: 18px;
+      object-fit: contain;
+      margin: 0 auto 0.75rem auto;
+      display: block;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+    .title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 0.4rem 0;
+    }
+    .subtitle {
+      font-size: 0.92rem;
+      color: #64748b;
+      margin: 0;
+    }
+    .reassurance-box {
+      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .reassurance-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: #1e3a8a;
+      margin-bottom: 0.35rem;
+    }
+    .reassurance-text {
+      font-size: 0.88rem;
+      color: #334155;
+      line-height: 1.5;
+    }
+    .action-box {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.35rem;
+      margin-bottom: 1.5rem;
+    }
+    .action-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 0.6rem 0;
+    }
+    .email-box {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.1rem;
+    }
+    .email-val {
+      font-size: 0.98rem;
+      color: #0f172a;
+      font-family: monospace;
+      font-weight: bold;
+    }
+    .copy-btn {
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .copy-btn:hover { background: #f1f5f9; }
+    .send-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      background: #2563eb;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.92rem;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+      transition: background 0.15s ease;
+    }
+    .send-btn:hover { background: #1d4ed8; }
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .info-card {
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .info-card.amber {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+    }
+    .info-card.slate {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+    .amber .card-title { color: #92400e; }
+    .amber .card-desc { color: #78350f; font-size: 0.82rem; line-height: 1.4; }
+    .slate .card-title { color: #1e293b; }
+    .slate .card-desc { color: #475569; font-size: 0.82rem; line-height: 1.4; }
+    .details-box {
+      border-top: 1px solid #f1f5f9;
+      padding-top: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .details-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #334155;
+      margin: 0 0 0.5rem 0;
+    }
+    ul.details-list {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 0.84rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .footer-section {
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1.25rem;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+    .btn-home {
+      display: inline-block;
+      margin-top: 0.5rem;
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #2563eb;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn-home:hover { background: #f8fafc; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <a href="/" class="back-btn">&larr; Back to GI Shop</a>
+
+    <div class="card">
+      <div class="header">
+        <img src="/logo.png" alt="GI SHOP Logo" class="logo" onerror="this.style.display='none'">
+        <h1 class="title">&#128465; Account Deletion Request</h1>
+        <p class="subtitle">GI SHOP &bull; Data & Account Removal Portal</p>
+      </div>
+
+      <div class="reassurance-box">
+        <div class="reassurance-title">&#128737; Sorry to hear you want to delete your account</div>
+        <div class="reassurance-text">
+          Let us assure you that everything is okay and your personal data & transactions are always treated with utmost privacy and security. If you are experiencing any issue, store difficulty, or billing question, our team is always ready to assist you.
+        </div>
+      </div>
+
+      <div class="action-box">
+        <h3 class="action-title">&#9993; If you still want to delete your account</h3>
+        <p style="font-size: 0.9rem; color: #475569; line-height: 1.5; margin: 0 0 1rem 0;">
+          Please send an account deletion request directly to our administrator email:
+        </p>
+
+        <div class="email-box">
+          <div>
+            <span style="font-size: 0.82rem; color: #64748b; font-weight: 500;">Email: </span>
+            <span class="email-val" id="emailText">pay.laxmikant@gmail.com</span>
+          </div>
+          <button class="copy-btn" id="copyBtn" onclick="copyEmail()">Copy Email</button>
+        </div>
+
+        <a 
+          href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20-%20Account%20Deletion%20Request&body=Hello%20GI%20Shop%20Support%20Team%2C%0A%0AI%20would%20like%20to%20request%20the%20permanent%20deletion%20of%20my%20GI%20Shop%20account%20and%20associated%20data.%0A%0AAccount%20Details%3A%0A-%20Registered%20Mobile%20Number%3A%20%0A-%20Registered%20Email%20Address%3A%20%0A-%20User%20Short%20ID%20(if%20known)%3A%20%0A-%20Role%20(Customer%20%2F%20Shopkeeper)%3A%20%0A-%20Reason%20for%20Deletion%20(Optional)%3A%20%0A%0APlease%20confirm%20once%20the%20account%20deletion%20has%20been%20processed%20within%207%20days.%0A%0AThank%20you." 
+          class="send-btn"
+        >
+          &#9993; Send Deletion Email
+        </a>
+      </div>
+
+      <div class="grid-cards">
+        <div class="info-card amber">
+          <div class="card-title">&#9201; Processing Timeline</div>
+          <div class="card-desc">We take <strong>up to 7 days</strong> to verify and permanently delete your account from our records.</div>
+        </div>
+        <div class="info-card slate">
+          <div class="card-title">&#128241; What to Include in Email</div>
+          <div class="card-desc">Include your <strong>Registered Phone Number</strong>, <strong>Email</strong>, or <strong>Short ID</strong> so we can locate your account.</div>
+        </div>
+      </div>
+
+      <div class="details-box">
+        <h4 class="details-title">&#8505; What happens upon deletion?</h4>
+        <ul class="details-list">
+          <li>All personal profile information (name, phone number, address, and password) will be permanently erased.</li>
+          <li>Active sessions and device push notification tokens will be invalidated immediately.</li>
+          <li>If you are a shop owner, your shop listing, catalog items, and staff connections will be permanently removed.</li>
+          <li>Please settle all pending credit/khata balances with respective stores or customers prior to requesting deletion.</li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <p style="margin: 0 0 0.5rem 0; font-weight: 500;">Thanks for being a part of GI SHOP!</p>
+        <a href="/" class="btn-home">Return to GI Shop Home</a>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.78rem; color: #94a3b8;">
+      &copy; 2026 GI SHOP &bull; All Rights Reserved
+    </div>
+  </div>
+
+  <script>
+    function copyEmail() {
+      const email = document.getElementById('emailText').innerText;
+      navigator.clipboard.writeText(email).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.innerText = 'Copied!';
+        btn.style.background = '#16a34a';
+        btn.style.color = '#fff';
+        setTimeout(() => {
+          btn.innerText = 'Copy Email';
+          btn.style.background = '#ffffff';
+          btn.style.color = '#334155';
+        }, 2500);
+      });
+    }
+  </script>
+</body>
+</html>
