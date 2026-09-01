@@ -1,10 +1,9 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
-const PORT = parseInt(process.env.PORT, 10) || 3000;
-const HOST = '0.0.0.0';
+let port = parseInt(process.env.PORT, 10) || 3000;
+const host = '0.0.0.0';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=UTF-8',
@@ -38,37 +37,31 @@ function getPublicDir() {
       return p;
     }
   }
-  return null;
+  return path.join(__dirname, 'dist');
 }
 
-let publicDir = getPublicDir();
-
-// If dist/build does not exist yet, build on the fly
-if (!publicDir) {
-  try {
-    console.log('[Server Startup] Build files not found, running build-web.js...');
-    execSync('node scripts/build-web.js', { cwd: __dirname, stdio: 'inherit' });
-    publicDir = getPublicDir() || path.join(__dirname, 'dist');
-  } catch (e) {
-    console.error('[Server Startup Error]', e.message);
-    publicDir = path.join(__dirname, 'dist');
-  }
-}
+const publicDir = getPublicDir();
 
 const server = http.createServer((req, res) => {
-  const currentPublicDir = publicDir || path.join(__dirname, 'dist');
   const urlPath = req.url.split('?')[0];
-  let safePath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
-  let filePath = path.join(currentPublicDir, safePath);
 
-  // If path is a directory or root, serve index.html
+  if (urlPath === '/favicon.ico' || urlPath === '/favicon.svg') {
+    const favPath = path.join(publicDir, 'favicon.svg');
+    if (fs.existsSync(favPath)) {
+      res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
+      return fs.createReadStream(favPath).pipe(res);
+    }
+  }
+
+  let safePath = path.normalize(urlPath).replace(/^(\.\.[\/\\])+/, '');
+  let filePath = path.join(publicDir, safePath);
+
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
     filePath = path.join(filePath, 'index.html');
   }
 
-  // If file does not exist, fallback to index.html for SPA client-side routing
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    filePath = path.join(currentPublicDir, 'index.html');
+    filePath = path.join(publicDir, 'index.html');
   }
 
   const ext = path.extname(filePath).toLowerCase();
@@ -88,7 +81,27 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`Server running on ${PORT}`);
-  console.log(`[GI-Shop Production Server] Serving from ${publicDir} on http://${HOST}:${PORT}`);
-});
+function startServer(currentPort) {
+  server.removeAllListeners('error');
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[GI-Shop Warning] Port ${currentPort} in use, trying port ${currentPort + 1}...`);
+      if (currentPort < 3050) {
+        setTimeout(() => startServer(currentPort + 1), 200);
+      } else {
+        server.listen(0, host, () => {
+          console.log(`Server running on ${server.address().port}`);
+        });
+      }
+    } else {
+      console.error('[GI-Shop Server Error]', err);
+    }
+  });
+
+  server.listen(currentPort, host, () => {
+    console.log(`Server running on ${currentPort}`);
+    console.log(`[GI-Shop Production Server] Serving from ${publicDir} on http://${host}:${currentPort}`);
+  });
+}
+
+startServer(port);
