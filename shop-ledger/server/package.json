@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "npm rebuild sqlite3 --build-from-source",
     "start": "node index.js",
     "create-admin": "node create-admin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,6 +22,6 @@
     "express": "^5.2.1",
     "firebase-admin": "^13.6.0",
     "jsonwebtoken": "^9.0.3",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^5.1.7"
   }
 }
