@@ -11,11 +11,20 @@ const request = async (endpoint, options = {}) => {
   };
   
   const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'API Error' }));
-    throw new Error(err.error || 'API Error');
+  const contentType = res.headers.get('content-type') || '';
+  
+  if (!contentType.includes('application/json')) {
+    if (!res.ok) {
+      throw new Error(`Server returned status ${res.status} (${res.statusText})`);
+    }
+    throw new Error('Backend API server returned HTML instead of JSON. Ensure the Node.js backend server is running.');
   }
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || 'API Error');
+  }
+  return data;
 };
 
 // Auth & Profile

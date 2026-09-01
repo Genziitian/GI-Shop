@@ -1491,5 +1491,43 @@ app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
     });
   });
 });
+// --- STATIC FRONTEND & SPA ROUTING IN PRODUCTION ---
+const possibleDistDirs = [
+  path.join(__dirname, '..', 'dist'),
+  path.join(__dirname, '..', '..', 'dist'),
+  path.join(__dirname, 'dist'),
+  path.join(__dirname, 'public_html'),
+  path.join(__dirname, 'public')
+];
 
-app.listen(PORT, () => console.log(`[GI-Shop] Backend server running on port ${PORT}`));
+let publicStaticDir = null;
+for (const dir of possibleDistDirs) {
+  if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))) {
+    publicStaticDir = dir;
+    break;
+  }
+}
+
+if (publicStaticDir) {
+  console.log('[GI-Shop] Serving static frontend files from:', publicStaticDir);
+  app.use(express.static(publicStaticDir, { maxAge: '1d' }));
+
+  // SPA fallback for all non-API GET requests
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(publicStaticDir, 'index.html'));
+    }
+    next();
+  });
+}
+
+// 404 handler for unmatched API requests
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
+});
+
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => console.log(`[GI-Shop] Backend & Frontend server running on port ${PORT}`));
+}
+
+module.exports = app;
