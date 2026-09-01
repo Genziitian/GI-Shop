@@ -5,7 +5,7 @@
   "scripts": {
     "install:web": "npm --prefix shop-ledger install",
     "build:web": "npm --prefix shop-ledger run build",
-    "build": "npm --prefix shop-ledger install && npm --prefix shop-ledger run build",
-    "start": "npm --prefix shop-ledger run preview"
+    "build": "npm --prefix shop-ledger install && npm --prefix shop-ledger run build && cp -r shop-ledger/dist ./dist",
+    "start": "node server.js"
   }
 }
