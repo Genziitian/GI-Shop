@@ -33,12 +33,13 @@ import { colors } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
+import ChangePasswordModal from '../../components/ChangePasswordModal';
 import { Modal } from 'react-native';
 
 export default function CustomerMoreScreen({ navigation }) {
   const { user, logout, lock } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [profileModalTab, setProfileModalTab] = useState('profile');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -129,10 +130,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
           <TouchableOpacity
             style={[styles.menuRow, { borderBottomWidth: 0 }]}
-            onPress={() => {
-              setProfileModalTab('security');
-              setShowProfileModal(true);
-            }}
+            onPress={() => setShowPasswordModal(true)}
             activeOpacity={0.7}
           >
             <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
@@ -223,7 +221,14 @@ export default function CustomerMoreScreen({ navigation }) {
         <ProfileSettingsModal
           visible={showProfileModal}
           onClose={() => setShowProfileModal(false)}
-          initialTab={profileModalTab}
+        />
+      )}
+
+      {/* Account Password Change Modal */}
+      {showPasswordModal && (
+        <ChangePasswordModal
+          visible={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
         />
       )}
 

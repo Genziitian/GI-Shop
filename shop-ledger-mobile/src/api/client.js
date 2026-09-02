@@ -122,6 +122,13 @@ export const getMe = async () => {
   return await fetchWithAuth('/api/me');
 };
 
+export const changePassword = async (currentPassword, newPassword) => {
+  return await fetchWithAuth('/api/user/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+};
+
 // --- SHOPKEEPER APIs ---
 export const getItems = async () => {
   return await fetchWithAuth('/api/shop/items');

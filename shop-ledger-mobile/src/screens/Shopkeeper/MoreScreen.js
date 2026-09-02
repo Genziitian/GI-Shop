@@ -53,6 +53,7 @@ import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import EditProductModal from '../../components/EditProductModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
+import ChangePasswordModal from '../../components/ChangePasswordModal';
 import CitySelector from '../../components/CitySelector';
 
 export default function MoreScreen({ navigation }) {
@@ -61,6 +62,7 @@ export default function MoreScreen({ navigation }) {
   // Active Sub-View: 'hub' | 'items' | 'staff' | 'profile' | 'pin'
   const [activeSubView, setActiveSubView] = useState('hub');
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -482,14 +484,10 @@ export default function MoreScreen({ navigation }) {
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
-              {/* 4. Change Security PIN */}
+              {/* 4. Account Password */}
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  setPinNotice('');
-                  setPinError('');
-                  setActiveSubView('pin');
-                }}
+                onPress={() => setShowPasswordModal(true)}
                 activeOpacity={0.7}
               >
                 <View style={[styles.menuIconBox, { backgroundColor: '#fdf4ff' }]}>
@@ -940,6 +938,14 @@ export default function MoreScreen({ navigation }) {
         visible={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
+
+      {/* Account Password Change Modal */}
+      {showPasswordModal && (
+        <ChangePasswordModal
+          visible={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+        />
+      )}
 
       {/* Privacy Policy Modal */}
       {showPrivacyModal && (
