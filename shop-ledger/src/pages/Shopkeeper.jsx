@@ -20,8 +20,22 @@ import logoImg from '../assets/logo.png';
 
 export default function Shopkeeper() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentShop, setCurrentShop] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('userData');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [currentShop, setCurrentShop] = useState(() => {
+    try {
+      const saved = localStorage.getItem('shopData');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [isOwner, setIsOwner] = useState(true);
   const [activeTab, setActiveTab] = useState('pos'); // 'pos' | 'orders' | 'khata' | 'transactions' | 'items' | 'staff'
 
@@ -311,11 +325,15 @@ export default function Shopkeeper() {
   const loadInitialData = async () => {
     try {
       const me = await getMe();
-      setCurrentUser(me.user);
+      if (me.user) {
+        setCurrentUser(me.user);
+        localStorage.setItem('userData', JSON.stringify(me.user));
+      }
       if (me.shop) {
         setCurrentShop(me.shop);
+        localStorage.setItem('shopData', JSON.stringify(me.shop));
         setIsOpen(me.shop.isOpen === 1);
-        setIsOwner(me.isOwner !== false && me.user.role === 'Shopkeeper');
+        setIsOwner(me.isOwner !== false && me.user?.role === 'Shopkeeper');
       } else if (me.staffRole) {
         setIsOwner(false);
         setIsOpen(me.staffRole.isOpen === 1);
@@ -550,7 +568,9 @@ export default function Shopkeeper() {
                 <Info size={13} color="var(--text-muted)" />
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Shop ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId || 'shp'}</strong> • User: {currentUser?.name} ({currentUser?.shortId})
+                Shop ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}</strong>
+                {currentUser?.name ? ` • User: ${currentUser.name}` : ''}
+                {currentUser?.shortId ? ` (${currentUser.shortId})` : ''}
               </div>
             </div>
           </div>
