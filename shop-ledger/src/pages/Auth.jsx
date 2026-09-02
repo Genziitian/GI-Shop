@@ -9,6 +9,118 @@ import {
 import logoImg from '../assets/logo.png';
 import authBg from '../assets/auth-bg.jpg';
 
+// Bilingual Translations Dictionary
+const translations = {
+  en: {
+    brandTagline: 'Apni Dukaan, Apna Hisab.',
+    headline1: 'Har Dukaan.',
+    headline2: 'Har Grahak.',
+    headline3: 'Ek Saaf Hisab.',
+    subheadline: 'Billing, Digital Khata, Customers aur Dues — sab kuch ek jagah.',
+    fastBilling: 'Fast Billing',
+    digitalKhata: 'Digital Khata',
+    customerMgmt: 'Customer Management',
+    duesSettlements: 'Dues & Settlements',
+    receipts: 'Receipts',
+    reports: 'Reports & Analytics',
+    trustTitle: 'Aapka Data, Aapka Vishwas',
+    trustSubtitle: 'Secure • Reliable • Private',
+    copyright: '© 2026 GI SHOP • All Rights Reserved.',
+    welcome: 'Welcome',
+    backWord: 'Back!',
+    create: 'Create',
+    accountWord: 'Account',
+    loginSubtitle: 'Login to continue to GI SHOP',
+    signupSubtitle: 'Please continue with Google to create your account',
+    continueGoogle: 'Continue with Google',
+    connectingGoogle: 'Connecting to Google...',
+    orContinueWith: 'or continue with',
+    emailOrShortId: 'Email ID or Short ID',
+    emailPlaceholder: 'Enter your email or Short ID',
+    next: 'Next',
+    password: 'Password',
+    passwordPlaceholder: 'Enter your password',
+    rememberMe: 'Remember me',
+    forgotPassword: 'Forgot Password?',
+    login: 'Login',
+    loggingIn: 'Logging in...',
+    backToEmail: 'Back to email',
+    change: 'Change',
+    dontHaveAccount: "Don't have an account?",
+    alreadyHaveAccount: "Already have an account?",
+    signUp: 'Sign Up',
+    logIn: 'Log In',
+    privacyPolicy: 'Privacy Policy',
+    terms: 'Terms & Conditions',
+    accountDeletion: 'Account Deletion',
+    footerCopyright: '© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.',
+    welcomeUser: (name) => `👋 Welcome, ${name || 'Friend'}!`,
+    chooseRole: 'Choose Your Role',
+    howToUse: 'How do you want to use GI SHOP today?',
+    iAmCustomer: 'I am a Customer',
+    shopperBadge: 'Shopper',
+    customerDesc: 'Discover local grocery shops in your city, compare product prices, place pickup orders, and track your Khata credit ledger.',
+    iAmShopkeeper: 'I am a Shopkeeper',
+    ownerBadge: 'Store Owner',
+    shopkeeperDesc: 'Manage your grocery store, fast barcode POS billing, inventory stock catalog, customer Khata ledger, and accept incoming customer orders.',
+    cancelAndBack: 'Cancel and back to login'
+  },
+  hi: {
+    brandTagline: 'अपनी दुकान, अपना हिसाब।',
+    headline1: 'हर दुकान।',
+    headline2: 'हर ग्राहक।',
+    headline3: 'एक साफ़ हिसाब।',
+    subheadline: 'बिलिंग, डिजिटल खाता, ग्राहक और उधारी — सब कुछ एक जगह।',
+    fastBilling: 'तेज़ बिलिंग',
+    digitalKhata: 'डिजिटल खाता',
+    customerMgmt: 'ग्राहक प्रबंधन',
+    duesSettlements: 'उधारी व सेटलमेंट',
+    receipts: 'पक्की रसीदें',
+    reports: 'दुकान रिपोर्ट व आंकड़े',
+    trustTitle: 'आपका डेटा, आपका विश्वास',
+    trustSubtitle: 'सुरक्षित • विश्वसनीय • निजी',
+    copyright: '© 2026 जीआई शॉप • सर्वाधिकार सुरक्षित।',
+    welcome: 'वापसी पर स्वागत',
+    backWord: 'है!',
+    create: 'नया खाता',
+    accountWord: 'बनाएं',
+    loginSubtitle: 'जीआई शॉप में आगे बढ़ने के लिए लॉगिन करें',
+    signupSubtitle: 'नया खाता बनाने के लिए कृपया गूगल से आगे बढ़ें',
+    continueGoogle: 'गूगल के साथ आगे बढ़ें',
+    connectingGoogle: 'गूगल से जुड़ रहे हैं...',
+    orContinueWith: 'या इसके माध्यम से लॉगिन करें',
+    emailOrShortId: 'ईमेल आईडी या यूज़र आईडी',
+    emailPlaceholder: 'अपना ईमेल या यूज़र आईडी दर्ज करें',
+    next: 'आगे बढ़ें',
+    password: 'पासवर्ड',
+    passwordPlaceholder: 'अपना पासवर्ड दर्ज करें',
+    rememberMe: 'मुझे याद रखें',
+    forgotPassword: 'पासवर्ड भूल गए?',
+    login: 'लॉगिन करें',
+    loggingIn: 'लॉगिन हो रहा है...',
+    backToEmail: 'ईमेल पर वापस जाएं',
+    change: 'बदलें',
+    dontHaveAccount: 'खाता नहीं है?',
+    alreadyHaveAccount: 'पहले से खाता है?',
+    signUp: 'साइन अप करें',
+    logIn: 'लॉगिन करें',
+    privacyPolicy: 'प्राइवेसी पॉलिसी',
+    terms: 'नियम व शर्तें',
+    accountDeletion: 'खाता डिलीट करें',
+    footerCopyright: '© 2026 जीआई शॉप • अपनी दुकान, अपना हिसाब। सर्वाधिकार सुरक्षित।',
+    welcomeUser: (name) => `👋 नमस्ते, ${name || 'मित्र'}!`,
+    chooseRole: 'अपनी भूमिका चुनें',
+    howToUse: 'आज आप जीआई शॉप का उपयोग कैसे करना चाहते हैं?',
+    iAmCustomer: 'मैं एक ग्राहक हूँ',
+    shopperBadge: 'खरीदार',
+    customerDesc: 'अपने शहर की किराना दुकानें खोजें, कीमतों की तुलना करें, आर्डर दें और अपना उधारी खाता ट्रैक करें।',
+    iAmShopkeeper: 'मैं एक दुकानदार हूँ',
+    ownerBadge: 'दुकान मालिक',
+    shopkeeperDesc: 'अपनी किराना दुकान, तेज़ बारकोड बिलिंग, स्टॉक इन्वेंटरी और ग्राहकों का खाता व्यवस्थित करें।',
+    cancelAndBack: 'रद्द करें और लॉगिन पर जाएं'
+  }
+};
+
 export default function Auth() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -20,6 +132,9 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Active translation dictionary
+  const t = translations[language] || translations.en;
 
   // Credentials Form (Login Only)
   const [loginForm, setLoginForm] = useState({
@@ -109,7 +224,7 @@ export default function Auth() {
       else if (res.user.role === 'Shopkeeper') navigate('/shop');
       else navigate('/customer');
     } catch (err) {
-      setError(err.message || 'Invalid credentials. User not found.');
+      setError(err.message || (language === 'hi' ? 'गलत विवरण। उपयोगकर्ता नहीं मिला।' : 'Invalid credentials. User not found.'));
     } finally {
       setLoading(false);
     }
@@ -121,28 +236,28 @@ export default function Auth() {
     setError('');
 
     if (!onboardingForm.phone || onboardingForm.phone.trim().length < 10) {
-      return setError('Please enter a valid 10-digit mobile phone number.');
+      return setError(language === 'hi' ? 'कृपया मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile phone number.');
     }
 
     if (onboarding.role === 'Shopkeeper') {
       if (!onboardingForm.shopName || !onboardingForm.shopName.trim()) {
-        return setError('Please enter your Shop Name.');
+        return setError(language === 'hi' ? 'कृपया अपनी दुकान का नाम दर्ज करें।' : 'Please enter your Shop Name.');
       }
       if (!onboardingForm.shopAddress || !onboardingForm.shopAddress.trim()) {
-        return setError('Please enter your Shop Address.');
+        return setError(language === 'hi' ? 'कृपया अपनी दुकान का पता दर्ज करें।' : 'Please enter your Shop Address.');
       }
     }
 
     if (onboardingForm.pin && onboardingForm.pin.trim().length !== 4) {
-      return setError('If setting a security PIN, it must be exactly 4 digits.');
+      return setError(language === 'hi' ? 'सुरक्षा पिन ठीक 4 अंकों का होना चाहिए।' : 'If setting a security PIN, it must be exactly 4 digits.');
     }
 
     if (onboardingForm.password) {
       if (onboardingForm.password.length < 4) {
-        return setError('Password should be at least 4 characters long.');
+        return setError(language === 'hi' ? 'पासवर्ड कम से कम 4 अक्षरों का होना चाहिए।' : 'Password should be at least 4 characters long.');
       }
       if (onboardingForm.password !== onboardingForm.confirmPassword) {
-        return setError('Passwords do not match.');
+        return setError(language === 'hi' ? 'पासवर्ड मेल नहीं खाते हैं।' : 'Passwords do not match.');
       }
     }
 
@@ -173,7 +288,7 @@ export default function Auth() {
       else navigate('/customer');
     } catch (err) {
       console.error('[Onboarding Error]', err);
-      setError(err.message || 'Failed to complete profile setup');
+      setError(err.message || (language === 'hi' ? 'प्रोफ़ाइल सेटअप पूरा करने में विफल' : 'Failed to complete profile setup'));
     } finally {
       setLoading(false);
     }
@@ -235,7 +350,7 @@ export default function Auth() {
                 <span style={{ fontSize: '1.85rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>SHOP</span>
               </div>
               <div style={{ fontSize: '0.88rem', color: '#64748b', fontWeight: '600', marginTop: '3px' }}>
-                Apni Dukaan, Apna Hisab.
+                {t.brandTagline}
               </div>
               <div style={{ width: '42px', height: '3px', background: '#16a34a', borderRadius: '2px', marginTop: '4px' }}></div>
             </div>
@@ -252,13 +367,13 @@ export default function Auth() {
             margin: '0 0 0.85rem 0',
             letterSpacing: '-0.03em'
           }}>
-            Har Dukaan.<br />
-            Har Grahak.<br />
-            <span style={{ color: '#16a34a' }}>Ek Saaf Hisab.</span>
+            {t.headline1}<br />
+            {t.headline2}<br />
+            <span style={{ color: '#16a34a' }}>{t.headline3}</span>
           </h1>
 
           <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: '1.45', margin: '0 0 2rem 0', fontWeight: '500' }}>
-            Billing, Digital Khata, Customers aur Dues — sab kuch ek jagah.
+            {t.subheadline}
           </p>
 
           {/* 6 Feature Badges Grid (Crisp Vector Icons & Glass Cards) */}
@@ -269,12 +384,12 @@ export default function Auth() {
             marginBottom: '2rem'
           }}>
             {[
-              { icon: <Receipt size={22} color="#16a34a" />, label: 'Fast Billing' },
-              { icon: <BookOpen size={22} color="#16a34a" />, label: 'Digital Khata' },
-              { icon: <Users size={22} color="#16a34a" />, label: 'Customer Management' },
-              { icon: <RefreshCw size={22} color="#16a34a" />, label: 'Dues & Settlements' },
-              { icon: <FileText size={22} color="#16a34a" />, label: 'Receipts' },
-              { icon: <BarChart3 size={22} color="#16a34a" />, label: 'Reports & Analytics' }
+              { icon: <Receipt size={22} color="#16a34a" />, label: t.fastBilling },
+              { icon: <BookOpen size={22} color="#16a34a" />, label: t.digitalKhata },
+              { icon: <Users size={22} color="#16a34a" />, label: t.customerMgmt },
+              { icon: <RefreshCw size={22} color="#16a34a" />, label: t.duesSettlements },
+              { icon: <FileText size={22} color="#16a34a" />, label: t.receipts },
+              { icon: <BarChart3 size={22} color="#16a34a" />, label: t.reports }
             ].map((f, i) => (
               <div key={i} style={{
                 background: '#ffffff',
@@ -308,9 +423,9 @@ export default function Auth() {
               <Shield size={22} />
             </div>
             <div>
-              <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#0f172a' }}>Aapka Data, Aapka Vishwas</div>
+              <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#0f172a' }}>{t.trustTitle}</div>
               <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: '700', marginTop: '1px' }}>
-                Secure • Reliable • Private
+                {t.trustSubtitle}
               </div>
             </div>
           </div>
@@ -332,7 +447,7 @@ export default function Auth() {
           border: '1px solid #e2e8f0',
           alignSelf: 'flex-start'
         }}>
-          © 2026 GI SHOP • All Rights Reserved.
+          {t.copyright}
         </div>
       </div>
 
@@ -407,13 +522,13 @@ export default function Auth() {
                 <div>
                   <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
                     <span style={{ display: 'inline-block', background: '#dcfce7', color: '#16a34a', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', marginBottom: '0.6rem' }}>
-                      👋 Welcome, {onboarding.googleUser.name || 'Friend'}!
+                      {t.welcomeUser(onboarding.googleUser.name)}
                     </span>
                     <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.35rem 0' }}>
-                      Choose Your Role
+                      {t.chooseRole}
                     </h2>
                     <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
-                      How do you want to use GI SHOP today?
+                      {t.howToUse}
                     </p>
                   </div>
 
@@ -441,11 +556,11 @@ export default function Auth() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>I am a Customer</h4>
-                          <span style={{ fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>Shopper</span>
+                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmCustomer}</h4>
+                          <span style={{ fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>{t.shopperBadge}</span>
                         </div>
                         <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                          Discover local grocery shops in your city, compare product prices, place pickup orders, and track your Khata credit ledger.
+                          {t.customerDesc}
                         </p>
                       </div>
                       <ArrowRight size={18} color="#16a34a" style={{ alignSelf: 'center' }} />
@@ -473,11 +588,11 @@ export default function Auth() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>I am a Shopkeeper</h4>
-                          <span style={{ fontSize: '0.7rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>Store Owner</span>
+                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmShopkeeper}</h4>
+                          <span style={{ fontSize: '0.7rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>{t.ownerBadge}</span>
                         </div>
                         <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                          Manage your grocery store, fast barcode POS billing, inventory stock catalog, customer Khata ledger, and accept incoming customer orders.
+                          {t.shopkeeperDesc}
                         </p>
                       </div>
                       <ArrowRight size={18} color="#16a34a" style={{ alignSelf: 'center' }} />
@@ -491,7 +606,7 @@ export default function Auth() {
                       onClick={() => { setOnboarding(null); setError(''); }}
                       style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
                     >
-                      Cancel and back to login
+                      {t.cancelAndBack}
                     </button>
                   </div>
                 </div>
@@ -506,7 +621,7 @@ export default function Auth() {
                       onClick={() => setOnboarding({ ...onboarding, step: 'ROLE_SELECT' })}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontSize: '0.85rem', fontWeight: '600', padding: 0 }}
                     >
-                      <ArrowLeft size={16} /> Switch Role
+                      <ArrowLeft size={16} /> {language === 'hi' ? 'भूमिका बदलें' : 'Switch Role'}
                     </button>
                     <span style={{ 
                       fontSize: '0.78rem', 
@@ -516,21 +631,21 @@ export default function Auth() {
                       background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dcfce7',
                       color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#16a34a'
                     }}>
-                      {onboarding.role === 'Shopkeeper' ? '🏪 Shopkeeper Setup' : '🛒 Customer Setup'}
+                      {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? '🏪 दुकानदार सेटअप' : '🏪 Shopkeeper Setup') : (language === 'hi' ? '🛒 ग्राहक सेटअप' : '🛒 Customer Setup')}
                     </span>
                   </div>
 
                   <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
-                    {onboarding.role === 'Shopkeeper' ? 'Configure Your Store' : 'Complete Your Profile'}
+                    {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकान की जानकारी भरें' : 'Configure Your Store') : (language === 'hi' ? 'अपनी प्रोफ़ाइल पूरी करें' : 'Complete Your Profile')}
                   </h3>
                   <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.85rem', color: '#64748b' }}>
-                    A few details are needed to activate your {onboarding.role.toLowerCase()} account.
+                    {language === 'hi' ? 'खाता सक्रिय करने के लिए कुछ आवश्यक विवरण भरें।' : `A few details are needed to activate your ${onboarding.role.toLowerCase()} account.`}
                   </p>
 
                   {/* Google Account (Read Only) */}
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                      Google Account <Lock size={12} color="#94a3b8" />
+                      {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={12} color="#94a3b8" />
                     </label>
                     <input 
                       type="text" 
@@ -539,12 +654,14 @@ export default function Auth() {
                       disabled 
                       style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '500' }}
                     />
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>🔒 Synced with your verified Google email.</span>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>🔒 {language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
                   </div>
 
                   {/* Full Name */}
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>Full Name *</label>
+                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                      {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
+                    </label>
                     <input 
                       name="name" 
                       className="input" 
@@ -557,7 +674,9 @@ export default function Auth() {
 
                   {/* Mobile Phone (Required) */}
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>Mobile Phone Number *</label>
+                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                      {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone Number *'}
+                    </label>
                     <input 
                       name="phone" 
                       type="tel"
@@ -567,12 +686,14 @@ export default function Auth() {
                       onChange={handleOnboardingChange} 
                       required 
                     />
-                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Used for Khata orders and bill notifications.</span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{language === 'hi' ? 'खाता आर्डर और बिल सूचनाओं के लिए उपयोग किया जाता है।' : 'Used for Khata orders and bill notifications.'}</span>
                   </div>
 
                   {/* City (Required) */}
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>City *</label>
+                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                      {language === 'hi' ? 'शहर *' : 'City *'}
+                    </label>
                     <select name="city" className="select" value={onboardingForm.city} onChange={handleOnboardingChange} required>
                       {cities.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
@@ -582,11 +703,13 @@ export default function Auth() {
                   {onboarding.role === 'Shopkeeper' && (
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
                       <div style={{ fontWeight: '800', fontSize: '0.9rem', color: '#16a34a', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Store size={16} /> Store Information
+                        <Store size={16} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
                       </div>
 
                       <div style={{ marginBottom: '0.75rem' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>Shop Name *</label>
+                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                          {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
+                        </label>
                         <input 
                           name="shopName" 
                           className="input" 
@@ -598,7 +721,9 @@ export default function Auth() {
                       </div>
 
                       <div style={{ marginBottom: '0.75rem' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>Shop Address *</label>
+                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                          {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
+                        </label>
                         <input 
                           name="shopAddress" 
                           className="input" 
@@ -610,7 +735,9 @@ export default function Auth() {
                       </div>
 
                       <div>
-                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>Shop Timings</label>
+                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                          {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
+                        </label>
                         <input 
                           name="timings" 
                           className="input" 
@@ -625,7 +752,9 @@ export default function Auth() {
                   {/* CUSTOMER SPECIFIC FIELDS */}
                   {onboarding.role === 'Customer' && (
                     <div style={{ marginBottom: '1rem' }}>
-                      <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>Delivery / Home Address (Optional)</label>
+                      <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                        {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
+                      </label>
                       <input 
                         name="address" 
                         className="input" 
@@ -639,7 +768,7 @@ export default function Auth() {
                   {/* OPTIONAL SECURITY PIN */}
                   <div style={{ background: '#fdfbf7', border: '1px solid #fed7aa', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1rem' }}>
                     <label style={{ fontSize: '0.8rem', color: '#9a3412', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                      <Shield size={14} /> 4-Digit Security PIN (Optional)
+                      <Shield size={14} /> {language === 'hi' ? '4-अंकों का सुरक्षा पिन (वैकल्पिक)' : '4-Digit Security PIN (Optional)'}
                     </label>
                     <input 
                       name="pin" 
@@ -651,21 +780,21 @@ export default function Auth() {
                       onChange={handleOnboardingChange} 
                     />
                     <span style={{ fontSize: '0.72rem', color: '#9a3412' }}>
-                      Used for quick app lock &amp; cashier mode security. Optional — you can set or change it later in settings.
+                      {language === 'hi' ? 'ऐप लॉक व सुरक्षा के लिए उपयोग किया जाता है। आप इसे सेटिंग्स में भी बदल सकते हैं।' : 'Used for quick app lock & cashier mode security. Optional — you can set or change it later in settings.'}
                     </span>
                   </div>
 
                   {/* OPTIONAL PASSWORD CREATION */}
                   <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.5rem' }}>
                     <label style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                      <Lock size={14} /> Create a Password (Optional)
+                      <Lock size={14} /> {language === 'hi' ? 'पासवर्ड बनाएं (वैकल्पिक)' : 'Create a Password (Optional)'}
                     </label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                       <input 
                         name="password" 
                         type="password" 
                         className="input" 
-                        placeholder="Create password" 
+                        placeholder={language === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'} 
                         value={onboardingForm.password} 
                         onChange={handleOnboardingChange} 
                       />
@@ -673,13 +802,13 @@ export default function Auth() {
                         name="confirmPassword" 
                         type="password" 
                         className="input" 
-                        placeholder="Confirm password" 
+                        placeholder={language === 'hi' ? 'पासवर्ड कन्फर्म करें' : 'Confirm password'} 
                         value={onboardingForm.confirmPassword} 
                         onChange={handleOnboardingChange} 
                       />
                     </div>
                     <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                      Set a password if you'd like to log in with email/password directly later. Optional — you can set it anytime in settings.
+                      {language === 'hi' ? 'यदि आप भविष्य में सीधे ईमेल/पासवर्ड से लॉगिन करना चाहते हैं तो पासवर्ड सेट करें।' : "Set a password if you'd like to log in with email/password directly later. Optional — you can set it anytime in settings."}
                     </span>
                   </div>
 
@@ -697,7 +826,7 @@ export default function Auth() {
                     }}
                     disabled={loading}
                   >
-                    {loading ? 'Setting up account...' : 'Complete Setup & Enter Dashboard 🚀'}
+                    {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
                   </button>
                 </form>
               )}
@@ -711,13 +840,13 @@ export default function Auth() {
               <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
                 <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
                   {isLogin ? (
-                    <>Welcome <span style={{ color: '#16a34a' }}>Back!</span></>
+                    <>{t.welcome} <span style={{ color: '#16a34a' }}>{t.backWord}</span></>
                   ) : (
-                    <>Create <span style={{ color: '#16a34a' }}>Account</span></>
+                    <>{t.create} <span style={{ color: '#16a34a' }}>{t.accountWord}</span></>
                   )}
                 </h2>
                 <p style={{ fontSize: '0.92rem', color: '#64748b', margin: 0 }}>
-                  {isLogin ? 'Login to continue to GI SHOP' : 'Please continue with Google to create your account'}
+                  {isLogin ? t.loginSubtitle : t.signupSubtitle}
                 </p>
               </div>
 
@@ -753,7 +882,7 @@ export default function Auth() {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                 </svg>
-                {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
+                {googleLoading ? t.connectingGoogle : t.continueGoogle}
               </button>
 
               {isLogin ? (
@@ -764,7 +893,7 @@ export default function Auth() {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (!loginForm.identifier || !loginForm.identifier.trim()) {
-                        return setError('Please enter your Email or User Short ID');
+                        return setError(language === 'hi' ? 'कृपया अपना ईमेल या यूज़र आईडी दर्ज करें' : 'Please enter your Email or User Short ID');
                       }
                       setError('');
                       setLoginStep('PASSWORD');
@@ -772,20 +901,20 @@ export default function Auth() {
                       {/* Divider: or continue with */}
                       <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>
                         <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                        <span style={{ padding: '0 0.85rem' }}>or continue with</span>
+                        <span style={{ padding: '0 0.85rem' }}>{t.orContinueWith}</span>
                         <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
                       </div>
 
                       {/* Email ID or Short ID Input */}
                       <div style={{ marginBottom: '1.25rem' }}>
                         <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          Email ID or Short ID
+                          {t.emailOrShortId}
                         </label>
                         <div style={{ position: 'relative' }}>
                           <input 
                             name="identifier" 
                             className="input" 
-                            placeholder="Enter your email or Short ID" 
+                            placeholder={t.emailPlaceholder} 
                             value={loginForm.identifier} 
                             onChange={handleLoginChange} 
                             required 
@@ -817,7 +946,7 @@ export default function Auth() {
                           transition: 'all 0.15s ease'
                         }}
                       >
-                        Next <ArrowRight size={18} />
+                        {t.next} <ArrowRight size={18} />
                       </button>
                     </form>
                   ) : (
@@ -842,21 +971,21 @@ export default function Auth() {
                           onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
                           style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
                         >
-                          Change
+                          {t.change}
                         </button>
                       </div>
 
                       {/* Password Input */}
                       <div style={{ marginBottom: '1.1rem' }}>
                         <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          Password
+                          {t.password}
                         </label>
                         <div style={{ position: 'relative' }}>
                           <input 
                             name="password" 
                             type={showPassword ? 'text' : 'password'}
                             className="input" 
-                            placeholder="Enter your password" 
+                            placeholder={t.passwordPlaceholder} 
                             value={loginForm.password} 
                             onChange={handleLoginChange} 
                             required 
@@ -885,13 +1014,13 @@ export default function Auth() {
                             onChange={e => setRememberMe(e.target.checked)}
                             style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
                           />
-                          Remember me
+                          {t.rememberMe}
                         </label>
                         <span 
                           style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
-                          onClick={() => alert('Please log in with Google to access or reset your account.')}
+                          onClick={() => alert(language === 'hi' ? 'कृपया अपने खाते तक पहुंचने या पासवर्ड रीसेट करने के लिए गूगल से लॉगिन करें।' : 'Please log in with Google to access or reset your account.')}
                         >
-                          Forgot Password?
+                          {t.forgotPassword}
                         </span>
                       </div>
 
@@ -915,7 +1044,7 @@ export default function Auth() {
                         }}
                         disabled={loading}
                       >
-                        {loading ? 'Logging in...' : 'Login'} <ArrowRight size={18} />
+                        {loading ? t.loggingIn : t.login} <ArrowRight size={18} />
                       </button>
 
                       {/* Back button */}
@@ -925,7 +1054,7 @@ export default function Auth() {
                           onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
                           style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
                         >
-                          <ArrowLeft size={14} /> Back to email
+                          <ArrowLeft size={14} /> {t.backToEmail}
                         </button>
                       </div>
                     </form>
@@ -945,21 +1074,21 @@ export default function Auth() {
                     color: '#166534'
                   }}>
                     <div style={{ fontWeight: '800', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Sparkles size={16} /> 1-Click Fast Registration
+                      <Sparkles size={16} /> {language === 'hi' ? '1-क्लिक तेज़ रजिस्ट्रेशन' : '1-Click Fast Registration'}
                     </div>
-                    <div>Click <strong>"Continue with Google"</strong> above. You'll be able to choose whether you are a <strong>Customer</strong> or a <strong>Shopkeeper</strong> and configure your profile in the next screen!</div>
+                    <div>{language === 'hi' ? 'ऊपर "गूगल के साथ आगे बढ़ें" पर क्लिक करें। अगली स्क्रीन में आप ग्राहक या दुकानदार चुन सकेंगे!' : 'Click "Continue with Google" above. You will be able to choose whether you are a Customer or a Shopkeeper and configure your profile in the next screen!'}</div>
                   </div>
                 </div>
               )}
 
               {/* Toggle Login / Signup */}
               <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.92rem', color: '#64748b' }}>
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
+                {isLogin ? t.dontHaveAccount : t.alreadyHaveAccount}{' '}
                 <span
                   style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '800' }}
                   onClick={() => { setIsLogin(!isLogin); setError(''); }}
                 >
-                  {isLogin ? 'Sign Up' : 'Log In'}
+                  {isLogin ? t.signUp : t.logIn}
                 </span>
               </p>
 
@@ -981,27 +1110,27 @@ export default function Auth() {
                   style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
                   onClick={() => navigate('/privacy')}
                 >
-                  Privacy Policy
+                  {t.privacyPolicy}
                 </span>
                 <span>•</span>
                 <span 
                   style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
                   onClick={() => navigate('/terms')}
                 >
-                  Terms &amp; Conditions
+                  {t.terms}
                 </span>
                 <span>•</span>
                 <span 
                   style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
                   onClick={() => navigate('/delete')}
                 >
-                  Account Deletion
+                  {t.accountDeletion}
                 </span>
               </div>
 
               {/* Copyright Text */}
               <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
-                © 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.
+                {t.footerCopyright}
               </div>
             </div>
           )}
