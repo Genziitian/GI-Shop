@@ -4,7 +4,7 @@ import { login, googleLogin, getCities } from '../lib/api';
 import { signInWithGoogle } from '../lib/firebase';
 import { 
   Store, User, ArrowRight, ArrowLeft, Lock, Shield, Eye, EyeOff, 
-  Globe, Sparkles, AlertCircle 
+  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3 
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import authBg from '../assets/auth-bg.jpg';
