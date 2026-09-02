@@ -170,7 +170,14 @@ export default function Auth() {
   };
 
   const handleOnboardingChange = (e) => {
-    setOnboardingForm({ ...onboardingForm, [e.target.name]: e.target.value });
+    let { name, value } = e.target;
+    if (name === 'phone') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+    if (name === 'pin') {
+      value = value.replace(/\D/g, '').slice(0, 4);
+    }
+    setOnboardingForm({ ...onboardingForm, [name]: value });
   };
 
   // Google Sign-In Handler
@@ -245,8 +252,8 @@ export default function Auth() {
     e.preventDefault();
     setError('');
 
-    if (!onboardingForm.phone || onboardingForm.phone.trim().length < 10) {
-      return setError(language === 'hi' ? 'कृपया मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile phone number.');
+    if (!onboardingForm.phone || onboardingForm.phone.trim().length !== 10) {
+      return setError(language === 'hi' ? 'कृपया ठीक 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile phone number.');
     }
 
     if (onboarding.role === 'Shopkeeper') {
@@ -374,17 +381,9 @@ export default function Auth() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '2.5rem 1.25rem'
+          padding: '2.5rem 1.5rem'
         }}>
-          <div style={{
-            width: '100%',
-            maxWidth: onboarding.step === 'ROLE_SELECT' ? '600px' : '640px',
-            background: '#ffffff',
-            borderRadius: '20px',
-            border: '1.5px solid #e2e8f0',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
-            padding: '2.5rem 2.25rem'
-          }}>
+          <div className="onboarding-card">
             {error && (
               <div style={{
                 background: '#fef2f2',
@@ -406,50 +405,52 @@ export default function Auth() {
             {/* STEP 1: ROLE SELECTION */}
             {onboarding.step === 'ROLE_SELECT' && (
               <div>
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                   <span style={{ display: 'inline-block', background: '#dcfce7', color: '#16a34a', padding: '0.35rem 0.95rem', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '800', marginBottom: '0.75rem' }}>
                     {t.welcomeUser(onboarding.googleUser.name)}
                   </span>
-                  <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
+                  <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
                     {t.chooseRole}
                   </h2>
-                  <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>
+                  <p style={{ fontSize: '0.98rem', color: '#64748b', margin: 0 }}>
                     {t.howToUse}
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2rem' }}>
-                  
+                <div className="role-select-grid">
                   {/* Role Option 1: Customer */}
                   <div
                     onClick={() => setOnboarding({ ...onboarding, role: 'Customer', step: 'DETAILS_FORM' })}
                     style={{
                       border: '2px solid #e2e8f0',
-                      borderRadius: '16px',
-                      padding: '1.5rem',
+                      borderRadius: '18px',
+                      padding: '1.75rem',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       background: '#ffffff',
                       display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '1.25rem'
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '1rem'
                     }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
                   >
-                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <User size={28} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                        <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmCustomer}</h4>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <div style={{ width: '54px', height: '54px', borderRadius: '14px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <User size={28} />
+                        </div>
                         <span style={{ fontSize: '0.74rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{t.shopperBadge}</span>
                       </div>
+                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmCustomer}</h4>
                       <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: '1.45' }}>
                         {t.customerDesc}
                       </p>
                     </div>
-                    <ArrowRight size={20} color="#16a34a" style={{ alignSelf: 'center' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#16a34a', fontWeight: '800', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      Select Customer <ArrowRight size={18} />
+                    </div>
                   </div>
 
                   {/* Role Option 2: Shopkeeper */}
@@ -457,33 +458,35 @@ export default function Auth() {
                     onClick={() => setOnboarding({ ...onboarding, role: 'Shopkeeper', step: 'DETAILS_FORM' })}
                     style={{
                       border: '2px solid #e2e8f0',
-                      borderRadius: '16px',
-                      padding: '1.5rem',
+                      borderRadius: '18px',
+                      padding: '1.75rem',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       background: '#ffffff',
                       display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '1.25rem'
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '1rem'
                     }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
                   >
-                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#ede9fe', color: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Store size={28} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                        <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmShopkeeper}</h4>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <div style={{ width: '54px', height: '54px', borderRadius: '14px', background: '#ede9fe', color: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Store size={28} />
+                        </div>
                         <span style={{ fontSize: '0.74rem', background: '#ede9fe', color: '#6d28d9', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{t.ownerBadge}</span>
                       </div>
+                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmShopkeeper}</h4>
                       <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: '1.45' }}>
                         {t.shopkeeperDesc}
                       </p>
                     </div>
-                    <ArrowRight size={20} color="#16a34a" style={{ alignSelf: 'center' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#16a34a', fontWeight: '800', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      Select Shopkeeper <ArrowRight size={18} />
+                    </div>
                   </div>
-
                 </div>
 
                 <div style={{ textAlign: 'center' }}>
@@ -498,11 +501,11 @@ export default function Auth() {
               </div>
             )}
 
-            {/* STEP 2: PROFILE DETAILS FORM (Full Page View) */}
+            {/* STEP 2: PROFILE DETAILS FORM (Wide 2-Column Full Page View) */}
             {onboarding.step === 'DETAILS_FORM' && (
-              <form onSubmit={handleCompleteOnboarding}>
+              <div>
                 {/* Header Navigation */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1.5px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1.5px solid #f1f5f9' }}>
                   <button 
                     type="button" 
                     onClick={() => setOnboarding({ ...onboarding, step: 'ROLE_SELECT' })}
@@ -511,9 +514,9 @@ export default function Auth() {
                     <ArrowLeft size={18} /> {language === 'hi' ? 'भूमिका बदलें' : 'Switch Role'}
                   </button>
                   <span style={{ 
-                    fontSize: '0.82rem', 
+                    fontSize: '0.84rem', 
                     fontWeight: '800', 
-                    padding: '0.3rem 0.85rem', 
+                    padding: '0.35rem 0.95rem', 
                     borderRadius: '8px',
                     background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dcfce7',
                     color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#16a34a'
@@ -522,197 +525,212 @@ export default function Auth() {
                   </span>
                 </div>
 
-                <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.6rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>
-                  {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकान की जानकारी भरें' : 'Configure Your Store') : (language === 'hi' ? 'अपनी प्रोफ़ाइल पूरी करें' : 'Complete Your Profile')}
-                </h3>
-                <p style={{ margin: '0 0 1.75rem 0', fontSize: '0.92rem', color: '#64748b' }}>
-                  {language === 'hi' ? 'खाता सक्रिय करने के लिए कुछ आवश्यक विवरण भरें।' : `A few details are needed to activate your ${onboarding.role.toLowerCase()} account.`}
-                </p>
-
-                {/* Google Account (Read Only) */}
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
-                    {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#94a3b8" />
-                  </label>
-                  <input 
-                    type="text" 
-                    className="input" 
-                    value={onboarding.googleUser.email} 
-                    disabled 
-                    style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
-                  />
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>🔒 {language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
+                <div style={{ marginBottom: '1.75rem' }}>
+                  <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.75rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>
+                    {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकान की जानकारी भरें' : 'Configure Your Store') : (language === 'hi' ? 'अपनी प्रोफ़ाइल पूरी करें' : 'Complete Your Profile')}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.92rem', color: '#64748b' }}>
+                    {language === 'hi' ? 'खाता सक्रिय करने के लिए कुछ आवश्यक विवरण भरें।' : `A few details are needed to activate your ${onboarding.role.toLowerCase()} account.`}
+                  </p>
                 </div>
 
-                {/* Full Name */}
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                    {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
-                  </label>
-                  <input 
-                    name="name" 
-                    className="input" 
-                    placeholder="e.g. Ramesh Kumar" 
-                    value={onboardingForm.name} 
-                    onChange={handleOnboardingChange} 
-                    required 
-                  />
-                </div>
-
-                {/* Mobile Phone (Required) */}
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                    {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone Number *'}
-                  </label>
-                  <input 
-                    name="phone" 
-                    type="tel"
-                    className="input" 
-                    placeholder="10-digit mobile phone" 
-                    value={onboardingForm.phone} 
-                    onChange={handleOnboardingChange} 
-                    required 
-                  />
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'खाता आर्डर और बिल सूचनाओं के लिए उपयोग किया जाता है।' : 'Used for Khata orders and bill notifications.'}</span>
-                </div>
-
-                {/* SHOPKEEPER SPECIFIC FIELDS */}
-                {onboarding.role === 'Shopkeeper' && (
-                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.35rem', marginBottom: '1.5rem' }}>
-                    <div style={{ fontWeight: '800', fontSize: '0.98rem', color: '#16a34a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Store size={18} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
-                    </div>
-
-                    <div style={{ marginBottom: '1rem' }}>
-                      <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                        {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
-                      </label>
-                      <input 
-                        name="shopName" 
-                        className="input" 
-                        placeholder="e.g. Krishna Super Market" 
-                        value={onboardingForm.shopName} 
-                        onChange={handleOnboardingChange} 
-                        required 
-                        style={{ background: '#ffffff' }}
-                      />
-                    </div>
-
-                    <div style={{ marginBottom: '1rem' }}>
-                      <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                        {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
-                      </label>
-                      <input 
-                        name="shopAddress" 
-                        className="input" 
-                        placeholder="e.g. Shop #12, Main Market" 
-                        value={onboardingForm.shopAddress} 
-                        onChange={handleOnboardingChange} 
-                        required 
-                        style={{ background: '#ffffff' }}
-                      />
-                    </div>
-
+                <form onSubmit={handleCompleteOnboarding}>
+                  <div className="onboarding-grid-2col">
+                    {/* LEFT COLUMN: IDENTITY & STORE INFORMATION */}
                     <div>
-                      <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                        {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
-                      </label>
-                      <input 
-                        name="timings" 
-                        className="input" 
-                        placeholder="e.g. 08:00 AM - 10:00 PM" 
-                        value={onboardingForm.timings} 
-                        onChange={handleOnboardingChange} 
-                        style={{ background: '#ffffff' }}
-                      />
+                      {/* Google Account (Read Only) */}
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                          {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#94a3b8" />
+                        </label>
+                        <input 
+                          type="text" 
+                          className="input" 
+                          value={onboarding.googleUser.email} 
+                          disabled 
+                          style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
+                        />
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>🔒 {language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
+                      </div>
+
+                      {/* Full Name & Phone in 2-col on desktop */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                        <div>
+                          <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                            {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
+                          </label>
+                          <input 
+                            name="name" 
+                            className="input" 
+                            placeholder="e.g. Ramesh Kumar" 
+                            value={onboardingForm.name} 
+                            onChange={handleOnboardingChange} 
+                            required 
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                            {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone *'}
+                          </label>
+                          <input 
+                            name="phone" 
+                            type="tel"
+                            inputMode="numeric"
+                            maxLength="10"
+                            className="input" 
+                            placeholder="10-digit mobile" 
+                            value={onboardingForm.phone} 
+                            onChange={handleOnboardingChange} 
+                            required 
+                          />
+                        </div>
+                      </div>
+
+                      {/* SHOPKEEPER STORE INFORMATION */}
+                      {onboarding.role === 'Shopkeeper' && (
+                        <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem' }}>
+                          <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#16a34a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Store size={18} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
+                          </div>
+
+                          <div style={{ marginBottom: '0.85rem' }}>
+                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                              {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
+                            </label>
+                            <input 
+                              name="shopName" 
+                              className="input" 
+                              placeholder="e.g. Krishna Super Market" 
+                              value={onboardingForm.shopName} 
+                              onChange={handleOnboardingChange} 
+                              required 
+                              style={{ background: '#ffffff' }}
+                            />
+                          </div>
+
+                          <div style={{ marginBottom: '0.85rem' }}>
+                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                              {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
+                            </label>
+                            <input 
+                              name="shopAddress" 
+                              className="input" 
+                              placeholder="e.g. Shop #12, Main Market" 
+                              value={onboardingForm.shopAddress} 
+                              onChange={handleOnboardingChange} 
+                              required 
+                              style={{ background: '#ffffff' }}
+                            />
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                              {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
+                            </label>
+                            <input 
+                              name="timings" 
+                              className="input" 
+                              placeholder="e.g. 08:00 AM - 10:00 PM" 
+                              value={onboardingForm.timings} 
+                              onChange={handleOnboardingChange} 
+                              style={{ background: '#ffffff' }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* CUSTOMER ADDRESS */}
+                      {onboarding.role === 'Customer' && (
+                        <div>
+                          <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                            {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
+                          </label>
+                          <input 
+                            name="address" 
+                            className="input" 
+                            placeholder="e.g. Flat 301, Sunrise Tower" 
+                            value={onboardingForm.address} 
+                            onChange={handleOnboardingChange} 
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* RIGHT COLUMN: SECURITY, PASSWORD & SUBMIT BUTTON */}
+                    <div>
+                      {/* OPTIONAL SECURITY PIN */}
+                      <div style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.25rem' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#9a3412', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                          <Shield size={16} /> {language === 'hi' ? '4-अंकों का सुरक्षा पिन (वैकल्पिक)' : '4-Digit Security PIN (Optional)'}
+                        </label>
+                        <input 
+                          name="pin" 
+                          type="password" 
+                          maxLength="4" 
+                          className="input" 
+                          placeholder="e.g. 1234 (default: 1234)" 
+                          value={onboardingForm.pin} 
+                          onChange={handleOnboardingChange} 
+                          style={{ background: '#ffffff' }}
+                        />
+                        <span style={{ fontSize: '0.74rem', color: '#9a3412', marginTop: '4px', display: 'block' }}>
+                          {language === 'hi' ? 'ऐप लॉक व सुरक्षा के लिए उपयोग किया जाता है।' : 'Used for quick app lock & cashier mode security. You can set it later in settings.'}
+                        </span>
+                      </div>
+
+                      {/* OPTIONAL PASSWORD CREATION */}
+                      <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.5rem' }}>
+                        <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                          <Lock size={16} /> {language === 'hi' ? 'पासवर्ड बनाएं (वैकल्पिक)' : 'Create a Password (Optional)'}
+                        </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                          <input 
+                            name="password" 
+                            type="password" 
+                            className="input" 
+                            placeholder={language === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'} 
+                            value={onboardingForm.password} 
+                            onChange={handleOnboardingChange} 
+                            style={{ background: '#ffffff' }}
+                          />
+                          <input 
+                            name="confirmPassword" 
+                            type="password" 
+                            className="input" 
+                            placeholder={language === 'hi' ? 'पासवर्ड कन्फर्म' : 'Confirm password'} 
+                            value={onboardingForm.confirmPassword} 
+                            onChange={handleOnboardingChange} 
+                            style={{ background: '#ffffff' }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                          {language === 'hi' ? 'यदि आप भविष्य में सीधे ईमेल/पासवर्ड से लॉगिन करना चाहते हैं।' : "Allows direct email/password login anytime."}
+                        </span>
+                      </div>
+
+                      {/* Submit Button */}
+                      <button 
+                        type="submit" 
+                        className="btn" 
+                        style={{
+                          width: '100%',
+                          padding: '1.1rem',
+                          fontSize: '1.08rem',
+                          fontWeight: '900',
+                          background: '#16a34a',
+                          borderRadius: '14px',
+                          boxShadow: '0 6px 20px rgba(22, 163, 74, 0.35)',
+                          cursor: 'pointer'
+                        }}
+                        disabled={loading}
+                      >
+                        {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
+                      </button>
                     </div>
                   </div>
-                )}
-
-                {/* CUSTOMER SPECIFIC FIELDS */}
-                {onboarding.role === 'Customer' && (
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                      {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
-                    </label>
-                    <input 
-                      name="address" 
-                      className="input" 
-                      placeholder="e.g. Flat 301, Sunrise Tower" 
-                      value={onboardingForm.address} 
-                      onChange={handleOnboardingChange} 
-                    />
-                  </div>
-                )}
-
-                {/* OPTIONAL SECURITY PIN */}
-                <div style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.25rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#9a3412', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                    <Shield size={16} /> {language === 'hi' ? '4-अंकों का सुरक्षा पिन (वैकल्पिक)' : '4-Digit Security PIN (Optional)'}
-                  </label>
-                  <input 
-                    name="pin" 
-                    type="password" 
-                    maxLength="4" 
-                    className="input" 
-                    placeholder="e.g. 1234 (default: 1234)" 
-                    value={onboardingForm.pin} 
-                    onChange={handleOnboardingChange} 
-                    style={{ background: '#ffffff' }}
-                  />
-                  <span style={{ fontSize: '0.75rem', color: '#9a3412', marginTop: '4px', display: 'block' }}>
-                    {language === 'hi' ? 'ऐप लॉक व सुरक्षा के लिए उपयोग किया जाता है। आप इसे सेटिंग्स में भी बदल सकते हैं।' : 'Used for quick app lock & cashier mode security. Optional — you can set or change it later in settings.'}
-                  </span>
-                </div>
-
-                {/* OPTIONAL PASSWORD CREATION */}
-                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.75rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                    <Lock size={16} /> {language === 'hi' ? 'पासवर्ड बनाएं (वैकल्पिक)' : 'Create a Password (Optional)'}
-                  </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                    <input 
-                      name="password" 
-                      type="password" 
-                      className="input" 
-                      placeholder={language === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'} 
-                      value={onboardingForm.password} 
-                      onChange={handleOnboardingChange} 
-                      style={{ background: '#ffffff' }}
-                    />
-                    <input 
-                      name="confirmPassword" 
-                      type="password" 
-                      className="input" 
-                      placeholder={language === 'hi' ? 'पासवर्ड कन्फर्म करें' : 'Confirm password'} 
-                      value={onboardingForm.confirmPassword} 
-                      onChange={handleOnboardingChange} 
-                      style={{ background: '#ffffff' }}
-                    />
-                  </div>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                    {language === 'hi' ? 'यदि आप भविष्य में सीधे ईमेल/पासवर्ड से लॉगिन करना चाहते हैं तो पासवर्ड सेट करें।' : "Set a password if you'd like to log in with email/password directly later. Optional — you can set it anytime in settings."}
-                  </span>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="btn" 
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '1.05rem',
-                    fontWeight: '800',
-                    background: '#16a34a',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
-                    cursor: 'pointer'
-                  }}
-                  disabled={loading}
-                >
-                  {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
-                </button>
-              </form>
+                </form>
+              </div>
             )}
           </div>
         </main>
