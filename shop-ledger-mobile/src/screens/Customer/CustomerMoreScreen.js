@@ -138,7 +138,6 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>Security PIN & Password</Text>
-              <Text style={styles.menuSubtext}>4-Digit Lock PIN, Account Password & Biometrics</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -158,7 +157,6 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>Privacy Policy</Text>
-              <Text style={styles.menuSubtext}>Official data privacy policy & security notice</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -173,7 +171,6 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>Terms & Conditions</Text>
-              <Text style={styles.menuSubtext}>Official terms of service & user guidelines</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -188,7 +185,6 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={[styles.menuText, { color: '#dc2626' }]}>Account Deletion Request</Text>
-              <Text style={styles.menuSubtext}>Official account deletion & data wipe portal</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -197,22 +193,6 @@ export default function CustomerMoreScreen({ navigation }) {
         {/* SECTION 3: SYSTEM ACTIONS */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Session & Security</Text>
-
-          {/* Lock feature hidden from UI per user request */}
-          {/* <TouchableOpacity
-            style={styles.menuRow}
-            onPress={lock}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIconBox, { backgroundColor: '#fee2e2' }]}>
-              <Lock size={18} color="#dc2626" />
-            </View>
-            <View style={styles.menuTextBox}>
-              <Text style={[styles.menuText, { color: '#dc2626' }]}>Lock Account Screen</Text>
-              <Text style={styles.menuSubtext}>Require 4-digit PIN to unlock screen</Text>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} />
-          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[styles.menuRow, { borderBottomWidth: 0 }]}
@@ -224,7 +204,6 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={[styles.menuText, { color: '#b91c1c' }]}>Switch Account / Log Out</Text>
-              <Text style={styles.menuSubtext}>Safely exit your current customer session</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>

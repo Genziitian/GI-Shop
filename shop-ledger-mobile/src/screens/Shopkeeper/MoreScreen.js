@@ -448,9 +448,6 @@ export default function MoreScreen({ navigation }) {
                       <Text style={styles.itemsCountText}>{safeItems.length} Items</Text>
                     </View>
                   </View>
-                  <Text style={styles.menuItemSub}>
-                    Add products, update rates & auto-suggest catalog
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -466,9 +463,6 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>Staff Management</Text>
-                  <Text style={styles.menuItemSub}>
-                    Invite cashiers by Short ID/Phone & manage staff
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -484,9 +478,6 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>Profile & Settings</Text>
-                  <Text style={styles.menuItemSub}>
-                    Account details, preferences, security & support
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -506,9 +497,6 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>Change Security PIN</Text>
-                  <Text style={styles.menuItemSub}>
-                    Update 4-digit PIN for app lock screen
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -524,9 +512,6 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>Privacy Policy</Text>
-                  <Text style={styles.menuItemSub}>
-                    Official data privacy policy & security notice
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -542,9 +527,6 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>Terms & Conditions</Text>
-                  <Text style={styles.menuItemSub}>
-                    Official terms of service & merchant guidelines
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -560,9 +542,6 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.menuItemTitle, { color: '#dc2626' }]}>Account Deletion Request</Text>
-                  <Text style={styles.menuItemSub}>
-                    Official account deletion & data wipe portal
-                  </Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -579,9 +558,6 @@ export default function MoreScreen({ navigation }) {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.menuItemTitle, { color: colors.danger }]}>
                     Log Out
-                  </Text>
-                  <Text style={styles.menuItemSub}>
-                    Sign out of this GI SHOP account
                   </Text>
                 </View>
                 <ChevronRight size={20} color={colors.danger} />

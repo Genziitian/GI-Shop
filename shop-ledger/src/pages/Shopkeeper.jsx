@@ -1596,7 +1596,6 @@ export default function Shopkeeper() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security & Lock</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>4-Digit PIN & Screen Lock</div>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1617,7 +1616,6 @@ export default function Shopkeeper() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal & Policies</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Terms, Privacy & Deletion</div>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

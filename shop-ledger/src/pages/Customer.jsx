@@ -3583,7 +3583,6 @@ export default function Customer() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security & Lock</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>4-Digit PIN & Account Password</div>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -3603,7 +3602,6 @@ export default function Customer() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal & Privacy</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Policies, Terms & Account Deletion</div>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
