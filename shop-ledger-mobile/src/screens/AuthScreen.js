@@ -131,8 +131,14 @@ export default function AuthScreen() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    Alert.alert('Coming Soon', 'Google Sign-In will be available in a future update.');
+  const handleGoogleSignIn = async () => {
+    try {
+      const googleAuthUrl = 'https://gi-shop.genziitian.in/auth?provider=google';
+      await Linking.openURL(googleAuthUrl);
+    } catch (e) {
+      Alert.alert('Google Sign-In', 'Redirecting to secure Google authentication portal...');
+      Linking.openURL('https://gi-shop.genziitian.in/auth');
+    }
   };
 
   // ======= LOGIN VIEW (matching web screenshot) =======

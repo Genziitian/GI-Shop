@@ -122,6 +122,18 @@ export const getMe = async () => {
   return await fetchWithAuth('/api/me');
 };
 
+export const googleLogin = async (data) => {
+  const res = await fetchWithAuth('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (res.token) {
+    await storeToken(res.token);
+    await storeUser({ ...res.user, shop: res.shop });
+  }
+  return res;
+};
+
 export const changePassword = async (currentPassword, newPassword) => {
   return await fetchWithAuth('/api/user/change-password', {
     method: 'POST',
