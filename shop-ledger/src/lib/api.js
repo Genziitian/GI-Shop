@@ -110,3 +110,38 @@ export const changePassword = (currentPassword, newPassword) => request('/user/c
 // Customer Khata APIs (Read-Only)
 export const getCustomerKhata = () => request('/customer/khata');
 export const getCustomerShopKhata = (shopId) => request(`/customer/khata/${shopId}`);
+
+// Timing Helpers for Shop Hours
+export function parseTimings(timingsStr) {
+  if (!timingsStr) return { open: '08:00', close: '22:00' };
+  try {
+    const parts = timingsStr.split('-').map(s => s.trim());
+    if (parts.length === 2) {
+      const convert12to24 = (t12) => {
+        const match = t12.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+        if (!match) return '08:00';
+        let [_, h, m, meridiem] = match;
+        let hours = parseInt(h, 10);
+        if (meridiem) {
+          if (meridiem.toUpperCase() === 'PM' && hours < 12) hours += 12;
+          if (meridiem.toUpperCase() === 'AM' && hours === 12) hours = 0;
+        }
+        return `${String(hours).padStart(2, '0')}:${m.padStart(2, '0')}`;
+      };
+      return { open: convert12to24(parts[0]), close: convert12to24(parts[1]) };
+    }
+  } catch (e) {}
+  return { open: '08:00', close: '22:00' };
+}
+
+export function formatTimings(open24, close24) {
+  const convert24to12 = (t24) => {
+    if (!t24) return '08:00 AM';
+    const [h, m] = t24.split(':');
+    let hours = parseInt(h, 10);
+    const meridiem = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${String(hours).padStart(2, '0')}:${m} ${meridiem}`;
+  };
+  return `${convert24to12(open24 || '08:00')} - ${convert24to12(close24 || '22:00')}`;
+}

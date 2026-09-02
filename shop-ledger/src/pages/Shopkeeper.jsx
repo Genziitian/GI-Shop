@@ -4,7 +4,8 @@ import {
   getMe, getItems, saveItem, deleteItem, editItem, toggleShopStatus, 
   getShopOrders, acceptShopOrder, declineShopOrder, completeShopOrder,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
-  getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword
+  getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword,
+  parseTimings, formatTimings
 } from '../lib/api';
 import { registerPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
@@ -77,8 +78,10 @@ export default function Shopkeeper() {
     shopPhone: '',
     city: 'Delhi',
     shopAddress: '',
-    timings: ''
+    timings: '08:00 AM - 10:00 PM'
   });
+  const [timeOpen, setTimeOpen] = useState('08:00');
+  const [timeClose, setTimeClose] = useState('22:00');
   const [shopSaving, setShopSaving] = useState(false);
   const [shopSaveNotice, setShopSaveNotice] = useState('');
 
@@ -86,12 +89,15 @@ export default function Shopkeeper() {
     try {
       const data = await getMyDetailedShop();
       setDetailedShop(data);
+      const parsed = parseTimings(data.timings);
+      setTimeOpen(parsed.open);
+      setTimeClose(parsed.close);
       setShopForm({
         shopName: data.shopName || '',
         shopPhone: data.shopPhone || '',
         city: data.city || 'Delhi',
         shopAddress: data.shopAddress || '',
-        timings: data.timings || ''
+        timings: data.timings || formatTimings(parsed.open, parsed.close)
       });
       setShopSaveNotice('');
       setShowShopDetailsModal(true);
@@ -1272,15 +1278,86 @@ export default function Shopkeeper() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Operating Timings</label>
-                    <input 
-                      className="input" 
-                      value={shopForm.timings} 
-                      onChange={e => setShopForm({ ...shopForm, timings: e.target.value })} 
-                      disabled={!isOwner}
-                      placeholder="e.g. 08:00 AM - 10:00 PM"
-                      required 
-                    />
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>Operating Timings</label>
+                    
+                    {/* 2 Time Pickers (Opens At & Closes At) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.45rem' }}>
+                      <div>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                          Opens At (From)
+                        </span>
+                        <input 
+                          type="time" 
+                          className="input" 
+                          value={timeOpen} 
+                          disabled={!isOwner}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setTimeOpen(val);
+                            setShopForm(prev => ({ ...prev, timings: formatTimings(val, timeClose) }));
+                          }} 
+                          required 
+                          style={{ margin: 0, background: '#ffffff' }}
+                        />
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                          Closes At (To)
+                        </span>
+                        <input 
+                          type="time" 
+                          className="input" 
+                          value={timeClose} 
+                          disabled={!isOwner}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setTimeClose(val);
+                            setShopForm(prev => ({ ...prev, timings: formatTimings(timeOpen, val) }));
+                          }} 
+                          required 
+                          style={{ margin: 0, background: '#ffffff' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    {isOwner && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                        {[
+                          { label: '8 AM - 10 PM', open: '08:00', close: '22:00' },
+                          { label: '9 AM - 9 PM', open: '09:00', close: '21:00' },
+                          { label: '7 AM - 11 PM', open: '07:00', close: '23:00' },
+                          { label: '6 AM - 10 PM', open: '06:00', close: '22:00' }
+                        ].map(p => (
+                          <button
+                            key={p.label}
+                            type="button"
+                            onClick={() => {
+                              setTimeOpen(p.open);
+                              setTimeClose(p.close);
+                              setShopForm(prev => ({ ...prev, timings: formatTimings(p.open, p.close) }));
+                            }}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: '600',
+                              padding: '0.2rem 0.45rem',
+                              borderRadius: '6px',
+                              border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
+                              background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
+                              color: (timeOpen === p.open && timeClose === p.close) ? '#15803d' : '#475569',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Clock size={13} /> {shopForm.timings || formatTimings(timeOpen, timeClose)}
+                    </div>
                   </div>
 
                   <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.75rem', marginTop: '0.5rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>

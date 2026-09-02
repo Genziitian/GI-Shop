@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, googleLogin, getCities } from '../lib/api';
+import { login, googleLogin, getCities, parseTimings, formatTimings } from '../lib/api';
 import { signInWithGoogle } from '../lib/firebase';
 import { isPasskeySupported, loginWithPasskey } from '../lib/passkey';
 import { 
   Store, User, ArrowRight, ArrowLeft, Lock, Shield, Eye, EyeOff, 
-  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3, Mail, X, KeyRound, Fingerprint 
+  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3, Mail, X, KeyRound, Fingerprint, Clock
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import authBg from '../assets/auth-bg.jpg';
@@ -161,6 +161,9 @@ export default function Auth() {
     password: '',
     confirmPassword: ''
   });
+
+  const [timeOpen, setTimeOpen] = useState('08:00');
+  const [timeClose, setTimeClose] = useState('22:00');
 
   useEffect(() => {
     const savedIdentifier = localStorage.getItem('gi_remembered_identifier');
@@ -727,16 +730,83 @@ export default function Auth() {
 
                           <div>
                             <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                              {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
+                              {language === 'hi' ? 'दुकान खुलने व बंद होने का समय *' : 'Shop Operating Hours *'}
                             </label>
-                            <input 
-                              name="timings" 
-                              className="input" 
-                              placeholder="e.g. 08:00 AM - 10:00 PM" 
-                              value={onboardingForm.timings} 
-                              onChange={handleOnboardingChange} 
-                              style={{ background: '#ffffff' }}
-                            />
+                            
+                            {/* 2 Time Pickers (Opens At & Closes At) */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.5rem' }}>
+                              <div>
+                                <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                                  {language === 'hi' ? 'खुलने का समय (Open)' : 'Opens At'}
+                                </span>
+                                <input 
+                                  type="time" 
+                                  className="input" 
+                                  value={timeOpen} 
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setTimeOpen(val);
+                                    setOnboardingForm(prev => ({ ...prev, timings: formatTimings(val, timeClose) }));
+                                  }} 
+                                  required 
+                                  style={{ background: '#ffffff', margin: 0 }}
+                                />
+                              </div>
+
+                              <div>
+                                <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                                  {language === 'hi' ? 'बंद होने का समय (Close)' : 'Closes At'}
+                                </span>
+                                <input 
+                                  type="time" 
+                                  className="input" 
+                                  value={timeClose} 
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setTimeClose(val);
+                                    setOnboardingForm(prev => ({ ...prev, timings: formatTimings(timeOpen, val) }));
+                                  }} 
+                                  required 
+                                  style={{ background: '#ffffff', margin: 0 }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Quick Presets */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                              {[
+                                { label: '8 AM - 10 PM', open: '08:00', close: '22:00' },
+                                { label: '9 AM - 9 PM', open: '09:00', close: '21:00' },
+                                { label: '7 AM - 11 PM', open: '07:00', close: '23:00' },
+                                { label: '6 AM - 10 PM', open: '06:00', close: '22:00' }
+                              ].map(p => (
+                                <button
+                                  key={p.label}
+                                  type="button"
+                                  onClick={() => {
+                                    setTimeOpen(p.open);
+                                    setTimeClose(p.close);
+                                    setOnboardingForm(prev => ({ ...prev, timings: formatTimings(p.open, p.close) }));
+                                  }}
+                                  style={{
+                                    fontSize: '0.72rem',
+                                    fontWeight: '600',
+                                    padding: '0.2rem 0.45rem',
+                                    borderRadius: '6px',
+                                    border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
+                                    background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
+                                    color: (timeOpen === p.open && timeClose === p.close) ? '#15803d' : '#475569',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <Clock size={13} /> {onboardingForm.timings || formatTimings(timeOpen, timeClose)}
+                            </div>
                           </div>
                         </div>
                       )}
