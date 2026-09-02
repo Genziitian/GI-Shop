@@ -601,7 +601,21 @@ app.post('/api/login', (req, res) => {
 
 // --- GOOGLE SIGN-IN & FIREBASE AUTH ENDPOINT ---
 app.post('/api/auth/google', async (req, res) => {
-  const { idToken, role = 'Customer', city = 'Delhi', shopName, shopAddress, timings } = req.body;
+  const { 
+    idToken, 
+    onboardComplete, 
+    role = 'Customer', 
+    name: inputName, 
+    phone, 
+    city = 'Delhi', 
+    address, 
+    shopName, 
+    shopAddress, 
+    timings, 
+    pin, 
+    password 
+  } = req.body;
+
   if (!idToken) return res.status(400).json({ error: 'Google ID Token is required' });
 
   try {
@@ -612,7 +626,7 @@ app.post('/api/auth/google', async (req, res) => {
       return res.status(500).json({ error: 'Firebase Admin authentication is not configured on server' });
     }
 
-    const { email, name, uid } = decodedToken;
+    const { email, name: googleName, uid } = decodedToken;
     if (!email) return res.status(400).json({ error: 'Google account does not provide an email address' });
 
     // Check if user already exists
@@ -631,7 +645,7 @@ app.post('/api/auth/google', async (req, res) => {
               return res.status(403).json({ error: 'This shop has been deactivated by the platform administrator.' });
             }
             const token = jwt.sign({ id: existingUser.id, role: existingUser.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET);
-            return res.json({ token, user: existingUser, shop, isStaff: false });
+            return res.json({ token, user: existingUser, shop, isStaff: false, isNewUser: false });
           });
         } else {
           db.get(`SELECT ShopStaff.*, Shops.shopName, Shops.city, Shops.isOpen FROM ShopStaff 
@@ -644,46 +658,69 @@ app.post('/api/auth/google', async (req, res) => {
               shopId: staffRole ? staffRole.shopId : null,
               staffRole: staffRole ? staffRole.role : null
             }, JWT_SECRET);
-            return res.json({ token, user: existingUser, staffRole: staffRole || null });
+            return res.json({ token, user: existingUser, staffRole: staffRole || null, isNewUser: false });
           });
         }
       } else {
-        // Create new user with Google account
+        // User does NOT exist in database!
+        // If onboardComplete is false/missing, signal the frontend to show role selection and onboarding details
+        if (!onboardComplete) {
+          return res.json({
+            isNewUser: true,
+            googleUser: {
+              email,
+              name: googleName || '',
+              uid
+            }
+          });
+        }
+
+        // Complete onboarding for new user
         const targetRole = (role === 'Shopkeeper' || role === 'Customer') ? role : 'Customer';
-        const userShortId = generateShortId(name ? name.slice(0, 3) : 'usr');
+        const finalName = (inputName || googleName || (targetRole === 'Shopkeeper' ? 'Shop Owner' : 'Customer')).trim();
+        const userShortId = generateShortId(finalName.slice(0, 3) || 'usr');
         const userCity = city || 'Delhi';
-        const dummyPassword = await bcrypt.hash(uid + Date.now(), 10);
+        const userAddress = (address || '').trim();
+        const userPhone = phone ? phone.trim() : null;
+        
+        // Security PIN: if provided 4-digits use it, else default '1234'
+        const finalPin = (pin && String(pin).trim().length === 4) ? String(pin).trim() : '1234';
+
+        // Password: if provided hash it, otherwise hash a random secret
+        const passwordToHash = (password && password.trim().length >= 4) ? password.trim() : (uid + Date.now() + Math.random());
+        const hashedPassword = await bcrypt.hash(passwordToHash, 10);
         const now = new Date().toISOString();
 
         db.run(
           `INSERT INTO Users (shortId, name, email, phone, password, pin, role, city, address, status, createdAt)
-           VALUES (?, ?, ?, ?, ?, '1234', ?, ?, '', 'ACTIVE', ?)`,
-          [userShortId, name || 'Google User', email, null, dummyPassword, targetRole, userCity, now],
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`,
+          [userShortId, finalName, email, userPhone, hashedPassword, finalPin, targetRole, userCity, userAddress, now],
           function(err) {
             if (err) return res.status(500).json({ error: 'Failed to create user account: ' + err.message });
             const newUserId = this.lastID;
             const newUser = {
               id: newUserId,
               shortId: userShortId,
-              name: name || 'Google User',
+              name: finalName,
               email,
-              phone: null,
+              phone: userPhone,
               role: targetRole,
               city: userCity,
+              address: userAddress,
               status: 'ACTIVE',
               createdAt: now
             };
 
             if (targetRole === 'Shopkeeper') {
               const shopShortId = generateShortId('shp');
-              const finalShopName = shopName || `${name || 'My'}'s Grocery`;
-              const finalTimings = timings || '08:00 AM - 10:00 PM';
-              const finalAddress = shopAddress || userCity;
+              const finalShopName = (shopName || `${finalName}'s Store`).trim();
+              const finalTimings = (timings || '08:00 AM - 10:00 PM').trim();
+              const finalShopAddress = (shopAddress || userAddress || userCity).trim();
 
               db.run(
                 `INSERT INTO Shops (shortId, ownerId, shopName, shopPhone, city, shopAddress, timings, isOpen, status, createdAt)
                  VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'ACTIVE', ?)`,
-                [shopShortId, newUserId, finalShopName, '', userCity, finalAddress, finalTimings, now],
+                [shopShortId, newUserId, finalShopName, userPhone || '', userCity, finalShopAddress, finalTimings, now],
                 function(shopErr) {
                   const newShopId = this ? this.lastID : null;
                   const newShop = {
@@ -691,28 +728,28 @@ app.post('/api/auth/google', async (req, res) => {
                     shortId: shopShortId,
                     ownerId: newUserId,
                     shopName: finalShopName,
-                    shopPhone: '',
+                    shopPhone: userPhone || '',
                     city: userCity,
-                    shopAddress: finalAddress,
+                    shopAddress: finalShopAddress,
                     timings: finalTimings,
                     isOpen: 1,
                     status: 'ACTIVE'
                   };
                   const token = jwt.sign({ id: newUserId, role: targetRole, shopId: newShopId, staffRole: 'Owner' }, JWT_SECRET);
-                  return res.json({ token, user: newUser, shop: newShop, isStaff: false, isNewUser: true });
+                  return res.json({ token, user: newUser, shop: newShop, isStaff: false, isNewUser: false });
                 }
               );
             } else {
-              const token = jwt.sign({ id: newUserId, role: targetRole, phone: null, shopId: null, staffRole: null }, JWT_SECRET);
-              return res.json({ token, user: newUser, staffRole: null, isNewUser: true });
+              const token = jwt.sign({ id: newUserId, role: targetRole, phone: userPhone, shopId: null, staffRole: null }, JWT_SECRET);
+              return res.json({ token, user: newUser, staffRole: null, isNewUser: false });
             }
           }
         );
       }
     });
-  } catch (verifyErr) {
-    console.error('[Google Auth] Token verification failed:', verifyErr);
-    return res.status(401).json({ error: 'Invalid Google credentials: ' + (verifyErr.message || 'Verification failed') });
+  } catch (err) {
+    console.error('[Google Auth Error]', err);
+    return res.status(401).json({ error: 'Invalid Google Authentication token: ' + (err.message || err) });
   }
 });
 
