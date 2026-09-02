@@ -160,6 +160,11 @@ export default function Auth() {
 
   useEffect(() => {
     getCities().then(setCities).catch(() => {});
+    const savedIdentifier = localStorage.getItem('gi_remembered_identifier');
+    if (savedIdentifier) {
+      setLoginForm(prev => ({ ...prev, identifier: savedIdentifier }));
+      setRememberMe(true);
+    }
   }, []);
 
   const handleLoginChange = (e) => {
@@ -215,6 +220,14 @@ export default function Auth() {
     setLoading(true);
     try {
       const res = await login({ email: loginForm.identifier, password: loginForm.password });
+      
+      // Save or Clear Remembered Identifier based on checkbox
+      if (rememberMe && loginForm.identifier) {
+        localStorage.setItem('gi_remembered_identifier', loginForm.identifier.trim());
+      } else {
+        localStorage.removeItem('gi_remembered_identifier');
+      }
+
       localStorage.setItem('token', res.token);
       localStorage.setItem('userRole', res.user.role);
       localStorage.setItem('userData', JSON.stringify(res.user));
