@@ -514,13 +514,13 @@ export default function CustomerExploreScreen({ navigation, route }) {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.productName}>{item.name}</Text>
                         <Text style={styles.productRate}>
-                          ₹{item.price.toFixed(2)}{' '}
-                          <Text style={{ color: colors.textMuted, fontSize: 12 }}>/ {item.unit}</Text>
+                          ₹{(Number(item?.price ?? item?.rate) || 0).toFixed(2)}{' '}
+                          <Text style={{ color: colors.textMuted, fontSize: 12 }}>/ {item?.unit || 'unit'}</Text>
                         </Text>
                         {isInCart && (
                           <View style={styles.inCartChip}>
                             <Text style={styles.inCartChipText}>
-                              In Cart: {cartEntry.qty} {item.unit} (₹{cartEntry.amount.toFixed(2)})
+                              In Cart: {cartEntry.qty} {item?.unit || 'unit'} (₹{(Number(cartEntry?.amount) || 0).toFixed(2)})
                             </Text>
                           </View>
                         )}
