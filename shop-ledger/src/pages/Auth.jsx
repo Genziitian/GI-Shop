@@ -191,123 +191,17 @@ export default function Auth() {
     }}>
       
       {/* ------------------------------------------------------------- */}
-      {/* LEFT SIDE: BRAND HERO & ARTWORK BANNER (Desktop & Tablet)      */}
+      {/* LEFT SIDE: BRAND ARTWORK IMAGE (Desktop & Tablet)             */}
       {/* ------------------------------------------------------------- */}
       <div style={{
-        flex: '1.15',
+        flex: '1.2',
         position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        padding: '3rem',
         backgroundImage: `url(${authBg})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        overflow: 'hidden'
-      }} className="auth-left-banner">
-        
-        {/* Soft subtle tint overlay for ultra-crisp text legibility */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(to right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.7) 45%, rgba(255,255,255,0.1) 100%)',
-          pointerEvents: 'none',
-          zIndex: 1
-        }}></div>
-
-        {/* Brand Header */}
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
-            <img 
-              src={logoImg} 
-              alt="GI SHOP" 
-              style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'contain', boxShadow: '0 4px 10px rgba(0,0,0,0.08)' }} 
-            />
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ fontSize: '1.65rem', fontWeight: '900', color: '#16a34a', letterSpacing: '-0.02em' }}>GI</span>
-                <span style={{ fontSize: '1.65rem', fontWeight: '900', color: '#1e293b', letterSpacing: '-0.02em' }}>SHOP</span>
-              </div>
-              <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500', marginTop: '-2px' }}>
-                Apni Dukaan, Apna Hisab.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Hero Copy & 6 Feature Badges */}
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '480px', margin: '2rem 0' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: '#0f172a', lineHeight: '1.15', margin: '0 0 0.85rem 0' }}>
-            Har Dukaan.<br />
-            Har Grahak.<br />
-            <span style={{ color: '#16a34a' }}>Ek Saaf Hisab.</span>
-          </h1>
-
-          <p style={{ fontSize: '1rem', color: '#475569', lineHeight: '1.5', margin: '0 0 2rem 0', fontWeight: '500' }}>
-            Billing, Digital Khata, Customers aur Dues — sab kuch ek jagah.
-          </p>
-
-          {/* 6 Feature Badges Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '0.85rem',
-            marginBottom: '2rem'
-          }}>
-            {[
-              { icon: <Receipt size={22} color="#16a34a" />, label: 'Fast Billing' },
-              { icon: <BookOpen size={22} color="#16a34a" />, label: 'Digital Khata' },
-              { icon: <Users size={22} color="#16a34a" />, label: 'Customer Management' },
-              { icon: <RefreshCw size={22} color="#16a34a" />, label: 'Dues & Settlements' },
-              { icon: <FileText size={22} color="#16a34a" />, label: 'Receipts' },
-              { icon: <BarChart3 size={22} color="#16a34a" />, label: 'Reports & Analytics' }
-            ].map((f, i) => (
-              <div key={i} style={{
-                background: 'rgba(255, 255, 255, 0.88)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '14px',
-                padding: '0.9rem 0.65rem',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
-                border: '1px solid rgba(255,255,255,0.9)'
-              }}>
-                <div style={{ marginBottom: '0.4rem' }}>{f.icon}</div>
-                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#1e293b', lineHeight: '1.2' }}>{f.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Trust Guarantee Badge */}
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '12px',
-            padding: '0.85rem 1.25rem',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.85rem',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Shield size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: '800', fontSize: '0.88rem', color: '#0f172a' }}>Aapka Data, Aapka Vishwas</div>
-              <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: '600', marginTop: '1px' }}>
-                Secure • Reliable • Private
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer info placeholder */}
-        <div style={{ position: 'relative', zIndex: 2, fontSize: '0.78rem', color: '#64748b' }}>
-          © {new Date().getFullYear()} GI SHOP. All Rights Reserved.
-        </div>
-      </div>
+        backgroundPosition: 'center left',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh'
+      }} className="auth-left-banner" />
 
       {/* ------------------------------------------------------------- */}
       {/* RIGHT SIDE: INTERACTIVE AUTH & ONBOARDING CARD PANEL         */}
