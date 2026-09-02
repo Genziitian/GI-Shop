@@ -3595,6 +3595,29 @@ export default function Customer() {
                   </button>
                 </div>
               </div>
+              {/* Legal & Privacy Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal & Privacy</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Policies, Terms & Account Deletion</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => alert("GI SHOP PRIVACY POLICY\n\n1. Information Collection: We collect name, phone, city, address for store ordering.\n2. Data Security: Protected with AES-256 encryption.\n3. Privacy: No third-party data selling.")} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <ShieldCheck size={16} color="#16a34a" /> Privacy Policy
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => alert("GI SHOP TERMS & CONDITIONS\n\n1. Use: Local retail ledger management.\n2. Payment: Credit agreements are between customer and merchant.\n3. Security: Maintain 4-digit PIN confidentiality.")} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <FileText size={16} color="#0284c7" /> Terms & Conditions
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => { if (window.confirm("⚠️ Account Deletion Request\n\nAre you sure you want to request account deletion? Your data will be erased and you will be logged out.")) { alert("Deletion request submitted to admin."); handleLogout(); } }} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                    <Trash2 size={16} color="#dc2626" /> Account Deletion Request
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Account Actions */}

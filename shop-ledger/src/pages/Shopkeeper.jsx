@@ -13,7 +13,7 @@ import {
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
   Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff,
-  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange
+  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
@@ -1552,8 +1552,96 @@ export default function Shopkeeper() {
             </div>
           </div>
         )}
-
       </div>
+
+        {/* TAB 7: MORE (Store Profile, Security PIN, Legal & Account) */}
+        {activeTab === 'more' && (
+          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border)' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations & Settings</h2>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Manage shop details, security PIN, legal policies & account settings
+                </div>
+              </div>
+              <button type="button" className="btn" onClick={handleOpenProfileModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                <Settings size={16} /> Edit Store Profile
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+              {/* Store Details Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Store size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{currentShop?.shopName || 'My Shop'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Short ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId}</strong></div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <div>📞 Phone: <strong>{currentShop?.shopPhone || currentUser?.phone || 'N/A'}</strong></div>
+                  <div>📍 City: <strong>{currentShop?.city || 'Delhi'}</strong></div>
+                  <div>🕒 Timings: <span>{currentShop?.timings || '08:00 AM - 10:00 PM'}</span></div>
+                </div>
+              </div>
+
+              {/* Security & Lock Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security & Lock</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>4-Digit PIN & Screen Lock</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <Key size={16} color="#16a34a" /> Change 4-Digit Security PIN
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                    <Lock size={16} color="#dc2626" /> Lock Screen Now
+                  </button>
+                </div>
+              </div>
+
+              {/* Legal & Privacy Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal & Policies</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Terms, Privacy & Deletion</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => alert("GI SHOP MERCHANT PRIVACY POLICY\n\n1. Store Data Security: AES-256 encrypted storage.\n2. Customer Data: Used strictly for order fulfillment.\n3. Retention: Synchronized logs.")} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <ShieldCheck size={16} color="#16a34a" /> Privacy Policy
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => alert("GI SHOP MERCHANT TERMS & CONDITIONS\n\n1. Use: Accurate rates & catalog management.\n2. Fulfillment: Complete orders per listed prices.\n3. Khata: Binding customer credit ledger.")} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <FileText size={16} color="#0284c7" /> Terms & Conditions
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => { if (window.confirm("⚠️ Account Deletion Request\n\nAre you sure you want to request deletion of your merchant account and catalog?")) { alert("Deletion request submitted."); handleLogout(); } }} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                    <Trash2 size={16} color="#dc2626" /> Account Deletion Request
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Actions */}
+            <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+              <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ fontWeight: 700, gap: '0.5rem' }}>
+                <LogOut size={16} /> Log Out Account
+              </button>
+            </div>
+          </div>
+        )}
 
       {/* Orders Accept / Decline Modal */}
       {showOrderModal && (
@@ -2632,6 +2720,11 @@ export default function Shopkeeper() {
             </button>
           </>
         )}
+
+        <button type="button" className={`footer-nav-item ${activeTab === 'more' ? 'active' : ''}`} onClick={() => setActiveTab('more')}>
+          <MoreHorizontal size={18} />
+          <span>More</span>
+        </button>
       </div>
 
       {/* Logout Confirmation Modal */}

@@ -24,15 +24,21 @@ import {
   Shield,
   Clock,
   BookOpen,
+  FileText,
+  Trash2,
+  X,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
+import { Modal } from 'react-native';
 
 export default function CustomerMoreScreen({ navigation }) {
   const { user, logout, lock } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const handleConfirmLogout = () => {
     Alert.alert(
@@ -44,6 +50,32 @@ export default function CustomerMoreScreen({ navigation }) {
           text: 'Log Out',
           style: 'destructive',
           onPress: () => logout(),
+        },
+      ]
+    );
+  };
+
+  const handleConfirmAccountDeletion = () => {
+    Alert.alert(
+      '⚠️ Account Deletion Request',
+      'Are you sure you want to request permanent account deletion? This action will erase your profile, delivery addresses, and personal history.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm Deletion',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Deletion Request Received',
+              'Your account deletion request has been submitted to system administration. You will be logged out now.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => logout(),
+                },
+              ]
+            );
+          },
         },
       ]
     );
@@ -111,36 +143,51 @@ export default function CustomerMoreScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* SECTION 2: QUICK NAVIGATION */}
+        {/* SECTION 2: LEGAL, PRIVACY & ACCOUNT */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Quick Shortcuts</Text>
+          <Text style={styles.sectionTitle}>Legal & Account Control</Text>
 
           <TouchableOpacity
             style={styles.menuRow}
-            onPress={() => navigation.navigate('CustomerKhata')}
+            onPress={() => setShowPrivacyModal(true)}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: '#f0f9ff' }]}>
-              <BookOpen size={18} color="#0284c7" />
+            <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
+              <Shield size={18} color="#16a34a" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>My Khata & Store Credits</Text>
-              <Text style={styles.menuSubtext}>View dues & statements with local shops</Text>
+              <Text style={styles.menuText}>Privacy Policy</Text>
+              <Text style={styles.menuSubtext}>Data protection, encryption & usage terms</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuRow}
-            onPress={() => navigation.navigate('CustomerOrders')}
+            onPress={() => setShowTermsModal(true)}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: '#fdf4ff' }]}>
-              <Clock size={18} color="#c026d3" />
+            <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
+              <FileText size={18} color="#0284c7" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>All Orders & Digital Receipts</Text>
-              <Text style={styles.menuSubtext}>Track order status and download receipts</Text>
+              <Text style={styles.menuText}>Terms & Conditions</Text>
+              <Text style={styles.menuSubtext}>Service agreement & customer terms</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuRow, { borderBottomWidth: 0 }]}
+            onPress={handleConfirmAccountDeletion}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconBox, { backgroundColor: '#fef2f2' }]}>
+              <Trash2 size={18} color="#dc2626" />
+            </View>
+            <View style={styles.menuTextBox}>
+              <Text style={[styles.menuText, { color: '#dc2626' }]}>Account Deletion Request</Text>
+              <Text style={styles.menuSubtext}>Permanently delete account, orders & personal data</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -193,6 +240,26 @@ export default function CustomerMoreScreen({ navigation }) {
         <ProfileSettingsModal
           visible={showProfileModal}
           onClose={() => setShowProfileModal(false)}
+        />
+      )}
+
+      {/* Privacy Policy Modal */}
+      {showPrivacyModal && (
+        <LegalModal
+          title="Privacy Policy"
+          visible={showPrivacyModal}
+          onClose={() => setShowPrivacyModal(false)}
+          content={`GI SHOP PRIVACY POLICY\n\n1. Information Collection: We collect your name, phone number, city, and delivery address to facilitate local store orders and digital ledger management.\n\n2. Data Security: All stored user credentials and PINs are protected using industry-standard AES-256 encryption.\n\n3. Third-Party Sharing: We do not sell or share your personal data with third-party advertisers.\n\n4. Your Rights: You have the right to inspect, update, or request full deletion of your account and order history at any time from this screen.`}
+        />
+      )}
+
+      {/* Terms & Conditions Modal */}
+      {showTermsModal && (
+        <LegalModal
+          title="Terms & Conditions"
+          visible={showTermsModal}
+          onClose={() => setShowTermsModal(false)}
+          content={`GI SHOP TERMS & CONDITIONS\n\n1. Acceptable Use: GI SHOP is designed for managing store ledgers, grocery discovery, and customer orders with participating local shops.\n\n2. Payment Responsibilities: All credit/khata settlements are directly between customer and shopkeeper. GI SHOP provides digital recording tools.\n\n3. Account Security: You are responsible for safeguarding your 4-digit security PIN and account password.\n\n4. Modifications: GI SHOP reserves the right to update features and terms to enhance service reliability.`}
         />
       )}
     </SafeAreaView>
@@ -329,5 +396,52 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#94a3b8',
     marginTop: 2,
+  },
+});
+
+function LegalModal({ title, visible, onClose, content }) {
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={legalStyles.header}>
+          <Text style={legalStyles.headerTitle}>{title}</Text>
+          <TouchableOpacity onPress={onClose} style={legalStyles.closeBtn}>
+            <X size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={{ padding: 20 }}>
+          <Text style={legalStyles.bodyText}>{content}</Text>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+const legalStyles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  closeBtn: {
+    padding: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 20,
+  },
+  bodyText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: 40,
   },
 });

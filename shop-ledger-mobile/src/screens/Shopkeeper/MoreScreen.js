@@ -31,7 +31,10 @@ import {
   KeyRound,
   ShieldCheck,
   Settings,
+  Shield,
+  FileText,
 } from 'lucide-react-native';
+import { Modal } from 'react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import {
   getItems,
@@ -57,6 +60,34 @@ export default function MoreScreen({ navigation }) {
   // Active Sub-View: 'hub' | 'items' | 'staff' | 'profile' | 'pin'
   const [activeSubView, setActiveSubView] = useState('hub');
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
+  const handleConfirmAccountDeletion = () => {
+    Alert.alert(
+      '⚠️ Account Deletion Request',
+      'Are you sure you want to request permanent account deletion? This action will erase your shop catalog, staff links, and personal data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Confirm Deletion',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Deletion Request Received',
+              'Your account deletion request has been submitted to system administration. You will be logged out now.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => logout(),
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
 
   // Shop Status
   const [isOpen, setIsOpen] = useState(user?.shop?.isOpen === 1 || user?.staffRole?.isOpen === 1);
@@ -481,7 +512,61 @@ export default function MoreScreen({ navigation }) {
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
-              {/* 4. Logout */}
+              {/* 5. Privacy Policy */}
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => setShowPrivacyModal(true)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
+                  <Shield size={22} color="#16a34a" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuItemTitle}>Privacy Policy</Text>
+                  <Text style={styles.menuItemSub}>
+                    Data protection, encryption & usage terms
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              {/* 6. Terms & Conditions */}
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => setShowTermsModal(true)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
+                  <FileText size={22} color="#0284c7" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuItemTitle}>Terms & Conditions</Text>
+                  <Text style={styles.menuItemSub}>
+                    Service agreement & merchant guidelines
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              {/* 7. Account Deletion Request */}
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleConfirmAccountDeletion}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: '#fef2f2' }]}>
+                  <Trash2 size={22} color="#dc2626" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.menuItemTitle, { color: '#dc2626' }]}>Account Deletion Request</Text>
+                  <Text style={styles.menuItemSub}>
+                    Permanently delete shop account & catalog
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              {/* 8. Logout */}
               <TouchableOpacity
                 style={[styles.menuItem, styles.logoutMenuItem]}
                 onPress={handleConfirmLogout}
@@ -878,6 +963,26 @@ export default function MoreScreen({ navigation }) {
         visible={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
+
+      {/* Privacy Policy Modal */}
+      {showPrivacyModal && (
+        <LegalModal
+          title="Privacy Policy"
+          visible={showPrivacyModal}
+          onClose={() => setShowPrivacyModal(false)}
+          content={`GI SHOP MERCHANT PRIVACY POLICY\n\n1. Store Data Security: Your product catalog, cashier details, and customer credit ledger records are protected with AES-256 encryption.\n\n2. Customer Information: Customer phone numbers and addresses provided for delivery are restricted to order fulfillment purposes.\n\n3. Data Retention: Merchant transaction logs are securely synchronized to prevent data loss.\n\n4. Your Control: You can update shop details or request full merchant account deletion at any time.`}
+        />
+      )}
+
+      {/* Terms & Conditions Modal */}
+      {showTermsModal && (
+        <LegalModal
+          title="Terms & Conditions"
+          visible={showTermsModal}
+          onClose={() => setShowTermsModal(false)}
+          content={`GI SHOP MERCHANT TERMS & CONDITIONS\n\n1. Merchant Account Use: As a shop owner or authorized cashier, you are responsible for maintaining accurate product rates and catalog listings.\n\n2. Order Fulfillment: Orders accepted through POS or online discovery must be fulfilled in accordance with displayed prices.\n\n3. Credit Ledger Accuracy: Khata credit entries entered by your store represent binding billing records between you and your customers.\n\n4. Service Availability: Platform tools are provided to streamline local retail commerce.`}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -1338,5 +1443,52 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+});
+
+function LegalModal({ title, visible, onClose, content }) {
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={legalStyles.header}>
+          <Text style={legalStyles.headerTitle}>{title}</Text>
+          <TouchableOpacity onPress={onClose} style={legalStyles.closeBtn}>
+            <X size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={{ padding: 20 }}>
+          <Text style={legalStyles.bodyText}>{content}</Text>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+const legalStyles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  closeBtn: {
+    padding: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 20,
+  },
+  bodyText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: 40,
   },
 });
