@@ -12,6 +12,7 @@ import authBg from '../assets/auth-bg.jpg';
 export default function Auth() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [loginStep, setLoginStep] = useState('IDENTIFIER'); // 'IDENTIFIER' | 'PASSWORD'
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [language, setLanguage] = useState('en'); // 'en' | 'hi'
@@ -756,108 +757,179 @@ export default function Auth() {
               </button>
 
               {isLogin ? (
-                /* --- LOGIN FORM --- */
+                /* --- 2-STEP LOGIN FORM --- */
                 <div>
-                  {/* Divider: or continue with */}
-                  <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>
-                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                    <span style={{ padding: '0 0.85rem' }}>or continue with</span>
-                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                  </div>
+                  {loginStep === 'IDENTIFIER' ? (
+                    /* STEP 1: EMAIL OR SHORT ID */
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!loginForm.identifier || !loginForm.identifier.trim()) {
+                        return setError('Please enter your Email or User Short ID');
+                      }
+                      setError('');
+                      setLoginStep('PASSWORD');
+                    }}>
+                      {/* Divider: or continue with */}
+                      <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>
+                        <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                        <span style={{ padding: '0 0.85rem' }}>or continue with</span>
+                        <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                      </div>
 
-                  <form onSubmit={handleCredentialsLogin}>
-                    {/* Email ID or User ID */}
-                    <div style={{ marginBottom: '1.1rem' }}>
-                      <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                        Email ID or Short ID
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <input 
-                          name="identifier" 
-                          className="input" 
-                          placeholder="Enter your email or Short ID" 
-                          value={loginForm.identifier} 
-                          onChange={handleLoginChange} 
-                          required 
-                          style={{ paddingRight: '2.5rem', borderRadius: '10px' }}
-                        />
-                        <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }}>
-                          <User size={18} />
+                      {/* Email ID or Short ID Input */}
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                          Email ID or Short ID
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input 
+                            name="identifier" 
+                            className="input" 
+                            placeholder="Enter your email or Short ID" 
+                            value={loginForm.identifier} 
+                            onChange={handleLoginChange} 
+                            required 
+                            autoFocus
+                            style={{ paddingRight: '2.5rem', borderRadius: '10px' }}
+                          />
+                          <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }}>
+                            <User size={18} />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Password */}
-                    <div style={{ marginBottom: '1.1rem' }}>
-                      <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                        Password
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <input 
-                          name="password" 
-                          type={showPassword ? 'text' : 'password'}
-                          className="input" 
-                          placeholder="Enter your password" 
-                          value={loginForm.password} 
-                          onChange={handleLoginChange} 
-                          required 
-                          style={{ paddingRight: '4.5rem', borderRadius: '10px' }}
-                        />
-                        <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }}>
-                          <Lock size={16} />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowPassword(!showPassword)}
-                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
-                          >
-                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Remember Me & Forgot Password Row */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.82rem' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569', fontWeight: '600' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={rememberMe} 
-                          onChange={e => setRememberMe(e.target.checked)}
-                          style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
-                        />
-                        Remember me
-                      </label>
-                      <span 
-                        style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
-                        onClick={() => alert('Please log in with Google to access or reset your account.')}
+                      {/* Green Next / Continue Button */}
+                      <button 
+                        type="submit" 
+                        className="btn" 
+                        style={{
+                          width: '100%',
+                          padding: '0.9rem',
+                          fontSize: '1.05rem',
+                          fontWeight: '800',
+                          background: '#16a34a',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                          boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                          transition: 'all 0.15s ease'
+                        }}
                       >
-                        Forgot Password?
-                      </span>
-                    </div>
-
-                    {/* Green Login Button */}
-                    <button 
-                      type="submit" 
-                      className="btn" 
-                      style={{
-                        width: '100%',
-                        padding: '0.9rem',
-                        fontSize: '1.05rem',
-                        fontWeight: '800',
-                        background: '#16a34a',
-                        borderRadius: '12px',
+                        Next <ArrowRight size={18} />
+                      </button>
+                    </form>
+                  ) : (
+                    /* STEP 2: PASSWORD + REMEMBER ME + FORGOT PASSWORD */
+                    <form onSubmit={handleCredentialsLogin}>
+                      {/* Active Account Pill */}
+                      <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
-                        transition: 'all 0.15s ease'
-                      }}
-                      disabled={loading}
-                    >
-                      {loading ? 'Logging in...' : 'Login'} <ArrowRight size={18} />
-                    </button>
-                  </form>
+                        justifyContent: 'space-between',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '10px',
+                        padding: '0.65rem 0.9rem',
+                        marginBottom: '1.25rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>
+                          <User size={16} color="#16a34a" /> {loginForm.identifier}
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
+                          style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                        >
+                          Change
+                        </button>
+                      </div>
+
+                      {/* Password Input */}
+                      <div style={{ marginBottom: '1.1rem' }}>
+                        <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                          Password
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input 
+                            name="password" 
+                            type={showPassword ? 'text' : 'password'}
+                            className="input" 
+                            placeholder="Enter your password" 
+                            value={loginForm.password} 
+                            onChange={handleLoginChange} 
+                            required 
+                            autoFocus
+                            style={{ paddingRight: '4.5rem', borderRadius: '10px' }}
+                          />
+                          <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }}>
+                            <Lock size={16} />
+                            <button 
+                              type="button" 
+                              onClick={() => setShowPassword(!showPassword)}
+                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
+                            >
+                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Remember Me & Forgot Password Row */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.82rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569', fontWeight: '600' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={rememberMe} 
+                            onChange={e => setRememberMe(e.target.checked)}
+                            style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
+                          />
+                          Remember me
+                        </label>
+                        <span 
+                          style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
+                          onClick={() => alert('Please log in with Google to access or reset your account.')}
+                        >
+                          Forgot Password?
+                        </span>
+                      </div>
+
+                      {/* Green Login Button */}
+                      <button 
+                        type="submit" 
+                        className="btn" 
+                        style={{
+                          width: '100%',
+                          padding: '0.9rem',
+                          fontSize: '1.05rem',
+                          fontWeight: '800',
+                          background: '#16a34a',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                          boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                          transition: 'all 0.15s ease'
+                        }}
+                        disabled={loading}
+                      >
+                        {loading ? 'Logging in...' : 'Login'} <ArrowRight size={18} />
+                      </button>
+
+                      {/* Back button */}
+                      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
+                          style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
+                        >
+                          <ArrowLeft size={14} /> Back to email
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               ) : (
                 /* --- SIGN UP ONBOARDING PROMPT --- */
