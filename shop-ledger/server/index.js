@@ -580,6 +580,38 @@ app.post('/api/user/change-pin', authenticate, (req, res) => {
   });
 });
 
+app.post('/api/user/change-password', authenticate, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!newPassword || newPassword.length < 4) {
+    return res.status(400).json({ error: 'New password must be at least 4 characters long.' });
+  }
+
+  db.get(`SELECT id, password FROM Users WHERE id = ?`, [req.user.id], async (err, user) => {
+    if (err || !user) return res.status(404).json({ error: 'User not found' });
+
+    // If user already has a password set, verify currentPassword
+    if (user.password) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Current password is required to change password.' });
+      }
+      const valid = await bcrypt.compare(currentPassword, user.password);
+      if (!valid) {
+        return res.status(400).json({ error: 'Current password is incorrect.' });
+      }
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      db.run(`UPDATE Users SET password = ? WHERE id = ?`, [hashedPassword, req.user.id], (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to update password' });
+        res.json({ success: true, message: 'Password updated successfully! You can now log in with email and password.' });
+      });
+    } catch (e) {
+      res.status(500).json({ error: 'Failed to hash and save password' });
+    }
+  });
+});
+
 // --- PASKEY (WEBAUTHN BIOMETRICS) APIS ---
 const passkeyChallenges = new Map();
 

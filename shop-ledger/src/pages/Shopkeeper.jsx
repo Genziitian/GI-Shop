@@ -4,14 +4,14 @@ import {
   getMe, getItems, saveItem, deleteItem, editItem, toggleShopStatus, 
   getShopOrders, acceptShopOrder, declineShopOrder, completeShopOrder,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
-  getMyDetailedShop, updateMyDetailedShop, getCities
+  getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword
 } from '../lib/api';
 import { registerPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
-  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint
+  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
@@ -114,6 +114,78 @@ export default function Shopkeeper() {
       alert(e.message || 'Error updating shop details');
     } finally {
       setShopSaving(false);
+    }
+  };
+
+  const [settingsTab, setSettingsTab] = useState('store'); // 'store' | 'owner' | 'security'
+
+  // PIN Form State
+  const [pinForm, setPinForm] = useState({ currentPin: '', newPin: '', confirmPin: '' });
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinNotice, setPinNotice] = useState('');
+  const [pinError, setPinError] = useState('');
+
+  const handleChangePin = async (e) => {
+    e.preventDefault();
+    setPinSaving(true);
+    setPinNotice('');
+    setPinError('');
+
+    if (pinForm.newPin !== pinForm.confirmPin) {
+      setPinError('New PIN and confirmation do not match');
+      setPinSaving(false);
+      return;
+    }
+    if (!/^\d{4}$/.test(pinForm.newPin)) {
+      setPinError('PIN must be exactly 4 numeric digits');
+      setPinSaving(false);
+      return;
+    }
+
+    try {
+      await changePin(pinForm.currentPin, pinForm.newPin);
+      setPinNotice('4-digit PIN updated successfully!');
+      setPinForm({ currentPin: '', newPin: '', confirmPin: '' });
+      setTimeout(() => setPinNotice(''), 4000);
+    } catch (err) {
+      setPinError(err.message || 'Failed to update PIN');
+    } finally {
+      setPinSaving(false);
+    }
+  };
+
+  // Password Form State
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordSaving(true);
+    setPasswordNotice('');
+    setPasswordError('');
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New password and confirmation do not match');
+      setPasswordSaving(false);
+      return;
+    }
+    if (passwordForm.newPassword.length < 4) {
+      setPasswordError('Password must be at least 4 characters long');
+      setPasswordSaving(false);
+      return;
+    }
+
+    try {
+      const res = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      setPasswordNotice(res.message || 'Password updated successfully!');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => setPasswordNotice(''), 4000);
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to update password');
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -385,7 +457,7 @@ export default function Shopkeeper() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {/* Shop Open / Closed Switcher */}
           <button
             type="button"
@@ -400,6 +472,16 @@ export default function Shopkeeper() {
             onClick={handleToggleStatus}
           >
             {isOpen ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
+          </button>
+
+          {/* Settings Button */}
+          <button 
+            type="button" 
+            className="btn btn-outline" 
+            onClick={handleOpenShopDetails} 
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <Settings size={16} /> Settings
           </button>
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
@@ -1010,169 +1092,471 @@ export default function Shopkeeper() {
         </div>
       )}
 
-      {/* Shop Details & Settings Modal (Click on Shop Header) */}
+      {/* Shop Details, Linked User & Security Settings Modal */}
       {showShopDetailsModal && (
         <div className="modal-overlay">
-          <div className="panel modal-dialog" style={{ width: '460px', maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.25rem' }}>
+          <div className="panel modal-dialog" style={{ width: '540px', maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.35rem', borderRadius: '18px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
+            {/* Modal Header */}
             <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Store size={22} color="var(--primary)" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Store size={22} />
+                </div>
                 <div>
-                  <h3 className="title" style={{ margin: 0, fontSize: '1.15rem' }}>Shop Information & Settings</h3>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Shop ID: <strong style={{ color: 'var(--primary)' }}>{detailedShop?.shortId || currentShop?.shortId}</strong>
+                  <h3 className="title" style={{ margin: 0, fontSize: '1.2rem' }}>Shop & Owner Settings</h3>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Shop ID: <strong style={{ color: 'var(--primary)' }}>{detailedShop?.shortId || currentShop?.shortId}</strong> • Owner: <strong>{detailedShop?.ownerName || currentUser?.name}</strong>
                   </div>
                 </div>
               </div>
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowShopDetailsModal(false)} />
             </div>
 
-            {/* Quick Metrics & Role Badge */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.6rem' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>YOUR ACCESS ROLE</div>
-                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isOwner ? 'var(--primary)' : '#7c3aed', marginTop: '2px' }}>
-                  {isOwner ? '👑 Shop Owner' : '🛡️ Cashier (Staff)'}
-                </div>
-              </div>
+            {/* Tab Navigation */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem', background: '#f1f5f9', padding: '0.3rem', borderRadius: '10px', marginBottom: '1.25rem' }}>
+              <button
+                type="button"
+                onClick={() => setSettingsTab('store')}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  background: settingsTab === 'store' ? '#ffffff' : 'transparent',
+                  color: settingsTab === 'store' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: settingsTab === 'store' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Store size={15} /> Store Details
+              </button>
 
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.6rem' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>STORE STATUS</div>
-                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isOpen ? 'var(--success)' : 'var(--danger)', marginTop: '2px' }}>
-                  {isOpen ? '🟢 Open for Orders' : '🔴 Closed'}
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setSettingsTab('owner')}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  background: settingsTab === 'owner' ? '#ffffff' : 'transparent',
+                  color: settingsTab === 'owner' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: settingsTab === 'owner' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <User size={15} /> Linked User
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSettingsTab('security')}
+                style={{
+                  padding: '0.5rem',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  background: settingsTab === 'security' ? '#ffffff' : 'transparent',
+                  color: settingsTab === 'security' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: settingsTab === 'security' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Lock size={15} /> PIN & Security
+              </button>
             </div>
 
-            {/* Cashier View-Only Warning */}
-            {!isOwner && (
-              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#1e40af' }}>
-                <Lock size={16} />
-                <div>
-                  <strong>View-Only Mode:</strong> You are logged in as a <strong>Cashier</strong>. Only the shop owner has permission to change store details, address, or timings.
+            {/* TAB 1: STORE DETAILS */}
+            {settingsTab === 'store' && (
+              <div>
+                {/* Quick Metrics & Role Badge */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.6rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>YOUR ACCESS ROLE</div>
+                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isOwner ? 'var(--primary)' : '#7c3aed', marginTop: '2px' }}>
+                      {isOwner ? '👑 Shop Owner' : '🛡️ Cashier (Staff)'}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.6rem' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>STORE STATUS</div>
+                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isOpen ? 'var(--success)' : 'var(--danger)', marginTop: '2px' }}>
+                      {isOpen ? '🟢 Open for Orders' : '🔴 Closed'}
+                    </div>
+                  </div>
                 </div>
+
+                {!isOwner && (
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#1e40af' }}>
+                    <Lock size={16} />
+                    <div>
+                      <strong>View-Only Mode:</strong> You are logged in as a <strong>Cashier</strong>. Only the shop owner has permission to change store details, address, or timings.
+                    </div>
+                  </div>
+                )}
+
+                {shopSaveNotice && (
+                  <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+                    <CheckCircle size={16} /> {shopSaveNotice}
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveShopDetails}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Name</label>
+                    <input 
+                      className="input" 
+                      value={shopForm.shopName} 
+                      onChange={e => setShopForm({ ...shopForm, shopName: e.target.value })} 
+                      disabled={!isOwner}
+                      required 
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Contact Phone</label>
+                      <input 
+                        className="input" 
+                        value={shopForm.shopPhone} 
+                        onChange={e => setShopForm({ ...shopForm, shopPhone: e.target.value })} 
+                        disabled={!isOwner}
+                        required 
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>City</label>
+                      <select 
+                        className="select" 
+                        value={shopForm.city} 
+                        onChange={e => setShopForm({ ...shopForm, city: e.target.value })} 
+                        disabled={!isOwner}
+                        required 
+                        style={{ marginBottom: 0 }}
+                      >
+                        {cities.map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Address</label>
+                    <input 
+                      className="input" 
+                      value={shopForm.shopAddress} 
+                      onChange={e => setShopForm({ ...shopForm, shopAddress: e.target.value })} 
+                      disabled={!isOwner}
+                      required 
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Operating Timings</label>
+                    <input 
+                      className="input" 
+                      value={shopForm.timings} 
+                      onChange={e => setShopForm({ ...shopForm, timings: e.target.value })} 
+                      disabled={!isOwner}
+                      placeholder="e.g. 08:00 AM - 10:00 PM"
+                      required 
+                    />
+                  </div>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.75rem', marginTop: '0.5rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <div>Total Active Inventory: <strong>{detailedShop?.totalItemsCount || items.length} products</strong></div>
+                    <div>Active Staff Enrolled: <strong>{detailedShop?.totalStaffCount || staffList.length} cashiers</strong></div>
+                  </div>
+
+                  <div className="flex-between">
+                    <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
+                      Close
+                    </button>
+                    {isOwner && (
+                      <button type="submit" className="btn" disabled={shopSaving}>
+                        {shopSaving ? 'Saving...' : 'Save Shop Changes'}
+                      </button>
+                    )}
+                  </div>
+                </form>
               </div>
             )}
 
-            {shopSaveNotice && (
-              <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                <CheckCircle size={16} /> {shopSaveNotice}
-              </div>
-            )}
-
-            {/* Shop Details Form */}
-            <form onSubmit={handleSaveShopDetails}>
+            {/* TAB 2: LINKED USER & OWNER PROFILE */}
+            {settingsTab === 'owner' && (
               <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Name</label>
-                <input 
-                  className="input" 
-                  value={shopForm.shopName} 
-                  onChange={e => setShopForm({ ...shopForm, shopName: e.target.value })} 
-                  disabled={!isOwner}
-                  required 
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Contact Phone</label>
-                  <input 
-                    className="input" 
-                    value={shopForm.shopPhone} 
-                    onChange={e => setShopForm({ ...shopForm, shopPhone: e.target.value })} 
-                    disabled={!isOwner}
-                    required 
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>City</label>
-                  <select 
-                    className="select" 
-                    value={shopForm.city} 
-                    onChange={e => setShopForm({ ...shopForm, city: e.target.value })} 
-                    disabled={!isOwner}
-                    required 
-                    style={{ marginBottom: 0 }}
-                  >
-                    {cities.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Address</label>
-                <input 
-                  className="input" 
-                  value={shopForm.shopAddress} 
-                  onChange={e => setShopForm({ ...shopForm, shopAddress: e.target.value })} 
-                  disabled={!isOwner}
-                  required 
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Operating Timings</label>
-                <input 
-                  className="input" 
-                  value={shopForm.timings} 
-                  onChange={e => setShopForm({ ...shopForm, timings: e.target.value })} 
-                  disabled={!isOwner}
-                  placeholder="e.g. 08:00 AM - 10:00 PM"
-                  required 
-                />
-              </div>
-
-              {/* Statistics Metadata */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.75rem', marginTop: '0.5rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                <div>Owner: <strong>{detailedShop?.ownerName || currentUser?.name}</strong> ({detailedShop?.ownerShortId || currentUser?.shortId})</div>
-                <div>Total Active Inventory: <strong>{detailedShop?.totalItemsCount || items.length} products</strong></div>
-                <div>Active Staff Enrolled: <strong>{detailedShop?.totalStaffCount || staffList.length} cashiers</strong></div>
-              </div>
-
-              {/* Passkey Biometric Security */}
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.85rem', marginBottom: '1.25rem' }}>
-                <div style={{ fontWeight: '700', fontSize: '0.88rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-                  <Fingerprint size={16} /> Passkey Biometric Login
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#166534', marginBottom: '0.65rem' }}>
-                  Enable Face ID, Touch ID, or Device Screen Lock on this browser for 1-tap passwordless login.
-                </div>
-                {passkeyNotice && (
-                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <CheckCircle size={14} /> {passkeyNotice}
+                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.2rem' }}>
+                      {(currentUser?.name || detailedShop?.ownerName || 'O')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>{currentUser?.name || detailedShop?.ownerName}</h4>
+                      <span style={{ fontSize: '0.75rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                        {isOwner ? '👑 Verified Shop Owner' : '🛡️ Enrolled Cashier'}
+                      </span>
+                    </div>
                   </div>
-                )}
-                {passkeyError && (
-                  <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <AlertCircle size={14} /> {passkeyError}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={handleRegisterPasskey}
-                  disabled={passkeyRegistering}
-                  className="btn btn-outline"
-                  style={{ width: '100%', padding: '0.5rem', fontSize: '0.82rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
-                >
-                  <Fingerprint size={15} />
-                  {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
-                </button>
-              </div>
 
-              <div className="flex-between">
-                <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
-                  Close
-                </button>
-                {isOwner && (
-                  <button type="submit" className="btn" disabled={shopSaving}>
-                    {shopSaving ? 'Saving...' : 'Save Shop Changes'}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', fontSize: '0.86rem' }}>
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>LINKED GOOGLE EMAIL</div>
+                      <div style={{ fontWeight: '700', color: '#0f172a', wordBreak: 'break-all' }}>
+                        {currentUser?.email || detailedShop?.ownerEmail || 'Linked via Google'}
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: '600' }}>🔒 Synced with Google Account</span>
+                    </div>
+
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>USER SHORT ID</div>
+                      <div style={{ fontWeight: '700', color: 'var(--primary)', fontFamily: 'monospace', fontSize: '0.95rem' }}>
+                        {currentUser?.shortId || detailedShop?.ownerShortId}
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Unique ID for Staff & Khata</span>
+                    </div>
+
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>CONTACT PHONE</div>
+                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
+                        {currentUser?.phone || detailedShop?.shopPhone || 'Not set'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>CITY & REGION</div>
+                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
+                        {currentUser?.city || detailedShop?.city || 'Delhi'}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>ACCOUNT STATUS</div>
+                      <div style={{ fontWeight: '700', color: '#16a34a' }}>
+                        🟢 Active & Verified
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>AUTHENTICATION TYPE</div>
+                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
+                        Google OAuth + Passkey
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-between">
+                  <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
+                    Close
                   </button>
-                )}
+                  <button type="button" className="btn" onClick={() => setSettingsTab('security')}>
+                    <Lock size={15} /> Manage PIN & Password
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
+
+            {/* TAB 3: PIN, PASSWORD & PASKEY SECURITY */}
+            {settingsTab === 'security' && (
+              <div>
+                {/* 1. Change 4-Digit Security PIN */}
+                <form onSubmit={handleChangePin} style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
+                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#9a3412', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                    <Shield size={16} /> 4-Digit Security PIN
+                  </div>
+                  <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.78rem', color: '#7c2d12' }}>
+                    Used for cashier mode verification and quick store security locks.
+                  </p>
+
+                  {pinNotice && (
+                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <CheckCircle size={15} /> {pinNotice}
+                    </div>
+                  )}
+                  {pinError && (
+                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <AlertCircle size={15} /> {pinError}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: '#7c2d12', fontWeight: '700' }}>Current PIN</label>
+                      <input 
+                        type="password" 
+                        maxLength="4" 
+                        className="input" 
+                        placeholder="••••" 
+                        value={pinForm.currentPin} 
+                        onChange={e => setPinForm({ ...pinForm, currentPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                        required 
+                        style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: '#7c2d12', fontWeight: '700' }}>New PIN</label>
+                      <input 
+                        type="password" 
+                        maxLength="4" 
+                        className="input" 
+                        placeholder="••••" 
+                        value={pinForm.newPin} 
+                        onChange={e => setPinForm({ ...pinForm, newPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                        required 
+                        style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: '#7c2d12', fontWeight: '700' }}>Confirm PIN</label>
+                      <input 
+                        type="password" 
+                        maxLength="4" 
+                        className="input" 
+                        placeholder="••••" 
+                        value={pinForm.confirmPin} 
+                        onChange={e => setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                        required 
+                        style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="btn btn-outline" 
+                    disabled={pinSaving} 
+                    style={{ width: '100%', padding: '0.55rem', fontSize: '0.85rem', borderColor: '#ea580c', color: '#c2410c', fontWeight: '700', background: '#fff' }}
+                  >
+                    {pinSaving ? 'Updating PIN...' : 'Update 4-Digit Security PIN'}
+                  </button>
+                </form>
+
+                {/* 2. Set / Change Password */}
+                <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
+                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                    <Key size={16} /> Account Password
+                  </div>
+                  <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Set a password if you would like to log in with your Email ID or Short ID directly.
+                  </p>
+
+                  {passwordNotice && (
+                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <CheckCircle size={15} /> {passwordNotice}
+                    </div>
+                  )}
+                  {passwordError && (
+                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <AlertCircle size={15} /> {passwordError}
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Password (leave blank if first time)</label>
+                    <input 
+                      type="password" 
+                      className="input" 
+                      placeholder="Current password (if set)" 
+                      value={passwordForm.currentPassword} 
+                      onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} 
+                      style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>New Password</label>
+                      <input 
+                        type="password" 
+                        className="input" 
+                        placeholder="New password" 
+                        value={passwordForm.newPassword} 
+                        onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
+                        required 
+                        style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm Password</label>
+                      <input 
+                        type="password" 
+                        className="input" 
+                        placeholder="Confirm password" 
+                        value={passwordForm.confirmPassword} 
+                        onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
+                        required 
+                        style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="btn btn-outline" 
+                    disabled={passwordSaving} 
+                    style={{ width: '100%', padding: '0.55rem', fontSize: '0.85rem', fontWeight: '700', background: '#fff' }}
+                  >
+                    {passwordSaving ? 'Updating Password...' : 'Save / Change Password'}
+                  </button>
+                </form>
+
+                {/* 3. Passkey Biometric Security */}
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
+                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                    <Fingerprint size={16} /> Passkey Biometric Login
+                  </div>
+                  <p style={{ margin: '0 0 0.65rem 0', fontSize: '0.78rem', color: '#166534' }}>
+                    Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
+                  </p>
+                  {passkeyNotice && (
+                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <CheckCircle size={14} /> {passkeyNotice}
+                    </div>
+                  )}
+                  {passkeyError && (
+                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <AlertCircle size={14} /> {passkeyError}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleRegisterPasskey}
+                    disabled={passkeyRegistering}
+                    className="btn btn-outline"
+                    style={{ width: '100%', padding: '0.55rem', fontSize: '0.85rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                  >
+                    <Fingerprint size={16} />
+                    {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
+                  </button>
+                </div>
+
+                <div className="flex-between">
+                  <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
