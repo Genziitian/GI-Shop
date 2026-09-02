@@ -49,6 +49,7 @@ import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import EditProductModal from '../../components/EditProductModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
+import CitySelector from '../../components/CitySelector';
 
 export default function MoreScreen({ navigation }) {
   const { user, logout, changePin } = useAuth();
@@ -821,15 +822,11 @@ export default function MoreScreen({ navigation }) {
                 />
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>City</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={shopForm.city}
-                  onChangeText={(t) => setShopForm({ ...shopForm, city: t })}
-                  editable={isOwner}
-                />
-              </View>
+              <CitySelector
+                selectedCity={shopForm.city}
+                onSelectCity={(selected) => setShopForm({ ...shopForm, city: selected })}
+                disabled={!isOwner}
+              />
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Shop Address</Text>

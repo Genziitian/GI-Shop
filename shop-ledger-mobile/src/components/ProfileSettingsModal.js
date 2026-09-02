@@ -33,6 +33,7 @@ import {
 import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { updateUserProfile, changePin, getSupportSettings } from '../api/client';
+import CitySelector from './CitySelector';
 
 export default function ProfileSettingsModal({ visible, onClose }) {
   const { user, refreshUser, logout, lock } = useAuth();
@@ -333,16 +334,11 @@ export default function ProfileSettingsModal({ visible, onClose }) {
                   />
                 </View>
 
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>City / Location</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={form.city}
-                    onChangeText={(t) => setForm({ ...form, city: t })}
-                    placeholder="e.g. Delhi, Mumbai, etc."
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
+                <CitySelector
+                  selectedCity={form.city}
+                  onSelectCity={(selected) => setForm({ ...form, city: selected })}
+                  label="City / Location"
+                />
 
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>Delivery Address</Text>

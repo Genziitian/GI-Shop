@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
+import CitySelector from '../components/CitySelector';
 
 const GoogleIcon = () => (
   <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
@@ -40,6 +41,7 @@ export default function AuthScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [city, setCity] = useState('Delhi');
   const [shopName, setShopName] = useState('');
   const [shopAddress, setShopAddress] = useState('');
   const [address, setAddress] = useState('');
@@ -101,6 +103,7 @@ export default function AuthScreen() {
         password,
         pin: pin.trim(),
         role,
+        city,
         shopName: shopName.trim(),
         shopAddress: shopAddress.trim(),
         address: address.trim(),
@@ -494,6 +497,13 @@ export default function AuthScreen() {
                 🔒 Used to unlock the app and protect your ledger.
               </Text>
             </View>
+
+            {/* City Selector */}
+            <CitySelector
+              selectedCity={city}
+              onSelectCity={setCity}
+              label="Select City / Region"
+            />
 
             {/* Shopkeeper fields */}
             {role === 'Shopkeeper' && (
