@@ -19,6 +19,7 @@ export default function SuperManager() {
   // New City Input State
   const [newCityName, setNewCityName] = useState('');
   const [cityNotice, setCityNotice] = useState('');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -29,7 +30,7 @@ export default function SuperManager() {
       setCities(c);
     } catch (e) {
       if (e.message.includes('Unauthorized') || e.message.includes('Forbidden')) {
-        handleLogout();
+        confirmLogout();
       }
     } finally {
       setLoading(false);
@@ -41,6 +42,10 @@ export default function SuperManager() {
   }, []);
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     localStorage.clear();
     navigate('/');
   };
@@ -433,6 +438,41 @@ export default function SuperManager() {
           </div>
         )}
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+          <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
+              <LogOut size={26} />
+            </div>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+              Log Out?
+            </h3>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+              Are you sure you want to log out of SuperManager Admin?
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                onClick={confirmLogout}
+                style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+              >
+                Yes, Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

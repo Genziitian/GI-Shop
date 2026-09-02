@@ -6,11 +6,12 @@ import {
   updateUserProfile, changePin, getCustomerKhata, getCustomerShopKhata,
   cancelCustomerOrder, updateOrderCollection
 } from '../lib/api';
+import { registerPasskey } from '../lib/passkey';
 import { 
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
   X, CheckCircle, AlertCircle, LogOut, Phone, ShieldCheck, UserCheck, 
   Tag, ArrowRight, AlertTriangle, Printer, FileText, Download, Key, Lock, User,
-  MessageCircle, BookOpen
+  MessageCircle, BookOpen, Fingerprint
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
@@ -51,6 +52,7 @@ export default function Customer() {
   // Active Receipt & Order Modals
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedOrderForDetails, setSelectedOrderForDetails] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Customer Profile Modal & Settings State
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -242,6 +244,10 @@ export default function Customer() {
   }, [activeTab]);
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     localStorage.clear();
     navigate('/');
   };
@@ -309,6 +315,26 @@ export default function Customer() {
       setPinError(err.message || 'Failed to update PIN');
     } finally {
       setPinSaving(false);
+    }
+  };
+
+  const [passkeyRegistering, setPasskeyRegistering] = useState(false);
+  const [passkeyNotice, setPasskeyNotice] = useState('');
+  const [passkeyError, setPasskeyError] = useState('');
+
+  const handleRegisterPasskey = async () => {
+    setPasskeyRegistering(true);
+    setPasskeyNotice('');
+    setPasskeyError('');
+    try {
+      await registerPasskey(`${currentUser?.name || 'Customer'}'s Device`);
+      setPasskeyNotice('Passkey registered successfully on this device! You can now log in with Face ID / Fingerprint.');
+      setTimeout(() => setPasskeyNotice(''), 5000);
+    } catch (err) {
+      console.error('[Passkey Registration Error]', err);
+      setPasskeyError(err.message || 'Passkey setup was cancelled or failed.');
+    } finally {
+      setPasskeyRegistering(false);
     }
   };
 
@@ -2518,6 +2544,36 @@ export default function Customer() {
                 </button>
               </form>
 
+              {/* SECTION 3: PASSKEY BIOMETRICS */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', marginTop: '1.25rem' }}>
+                <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
+                  <Fingerprint size={16} color="#16a34a" /> Passkey Biometric Login
+                </h4>
+                <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                  Enable Face ID, Touch ID, or Device Screen Lock on this browser for 1-tap passwordless sign-in.
+                </p>
+                {passkeyNotice && (
+                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <CheckCircle size={16} /> {passkeyNotice}
+                  </div>
+                )}
+                {passkeyError && (
+                  <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <AlertCircle size={16} /> {passkeyError}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleRegisterPasskey}
+                  disabled={passkeyRegistering}
+                  className="btn btn-outline"
+                  style={{ width: '100%', padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', borderColor: '#16a34a', color: '#15803d', fontWeight: '700' }}
+                >
+                  <Fingerprint size={18} />
+                  {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
+                </button>
+              </div>
+
             </div>
           </div>
         )}
@@ -2743,6 +2799,41 @@ export default function Customer() {
           <span>All Orders</span>
         </button>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+          <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
+              <LogOut size={26} />
+            </div>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+              Log Out?
+            </h3>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+              Are you sure you want to log out of your GI SHOP account?
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                onClick={confirmLogout}
+                style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+              >
+                Yes, Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

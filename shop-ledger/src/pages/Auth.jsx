@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, googleLogin } from '../lib/api';
+import { login, googleLogin, getCities } from '../lib/api';
 import { signInWithGoogle } from '../lib/firebase';
+import { isPasskeySupported, loginWithPasskey } from '../lib/passkey';
 import { 
   Store, User, ArrowRight, ArrowLeft, Lock, Shield, Eye, EyeOff, 
-  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3, Mail, X 
+  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3, Mail, X, KeyRound, Fingerprint 
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import authBg from '../assets/auth-bg.jpg';
@@ -132,6 +133,9 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [cities, setCities] = useState(['Delhi', 'Mumbai', 'Bengaluru', 'Jaipur', 'Lucknow', 'Pune']);
 
   // Active translation dictionary
   const t = translations[language] || translations.en;
@@ -148,6 +152,7 @@ export default function Auth() {
   const [onboardingForm, setOnboardingForm] = useState({
     name: '',
     phone: '',
+    city: 'Delhi',
     address: '',
     shopName: '',
     shopAddress: '',
@@ -163,6 +168,62 @@ export default function Auth() {
       setLoginForm(prev => ({ ...prev, identifier: savedIdentifier }));
       setRememberMe(true);
     }
+
+    // Check Passkey Biometrics Support
+    isPasskeySupported().then(setPasskeyAvailable).catch(() => {});
+
+    // Load available cities
+    getCities().then(setCities).catch(() => {});
+
+    // Initialize Google One Tap Prompt
+    const initGoogleOneTap = () => {
+      if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: "548472173128",
+            callback: async (response) => {
+              if (response && response.credential) {
+                setError('');
+                setGoogleLoading(true);
+                try {
+                  const res = await googleLogin({ idToken: response.credential, onboardComplete: false });
+                  if (res.isNewUser) {
+                    setOnboarding({
+                      idToken: response.credential,
+                      googleUser: res.googleUser,
+                      step: 'ROLE_SELECT',
+                      role: 'Customer'
+                    });
+                    setOnboardingForm(prev => ({ ...prev, name: res.googleUser.name || '' }));
+                  } else {
+                    localStorage.setItem('token', res.token);
+                    localStorage.setItem('userRole', res.user.role);
+                    localStorage.setItem('userData', JSON.stringify(res.user));
+                    if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
+
+                    if (res.user.role === 'SuperManager') navigate('/admin');
+                    else if (res.user.role === 'Shopkeeper') navigate('/shop');
+                    else navigate('/customer');
+                  }
+                } catch (err) {
+                  console.error('[Google One Tap Error]', err);
+                } finally {
+                  setGoogleLoading(false);
+                }
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true
+          });
+          window.google.accounts.id.prompt();
+        } catch (e) {
+          console.log('[Google One Tap Info]', e);
+        }
+      }
+    };
+
+    const timer = setTimeout(initGoogleOneTap, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleLoginChange = (e) => {
@@ -178,6 +239,28 @@ export default function Auth() {
       value = value.replace(/\D/g, '').slice(0, 4);
     }
     setOnboardingForm({ ...onboardingForm, [name]: value });
+  };
+
+  // WebAuthn Passkey Login Handler
+  const handlePasskeyLogin = async () => {
+    setError('');
+    setPasskeyLoading(true);
+    try {
+      const res = await loginWithPasskey();
+      localStorage.setItem('token', res.token);
+      localStorage.setItem('userRole', res.user.role);
+      localStorage.setItem('userData', JSON.stringify(res.user));
+      if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
+
+      if (res.user.role === 'SuperManager') navigate('/admin');
+      else if (res.user.role === 'Shopkeeper') navigate('/shop');
+      else navigate('/customer');
+    } catch (err) {
+      console.error('[Passkey Login Error]', err);
+      setError(err.message || 'Passkey authentication was not completed.');
+    } finally {
+      setPasskeyLoading(false);
+    }
   };
 
   // Google Sign-In Handler
@@ -624,6 +707,24 @@ export default function Auth() {
                             />
                           </div>
 
+                          <div style={{ marginBottom: '0.85rem' }}>
+                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                              {language === 'hi' ? 'दुकान का शहर *' : 'Shop City *'}
+                            </label>
+                            <select 
+                              name="city" 
+                              className="select" 
+                              value={onboardingForm.city || 'Delhi'} 
+                              onChange={handleOnboardingChange} 
+                              required 
+                              style={{ background: '#ffffff', width: '100%', marginBottom: 0 }}
+                            >
+                              {cities.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                              ))}
+                            </select>
+                          </div>
+
                           <div>
                             <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                               {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
@@ -993,7 +1094,7 @@ export default function Auth() {
               fontWeight: '700',
               cursor: 'pointer',
               boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-              marginBottom: '1.25rem',
+              marginBottom: passkeyAvailable && isLogin ? '0.75rem' : '1.25rem',
               transition: 'all 0.15s ease'
             }}
             onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
@@ -1007,6 +1108,40 @@ export default function Auth() {
             </svg>
             {googleLoading ? t.connectingGoogle : t.continueGoogle}
           </button>
+
+          {/* Sign In with Passkey (Biometrics / Device Lock) Button */}
+          {passkeyAvailable && isLogin && (
+            <button
+              type="button"
+              onClick={handlePasskeyLogin}
+              disabled={passkeyLoading || googleLoading || loading}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.65rem',
+                padding: '0.85rem 1.25rem',
+                background: '#f8fafc',
+                color: '#0f172a',
+                border: '1.5px solid #cbd5e1',
+                borderRadius: '12px',
+                fontSize: '0.92rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                marginBottom: '1.25rem',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+            >
+              <Fingerprint size={20} color="#0f172a" />
+              {passkeyLoading 
+                ? (language === 'hi' ? 'पासकी सत्यापन हो रहा है...' : 'Authenticating Passkey...') 
+                : (language === 'hi' ? 'पासकी (Face ID / Fingerprint) से लॉगिन करें' : 'Sign in with Passkey (Face ID / Fingerprint)')}
+            </button>
+          )}
 
           {isLogin ? (
             /* --- 2-STEP LOGIN FORM --- */

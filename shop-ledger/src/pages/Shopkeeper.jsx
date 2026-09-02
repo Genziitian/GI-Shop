@@ -4,13 +4,14 @@ import {
   getMe, getItems, saveItem, deleteItem, editItem, toggleShopStatus, 
   getShopOrders, acceptShopOrder, declineShopOrder, completeShopOrder,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
-  getMyDetailedShop, updateMyDetailedShop
+  getMyDetailedShop, updateMyDetailedShop, getCities
 } from '../lib/api';
+import { registerPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
-  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle
+  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
@@ -68,6 +69,8 @@ export default function Shopkeeper() {
 
   // Shop Details & Settings Modal State
   const [showShopDetailsModal, setShowShopDetailsModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [cities, setCities] = useState(['Delhi', 'Mumbai', 'Bengaluru', 'Jaipur', 'Lucknow', 'Pune']);
   const [detailedShop, setDetailedShop] = useState(null);
   const [shopForm, setShopForm] = useState({
     shopName: '',
@@ -105,12 +108,32 @@ export default function Shopkeeper() {
     try {
       const res = await updateMyDetailedShop(shopForm);
       setShopSaveNotice(res.message || 'Shop details updated successfully!');
-      setCurrentShop(prev => ({ ...prev, ...shopForm }));
-      setTimeout(() => setShowShopDetailsModal(false), 1200);
-    } catch (err) {
-      alert(err.message || 'Failed to save shop details');
+      setTimeout(() => setShopSaveNotice(''), 3000);
+      loadInitialData();
+    } catch (e) {
+      alert(e.message || 'Error updating shop details');
     } finally {
       setShopSaving(false);
+    }
+  };
+
+  const [passkeyRegistering, setPasskeyRegistering] = useState(false);
+  const [passkeyNotice, setPasskeyNotice] = useState('');
+  const [passkeyError, setPasskeyError] = useState('');
+
+  const handleRegisterPasskey = async () => {
+    setPasskeyRegistering(true);
+    setPasskeyNotice('');
+    setPasskeyError('');
+    try {
+      await registerPasskey(`${currentUser?.name || 'Shopkeeper'}'s Device`);
+      setPasskeyNotice('Passkey registered successfully on this device! You can now log in with Face ID / Fingerprint.');
+      setTimeout(() => setPasskeyNotice(''), 5000);
+    } catch (err) {
+      console.error('[Passkey Registration Error]', err);
+      setPasskeyError(err.message || 'Passkey setup was cancelled or failed.');
+    } finally {
+      setPasskeyRegistering(false);
     }
   };
 
@@ -174,6 +197,7 @@ export default function Shopkeeper() {
 
   useEffect(() => {
     loadInitialData();
+    getCities().then(setCities).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -184,6 +208,10 @@ export default function Shopkeeper() {
   }, [activeTab, dateRange]);
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     localStorage.clear();
     navigate('/');
   };
@@ -1059,13 +1087,18 @@ export default function Shopkeeper() {
 
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>City</label>
-                  <input 
-                    className="input" 
+                  <select 
+                    className="select" 
                     value={shopForm.city} 
                     onChange={e => setShopForm({ ...shopForm, city: e.target.value })} 
                     disabled={!isOwner}
                     required 
-                  />
+                    style={{ marginBottom: 0 }}
+                  >
+                    {cities.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -1097,6 +1130,36 @@ export default function Shopkeeper() {
                 <div>Owner: <strong>{detailedShop?.ownerName || currentUser?.name}</strong> ({detailedShop?.ownerShortId || currentUser?.shortId})</div>
                 <div>Total Active Inventory: <strong>{detailedShop?.totalItemsCount || items.length} products</strong></div>
                 <div>Active Staff Enrolled: <strong>{detailedShop?.totalStaffCount || staffList.length} cashiers</strong></div>
+              </div>
+
+              {/* Passkey Biometric Security */}
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.85rem', marginBottom: '1.25rem' }}>
+                <div style={{ fontWeight: '700', fontSize: '0.88rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                  <Fingerprint size={16} /> Passkey Biometric Login
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#166534', marginBottom: '0.65rem' }}>
+                  Enable Face ID, Touch ID, or Device Screen Lock on this browser for 1-tap passwordless login.
+                </div>
+                {passkeyNotice && (
+                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <CheckCircle size={14} /> {passkeyNotice}
+                  </div>
+                )}
+                {passkeyError && (
+                  <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <AlertCircle size={14} /> {passkeyError}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleRegisterPasskey}
+                  disabled={passkeyRegistering}
+                  className="btn btn-outline"
+                  style={{ width: '100%', padding: '0.5rem', fontSize: '0.82rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                >
+                  <Fingerprint size={15} />
+                  {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
+                </button>
               </div>
 
               <div className="flex-between">
@@ -1157,6 +1220,41 @@ export default function Shopkeeper() {
           </>
         )}
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+          <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
+              <LogOut size={26} />
+            </div>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+              Log Out?
+            </h3>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+              Are you sure you want to log out of your GI SHOP account?
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                onClick={confirmLogout}
+                style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+              >
+                Yes, Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

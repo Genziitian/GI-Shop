@@ -2,7 +2,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://l
 
 const getToken = () => localStorage.getItem('token');
 
-const request = async (endpoint, options = {}) => {
+export const request = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
     'Content-Type': 'application/json',

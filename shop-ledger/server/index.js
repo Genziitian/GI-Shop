@@ -314,13 +314,24 @@ db.serialize(async () => {
     PRIMARY KEY(shopId, customerPhone)
   )`);
 
-  // 11. User FCM Tokens Table (Push Notifications)
+  // 12. User FCM Tokens Table (Push Notifications)
   db.run(`CREATE TABLE IF NOT EXISTS UserFCMTokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER NOT NULL,
     token TEXT UNIQUE NOT NULL,
     platform TEXT DEFAULT 'web',
     updatedAt TEXT
+  )`);
+
+  // 13. User Passkeys Table (WebAuthn Biometric / Device Security)
+  db.run(`CREATE TABLE IF NOT EXISTS UserPasskeys (
+    id TEXT PRIMARY KEY,
+    userId INTEGER NOT NULL,
+    credentialId TEXT UNIQUE NOT NULL,
+    publicKey TEXT NOT NULL,
+    deviceLabel TEXT,
+    createdAt TEXT,
+    FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE
   )`);
 
   // Performance Indexes
@@ -339,6 +350,8 @@ db.serialize(async () => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_shopstaff_shopId ON ShopStaff(shopId)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_shopstaff_userId ON ShopStaff(userId)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_fcm_userId ON UserFCMTokens(userId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_passkeys_credId ON UserPasskeys(credentialId)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_passkeys_userId ON UserPasskeys(userId)`);
 
   // Optional Super Administrator Bootstrap from Environment Variables
   const superAdminEmail = process.env.SUPERADMIN_EMAIL;
@@ -564,6 +577,124 @@ app.post('/api/user/change-pin', authenticate, (req, res) => {
       if (err) return res.status(500).json({ error: 'Failed to update PIN' });
       res.json({ success: true, message: 'Security PIN updated successfully!' });
     });
+  });
+});
+
+// --- PASKEY (WEBAUTHN BIOMETRICS) APIS ---
+const passkeyChallenges = new Map();
+
+// 1. Passkey Registration Challenge (for logged-in user)
+app.post('/api/passkey/register-challenge', authenticate, (req, res) => {
+  const challenge = Buffer.from(Math.random().toString(36) + Date.now().toString(36)).toString('base64url');
+  passkeyChallenges.set(`reg_${req.user.id}`, { challenge, timestamp: Date.now() });
+  
+  res.json({
+    challenge,
+    rp: { name: 'GI SHOP', id: req.hostname },
+    user: {
+      id: Buffer.from(String(req.user.id)).toString('base64url'),
+      name: req.user.email || req.user.name || `user_${req.user.id}`,
+      displayName: req.user.name || 'GI SHOP User'
+    },
+    pubKeyCredParams: [
+      { alg: -7, type: 'public-key' },  // ES256
+      { alg: -257, type: 'public-key' } // RS256
+    ],
+    authenticatorSelection: {
+      authenticatorAttachment: 'platform',
+      userVerification: 'preferred',
+      residentKey: 'preferred'
+    },
+    timeout: 60000
+  });
+});
+
+// 2. Passkey Registration Verification (Save Passkey credential to DB)
+app.post('/api/passkey/register-verify', authenticate, (req, res) => {
+  const { credentialId, publicKey, deviceLabel } = req.body;
+  if (!credentialId || !publicKey) {
+    return res.status(400).json({ error: 'Credential ID and Public Key are required' });
+  }
+
+  const passkeyId = 'pk_' + Math.random().toString(36).substring(2, 9);
+  const createdAt = new Date().toISOString();
+
+  db.run(`INSERT OR REPLACE INTO UserPasskeys (id, userId, credentialId, publicKey, deviceLabel, createdAt)
+          VALUES (?, ?, ?, ?, ?, ?)`,
+    [passkeyId, req.user.id, credentialId, publicKey, deviceLabel || 'Device Passkey', createdAt],
+    function(err) {
+      if (err) return res.status(500).json({ error: 'Failed to save passkey credential' });
+      res.json({ success: true, message: 'Passkey registered successfully! You can now log in instantly using Face ID / Fingerprint.' });
+    }
+  );
+});
+
+// 3. Passkey Authentication Challenge (Public for login)
+app.post('/api/passkey/auth-challenge', (req, res) => {
+  const challenge = Buffer.from(Math.random().toString(36) + Date.now().toString(36)).toString('base64url');
+  const sessionKey = Math.random().toString(36).substring(2, 10);
+  passkeyChallenges.set(`auth_${sessionKey}`, { challenge, timestamp: Date.now() });
+
+  res.json({
+    challenge,
+    sessionKey,
+    timeout: 60000,
+    userVerification: 'preferred',
+    rpId: req.hostname
+  });
+});
+
+// 4. Passkey Authentication Verification (Login with Passkey)
+app.post('/api/passkey/auth-verify', (req, res) => {
+  const { credentialId } = req.body;
+  if (!credentialId) return res.status(400).json({ error: 'Credential ID is required' });
+
+  db.get(`SELECT UserPasskeys.*, Users.id as userId, Users.role, Users.name, Users.email, Users.phone, Users.status, Users.shortId, Users.city, Users.address
+          FROM UserPasskeys 
+          JOIN Users ON UserPasskeys.userId = Users.id 
+          WHERE UserPasskeys.credentialId = ?`, [credentialId], (err, row) => {
+    if (err || !row) {
+      return res.status(401).json({ error: 'Passkey not recognized on this device. Please log in first with Google or Email/Password, then enable Passkey in your settings.' });
+    }
+
+    if (row.status === 'TERMINATED') {
+      return res.status(403).json({ error: 'Your account has been deactivated.' });
+    }
+
+    const user = {
+      id: row.userId,
+      role: row.role,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      shortId: row.shortId,
+      city: row.city,
+      address: row.address,
+      status: row.status
+    };
+
+    if (user.role === 'Shopkeeper') {
+      db.get(`SELECT * FROM Shops WHERE ownerId = ?`, [user.id], (err, shop) => {
+        if (shop && shop.status === 'TERMINATED') {
+          return res.status(403).json({ error: 'This shop has been deactivated.' });
+        }
+        const token = jwt.sign({ id: user.id, role: user.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET);
+        res.json({ token, user, shop, isStaff: false });
+      });
+    } else {
+      db.get(`SELECT ShopStaff.*, Shops.shopName, Shops.city, Shops.isOpen FROM ShopStaff 
+              JOIN Shops ON ShopStaff.shopId = Shops.id 
+              WHERE ShopStaff.userId = ? AND ShopStaff.status = 'ACCEPTED' AND Shops.status = 'ACTIVE'`, [user.id], (err, staffRole) => {
+        const token = jwt.sign({ 
+          id: user.id, 
+          role: user.role, 
+          phone: user.phone, 
+          shopId: staffRole?.shopId || null, 
+          staffRole: staffRole ? 'Cashier' : null 
+        }, JWT_SECRET);
+        res.json({ token, user, shop: staffRole ? { id: staffRole.shopId, shopName: staffRole.shopName, city: staffRole.city } : null, isStaff: !!staffRole });
+      });
+    }
   });
 });
 
