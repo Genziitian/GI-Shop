@@ -38,6 +38,7 @@ import { Modal } from 'react-native';
 export default function CustomerMoreScreen({ navigation }) {
   const { user, logout, lock } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileModalTab, setProfileModalTab] = useState('profile');
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
@@ -95,7 +96,10 @@ export default function CustomerMoreScreen({ navigation }) {
         {/* Customer Identity Card */}
         <TouchableOpacity
           style={styles.profileCard}
-          onPress={() => setShowProfileModal(true)}
+          onPress={() => {
+            setProfileModalTab('profile');
+            setShowProfileModal(true);
+          }}
           activeOpacity={0.7}
         >
           <View style={styles.profileAvatar}>
@@ -112,13 +116,8 @@ export default function CustomerMoreScreen({ navigation }) {
               </View>
             </View>
             <Text style={styles.profileSub}>
-              ID: <Text style={styles.highlightText}>{user?.shortId || 'N/A'}</Text> • {user?.phone}
+              ID: <Text style={styles.highlightText}>{user?.shortId || 'N/A'}</Text>
             </Text>
-            {user?.city && (
-              <Text style={styles.citySub}>
-                📍 {user?.city} {user?.address ? `• ${user.address}` : ''}
-              </Text>
-            )}
           </View>
 
           <ChevronRight size={20} color={colors.textMuted} />
@@ -130,7 +129,10 @@ export default function CustomerMoreScreen({ navigation }) {
 
           <TouchableOpacity
             style={[styles.menuRow, { borderBottomWidth: 0 }]}
-            onPress={() => setShowProfileModal(true)}
+            onPress={() => {
+              setProfileModalTab('security');
+              setShowProfileModal(true);
+            }}
             activeOpacity={0.7}
           >
             <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
@@ -221,6 +223,7 @@ export default function CustomerMoreScreen({ navigation }) {
         <ProfileSettingsModal
           visible={showProfileModal}
           onClose={() => setShowProfileModal(false)}
+          initialTab={profileModalTab}
         />
       )}
 

@@ -35,10 +35,10 @@ import { useAuth } from '../context/AuthContext';
 import { updateUserProfile, changePin, getSupportSettings } from '../api/client';
 import CitySelector from './CitySelector';
 
-export default function ProfileSettingsModal({ visible, onClose }) {
+export default function ProfileSettingsModal({ visible, onClose, initialTab = 'profile' }) {
   const { user, refreshUser, logout, lock } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'security', 'settings', 'support'
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [copiedId, setCopiedId] = useState(false);
 
   // Dynamic SuperAdmin Support Settings State
@@ -51,6 +51,7 @@ export default function ProfileSettingsModal({ visible, onClose }) {
 
   useEffect(() => {
     if (visible) {
+      setActiveTab(initialTab);
       getSupportSettings()
         .then(res => {
           if (res) {
