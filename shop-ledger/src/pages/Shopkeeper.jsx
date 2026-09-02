@@ -5,9 +5,9 @@ import {
   getShopOrders, acceptShopOrder, declineShopOrder, completeShopOrder,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
   getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword,
-  parseTimings, formatTimings
+  parseTimings, formatTimings, verifyPin
 } from '../lib/api';
-import { registerPasskey } from '../lib/passkey';
+import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
@@ -213,6 +213,64 @@ export default function Shopkeeper() {
     } finally {
       setPasskeyRegistering(false);
     }
+  };
+
+  // Screen Lock / POS Register Lock State
+  const [isScreenLocked, setIsScreenLocked] = useState(false);
+  const [unlockPin, setUnlockPin] = useState('');
+  const [unlockError, setUnlockError] = useState('');
+  const [unlockLoading, setUnlockLoading] = useState(false);
+
+  const handleUnlockWithPin = async (pinValue) => {
+    const pin = pinValue || unlockPin;
+    if (!pin || pin.length !== 4) {
+      setUnlockError('Please enter full 4-digit PIN');
+      return;
+    }
+    setUnlockLoading(true);
+    setUnlockError('');
+    try {
+      await verifyPin(pin);
+      setIsScreenLocked(false);
+      setUnlockPin('');
+      setUnlockError('');
+    } catch (err) {
+      setUnlockError(err.message || 'Incorrect PIN. Try again.');
+      setUnlockPin('');
+    } finally {
+      setUnlockLoading(false);
+    }
+  };
+
+  const handleUnlockWithPasskey = async () => {
+    setUnlockLoading(true);
+    setUnlockError('');
+    try {
+      await loginWithPasskey();
+      setIsScreenLocked(false);
+      setUnlockPin('');
+      setUnlockError('');
+    } catch (err) {
+      setUnlockError(err.message || 'Passkey unlock failed or cancelled.');
+    } finally {
+      setUnlockLoading(false);
+    }
+  };
+
+  const handleKeypadPress = (num) => {
+    if (unlockPin.length < 4) {
+      const nextPin = unlockPin + num;
+      setUnlockPin(nextPin);
+      setUnlockError('');
+      if (nextPin.length === 4) {
+        handleUnlockWithPin(nextPin);
+      }
+    }
+  };
+
+  const handleKeypadBackspace = () => {
+    setUnlockPin(prev => prev.slice(0, -1));
+    setUnlockError('');
   };
 
   const loadInitialData = async () => {
@@ -488,6 +546,21 @@ export default function Shopkeeper() {
             style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
             <Settings size={16} /> Settings
+          </button>
+
+          {/* Quick Screen Lock Button */}
+          <button 
+            type="button" 
+            className="btn btn-outline" 
+            onClick={() => {
+              setIsScreenLocked(true);
+              setUnlockPin('');
+              setUnlockError('');
+            }} 
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
+            title="Lock Register / Screen with your 4-digit PIN"
+          >
+            <Lock size={15} color="#e11d48" /> Lock
           </button>
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
@@ -1711,6 +1784,194 @@ export default function Shopkeeper() {
                 style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
               >
                 Yes, Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL-SCREEN REGISTER / POS SCREEN LOCK OVERLAY */}
+      {isScreenLocked && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            zIndex: 99999, 
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '1.5rem',
+            backdropFilter: 'blur(16px)'
+          }}
+        >
+          <div style={{ width: '380px', maxWidth: '100%', textAlign: 'center', color: '#fff' }}>
+            {/* Header Icon & Shop Name */}
+            <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(239, 68, 68, 0.15)', border: '1.5px solid rgba(239, 68, 68, 0.3)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+              <Lock size={32} />
+            </div>
+
+            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#f8fafc' }}>
+              {currentShop?.shopName || 'Register Locked'}
+            </h2>
+            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.5rem' }}>
+              Enter your 4-digit PIN to resume billing
+            </div>
+
+            {/* Error message */}
+            {unlockError && (
+              <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', padding: '0.6rem 0.85rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                <AlertCircle size={16} /> {unlockError}
+              </div>
+            )}
+
+            {/* Visual PIN Dots */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.75rem' }}>
+              {[0, 1, 2, 3].map(idx => (
+                <div 
+                  key={idx} 
+                  style={{ 
+                    width: '18px', 
+                    height: '18px', 
+                    borderRadius: '50%', 
+                    border: '2px solid rgba(255,255,255,0.4)', 
+                    background: unlockPin.length > idx ? '#10b981' : 'transparent',
+                    boxShadow: unlockPin.length > idx ? '0 0 12px rgba(16, 185, 129, 0.5)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }} 
+                />
+              ))}
+            </div>
+
+            {/* Touch Keypad (1 - 9, Clear, 0, Unlock) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', maxWidth: '280px', margin: '0 auto 1.5rem auto' }}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handleKeypadPress(String(num))}
+                  disabled={unlockLoading}
+                  style={{
+                    height: '56px',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    color: '#fff',
+                    fontSize: '1.4rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.1s ease',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  onMouseDown={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
+                  onMouseUp={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                >
+                  {num}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={handleKeypadBackspace}
+                disabled={unlockLoading}
+                style={{
+                  height: '56px',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  color: '#94a3b8',
+                  fontSize: '0.9rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleKeypadPress('0')}
+                disabled={unlockLoading}
+                style={{
+                  height: '56px',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  color: '#fff',
+                  fontSize: '1.4rem',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                0
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleUnlockWithPin()}
+                disabled={unlockLoading || unlockPin.length !== 4}
+                style={{
+                  height: '56px',
+                  borderRadius: '14px',
+                  border: 'none',
+                  background: unlockPin.length === 4 ? '#10b981' : 'rgba(255, 255, 255, 0.1)',
+                  color: '#fff',
+                  fontSize: '0.95rem',
+                  fontWeight: '800',
+                  cursor: unlockPin.length === 4 ? 'pointer' : 'not-allowed',
+                  boxShadow: unlockPin.length === 4 ? '0 4px 14px rgba(16, 185, 129, 0.4)' : 'none'
+                }}
+              >
+                {unlockLoading ? '...' : 'Unlock'}
+              </button>
+            </div>
+
+            {/* Passkey / Face ID Unlock Button */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <button
+                type="button"
+                onClick={handleUnlockWithPasskey}
+                disabled={unlockLoading}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '12px',
+                  color: '#f8fafc',
+                  fontSize: '0.9rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+              >
+                <Fingerprint size={18} color="#34d399" /> Unlock with Biometrics / Passkey
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmLogout}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                  textDecoration: 'underline'
+                }}
+              >
+                Switch Account / Log Out
               </button>
             </div>
           </div>
