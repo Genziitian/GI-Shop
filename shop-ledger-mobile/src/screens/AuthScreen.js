@@ -425,6 +425,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     marginTop: 2,
+  },
   formTitle: {
     fontSize: 16,
     fontWeight: '700',
