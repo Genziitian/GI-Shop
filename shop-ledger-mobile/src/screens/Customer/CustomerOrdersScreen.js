@@ -169,8 +169,8 @@ export default function CustomerOrdersScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title="All Orders & Receipts"
-        subtitle="Track active requests and purchase receipts"
+        title="GI SHOP"
+        subtitle="All Orders & Receipts"
       />
 
       {loading ? (

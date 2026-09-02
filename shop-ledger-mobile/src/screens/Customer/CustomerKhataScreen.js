@@ -104,8 +104,8 @@ export default function CustomerKhataScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        title="My Khata"
-        subtitle="Live synchronized credit ledger across local shops"
+        title="GI SHOP"
+        subtitle="My Khata & Store Credits"
       />
 
       {loading ? (

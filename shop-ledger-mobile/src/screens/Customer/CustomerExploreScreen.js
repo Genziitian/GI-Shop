@@ -267,60 +267,51 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header with City Dropdown Selector */}
-      <View style={styles.topHeader}>
+      {/* Uniform Top Header with App Name, Icon, Profile & Lock Button */}
+      <Header
+        title="GI SHOP"
+        subtitle={user?.name ? `${user.name} • ID: ${user?.shortId || ''}` : 'Smart Grocery Discovery'}
+        rightComponent={
+          <>
+            {totalCartCount > 0 && (
+              <TouchableOpacity
+                style={styles.cartBadgeBtn}
+                onPress={() => setShowCartModal(true)}
+                activeOpacity={0.8}
+              >
+                <ShoppingCart size={15} color="#fff" />
+                <Text style={styles.cartBadgeText}>₹{totalCartAmount.toFixed(0)}</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.profileBtn}
+              onPress={() => setShowProfileModal(true)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileAvatarText}>
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </Text>
+              </View>
+              <Settings size={14} color={colors.primaryDark} />
+            </TouchableOpacity>
+          </>
+        }
+      />
+
+      {/* Compact City Dropdown Selector Bar */}
+      <View style={styles.topSubBar}>
         <TouchableOpacity
-          style={styles.cityDropdownBtn}
+          style={styles.compactCityBtn}
           onPress={() => setShowCityModal(true)}
           activeOpacity={0.7}
         >
-          <View style={styles.cityIconBadge}>
-            <MapPin size={18} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cityDropdownLabel}>Current City</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={styles.cityDropdownText}>{selectedCity}</Text>
-              <ChevronDown size={15} color={colors.text} />
-            </View>
-          </View>
+          <MapPin size={14} color={colors.primary} />
+          <Text style={styles.compactCityLabel}>City:</Text>
+          <Text style={styles.compactCityText}>{selectedCity}</Text>
+          <ChevronDown size={13} color={colors.text} />
         </TouchableOpacity>
-
-        <View style={styles.headerRightBox}>
-          {totalCartCount > 0 && (
-            <TouchableOpacity
-              style={styles.cartBadgeBtn}
-              onPress={() => setShowCartModal(true)}
-              activeOpacity={0.8}
-            >
-              <ShoppingCart size={15} color="#fff" />
-              <Text style={styles.cartBadgeText}>₹{totalCartAmount.toFixed(0)}</Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Top Right Profile & Settings Button */}
-          <TouchableOpacity
-            style={styles.profileBtn}
-            onPress={() => setShowProfileModal(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarText}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </Text>
-            </View>
-            <Settings size={14} color={colors.primaryDark} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.lockBtn}
-            onPress={lock}
-            activeOpacity={0.7}
-          >
-            <Lock size={14} color={colors.primaryDark} />
-            <Text style={styles.lockBtnText}>Lock</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Staff Invites Banner */}
@@ -796,6 +787,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#fff',
+  },
+  topSubBar: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  compactCityBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  compactCityLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  compactCityText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.primaryDark,
   },
   cityDropdownBtn: {
     flexDirection: 'row',

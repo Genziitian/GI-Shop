@@ -73,27 +73,11 @@ export default function CustomerCompareScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header with City Dropdown Selector */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.cityDropdownBtn}
-          onPress={() => setShowCityModal(true)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.cityIconBadge}>
-            <MapPin size={18} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cityDropdownLabel}>Compare in City</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={styles.cityDropdownText}>{selectedCity}</Text>
-              <ChevronDown size={15} color={colors.text} />
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <View style={styles.headerRightBox}>
-          {/* Top Right Profile & Settings Button */}
+      {/* Uniform Top Header with App Name, Icon, Profile & Lock Button */}
+      <Header
+        title="GI SHOP"
+        subtitle="Compare Prices in Shops"
+        rightComponent={
           <TouchableOpacity
             style={styles.profileBtn}
             onPress={() => setShowProfileModal(true)}
@@ -106,16 +90,21 @@ export default function CustomerCompareScreen({ navigation }) {
             </View>
             <Settings size={14} color={colors.primaryDark} />
           </TouchableOpacity>
+        }
+      />
 
-          <TouchableOpacity
-            style={styles.lockBtn}
-            onPress={lock}
-            activeOpacity={0.7}
-          >
-            <Lock size={14} color={colors.primaryDark} />
-            <Text style={styles.lockBtnText}>Lock</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Compact City Dropdown Selector Bar */}
+      <View style={styles.topSubBar}>
+        <TouchableOpacity
+          style={styles.compactCityBtn}
+          onPress={() => setShowCityModal(true)}
+          activeOpacity={0.7}
+        >
+          <MapPin size={14} color={colors.primary} />
+          <Text style={styles.compactCityLabel}>City:</Text>
+          <Text style={styles.compactCityText}>{selectedCity}</Text>
+          <ChevronDown size={13} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
       {/* Search Input */}
@@ -322,6 +311,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#fff',
+  },
+  topSubBar: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  compactCityBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  compactCityLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  compactCityText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.primaryDark,
   },
   cityDropdownBtn: {
     flexDirection: 'row',
