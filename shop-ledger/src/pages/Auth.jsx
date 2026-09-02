@@ -557,12 +557,12 @@ export default function Auth() {
                 <form onSubmit={handleCredentialsLogin}>
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-                      Email, Phone Number or Short ID
+                      Email Address or User Short ID
                     </label>
                     <input 
                       name="identifier" 
                       className="input" 
-                      placeholder="Enter email, 10-digit phone, or User ID" 
+                      placeholder="Enter your email or User Short ID (e.g. CUST-1042)" 
                       value={loginForm.identifier} 
                       onChange={handleLoginChange} 
                       required 
