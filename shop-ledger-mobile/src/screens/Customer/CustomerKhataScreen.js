@@ -135,7 +135,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       { color: khataOverview.overallDue > 0 ? '#ef4444' : '#22c55e' },
                     ]}
                   >
-                    ₹{khataOverview.overallDue.toFixed(2)}
+                    ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
                   </Text>
                   <Text style={styles.totalDueSub}>
                     {khataOverview.stores.length} Enrolled Stores •{' '}
@@ -199,7 +199,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       { color: st.totalDue > 0 ? '#ef4444' : '#15803d' },
                     ]}
                   >
-                    {st.totalDue > 0 ? `₹${st.totalDue.toFixed(2)}` : '₹0.00'}
+                    {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
                   </Text>
                   <Text
                     style={[
@@ -292,7 +292,7 @@ export default function CustomerKhataScreen({ navigation }) {
                         },
                       ]}
                     >
-                      ₹{(storeStatement?.totalDue ?? selectedStore.totalDue ?? 0).toFixed(2)}
+                      ₹{(Number(storeStatement?.totalDue ?? selectedStore?.totalDue) || 0).toFixed(2)}
                     </Text>
                     <Text style={{ fontSize: 10, color: colors.textMuted }}>Current Due</Text>
                   </View>
@@ -418,10 +418,10 @@ export default function CustomerKhataScreen({ navigation }) {
                               ]}
                             >
                               {isSale && entry.paymentMethod === 'Add to Book'
-                                ? `+₹${entry.total.toFixed(2)}`
+                                ? `+₹${(Number(entry?.total) || 0).toFixed(2)}`
                                 : isSettlement
-                                ? `-₹${entry.amount.toFixed(2)}`
-                                : `₹${(entry.total || entry.estimatedTotal || 0).toFixed(2)}`}
+                                ? `-₹${(Number(entry?.amount) || 0).toFixed(2)}`
+                                : `₹${(Number(entry?.total ?? entry?.estimatedTotal) || 0).toFixed(2)}`}
                             </Text>
                             {isSale && (
                               <TouchableOpacity

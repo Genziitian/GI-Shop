@@ -191,7 +191,7 @@ export default function CustomerOrdersScreen({ navigation }) {
           <View style={styles.lifetimeBanner}>
             <View style={{ flex: 1 }}>
               <Text style={styles.lifetimeLabel}>Total Lifetime Purchases</Text>
-              <Text style={styles.lifetimeValue}>₹{totalSpent.toFixed(2)}</Text>
+              <Text style={styles.lifetimeValue}>₹{(Number(totalSpent) || 0).toFixed(2)}</Text>
               <Text style={styles.lifetimeSub}>
                 {recentOrders.length} Active • {pastOrders.length + sales.length} Total in All Orders
               </Text>
@@ -234,10 +234,14 @@ export default function CustomerOrdersScreen({ navigation }) {
               </View>
             ) : (
               filteredRecentOrders.map((order) => {
-                const items = JSON.parse(order.itemsJSON || '[]');
-                const computedTotal = (order.estimatedTotal && order.estimatedTotal > 0)
-                  ? order.estimatedTotal
-                  : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0);
+                const items = Array.isArray(order.itemsJSON)
+                  ? order.itemsJSON
+                  : (() => { try { return JSON.parse(order.itemsJSON || '[]'); } catch (e) { return []; } })();
+
+                const computedTotal = Number(
+                  order.totalAmount ?? order.total ?? order.estimatedTotal ??
+                  items.reduce((s, it) => s + (Number(it.amount || (it.rate * it.qty)) || 0), 0)
+                ) || 0;
 
                 return (
                   <View key={`active-${order.id}`} style={styles.orderCard}>
@@ -327,7 +331,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                       ))}
                       <View style={styles.totalLine}>
                         <Text style={styles.totalLabel}>Total Payable:</Text>
-                        <Text style={styles.totalValue}>₹{computedTotal.toFixed(2)}</Text>
+                        <Text style={styles.totalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
                       </View>
                     </View>
 
@@ -398,7 +402,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.receiptTotal}>₹{sale.total.toFixed(2)}</Text>
+                        <Text style={styles.receiptTotal}>₹{(Number(sale?.total) || 0).toFixed(2)}</Text>
                         <Text style={styles.receiptMethod}>{sale.paymentMethod}</Text>
                       </View>
                     </View>
@@ -415,10 +419,14 @@ export default function CustomerOrdersScreen({ navigation }) {
 
                 {/* Past Orders */}
                 {filteredPastOrders.map((order) => {
-                  const items = JSON.parse(order.itemsJSON || '[]');
-                  const computedTotal = (order.estimatedTotal && order.estimatedTotal > 0)
-                    ? order.estimatedTotal
-                    : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0);
+                  const items = Array.isArray(order.itemsJSON)
+                    ? order.itemsJSON
+                    : (() => { try { return JSON.parse(order.itemsJSON || '[]'); } catch (e) { return []; } })();
+
+                  const computedTotal = Number(
+                    order.totalAmount ?? order.total ?? order.estimatedTotal ??
+                    items.reduce((s, it) => s + (Number(it.amount || (it.rate * it.qty)) || 0), 0)
+                  ) || 0;
 
                   return (
                     <View key={`past-order-${order.id}`} style={styles.orderCard}>
@@ -429,7 +437,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                             Order #{order.orderNumber} • {new Date(order.createdAt).toLocaleDateString('en-IN')}
                           </Text>
                         </View>
-                        <Text style={styles.receiptTotal}>₹{computedTotal.toFixed(2)}</Text>
+                        <Text style={styles.receiptTotal}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
                       </View>
                     </View>
                   );
