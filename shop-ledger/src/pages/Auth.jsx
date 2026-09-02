@@ -1109,7 +1109,7 @@ export default function Auth() {
             {googleLoading ? t.connectingGoogle : t.continueGoogle}
           </button>
 
-          {/* Sign In with Passkey (Biometrics / Device Lock) Button */}
+          {/* Sign In with Passkey Button */}
           {passkeyAvailable && isLogin && (
             <button
               type="button"
@@ -1122,24 +1122,24 @@ export default function Auth() {
                 justifyContent: 'center',
                 gap: '0.65rem',
                 padding: '0.85rem 1.25rem',
-                background: '#f8fafc',
+                background: '#ffffff',
                 color: '#0f172a',
                 border: '1.5px solid #cbd5e1',
                 borderRadius: '12px',
-                fontSize: '0.92rem',
+                fontSize: '0.95rem',
                 fontWeight: '700',
                 cursor: 'pointer',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
                 marginBottom: '1.25rem',
                 transition: 'all 0.15s ease'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
             >
               <Fingerprint size={20} color="#0f172a" />
               {passkeyLoading 
-                ? (language === 'hi' ? 'पासकी सत्यापन हो रहा है...' : 'Authenticating Passkey...') 
-                : (language === 'hi' ? 'पासकी (Face ID / Fingerprint) से लॉगिन करें' : 'Sign in with Passkey (Face ID / Fingerprint)')}
+                ? (language === 'hi' ? 'पासकी सत्यापन...' : 'Authenticating Passkey...') 
+                : (language === 'hi' ? 'पासकी से लॉगिन करें' : 'Sign in with Passkey')}
             </button>
           )}
 
@@ -1171,6 +1171,7 @@ export default function Auth() {
                     <div style={{ position: 'relative' }}>
                       <input 
                         name="identifier" 
+                        autoComplete="username webauthn"
                         className="input" 
                         placeholder={t.emailPlaceholder} 
                         value={loginForm.identifier} 

@@ -3,14 +3,6 @@ import { request } from './api';
 // Check if browser/hardware supports WebAuthn Passkeys
 export const isPasskeySupported = async () => {
   if (typeof window === 'undefined' || !window.PublicKeyCredential) return false;
-  if (typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
-    try {
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      return !!available;
-    } catch {
-      return false;
-    }
-  }
   return true;
 };
 
@@ -38,10 +30,10 @@ export function base64URLToBuffer(base64url) {
   return bytes.buffer;
 }
 
-// Register a new Passkey (for currently logged-in user)
-export const registerPasskey = async (deviceLabel = 'My Device Passkey') => {
+// Register a new Passkey (Standard WebAuthn create)
+export const registerPasskey = async (deviceLabel = 'Device Passkey') => {
   if (!window.PublicKeyCredential) {
-    throw new Error('Passkeys (WebAuthn) are not supported in this browser.');
+    throw new Error('Passkeys are not supported on this browser or device.');
   }
 
   // 1. Get challenge from backend
@@ -51,16 +43,22 @@ export const registerPasskey = async (deviceLabel = 'My Device Passkey') => {
   const publicKeyCredentialCreationOptions = {
     challenge: base64URLToBuffer(options.challenge),
     rp: {
-      name: options.rp.name,
+      name: options.rp?.name || 'GI SHOP',
       id: window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
     },
     user: {
       id: base64URLToBuffer(options.user.id),
-      name: options.user.name,
-      displayName: options.user.displayName
+      name: options.user.name || 'user@gishop',
+      displayName: options.user.displayName || 'GI SHOP User'
     },
-    pubKeyCredParams: options.pubKeyCredParams,
-    authenticatorSelection: options.authenticatorSelection,
+    pubKeyCredParams: [
+      { alg: -7, type: 'public-key' },  // ES256
+      { alg: -257, type: 'public-key' } // RS256
+    ],
+    authenticatorSelection: {
+      userVerification: 'preferred',
+      residentKey: 'preferred'
+    },
     timeout: options.timeout || 60000,
     attestation: 'none'
   };
@@ -92,10 +90,10 @@ export const registerPasskey = async (deviceLabel = 'My Device Passkey') => {
   return res;
 };
 
-// Sign in with Passkey (public login)
-export const loginWithPasskey = async () => {
+// Sign in with Passkey (Standard WebAuthn get)
+export const loginWithPasskey = async (isConditional = false) => {
   if (!window.PublicKeyCredential) {
-    throw new Error('Passkeys (WebAuthn) are not supported in this browser.');
+    throw new Error('Passkeys are not supported on this browser or device.');
   }
 
   // 1. Get challenge from backend
@@ -105,14 +103,20 @@ export const loginWithPasskey = async () => {
   const publicKeyCredentialRequestOptions = {
     challenge: base64URLToBuffer(options.challenge),
     timeout: options.timeout || 60000,
-    userVerification: options.userVerification || 'preferred',
+    userVerification: 'preferred',
     rpId: window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
   };
 
-  // 3. Trigger browser native Face ID / Fingerprint / Device PIN prompt
-  const assertion = await navigator.credentials.get({
+  const getOptions = {
     publicKey: publicKeyCredentialRequestOptions
-  });
+  };
+
+  if (isConditional) {
+    getOptions.mediation = 'conditional';
+  }
+
+  // 3. Trigger browser native Face ID / Fingerprint / Device PIN prompt
+  const assertion = await navigator.credentials.get(getOptions);
 
   if (!assertion) {
     throw new Error('Passkey authentication was cancelled.');
