@@ -214,11 +214,11 @@ export default function ProfileSettingsModal({ visible, onClose }) {
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={styles.headerIconBadge}>
-              <Settings size={18} color={colors.primary} />
+              <User size={18} color={colors.primary} />
             </View>
             <View>
-              <Text style={styles.headerTitle}>Profile & Settings</Text>
-              <Text style={styles.headerSubtitle}>Manage account, security & preferences</Text>
+              <Text style={styles.headerTitle}>Personal & Delivery Details</Text>
+              <Text style={styles.headerSubtitle}>Update your name, phone, city & address</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -228,41 +228,6 @@ export default function ProfileSettingsModal({ visible, onClose }) {
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           >
             <X size={20} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Top Navigation Segment Bar */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'profile' && styles.tabItemActive]}
-            onPress={() => setActiveTab('profile')}
-          >
-            <User size={14} color={activeTab === 'profile' ? colors.primary : colors.textMuted} />
-            <Text style={[styles.tabText, activeTab === 'profile' && styles.tabTextActive]}>Profile</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'security' && styles.tabItemActive]}
-            onPress={() => setActiveTab('security')}
-          >
-            <ShieldCheck size={14} color={activeTab === 'security' ? colors.primary : colors.textMuted} />
-            <Text style={[styles.tabText, activeTab === 'security' && styles.tabTextActive]}>Security</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'settings' && styles.tabItemActive]}
-            onPress={() => setActiveTab('settings')}
-          >
-            <Settings size={14} color={activeTab === 'settings' ? colors.primary : colors.textMuted} />
-            <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>Settings</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tabItem, activeTab === 'support' && styles.tabItemActive]}
-            onPress={() => setActiveTab('support')}
-          >
-            <HelpCircle size={14} color={activeTab === 'support' ? colors.primary : colors.textMuted} />
-            <Text style={[styles.tabText, activeTab === 'support' && styles.tabTextActive]}>Help</Text>
           </TouchableOpacity>
         </View>
 
@@ -298,300 +263,71 @@ export default function ProfileSettingsModal({ visible, onClose }) {
             </TouchableOpacity>
           </View>
 
-          {/* TAB 1: PROFILE */}
-          {activeTab === 'profile' && (
-            <View>
-              {profileNotice ? (
-                <View style={styles.successBanner}>
-                  <CheckCircle size={15} color="#15803d" />
-                  <Text style={styles.successBannerText}>{profileNotice}</Text>
-                </View>
-              ) : null}
+          {/* PROFILE DETAILS FORM */}
+          <View>
+            {profileNotice ? (
+              <View style={styles.successBanner}>
+                <CheckCircle size={15} color="#15803d" />
+                <Text style={styles.successBannerText}>{profileNotice}</Text>
+              </View>
+            ) : null}
 
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Personal & Delivery Details</Text>
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Personal & Delivery Details</Text>
 
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Full Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={form.name}
-                    onChangeText={(t) => setForm({ ...form, name: t })}
-                    placeholder="Enter your full name"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Mobile Phone</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={form.phone}
-                    onChangeText={(t) => setForm({ ...form, phone: t })}
-                    placeholder="10-digit mobile number"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="phone-pad"
-                  />
-                </View>
-
-                <CitySelector
-                  selectedCity={form.city}
-                  onSelectCity={(selected) => setForm({ ...form, city: selected })}
-                  label="City / Location"
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.name}
+                  onChangeText={(t) => setForm({ ...form, name: t })}
+                  placeholder="Enter your full name"
+                  placeholderTextColor={colors.textMuted}
                 />
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Delivery Address</Text>
-                  <TextInput
-                    style={[styles.input, { height: 65, textAlignVertical: 'top' }]}
-                    value={form.address}
-                    onChangeText={(t) => setForm({ ...form, address: t })}
-                    placeholder="Street, flat/house number, landmark"
-                    placeholderTextColor={colors.textMuted}
-                    multiline
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.saveBtn, profileSaving && { opacity: 0.7 }]}
-                  disabled={profileSaving}
-                  onPress={handleSaveProfile}
-                >
-                  {profileSaving ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.saveBtnText}>Save Profile Changes</Text>
-                  )}
-                </TouchableOpacity>
               </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Mobile Phone</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.phone}
+                  onChangeText={(t) => setForm({ ...form, phone: t })}
+                  placeholder="10-digit mobile number"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <CitySelector
+                selectedCity={form.city}
+                onSelectCity={(selected) => setForm({ ...form, city: selected })}
+                label="City / Location"
+              />
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Delivery Address</Text>
+                <TextInput
+                  style={[styles.input, { height: 65, textAlignVertical: 'top' }]}
+                  value={form.address}
+                  onChangeText={(t) => setForm({ ...form, address: t })}
+                  placeholder="Street, flat/house number, landmark"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveBtn, profileSaving && { opacity: 0.7 }]}
+                disabled={profileSaving}
+                onPress={handleSaveProfile}
+              >
+                {profileSaving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveBtnText}>Save Profile Changes</Text>
+                )}
+              </TouchableOpacity>
             </View>
-          )}
-
-          {/* TAB 2: SECURITY & PIN */}
-          {activeTab === 'security' && (
-            <View>
-              {pinNotice ? (
-                <View style={styles.successBanner}>
-                  <CheckCircle size={15} color="#15803d" />
-                  <Text style={styles.successBannerText}>{pinNotice}</Text>
-                </View>
-              ) : null}
-
-              {pinError ? (
-                <View style={styles.errorBanner}>
-                  <AlertTriangle size={15} color="#b91c1c" />
-                  <Text style={styles.errorBannerText}>{pinError}</Text>
-                </View>
-              ) : null}
-
-              <View style={styles.sectionCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                  <ShieldCheck size={18} color={colors.primary} />
-                  <Text style={styles.sectionTitle}>Change 4-Digit Security PIN</Text>
-                </View>
-                <Text style={styles.sectionSub}>Your PIN protects your store ledger and prevents unauthorized orders.</Text>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Current 4-Digit PIN</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={currentPin}
-                    onChangeText={setCurrentPin}
-                    placeholder="••••"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    secureTextEntry
-                  />
-                </View>
-
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>New PIN</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newPin}
-                      onChangeText={setNewPin}
-                      placeholder="••••"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="numeric"
-                      maxLength={4}
-                      secureTextEntry
-                    />
-                  </View>
-
-                  <View style={[styles.fieldGroup, { flex: 1 }]}>
-                    <Text style={styles.fieldLabel}>Confirm PIN</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={confirmPin}
-                      onChangeText={setConfirmPin}
-                      placeholder="••••"
-                      placeholderTextColor={colors.textMuted}
-                      keyboardType="numeric"
-                      maxLength={4}
-                      secureTextEntry
-                    />
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.pinBtn, pinSaving && { opacity: 0.7 }]}
-                  disabled={pinSaving}
-                  onPress={handleChangePin}
-                >
-                  {pinSaving ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.pinBtnText}>Update PIN</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Quick Lock Action Card */}
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Instant Security</Text>
-                <TouchableOpacity
-                  style={styles.lockNowBtn}
-                  onPress={() => {
-                    onClose();
-                    lock();
-                  }}
-                >
-                  <Lock size={16} color="#fff" />
-                  <Text style={styles.lockNowBtnText}>Lock Application Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 3: APP SETTINGS */}
-          {activeTab === 'settings' && (
-            <View>
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Preferences & Notifications</Text>
-
-                <View style={styles.toggleRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.toggleLabel}>Order Status Alerts</Text>
-                    <Text style={styles.toggleSub}>Get notifications when shopkeeper packs your order</Text>
-                  </View>
-                  <Switch
-                    value={orderNotifications}
-                    onValueChange={setOrderNotifications}
-                    trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-                    thumbColor={orderNotifications ? colors.primary : '#f1f5f9'}
-                  />
-                </View>
-
-                <View style={[styles.toggleRow, { borderBottomWidth: 0 }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.toggleLabel}>Digital Bills & Ledger SMS</Text>
-                    <Text style={styles.toggleSub}>Receive automated digital bill receipts</Text>
-                  </View>
-                  <Switch
-                    value={smsReceipts}
-                    onValueChange={setSmsReceipts}
-                    trackColor={{ false: '#cbd5e1', true: '#93c5fd' }}
-                    thumbColor={smsReceipts ? colors.primary : '#f1f5f9'}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Language Preference</Text>
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                  <TouchableOpacity
-                    style={[styles.langChip, selectedLanguage === 'en' && styles.langChipActive]}
-                    onPress={() => setSelectedLanguage('en')}
-                  >
-                    <Text style={[styles.langChipText, selectedLanguage === 'en' && styles.langChipTextActive]}>English</Text>
-                    {selectedLanguage === 'en' && <Check size={14} color="#fff" />}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.langChip, selectedLanguage === 'hi' && styles.langChipActive]}
-                    onPress={() => setSelectedLanguage('hi')}
-                  >
-                    <Text style={[styles.langChipText, selectedLanguage === 'hi' && styles.langChipTextActive]}>हिन्दी (Hindi)</Text>
-                    {selectedLanguage === 'hi' && <Check size={14} color="#fff" />}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 4: HELP & SUPPORT */}
-          {activeTab === 'support' && (
-            <View>
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Customer Support</Text>
-                <Text style={styles.sectionSub}>Reach our customer support team for any billing or order inquiries.</Text>
-
-                <TouchableOpacity style={styles.supportOptionBtn} onPress={handleOpenWhatsAppSupport}>
-                  <View style={[styles.supportIconCircle, { backgroundColor: '#dcfce7' }]}>
-                    <MessageSquare size={18} color="#15803d" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.supportOptionTitle}>Chat on WhatsApp</Text>
-                    <Text style={styles.supportOptionSub}>
-                      {supportData.supportWhatsapp ? `+${supportData.supportWhatsapp} • Instant Chat` : 'Fast response • Instant resolution'}
-                    </Text>
-                  </View>
-                  <ChevronRight size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.supportOptionBtn} onPress={handleCallSupport}>
-                  <View style={[styles.supportIconCircle, { backgroundColor: '#e0f2fe' }]}>
-                    <Phone size={18} color={colors.primary} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.supportOptionTitle}>Call Support Helpline</Text>
-                    <Text style={styles.supportOptionSub}>
-                      {supportData.supportPhone ? `${supportData.supportPhone} • ${supportData.supportHours || '09:00 AM - 09:00 PM'}` : 'Contact SuperAdmin for support'}
-                    </Text>
-                  </View>
-                  <ChevronRight size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-
-                {supportData.supportEmail ? (
-                  <TouchableOpacity style={styles.supportOptionBtn} onPress={() => Linking.openURL(`mailto:${supportData.supportEmail}`)}>
-                    <View style={[styles.supportIconCircle, { backgroundColor: '#fef3c7' }]}>
-                      <Mail size={18} color="#d97706" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.supportOptionTitle}>Email Support</Text>
-                      <Text style={styles.supportOptionSub}>{supportData.supportEmail}</Text>
-                    </View>
-                    <ChevronRight size={16} color={colors.textMuted} />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-
-              <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>About Application</Text>
-                <View style={styles.aboutRow}>
-                  <Text style={styles.aboutLabel}>Version</Text>
-                  <Text style={styles.aboutValue}>1.0.0 (Build 2026.09)</Text>
-                </View>
-                <View style={styles.aboutRow}>
-                  <Text style={styles.aboutLabel}>Data Encryption</Text>
-                  <Text style={styles.aboutValue}>AES-256 Synchronized</Text>
-                </View>
-                <View style={[styles.aboutRow, { borderBottomWidth: 0 }]}>
-                  <Text style={styles.aboutLabel}>Server Connectivity</Text>
-                  <Text style={[styles.aboutValue, { color: '#16a34a', fontWeight: '700' }]}>🟢 Live Online</Text>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* Bottom Account Actions */}
-          <View style={styles.bottomActions}>
-            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
-              <LogOut size={16} color="#b91c1c" />
-              <Text style={styles.logoutBtnText}>Log Out Account</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </SafeAreaView>

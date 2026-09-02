@@ -1049,41 +1049,35 @@ export default function Customer() {
           </div>
         ))}
 
-        {/* City Selector Bar */}
-        <div className="panel" style={{ marginBottom: '1.25rem', padding: '0.85rem' }}>
-          <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <MapPin size={18} color="var(--primary)" />
-              <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>City:</span>
-              <select 
-                className="select" 
-                style={{ width: '160px', margin: 0, padding: '0.4rem 0.6rem', fontSize: '0.9rem' }}
-                value={selectedCity}
-                onChange={e => { setSelectedCity(e.target.value); setActiveShop(null); }}
-              >
-                {cities.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Exploring shops in <strong>{selectedCity}</strong>
-            </div>
-          </div>
-        </div>
-
         {/* TAB 1: EXPLORE SHOPS */}
         {activeTab === 'explore' && !activeShop && (
           <div>
-            <div style={{ marginBottom: '1rem', position: 'relative' }}>
-              <input
-                type="text"
-                className="input"
-                style={{ margin: 0, paddingLeft: '2.5rem', background: '#fff' }}
-                placeholder={`Search shops in ${selectedCity} by name or Short ID...`}
-                value={shopSearch}
-                onChange={e => setShopSearch(e.target.value)}
-              />
-              <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+            {/* Filter Row: City Selector & Search Bar in 1 Single Row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.35rem 0.65rem', borderRadius: '10px' }}>
+                <MapPin size={16} color="var(--primary)" />
+                <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)' }}>City:</span>
+                <select 
+                  className="select" 
+                  style={{ width: 'auto', margin: 0, padding: '0.2rem 0.4rem', fontSize: '0.88rem', fontWeight: '700', border: 'none', background: 'transparent' }}
+                  value={selectedCity}
+                  onChange={e => { setSelectedCity(e.target.value); setActiveShop(null); }}
+                >
+                  {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div style={{ flex: '1 1 200px', position: 'relative' }}>
+                <input
+                  type="text"
+                  className="input"
+                  style={{ margin: 0, paddingLeft: '2.5rem', background: '#fff' }}
+                  placeholder={`Search shops in ${selectedCity}...`}
+                  value={shopSearch}
+                  onChange={e => setShopSearch(e.target.value)}
+                />
+                <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+              </div>
             </div>
 
             <div className="grid grid-2">

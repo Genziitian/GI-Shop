@@ -79,8 +79,8 @@ export default function CustomerCompareScreen({ navigation }) {
         subtitle="Compare Prices in Shops"
       />
 
-      {/* Compact City Dropdown Selector Bar */}
-      <View style={styles.topSubBar}>
+      {/* Filter Row: Compact City Selector & Search Bar in 1 Single Row */}
+      <View style={styles.filterRow}>
         <TouchableOpacity
           style={styles.compactCityBtn}
           onPress={() => setShowCityModal(true)}
@@ -91,26 +91,25 @@ export default function CustomerCompareScreen({ navigation }) {
           <Text style={styles.compactCityText}>{selectedCity}</Text>
           <ChevronDown size={13} color={colors.text} />
         </TouchableOpacity>
-      </View>
 
-      {/* Search Input */}
-      <View style={styles.searchBox}>
-        <Search size={16} color={colors.textMuted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search item to compare (e.g. Milk, Rice, Atta)..."
-          placeholderTextColor={colors.textMuted}
-          value={query}
-          onChangeText={(txt) => {
-            setQuery(txt);
-            handleSearch(txt, selectedCity);
-          }}
-        />
-        {query.length > 0 && (
-          <TouchableOpacity onPress={() => { setQuery(''); handleSearch('', selectedCity); }}>
-            <X size={16} color={colors.textMuted} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.searchBoxInline}>
+          <Search size={15} color={colors.textMuted} />
+          <TextInput
+            style={styles.searchInputInline}
+            placeholder="Search item to compare..."
+            placeholderTextColor={colors.textMuted}
+            value={query}
+            onChangeText={(txt) => {
+              setQuery(txt);
+              handleSearch(txt, selectedCity);
+            }}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => { setQuery(''); handleSearch('', selectedCity); }}>
+              <X size={15} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Quick Search Chips */}
@@ -298,22 +297,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#fff',
   },
-  topSubBar: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+  filterRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
   },
   compactCityBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
     borderWidth: 1,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    height: 38,
     borderRadius: 8,
   },
   compactCityLabel: {
@@ -325,6 +324,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: colors.primaryDark,
+  },
+  searchBoxInline: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 38,
+    gap: 6,
+  },
+  searchInputInline: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    paddingVertical: 0,
   },
   cityDropdownBtn: {
     flexDirection: 'row',

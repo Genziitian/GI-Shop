@@ -285,8 +285,8 @@ export default function CustomerExploreScreen({ navigation, route }) {
         }
       />
 
-      {/* Compact City Dropdown Selector Bar */}
-      <View style={styles.topSubBar}>
+      {/* Filter Row: Compact City Selector & Search Bar in 1 Single Row */}
+      <View style={styles.filterRow}>
         <TouchableOpacity
           style={styles.compactCityBtn}
           onPress={() => setShowCityModal(true)}
@@ -297,49 +297,22 @@ export default function CustomerExploreScreen({ navigation, route }) {
           <Text style={styles.compactCityText}>{selectedCity}</Text>
           <ChevronDown size={13} color={colors.text} />
         </TouchableOpacity>
-      </View>
 
-      {/* Staff Invites Banner */}
-      {invites.map((inv) => (
-        <View key={inv.id} style={styles.inviteBanner}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.inviteTitle}>🎉 Staff Invitation from {inv.shopName}</Text>
-            <Text style={styles.inviteSub}>
-              You have been invited to join as Cashier for {inv.shopName} ({inv.city}).
-            </Text>
-          </View>
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-            <TouchableOpacity
-              style={[styles.inviteActionBtn, { backgroundColor: '#7c3aed' }]}
-              onPress={() => handleInviteAction(inv.id, 'ACCEPT')}
-            >
-              <Text style={styles.inviteActionText}>Accept & Join</Text>
+        <View style={styles.searchBoxInline}>
+          <Search size={15} color={colors.textMuted} />
+          <TextInput
+            style={styles.searchInputInline}
+            placeholder={`Search shops in ${selectedCity}...`}
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <X size={15} color={colors.textMuted} />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.inviteActionBtn, { backgroundColor: '#f1f5f9' }]}
-              onPress={() => handleInviteAction(inv.id, 'DECLINE')}
-            >
-              <Text style={[styles.inviteActionText, { color: '#475569' }]}>Decline</Text>
-            </TouchableOpacity>
-          </View>
+          )}
         </View>
-      ))}
-
-      {/* Search Input */}
-      <View style={styles.searchBox}>
-        <Search size={16} color={colors.textMuted} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={`Search shops in ${selectedCity} by name or Short ID...`}
-          placeholderTextColor={colors.textMuted}
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <X size={16} color={colors.textMuted} />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Shop List */}
@@ -773,22 +746,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#fff',
   },
-  topSubBar: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 4,
+  filterRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
   },
   compactCityBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
     borderWidth: 1,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    height: 38,
     borderRadius: 8,
   },
   compactCityLabel: {
@@ -800,6 +773,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: colors.primaryDark,
+  },
+  searchBoxInline: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 38,
+    gap: 6,
+  },
+  searchInputInline: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    paddingVertical: 0,
   },
   cityDropdownBtn: {
     flexDirection: 'row',

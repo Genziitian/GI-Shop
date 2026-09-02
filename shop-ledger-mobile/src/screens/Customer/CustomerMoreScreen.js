@@ -91,27 +91,12 @@ export default function CustomerMoreScreen({ navigation }) {
           <ChevronRight size={20} color={colors.textMuted} />
         </TouchableOpacity>
 
-        {/* SECTION 1: ACCOUNT & PROFILE SETTINGS */}
+        {/* SECTION 1: ACCOUNT & SECURITY SETTINGS */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Account & Settings</Text>
+          <Text style={styles.sectionTitle}>Account & Security</Text>
 
           <TouchableOpacity
-            style={styles.menuRow}
-            onPress={() => setShowProfileModal(true)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
-              <User size={18} color={colors.primary} />
-            </View>
-            <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>My Profile Details</Text>
-              <Text style={styles.menuSubtext}>Name, Phone, City & Delivery Address</Text>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.menuRow}
+            style={[styles.menuRow, { borderBottomWidth: 0 }]}
             onPress={() => setShowProfileModal(true)}
             activeOpacity={0.7}
           >
