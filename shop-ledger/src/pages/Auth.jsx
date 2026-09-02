@@ -232,6 +232,71 @@ export default function Auth() {
     }
   }, []);
 
+  // 1. Conditional Passkey Autofill Listener (when focusing Email on Identifier step)
+  useEffect(() => {
+    if (!isLogin || loginStep !== 'IDENTIFIER') return;
+
+    const abortController = new AbortController();
+    if (typeof window !== 'undefined' && window.PublicKeyCredential && PublicKeyCredential.isConditionalMediationAvailable) {
+      PublicKeyCredential.isConditionalMediationAvailable().then((available) => {
+        if (available && !abortController.signal.aborted) {
+          loginWithPasskey(true, abortController.signal)
+            .then((res) => {
+              if (res && res.token) {
+                localStorage.setItem('token', res.token);
+                localStorage.setItem('userRole', res.user.role);
+                localStorage.setItem('userData', JSON.stringify(res.user));
+                if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
+
+                if (res.user.role === 'SuperManager') navigate('/admin');
+                else if (res.user.role === 'Shopkeeper') navigate('/shop');
+                else navigate('/customer');
+              }
+            })
+            .catch(() => {});
+        }
+      }).catch(() => {});
+    }
+
+    return () => {
+      abortController.abort();
+    };
+  }, [isLogin, loginStep]);
+
+  // 2. Auto-Prompt Native Biometric / Passkey when entering Password step
+  useEffect(() => {
+    if (!isLogin || loginStep !== 'PASSWORD') return;
+
+    let active = true;
+    const abortController = new AbortController();
+
+    const timer = setTimeout(() => {
+      if (!active) return;
+      loginWithPasskey(false, abortController.signal)
+        .then((res) => {
+          if (active && res && res.token) {
+            localStorage.setItem('token', res.token);
+            localStorage.setItem('userRole', res.user.role);
+            localStorage.setItem('userData', JSON.stringify(res.user));
+            if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
+
+            if (res.user.role === 'SuperManager') navigate('/admin');
+            else if (res.user.role === 'Shopkeeper') navigate('/shop');
+            else navigate('/customer');
+          }
+        })
+        .catch((err) => {
+          console.log('[Native Passkey Auto-Prompt skipped/cancelled]', err?.message);
+        });
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      abortController.abort();
+    };
+  }, [isLogin, loginStep]);
+
   const handleLoginChange = (e) => {
     setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
   };
@@ -1282,6 +1347,7 @@ export default function Auth() {
                       <input 
                         name="password" 
                         type={showPassword ? 'text' : 'password'}
+                        autoComplete="current-password webauthn"
                         className="input" 
                         placeholder={t.passwordPlaceholder} 
                         value={loginForm.password} 

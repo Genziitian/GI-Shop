@@ -91,7 +91,7 @@ export const registerPasskey = async (deviceLabel = 'Device Passkey') => {
 };
 
 // Sign in with Passkey (Standard WebAuthn get)
-export const loginWithPasskey = async (isConditional = false) => {
+export const loginWithPasskey = async (isConditional = false, signal = null) => {
   if (!window.PublicKeyCredential) {
     throw new Error('Passkeys are not supported on this browser or device.');
   }
@@ -113,6 +113,9 @@ export const loginWithPasskey = async (isConditional = false) => {
 
   if (isConditional) {
     getOptions.mediation = 'conditional';
+  }
+  if (signal) {
+    getOptions.signal = signal;
   }
 
   // 3. Trigger browser native Face ID / Fingerprint / Device PIN prompt
