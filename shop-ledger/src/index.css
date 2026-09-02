@@ -368,3 +368,16 @@ input[type="number"] {
     font-size: 0.85rem;
   }
 }
+
+/* Split-screen Web Auth Page */
+@media (max-width: 960px) {
+  .auth-left-banner {
+    display: none !important;
+  }
+  .auth-right-panel {
+    flex: 1 !important;
+    width: 100% !important;
+    padding: 2rem 1.25rem !important;
+    box-shadow: none !important;
+  }
+}
