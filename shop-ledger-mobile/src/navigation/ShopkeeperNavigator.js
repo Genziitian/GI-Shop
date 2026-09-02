@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShoppingCart, Users, ShoppingBag, BarChart2, MoreHorizontal } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import POSScreen from '../screens/Shopkeeper/POSScreen';
@@ -11,6 +12,8 @@ import MoreScreen from '../screens/Shopkeeper/MoreScreen';
 const Tab = createBottomTabNavigator();
 
 export default function ShopkeeperNavigator() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -21,8 +24,8 @@ export default function ShopkeeperNavigator() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
         },
         tabBarLabelStyle: {

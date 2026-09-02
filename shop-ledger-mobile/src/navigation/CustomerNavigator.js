@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Store, Tag, BookOpen, Clock } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import CustomerExploreScreen from '../screens/Customer/CustomerExploreScreen';
@@ -10,6 +11,8 @@ import CustomerOrdersScreen from '../screens/Customer/CustomerOrdersScreen';
 const Tab = createBottomTabNavigator();
 
 export default function CustomerNavigator() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       initialRouteName="CustomerKhata"
@@ -21,8 +24,8 @@ export default function CustomerNavigator() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
         },
         tabBarLabelStyle: {

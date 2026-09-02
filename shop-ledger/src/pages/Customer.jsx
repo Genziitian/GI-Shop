@@ -1048,7 +1048,7 @@ export default function Customer() {
         </div>
       </div>
 
-      <div className="container" style={{ flex: 1, marginTop: '1rem', marginBottom: '4rem' }}>
+      <div className="container" style={{ flex: 1, marginTop: '1rem' }}>
         
         {/* Pending Staff Invites Banner */}
         {invites.map(inv => (

@@ -1015,7 +1015,7 @@ export default function Shopkeeper() {
       </div>
 
       {/* Main Content Area */}
-      <div className="container" style={{ flex: 1, marginTop: '1rem', marginBottom: '4rem' }}>
+      <div className="container" style={{ flex: 1, marginTop: '1rem' }}>
         
         {/* TAB 1: POS BILLING */}
         {activeTab === 'pos' && (

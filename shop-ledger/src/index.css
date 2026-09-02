@@ -9,6 +9,7 @@
   --success: #16a34a;
   --danger: #dc2626;
   --warning: #d97706;
+  --safe-area-bottom: max(env(safe-area-inset-bottom, 0px), constant(safe-area-inset-bottom, 0px));
 }
 
 html {
@@ -136,6 +137,7 @@ input[type="number"] {
   max-width: 1100px;
   margin: 0 auto;
   padding: 1rem;
+  padding-bottom: calc(5rem + max(env(safe-area-inset-bottom, 0px), constant(safe-area-inset-bottom, 0px)));
   width: 100%;
 }
 
@@ -189,15 +191,18 @@ input[type="number"] {
 /* App-Like Bottom Footer Navigation (Mobile & Tablet) */
 .mobile-footer-nav {
   display: flex;
-  position: sticky;
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
+  width: 100%;
   background: #ffffff;
   border-top: 1px solid var(--border);
-  padding: 0.35rem 0.5rem;
-  padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0.35rem));
-  z-index: 50;
+  padding-top: 0.35rem;
+  padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(0.35rem + max(env(safe-area-inset-bottom, 0px), constant(safe-area-inset-bottom, 0px)));
+  z-index: 100;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
 }
 
@@ -340,7 +345,7 @@ input[type="number"] {
   .panel { padding: 0.85rem; }
   .container {
     padding: 0.5rem;
-    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(5rem + max(env(safe-area-inset-bottom, 0px), constant(safe-area-inset-bottom, 0px)));
   }
   .title { font-size: 1.15rem; }
   .subtitle { font-size: 0.85rem; }
