@@ -1198,6 +1198,22 @@ export default function Auth() {
             </div>
           )}
 
+          {/* App Logo (visible on mobile when left banner is hidden) */}
+          <div className="auth-mobile-logo" style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+            <img 
+              src={logoImg} 
+              alt="GI SHOP" 
+              style={{ 
+                width: '56px', 
+                height: '56px', 
+                borderRadius: '14px', 
+                objectFit: 'contain',
+                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.15)',
+                border: '1px solid #e2e8f0'
+              }} 
+            />
+          </div>
+
           {/* Header Title */}
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
             <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>

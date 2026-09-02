@@ -370,6 +370,10 @@ input[type="number"] {
 }
 
 /* Split-screen Web Auth Page */
+.auth-mobile-logo {
+  display: none !important;
+}
+
 @media (max-width: 960px) {
   .auth-left-banner {
     display: none !important;
@@ -379,6 +383,13 @@ input[type="number"] {
     width: 100% !important;
     padding: 2rem 1.25rem !important;
     box-shadow: none !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    justify-content: flex-start !important;
+    padding-top: 3.5rem !important;
+  }
+  .auth-mobile-logo {
+    display: block !important;
   }
 }
 

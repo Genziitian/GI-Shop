@@ -284,16 +284,18 @@ app.post('/api/register', async (req, res) => {
     return res.status(400).json({ error: 'Invalid registration role' });
   }
 
+  const userEmail = email.trim().toLowerCase();
+  const userPhone = phone.trim();
   const userPin = pin && /^\d{4}$/.test(pin.toString().trim()) ? pin.toString().trim() : '1234';
 
   try {
     const hash = await bcrypt.hash(password, 10);
-    const userShortId = generateShortId(name.slice(0, 3));
+    const userShortId = generateShortId(name.slice(0, 3)).toLowerCase();
     const now = new Date().toISOString();
 
     db.run(`INSERT INTO Users (shortId, name, email, phone, password, pin, role, city, address, status, createdAt)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)`,
-      [userShortId, name, email, phone, hash, userPin, role, city || 'Delhi', address || '', now], function(err) {
+      [userShortId, name.trim(), userEmail, userPhone, hash, userPin, role, city || 'Delhi', address || '', now], function(err) {
         if (err) return res.status(400).json({ error: 'Email or phone number already registered' });
         const userId = this.lastID;
 

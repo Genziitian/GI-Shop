@@ -28,7 +28,8 @@
     "react-native-svg": "15.8.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2"
+    "@babel/core": "^7.25.2",
+    "@react-native-community/cli": "^20.2.0"
   },
   "overrides": {
     "tar": "^7.5.3",
