@@ -103,7 +103,7 @@ export const reactivateUser = (userId) => request('/admin/reactivate-user', { me
 export const resetAdminPin = (userId, newPin) => request('/admin/reset-pin', { method: 'POST', body: JSON.stringify({ userId, newPin }) });
 
 // Security PIN & Password APIs
-export const verifyPin = (pin) => request('/user/verify-pin', { method: 'POST', body: JSON.stringify({ pin }) });
+export const verifyPin = (pin, password = null) => request('/user/verify-pin', { method: 'POST', body: JSON.stringify({ pin, password }) });
 export const changePin = (currentPin, newPin) => request('/user/change-pin', { method: 'POST', body: JSON.stringify({ currentPin, newPin }) });
 export const changePassword = (currentPassword, newPassword) => request('/user/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
 

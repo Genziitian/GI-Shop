@@ -328,16 +328,29 @@ app.put('/api/user/profile', authenticate, (req, res) => {
     });
 });
 
-app.post('/api/user/verify-pin', authenticate, (req, res) => {
-  const { pin } = req.body;
-  if (!pin) return res.status(400).json({ error: 'PIN is required' });
-  db.get(`SELECT pin FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
+app.post('/api/user/verify-pin', authenticate, async (req, res) => {
+  const { pin, password } = req.body;
+  if (!pin && !password) return res.status(400).json({ error: 'PIN or Password is required' });
+  db.get(`SELECT pin, password FROM Users WHERE id = ?`, [req.user.id], async (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
-    const currentPin = user.pin || '1234';
-    if (currentPin === pin.toString().trim()) {
-      return res.json({ valid: true });
+    
+    // 1. Verify PIN
+    if (pin) {
+      const currentPin = user.pin || '1234';
+      if (currentPin === pin.toString().trim()) {
+        return res.json({ valid: true });
+      }
     }
-    return res.status(400).json({ error: 'Incorrect 4-digit PIN' });
+
+    // 2. Verify Password
+    if (password && user.password) {
+      try {
+        const valid = await bcrypt.compare(password, user.password);
+        if (valid) return res.json({ valid: true });
+      } catch (e) {}
+    }
+
+    return res.status(400).json({ error: pin ? 'Incorrect 4-digit PIN' : 'Incorrect account password' });
   });
 });
 

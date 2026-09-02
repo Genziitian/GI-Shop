@@ -151,6 +151,7 @@ export default function Shopkeeper() {
     try {
       await changePin(pinForm.currentPin, pinForm.newPin);
       setPinNotice('4-digit PIN updated successfully!');
+      setCurrentUser(prev => prev ? ({ ...prev, pin: pinForm.newPin, hasPinSet: 1 }) : prev);
       setPinForm({ currentPin: '', newPin: '', confirmPin: '' });
       setTimeout(() => setPinNotice(''), 4000);
     } catch (err) {
@@ -226,7 +227,10 @@ export default function Shopkeeper() {
 
   // Screen Lock / POS Register Lock State
   const [isScreenLocked, setIsScreenLocked] = useState(false);
+  const [unlockMode, setUnlockMode] = useState('PIN'); // 'PIN' | 'PASSWORD'
   const [unlockPin, setUnlockPin] = useState('');
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const [showUnlockPassword, setShowUnlockPassword] = useState(false);
   const [unlockError, setUnlockError] = useState('');
   const [unlockLoading, setUnlockLoading] = useState(false);
 
@@ -251,6 +255,27 @@ export default function Shopkeeper() {
     }
   };
 
+  const handleUnlockWithPassword = async (e) => {
+    if (e) e.preventDefault();
+    if (!unlockPassword) {
+      setUnlockError('Please enter your account password');
+      return;
+    }
+    setUnlockLoading(true);
+    setUnlockError('');
+    try {
+      await verifyPin(null, unlockPassword);
+      setIsScreenLocked(false);
+      setUnlockPassword('');
+      setUnlockPin('');
+      setUnlockError('');
+    } catch (err) {
+      setUnlockError(err.message || 'Incorrect password. Try again.');
+    } finally {
+      setUnlockLoading(false);
+    }
+  };
+
   const handleUnlockWithPasskey = async () => {
     setUnlockLoading(true);
     setUnlockError('');
@@ -258,6 +283,7 @@ export default function Shopkeeper() {
       await loginWithPasskey();
       setIsScreenLocked(false);
       setUnlockPin('');
+      setUnlockPassword('');
       setUnlockError('');
     } catch (err) {
       setUnlockError(err.message || 'Passkey unlock failed or cancelled.');
@@ -557,22 +583,21 @@ export default function Shopkeeper() {
             <Settings size={16} /> Settings
           </button>
 
-          {/* Quick Screen Lock Button (Only visible if PIN is configured by user) */}
-          {(currentUser?.hasPinSet === 1 || currentUser?.hasPinSet === true || (currentUser?.pin && String(currentUser.pin).length === 4)) && (
-            <button 
-              type="button" 
-              className="btn btn-outline" 
-              onClick={() => {
-                setIsScreenLocked(true);
-                setUnlockPin('');
-                setUnlockError('');
-              }} 
-              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
-              title="Lock Register / Screen with your 4-digit PIN"
-            >
-              <Lock size={15} color="#e11d48" /> Lock
-            </button>
-          )}
+          {/* Quick Screen Lock Button */}
+          <button 
+            type="button" 
+            className="btn btn-outline" 
+            onClick={() => {
+              setIsScreenLocked(true);
+              setUnlockPin('');
+              setUnlockPassword('');
+              setUnlockError('');
+            }} 
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
+            title="Lock Register / Screen"
+          >
+            <Lock size={15} color="#e11d48" /> Lock
+          </button>
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
             <LogOut size={16} /> Logout
@@ -1911,8 +1936,48 @@ export default function Shopkeeper() {
             <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#f8fafc' }}>
               {currentShop?.shopName || 'Register Locked'}
             </h2>
-            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.5rem' }}>
-              Enter your 4-digit PIN to resume billing
+            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.25rem' }}>
+              {unlockMode === 'PIN' ? 'Enter 4-digit PIN to resume billing' : 'Enter account password to resume billing'}
+            </div>
+
+            {/* Unlock Mode Selector (PIN vs Password) */}
+            <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '10px', padding: '3px', maxWidth: '280px', margin: '0 auto 1.25rem auto' }}>
+              <button
+                type="button"
+                onClick={() => { setUnlockMode('PIN'); setUnlockError(''); }}
+                style={{
+                  flex: 1,
+                  padding: '0.4rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: unlockMode === 'PIN' ? '#10b981' : 'transparent',
+                  color: '#fff',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                4-Digit PIN
+              </button>
+              <button
+                type="button"
+                onClick={() => { setUnlockMode('PASSWORD'); setUnlockError(''); }}
+                style={{
+                  flex: 1,
+                  padding: '0.4rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: unlockMode === 'PASSWORD' ? '#10b981' : 'transparent',
+                  color: '#fff',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Password
+              </button>
             </div>
 
             {/* Error message */}
@@ -1922,109 +1987,164 @@ export default function Shopkeeper() {
               </div>
             )}
 
-            {/* Visual PIN Dots */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.75rem' }}>
-              {[0, 1, 2, 3].map(idx => (
-                <div 
-                  key={idx} 
-                  style={{ 
-                    width: '18px', 
-                    height: '18px', 
-                    borderRadius: '50%', 
-                    border: '2px solid rgba(255,255,255,0.4)', 
-                    background: unlockPin.length > idx ? '#10b981' : 'transparent',
-                    boxShadow: unlockPin.length > idx ? '0 0 12px rgba(16, 185, 129, 0.5)' : 'none',
-                    transition: 'all 0.15s ease'
-                  }} 
-                />
-              ))}
-            </div>
+            {unlockMode === 'PIN' ? (
+              <div>
+                {/* Visual PIN Dots */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  {[0, 1, 2, 3].map(idx => (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        width: '18px', 
+                        height: '18px', 
+                        borderRadius: '50%', 
+                        border: '2px solid rgba(255,255,255,0.4)', 
+                        background: unlockPin.length > idx ? '#10b981' : 'transparent',
+                        boxShadow: unlockPin.length > idx ? '0 0 12px rgba(16, 185, 129, 0.5)' : 'none',
+                        transition: 'all 0.15s ease'
+                      }} 
+                    />
+                  ))}
+                </div>
 
-            {/* Touch Keypad (1 - 9, Clear, 0, Unlock) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', maxWidth: '280px', margin: '0 auto 1.5rem auto' }}>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                {/* Touch Keypad (1 - 9, Clear, 0, Unlock) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', maxWidth: '280px', margin: '0 auto 1.5rem auto' }}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => handleKeypadPress(String(num))}
+                      disabled={unlockLoading}
+                      style={{
+                        height: '54px',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: '#fff',
+                        fontSize: '1.4rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        transition: 'all 0.1s ease',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                      onMouseDown={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
+                      onMouseUp={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                    >
+                      {num}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={handleKeypadBackspace}
+                    disabled={unlockLoading}
+                    style={{
+                      height: '54px',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      color: '#94a3b8',
+                      fontSize: '0.9rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    Clear
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleKeypadPress('0')}
+                    disabled={unlockLoading}
+                    style={{
+                      height: '54px',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      color: '#fff',
+                      fontSize: '1.4rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    0
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUnlockWithPin()}
+                    disabled={unlockLoading || unlockPin.length !== 4}
+                    style={{
+                      height: '54px',
+                      borderRadius: '14px',
+                      border: 'none',
+                      background: unlockPin.length === 4 ? '#10b981' : 'rgba(255, 255, 255, 0.1)',
+                      color: '#fff',
+                      fontSize: '0.92rem',
+                      fontWeight: '800',
+                      cursor: unlockPin.length === 4 ? 'pointer' : 'not-allowed',
+                      boxShadow: unlockPin.length === 4 ? '0 4px 14px rgba(16, 185, 129, 0.4)' : 'none'
+                    }}
+                  >
+                    {unlockLoading ? '...' : 'Unlock'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Password Unlock Form */
+              <form onSubmit={handleUnlockWithPassword} style={{ maxWidth: '280px', margin: '0 auto 1.5rem auto' }}>
+                <div style={{ position: 'relative', marginBottom: '0.85rem' }}>
+                  <input
+                    type={showUnlockPassword ? 'text' : 'password'}
+                    placeholder="Enter account password"
+                    value={unlockPassword}
+                    onChange={e => setUnlockPassword(e.target.value)}
+                    required
+                    autoFocus
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 2.5rem 0.85rem 0.85rem',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderRadius: '12px',
+                      color: '#fff',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowUnlockPassword(!showUnlockPassword)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                  >
+                    {showUnlockPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
                 <button
-                  key={num}
-                  type="button"
-                  onClick={() => handleKeypadPress(String(num))}
-                  disabled={unlockLoading}
+                  type="submit"
+                  disabled={unlockLoading || !unlockPassword}
                   style={{
-                    height: '56px',
-                    borderRadius: '14px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    background: 'rgba(255, 255, 255, 0.06)',
+                    width: '100%',
+                    padding: '0.85rem',
+                    background: '#10b981',
+                    border: 'none',
+                    borderRadius: '12px',
                     color: '#fff',
-                    fontSize: '1.4rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    transition: 'all 0.1s ease',
-                    backdropFilter: 'blur(10px)'
+                    fontSize: '0.95rem',
+                    fontWeight: '800',
+                    cursor: unlockPassword ? 'pointer' : 'not-allowed',
+                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
                   }}
-                  onMouseDown={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
-                  onMouseUp={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
                 >
-                  {num}
+                  {unlockLoading ? 'Unlocking...' : 'Unlock with Password'}
                 </button>
-              ))}
-
-              <button
-                type="button"
-                onClick={handleKeypadBackspace}
-                disabled={unlockLoading}
-                style={{
-                  height: '56px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  color: '#94a3b8',
-                  fontSize: '0.9rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                Clear
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleKeypadPress('0')}
-                disabled={unlockLoading}
-                style={{
-                  height: '56px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  color: '#fff',
-                  fontSize: '1.4rem',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
-                0
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleUnlockWithPin()}
-                disabled={unlockLoading || unlockPin.length !== 4}
-                style={{
-                  height: '56px',
-                  borderRadius: '14px',
-                  border: 'none',
-                  background: unlockPin.length === 4 ? '#10b981' : 'rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
-                  fontSize: '0.95rem',
-                  fontWeight: '800',
-                  cursor: unlockPin.length === 4 ? 'pointer' : 'not-allowed',
-                  boxShadow: unlockPin.length === 4 ? '0 4px 14px rgba(16, 185, 129, 0.4)' : 'none'
-                }}
-              >
-                {unlockLoading ? '...' : 'Unlock'}
-              </button>
-            </div>
+              </form>
+            )}
 
             {/* Passkey / Face ID Unlock Button */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
