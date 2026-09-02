@@ -265,6 +265,9 @@ if (DB_TYPE === 'mysql') {
       });
     }
 
+    // MySQL column migrations
+    pool.query(`ALTER TABLE Users ADD COLUMN hasPasswordSet TINYINT(1) DEFAULT 0`, () => {});
+
     // Seed baseline cities
     const defaultCities = ['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'];
     defaultCities.forEach(cName => {
