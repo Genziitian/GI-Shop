@@ -178,55 +178,58 @@ export default function Auth() {
     // Load available cities
     getCities().then(setCities).catch(() => {});
 
-    // Initialize Google One Tap Prompt
-    const initGoogleOneTap = () => {
-      if (typeof window !== 'undefined' && window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: "548472173128",
-            callback: async (response) => {
-              if (response && response.credential) {
-                setError('');
-                setGoogleLoading(true);
-                try {
-                  const res = await googleLogin({ idToken: response.credential, onboardComplete: false });
-                  if (res.isNewUser) {
-                    setOnboarding({
-                      idToken: response.credential,
-                      googleUser: res.googleUser,
-                      step: 'ROLE_SELECT',
-                      role: 'Customer'
-                    });
-                    setOnboardingForm(prev => ({ ...prev, name: res.googleUser.name || '' }));
-                  } else {
-                    localStorage.setItem('token', res.token);
-                    localStorage.setItem('userRole', res.user.role);
-                    localStorage.setItem('userData', JSON.stringify(res.user));
-                    if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
+    // Initialize Google One Tap Prompt only if a valid Google Web OAuth Client ID is configured
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    if (googleClientId && googleClientId.includes('.apps.googleusercontent.com')) {
+      const initGoogleOneTap = () => {
+        if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+          try {
+            window.google.accounts.id.initialize({
+              client_id: googleClientId,
+              callback: async (response) => {
+                if (response && response.credential) {
+                  setError('');
+                  setGoogleLoading(true);
+                  try {
+                    const res = await googleLogin({ idToken: response.credential, onboardComplete: false });
+                    if (res.isNewUser) {
+                      setOnboarding({
+                        idToken: response.credential,
+                        googleUser: res.googleUser,
+                        step: 'ROLE_SELECT',
+                        role: 'Customer'
+                      });
+                      setOnboardingForm(prev => ({ ...prev, name: res.googleUser.name || '' }));
+                    } else {
+                      localStorage.setItem('token', res.token);
+                      localStorage.setItem('userRole', res.user.role);
+                      localStorage.setItem('userData', JSON.stringify(res.user));
+                      if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-                    if (res.user.role === 'SuperManager') navigate('/admin');
-                    else if (res.user.role === 'Shopkeeper') navigate('/shop');
-                    else navigate('/customer');
+                      if (res.user.role === 'SuperManager') navigate('/admin');
+                      else if (res.user.role === 'Shopkeeper') navigate('/shop');
+                      else navigate('/customer');
+                    }
+                  } catch (err) {
+                    console.error('[Google One Tap Error]', err);
+                  } finally {
+                    setGoogleLoading(false);
                   }
-                } catch (err) {
-                  console.error('[Google One Tap Error]', err);
-                } finally {
-                  setGoogleLoading(false);
                 }
-              }
-            },
-            auto_select: false,
-            cancel_on_tap_outside: true
-          });
-          window.google.accounts.id.prompt();
-        } catch (e) {
-          console.log('[Google One Tap Info]', e);
+              },
+              auto_select: false,
+              cancel_on_tap_outside: true
+            });
+            window.google.accounts.id.prompt();
+          } catch (e) {
+            console.log('[Google One Tap Info]', e);
+          }
         }
-      }
-    };
+      };
 
-    const timer = setTimeout(initGoogleOneTap, 1000);
-    return () => clearTimeout(timer);
+      const timer = setTimeout(initGoogleOneTap, 1000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleLoginChange = (e) => {
