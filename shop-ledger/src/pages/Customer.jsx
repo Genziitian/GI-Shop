@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   getMe, getCities, getShops, getShopDetails, compareItems, placeOrder, 
   getCustomerOrders, getCustomerHistory, getCustomerInvites, respondToInvite,
-  updateUserProfile, changePin, getCustomerKhata, getCustomerShopKhata,
+  updateUserProfile, changePin, changePassword, getCustomerKhata, getCustomerShopKhata,
   cancelCustomerOrder, updateOrderCollection
 } from '../lib/api';
 import { registerPasskey } from '../lib/passkey';
@@ -11,7 +11,7 @@ import {
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
   X, CheckCircle, AlertCircle, LogOut, Phone, ShieldCheck, UserCheck, 
   Tag, ArrowRight, AlertTriangle, Printer, FileText, Download, Key, Lock, User,
-  MessageCircle, BookOpen, Fingerprint
+  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
@@ -56,6 +56,7 @@ export default function Customer() {
 
   // Customer Profile Modal & Settings State
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [customerSettingsTab, setCustomerSettingsTab] = useState('profile'); // 'profile' | 'security' | 'export'
   const [profileForm, setProfileForm] = useState({
     name: '',
     phone: '',
@@ -66,15 +67,45 @@ export default function Customer() {
   const [profileNotice, setProfileNotice] = useState('');
   const [profileError, setProfileError] = useState('');
 
-  // Security PIN State
+  // Security PIN State & Visibility
   const [pinForm, setPinForm] = useState({
     currentPin: '',
     newPin: '',
     confirmPin: ''
   });
+  const [showCurrentPin, setShowCurrentPin] = useState(false);
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [pinSaving, setPinSaving] = useState(false);
   const [pinNotice, setPinNotice] = useState('');
   const [pinError, setPinError] = useState('');
+
+  // Account Password Form & Visibility
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // Customer Data Export & Backup State
+  const [exportDateRange, setExportDateRange] = useState('ALL'); // 'ALL' | 'TODAY' | '7DAYS' | 'THIS_MONTH' | 'LAST_MONTH' | 'CUSTOM'
+  const [exportStartDate, setExportStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  });
+  const [exportEndDate, setExportEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [exportCategories, setExportCategories] = useState({
+    orders: true,
+    khata: true,
+    profile: true,
+    summary: true
+  });
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportNotice, setExportNotice] = useState('');
+  const [exportError, setExportError] = useState('');
 
   // Date Filter State for All Orders & Receipts (Today, Yesterday, Month, Custom, All)
   const [ordersDateFilter, setOrdersDateFilter] = useState('All');
@@ -338,6 +369,312 @@ export default function Customer() {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordSaving(true);
+    setPasswordNotice('');
+    setPasswordError('');
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New password and confirmation do not match');
+      setPasswordSaving(false);
+      return;
+    }
+    if (passwordForm.newPassword.length < 4) {
+      setPasswordError('Password must be at least 4 characters long');
+      setPasswordSaving(false);
+      return;
+    }
+
+    try {
+      const res = await changePassword(passwordForm.currentPassword || null, passwordForm.newPassword);
+      setPasswordNotice(res.message || 'Password saved successfully!');
+      setCurrentUser(prev => prev ? ({ ...prev, hasPasswordSet: 1 }) : prev);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => setPasswordNotice(''), 4000);
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to save password');
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  // Helper: Filter customer records by date
+  const filterCustomerRecordsByDate = (records, dateField = 'createdAt') => {
+    if (!Array.isArray(records)) return [];
+    if (exportDateRange === 'ALL') return records;
+
+    const now = new Date();
+    let start = new Date(0);
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    if (exportDateRange === 'TODAY') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    } else if (exportDateRange === '7DAYS') {
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      start.setHours(0, 0, 0, 0);
+    } else if (exportDateRange === 'THIS_MONTH') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    } else if (exportDateRange === 'LAST_MONTH') {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    } else if (exportDateRange === 'CUSTOM') {
+      if (exportStartDate) start = new Date(`${exportStartDate}T00:00:00`);
+      if (exportEndDate) end = new Date(`${exportEndDate}T23:59:59`);
+    }
+
+    return records.filter(item => {
+      const dStr = item[dateField] || item.createdAt || item.date;
+      if (!dStr) return true;
+      const d = new Date(dStr);
+      return !isNaN(d.getTime()) && d >= start && d <= end;
+    });
+  };
+
+  // CSV Downloader
+  const triggerCSVDownload = (filename, headers, rows) => {
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      let str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // JSON Downloader
+  const triggerJSONDownload = (filename, data) => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Customer Export CSV
+  const handleExportCSV = async () => {
+    setExportLoading(true);
+    setExportNotice('');
+    setExportError('');
+
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const userSlug = (currentUser?.name || 'Customer').replace(/\s+/g, '_');
+
+      // 1. Orders
+      if (exportCategories.orders) {
+        const filteredOrders = filterCustomerRecordsByDate(orders, 'createdAt');
+        const orderHeaders = ['Order Number', 'Date', 'Shop Name', 'Status', 'Estimated Total (₹)', 'Items'];
+        const orderRows = filteredOrders.map(o => {
+          let itemsText = '';
+          try {
+            const parsed = JSON.parse(o.itemsJSON || '[]');
+            itemsText = parsed.map(i => `${i.name} (Qty: ${i.quantity || 1})`).join('; ');
+          } catch(e) { itemsText = o.itemsJSON || ''; }
+
+          return [
+            o.orderNumber || o.id || '',
+            o.createdAt || '',
+            o.shopName || '',
+            o.status || 'PENDING',
+            o.estimatedTotal || 0,
+            itemsText
+          ];
+        });
+        triggerCSVDownload(`${userSlug}_Orders_${exportDateRange}_${todayStr}.csv`, orderHeaders, orderRows);
+      }
+
+      // 2. Khata Ledger
+      if (exportCategories.khata) {
+        const khataHeaders = ['Shop Name', 'Shop Phone', 'Outstanding Dues (₹)', 'Total Purchases (₹)', 'Settled (₹)'];
+        const khataRows = (khataOverview.stores || []).map(s => [
+          s.shopName || '',
+          s.shopPhone || '',
+          (s.netDue || 0).toFixed(2),
+          (s.totalKhataPurchases || 0).toFixed(2),
+          (s.totalSettlements || 0).toFixed(2)
+        ]);
+        triggerCSVDownload(`${userSlug}_Khata_Ledger_${todayStr}.csv`, khataHeaders, khataRows);
+      }
+
+      // 3. Profile & Summary
+      if (exportCategories.summary) {
+        const sumHeaders = ['Metric', 'Value'];
+        const sumRows = [
+          ['Customer Name', currentUser?.name || ''],
+          ['Customer ID', currentUser?.shortId || ''],
+          ['Email', currentUser?.email || ''],
+          ['Phone', currentUser?.phone || ''],
+          ['City', currentUser?.city || ''],
+          ['Delivery Address', currentUser?.address || ''],
+          ['Total Orders Placed', orders.length],
+          ['Active Khata Dues (₹)', (khataOverview.overallDue || 0).toFixed(2)],
+          ['Export Timestamp', new Date().toLocaleString()]
+        ];
+        triggerCSVDownload(`${userSlug}_Account_Summary_${todayStr}.csv`, sumHeaders, sumRows);
+      }
+
+      setExportNotice('Export complete! Spreadsheets downloaded successfully.');
+      setTimeout(() => setExportNotice(''), 6000);
+    } catch(err) {
+      setExportError(err.message || 'Failed to export customer data.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Customer Export JSON
+  const handleExportJSON = () => {
+    setExportLoading(true);
+    setExportNotice('');
+    setExportError('');
+
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const userSlug = (currentUser?.name || 'Customer').replace(/\s+/g, '_');
+
+      const masterBackup = {
+        meta: {
+          exportVersion: '1.0',
+          exportedAt: new Date().toISOString(),
+          customerName: currentUser?.name,
+          customerId: currentUser?.shortId,
+          email: currentUser?.email,
+          phone: currentUser?.phone,
+          city: currentUser?.city,
+          address: currentUser?.address,
+          dateRangeApplied: exportDateRange
+        },
+        orders: exportCategories.orders ? filterCustomerRecordsByDate(orders, 'createdAt') : undefined,
+        khata: exportCategories.khata ? khataOverview : undefined,
+        profile: exportCategories.profile ? profileForm : undefined
+      };
+
+      triggerJSONDownload(`${userSlug}_Full_Account_Backup_${exportDateRange}_${todayStr}.json`, masterBackup);
+      setExportNotice('Full Master JSON Backup downloaded successfully!');
+      setTimeout(() => setExportNotice(''), 6000);
+    } catch(err) {
+      setExportError(err.message || 'Failed to export JSON backup.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Customer Print Summary
+  const handlePrintSummary = () => {
+    const printWin = window.open('', '_blank', 'width=850,height=900');
+    if (!printWin) {
+      alert('Popup blocked! Please allow popups to print statement.');
+      return;
+    }
+
+    const filteredOrders = filterCustomerRecordsByDate(orders, 'createdAt');
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${currentUser?.name || 'Customer'} - Account Statement</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+          .title { font-size: 24px; font-weight: 800; color: #0284c7; margin: 0; }
+          .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 12px; }
+          .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+          .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #f8fafc; }
+          .card-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+          .card-val { font-size: 20px; font-weight: 800; color: #0f172a; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+          th { background: #f1f5f9; font-weight: 700; }
+          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">${currentUser?.name || 'Customer Statement'}</h1>
+            <div style="font-size: 13px; color: #475569; margin-top: 2px;">
+              Customer ID: <strong>${currentUser?.shortId || ''}</strong> • Phone: ${currentUser?.phone || ''}
+            </div>
+            <div style="font-size: 12px; color: #64748b;">${currentUser?.address || ''}, ${currentUser?.city || ''}</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="badge">Period: ${exportDateRange}</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">Total Orders Placed</div>
+            <div class="card-val" style="color: #0284c7;">${orders.length}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Active Khata Dues</div>
+            <div class="card-val" style="color: ${(khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#16a34a'};">₹${(khataOverview.overallDue || 0).toFixed(2)}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Active Linked Stores</div>
+            <div class="card-val">${(khataOverview.stores || []).length}</div>
+          </div>
+        </div>
+
+        <h3 style="margin: 16px 0 6px 0; font-size: 15px;">Recent Orders History (${filteredOrders.length} total)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Date</th>
+              <th>Shop</th>
+              <th>Status</th>
+              <th>Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredOrders.map(o => `
+              <tr>
+                <td><strong>${o.orderNumber || o.id}</strong></td>
+                <td>${o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '-'}</td>
+                <td>${o.shopName || 'Shop'}</td>
+                <td>${o.status || 'PENDING'}</td>
+                <td style="font-weight: 700;">₹${Number(o.estimatedTotal || 0).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          GI SHOP Customer Ledger & Account Summary • Confidential
+        </div>
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
   const handleOpenShop = async (shop) => {
     try {
       const details = await getShopDetails(shop.id || shop.shopId);
@@ -567,7 +904,7 @@ export default function Customer() {
             <div>
               <div style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 {currentUser?.name || 'Customer'}
-                <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.1rem 0.35rem', borderRadius: '4px', border: '1px solid #bfdbfe', fontWeight: '600' }}>✏️ Profile</span>
+                <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.1rem 0.45rem', borderRadius: '4px', border: '1px solid #bfdbfe', fontWeight: '700' }}>Settings</span>
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                 Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong> • {currentUser?.phone}
@@ -680,7 +1017,7 @@ export default function Customer() {
                       color: shop.isOpen ? '#15803d' : '#b91c1c',
                       borderColor: shop.isOpen ? '#bbf7d0' : '#fecaca'
                     }}>
-                      {shop.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
+                      {shop.isOpen ? 'OPEN' : 'CLOSED'}
                     </span>
                   </div>
 
@@ -868,7 +1205,7 @@ export default function Customer() {
                   background: activeShop.isOpen ? '#dcfce7' : '#fee2e2',
                   color: activeShop.isOpen ? '#15803d' : '#b91c1c'
                 }}>
-                  {activeShop.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
+                  {activeShop.isOpen ? 'OPEN' : 'CLOSED'}
                 </span>
               </div>
 
@@ -998,7 +1335,7 @@ export default function Customer() {
                               style={{ background: '#16a34a', color: '#fff', padding: '0.4rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '700' }}
                               onClick={() => openItemModal(item, activeShop)}
                             >
-                              ✏️ {currentQty} {item.unit}
+                              {currentQty} {item.unit}
                             </button>
                           ) : (
                             <button 
@@ -1141,12 +1478,12 @@ export default function Customer() {
                               ID: {st.shortId || `shp${st.shopId}`}
                             </span>
                             <span className="badge" style={{ fontSize: '0.7rem', background: st.isOpen ? '#dcfce7' : '#fee2e2', color: st.isOpen ? '#15803d' : '#b91c1c' }}>
-                              {st.isOpen ? '🟢 Open' : '🔴 Closed'}
+                              {st.isOpen ? 'Open' : 'Closed'}
                             </span>
                           </div>
 
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-                            📍 {st.shopAddress ? `${st.shopAddress}, ${st.city}` : st.city} {st.timings ? `• 🕒 ${st.timings}` : ''}
+                            {st.shopAddress ? `${st.shopAddress}, ${st.city}` : st.city} {st.timings ? `• ${st.timings}` : ''}
                           </div>
 
                           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
@@ -1268,11 +1605,11 @@ export default function Customer() {
                           ID: {selectedKhataStore.shortId || `shp${selectedKhataStore.shopId || selectedKhataStore.id}`}
                         </span>
                         <span className="badge" style={{ background: selectedKhataStore.isOpen ? '#dcfce7' : '#fee2e2', color: selectedKhataStore.isOpen ? '#15803d' : '#b91c1c' }}>
-                          {selectedKhataStore.isOpen ? '🟢 Open' : '🔴 Closed'}
+                          {selectedKhataStore.isOpen ? 'Open' : 'Closed'}
                         </span>
                       </div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        📍 {selectedKhataStore.shopAddress ? `${selectedKhataStore.shopAddress}, ${selectedKhataStore.city}` : selectedKhataStore.city}
+                        {selectedKhataStore.shopAddress ? `${selectedKhataStore.shopAddress}, ${selectedKhataStore.city}` : selectedKhataStore.city}
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
@@ -1440,7 +1777,7 @@ export default function Customer() {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                       <strong style={{ fontSize: '0.95rem' }}>In-Store Purchase #{entry.id}</strong>
                                       <span className="badge" style={{ fontSize: '0.75rem', background: isKhataMethod ? '#fee2e2' : '#dcfce7', color: isKhataMethod ? '#b91c1c' : '#15803d', fontWeight: '700' }}>
-                                        {isKhataMethod ? '📖 Added to Khata (Due)' : `💵 Paid (${entry.paymentMethod})`}
+                                        {isKhataMethod ? 'Added to Khata (Due)' : `Paid (${entry.paymentMethod})`}
                                       </span>
                                     </div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -1706,26 +2043,26 @@ export default function Customer() {
                               padding: '0.4rem 0.75rem',
                               fontWeight: '700'
                             }}>
-                              {order.status === 'PACKING' && `⏳ PACKING (ETA: ~${order.packingMinutes} mins)`}
-                              {order.status === 'PENDING' && '🕒 PENDING ACCEPTANCE (45m Window)'}
-                              {(order.status === 'COMPLETED' || order.status === 'READY') && '📦 PACKED & READY FOR PICKUP'}
-                              {order.status === 'COLLECTED' && '✓ COLLECTED BY YOU (LOCKED)'}
-                              {order.status === 'NOT_COLLECTED' && '✗ MARKED NOT COLLECTED (LOCKED)'}
-                              {order.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED / TAKEN BACK (LOCKED)'}
-                              {order.status === 'AUTO_CANCELLED_EXPIRED' && '⛔ AUTO-CANCELLED (45m EXPIRED)'}
-                              {order.status === 'DECLINED' && `❌ DECLINED (${order.declineReason || 'Unavailable'})`}
+                              {order.status === 'PACKING' && `PACKING (ETA: ~${order.packingMinutes} mins)`}
+                              {order.status === 'PENDING' && 'PENDING ACCEPTANCE (45m Window)'}
+                              {(order.status === 'COMPLETED' || order.status === 'READY') && 'PACKED & READY FOR PICKUP'}
+                              {order.status === 'COLLECTED' && 'COLLECTED BY YOU (LOCKED)'}
+                              {order.status === 'NOT_COLLECTED' && 'MARKED NOT COLLECTED (LOCKED)'}
+                              {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED / TAKEN BACK (LOCKED)'}
+                              {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
+                              {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
                             </span>
                           </div>
 
                           {order.status === 'AUTO_CANCELLED_EXPIRED' && (
                             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.5rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#b91c1c', fontWeight: '600' }}>
-                              ⚠️ Order automatically cancelled: Shopkeeper did not accept within 45 minutes.
+                              Order automatically cancelled: Shopkeeper did not accept within 45 minutes.
                             </div>
                           )}
 
                           {order.status === 'PENDING' && (
                             <div style={{ background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.5rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
-                              ⏳ Shopkeeper must accept within 45 minutes of order placement or it will be cancelled automatically.
+                              Shopkeeper must accept within 45 minutes of order placement or it will be cancelled automatically.
                             </div>
                           )}
 
@@ -2097,13 +2434,13 @@ export default function Customer() {
                   padding: '0.35rem 0.65rem',
                   fontWeight: '700'
                 }}>
-                  {selectedOrderForDetails.status === 'PACKING' && `⏳ PACKING (ETA: ~${selectedOrderForDetails.packingMinutes} mins)`}
-                  {selectedOrderForDetails.status === 'PENDING' && '🕒 PENDING CONFIRMATION'}
-                  {(selectedOrderForDetails.status === 'COMPLETED' || selectedOrderForDetails.status === 'READY') && '📦 PACKED & READY FOR PICKUP'}
-                  {selectedOrderForDetails.status === 'COLLECTED' && '✓ COLLECTED BY YOU (LOCKED)'}
-                  {selectedOrderForDetails.status === 'NOT_COLLECTED' && '✗ MARKED NOT COLLECTED (LOCKED)'}
-                  {selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED / TAKEN BACK (LOCKED)'}
-                  {selectedOrderForDetails.status === 'DECLINED' && `❌ DECLINED`}
+                  {selectedOrderForDetails.status === 'PACKING' && `PACKING (ETA: ~${selectedOrderForDetails.packingMinutes} mins)`}
+                  {selectedOrderForDetails.status === 'PENDING' && 'PENDING CONFIRMATION'}
+                  {(selectedOrderForDetails.status === 'COMPLETED' || selectedOrderForDetails.status === 'READY') && 'PACKED & READY FOR PICKUP'}
+                  {selectedOrderForDetails.status === 'COLLECTED' && 'COLLECTED BY YOU (LOCKED)'}
+                  {selectedOrderForDetails.status === 'NOT_COLLECTED' && 'MARKED NOT COLLECTED (LOCKED)'}
+                  {selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED / TAKEN BACK (LOCKED)'}
+                  {selectedOrderForDetails.status === 'DECLINED' && `DECLINED`}
                 </span>
               </div>
 
@@ -2218,7 +2555,7 @@ export default function Customer() {
             <div className="panel modal-dialog" style={{ width: '420px', maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.25rem' }}>
               <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
                 <div>
-                  <h3 className="title" style={{ margin: 0, fontSize: '1.15rem' }}>🛒 Your Order List</h3>
+                  <h3 className="title" style={{ margin: 0, fontSize: '1.15rem' }}>Your Order List</h3>
                   <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600' }}>
                     Shop: {activeCartShop.name}
                   </div>
@@ -2368,212 +2705,760 @@ export default function Customer() {
           </div>
         )}
 
-        {/* CUSTOMER PROFILE & SECURITY PIN MODAL */}
+        {/* CUSTOMER ACCOUNT, SECURITY & DATA EXPORT MODAL */}
         {showProfileModal && (
           <div className="modal-overlay">
-            <div className="panel modal-dialog" style={{ width: '480px', maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.25rem', borderRadius: '12px' }}>
+            <div className="panel modal-dialog" style={{ width: '860px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.75rem', borderRadius: '22px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
               
-              <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <UserCheck size={20} />
+              {/* Modal Header */}
+              <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <User size={24} />
                   </div>
                   <div>
-                    <h3 className="title" style={{ margin: 0, fontSize: '1.15rem' }}>Customer Profile</h3>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Manage profile &amp; security PIN</div>
+                    <h3 className="title" style={{ margin: 0, fontSize: '1.3rem' }}>Customer Account & Settings</h3>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      Customer ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong> • Name: <strong>{currentUser?.name}</strong>
+                    </div>
                   </div>
                 </div>
-                <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowProfileModal(false)} />
+                <X size={22} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowProfileModal(false)} />
               </div>
 
-              {/* Profile Card Header */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text)' }}>{currentUser?.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                    Role: <strong>{currentUser?.role || 'Customer'}</strong> • {currentUser?.email}
-                  </div>
-                </div>
-                <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)', fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}>
-                  Short ID: {currentUser?.shortId}
-                </span>
-              </div>
-
-              {/* SECTION 1: EDIT PROFILE */}
-              <form onSubmit={handleSaveProfile} style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
-                  <User size={16} color="var(--primary)" /> Profile Information
-                </h4>
-
-                {profileNotice && (
-                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <CheckCircle size={16} /> {profileNotice}
-                  </div>
-                )}
-                {profileError && (
-                  <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <AlertCircle size={16} /> {profileError}
-                  </div>
-                )}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Full Name</label>
-                    <input 
-                      type="text" 
-                      className="input" 
-                      style={{ margin: 0, marginTop: '4px' }} 
-                      value={profileForm.name} 
-                      onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Contact Phone</label>
-                    <input 
-                      type="tel" 
-                      className="input" 
-                      style={{ margin: 0, marginTop: '4px' }} 
-                      value={profileForm.phone} 
-                      onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current City</label>
-                  <select 
-                    className="select" 
-                    style={{ margin: 0, marginTop: '4px' }} 
-                    value={profileForm.city} 
-                    onChange={e => setProfileForm({ ...profileForm, city: e.target.value })}
-                  >
-                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Default Delivery Address</label>
-                  <textarea 
-                    className="input" 
-                    rows={2} 
-                    style={{ margin: 0, marginTop: '4px', resize: 'vertical' }} 
-                    placeholder="e.g. Flat #302, Sunrise Heights, Near City Mall" 
-                    value={profileForm.address} 
-                    onChange={e => setProfileForm({ ...profileForm, address: e.target.value })} 
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="btn" 
-                  style={{ width: '100%', padding: '0.65rem' }} 
-                  disabled={profileSaving}
-                >
-                  {profileSaving ? 'Saving...' : 'Save Profile Changes'}
-                </button>
-              </form>
-
-              {/* SECTION 2: CHANGE 4-DIGIT SECURITY PIN */}
-              <form onSubmit={handleChangePin} style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
-                <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
-                  <Lock size={16} color="#e11d48" /> Change 4-Digit Security PIN
-                </h4>
-
-                {pinNotice && (
-                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <CheckCircle size={16} /> {pinNotice}
-                  </div>
-                )}
-                {pinError && (
-                  <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <AlertCircle size={16} /> {pinError}
-                  </div>
-                )}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current PIN</label>
-                    <input 
-                      type="password" 
-                      maxLength="4" 
-                      className="input" 
-                      style={{ margin: 0, marginTop: '4px', textAlign: 'center', letterSpacing: '2px' }} 
-                      placeholder="••••" 
-                      value={pinForm.currentPin} 
-                      onChange={e => setPinForm({ ...pinForm, currentPin: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>New PIN</label>
-                    <input 
-                      type="password" 
-                      maxLength="4" 
-                      className="input" 
-                      style={{ margin: 0, marginTop: '4px', textAlign: 'center', letterSpacing: '2px' }} 
-                      placeholder="••••" 
-                      value={pinForm.newPin} 
-                      onChange={e => setPinForm({ ...pinForm, newPin: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm PIN</label>
-                    <input 
-                      type="password" 
-                      maxLength="4" 
-                      className="input" 
-                      style={{ margin: 0, marginTop: '4px', textAlign: 'center', letterSpacing: '2px' }} 
-                      placeholder="••••" 
-                      value={pinForm.confirmPin} 
-                      onChange={e => setPinForm({ ...pinForm, confirmPin: e.target.value })} 
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="btn btn-outline" 
-                  style={{ width: '100%', padding: '0.65rem' }} 
-                  disabled={pinSaving}
-                >
-                  {pinSaving ? 'Updating...' : 'Update Security PIN'}
-                </button>
-              </form>
-
-              {/* SECTION 3: PASSKEY BIOMETRICS */}
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', marginTop: '1.25rem' }}>
-                <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
-                  <Fingerprint size={16} color="#16a34a" /> Passkey Biometric Login
-                </h4>
-                <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                  Enable Face ID, Touch ID, or Device Screen Lock on this browser for 1-tap passwordless sign-in.
-                </p>
-                {passkeyNotice && (
-                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <CheckCircle size={16} /> {passkeyNotice}
-                  </div>
-                )}
-                {passkeyError && (
-                  <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <AlertCircle size={16} /> {passkeyError}
-                  </div>
-                )}
+              {/* Tab Navigation */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
                 <button
                   type="button"
-                  onClick={handleRegisterPasskey}
-                  disabled={passkeyRegistering}
-                  className="btn btn-outline"
-                  style={{ width: '100%', padding: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', borderColor: '#16a34a', color: '#15803d', fontWeight: '700' }}
+                  onClick={() => setCustomerSettingsTab('profile')}
+                  style={{
+                    padding: '0.6rem 0.5rem',
+                    fontSize: '0.86rem',
+                    fontWeight: '700',
+                    border: 'none',
+                    borderRadius: '9px',
+                    cursor: 'pointer',
+                    background: customerSettingsTab === 'profile' ? '#ffffff' : 'transparent',
+                    color: customerSettingsTab === 'profile' ? 'var(--primary)' : 'var(--text-muted)',
+                    boxShadow: customerSettingsTab === 'profile' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
                 >
-                  <Fingerprint size={18} />
-                  {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
+                  <User size={16} /> Profile Details
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCustomerSettingsTab('security')}
+                  style={{
+                    padding: '0.6rem 0.5rem',
+                    fontSize: '0.86rem',
+                    fontWeight: '700',
+                    border: 'none',
+                    borderRadius: '9px',
+                    cursor: 'pointer',
+                    background: customerSettingsTab === 'security' ? '#ffffff' : 'transparent',
+                    color: customerSettingsTab === 'security' ? 'var(--primary)' : 'var(--text-muted)',
+                    boxShadow: customerSettingsTab === 'security' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <Shield size={16} /> PIN & Security
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCustomerSettingsTab('export')}
+                  style={{
+                    padding: '0.6rem 0.5rem',
+                    fontSize: '0.86rem',
+                    fontWeight: '700',
+                    border: 'none',
+                    borderRadius: '9px',
+                    cursor: 'pointer',
+                    background: customerSettingsTab === 'export' ? '#ffffff' : 'transparent',
+                    color: customerSettingsTab === 'export' ? 'var(--primary)' : 'var(--text-muted)',
+                    boxShadow: customerSettingsTab === 'export' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <Download size={16} /> Export & Backup
                 </button>
               </div>
 
+              {/* TAB 1: PROFILE DETAILS */}
+              {customerSettingsTab === 'profile' && (
+                <div>
+                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.3rem' }}>
+                        {(currentUser?.name || 'C')[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a' }}>{currentUser?.name}</h4>
+                        <span style={{ fontSize: '0.76rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '5px', fontWeight: '700' }}>
+                          Verified Customer Account
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.86rem' }}>
+                      <div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>GOOGLE EMAIL</div>
+                        <div style={{ fontWeight: '700', color: '#0f172a', wordBreak: 'break-all' }}>{currentUser?.email}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>CUSTOMER SHORT ID</div>
+                        <div style={{ fontWeight: '700', color: 'var(--primary)', fontFamily: 'monospace' }}>{currentUser?.shortId}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>CONTACT PHONE</div>
+                        <div style={{ fontWeight: '700', color: '#0f172a' }}>{currentUser?.phone || 'Not set'}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {profileNotice && (
+                    <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <CheckCircle size={18} />
+                      <div>{profileNotice}</div>
+                    </div>
+                  )}
+                  {profileError && (
+                    <div style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <AlertCircle size={18} />
+                      <div>{profileError}</div>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Full Name</label>
+                        <input 
+                          type="text" 
+                          className="input" 
+                          value={profileForm.name} 
+                          onChange={e => setProfileForm({ ...profileForm, name: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Contact Phone</label>
+                        <input 
+                          type="tel" 
+                          className="input" 
+                          value={profileForm.phone} 
+                          onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current City</label>
+                        <select 
+                          className="input" 
+                          value={profileForm.city} 
+                          onChange={e => setProfileForm({ ...profileForm, city: e.target.value })}
+                          style={{ background: '#fff', width: '100%', marginBottom: 0 }}
+                        >
+                          {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Default Delivery Address</label>
+                      <textarea 
+                        className="input" 
+                        rows={2} 
+                        style={{ resize: 'vertical' }} 
+                        placeholder="e.g. Flat #302, Sunrise Heights, Near City Mall" 
+                        value={profileForm.address} 
+                        onChange={e => setProfileForm({ ...profileForm, address: e.target.value })} 
+                      />
+                    </div>
+
+                    <div className="flex-between" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <a 
+                        href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Customer%20Support%20Request" 
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                      >
+                        <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                      </a>
+
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
+                          Close
+                        </button>
+                        <button type="submit" className="btn" disabled={profileSaving}>
+                          {profileSaving ? 'Saving...' : 'Save Profile Changes'}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 2: PIN & SECURITY */}
+              {customerSettingsTab === 'security' && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                    {/* 1. Change 4-Digit Security PIN */}
+                    <form onSubmit={handleChangePin} style={{ background: '#fff7ed', border: '1.5px solid #fed7aa', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.96rem', color: '#9a3412', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <Lock size={17} /> 4-Digit Security PIN
+                          </h4>
+                          <span style={{ fontSize: '0.74rem', background: '#ffedd5', color: '#c2410c', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                            Register Lock
+                          </span>
+                        </div>
+                        <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: '#9a3412', lineHeight: '1.35' }}>
+                          Used to secure your account and verify transactions.
+                        </p>
+
+                        {pinNotice && (
+                          <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <CheckCircle size={15} /> {pinNotice}
+                          </div>
+                        )}
+                        {pinError && (
+                          <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <AlertCircle size={15} /> {pinError}
+                          </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Current PIN</label>
+                              <button type="button" onClick={() => setShowCurrentPin(!showCurrentPin)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', padding: 0 }}>
+                                {showCurrentPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                            </div>
+                            <input 
+                              type={showCurrentPin ? 'text' : 'password'} 
+                              maxLength="4" 
+                              className="input" 
+                              placeholder="••••" 
+                              value={pinForm.currentPin} 
+                              onChange={e => setPinForm({ ...pinForm, currentPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                              required 
+                              style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>New PIN</label>
+                              <button type="button" onClick={() => setShowNewPin(!showNewPin)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', padding: 0 }}>
+                                {showNewPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                            </div>
+                            <input 
+                              type={showNewPin ? 'text' : 'password'} 
+                              maxLength="4" 
+                              className="input" 
+                              placeholder="••••" 
+                              value={pinForm.newPin} 
+                              onChange={e => setPinForm({ ...pinForm, newPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                              required 
+                              style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Confirm PIN</label>
+                              <button type="button" onClick={() => setShowConfirmPin(!showConfirmPin)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', padding: 0 }}>
+                                {showConfirmPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                            </div>
+                            <input 
+                              type={showConfirmPin ? 'text' : 'password'} 
+                              maxLength="4" 
+                              className="input" 
+                              placeholder="••••" 
+                              value={pinForm.confirmPin} 
+                              onChange={e => setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                              required 
+                              style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit" 
+                        className="btn btn-outline" 
+                        disabled={pinSaving} 
+                        style={{ width: '100%', padding: '0.65rem', fontSize: '0.86rem', borderColor: '#ea580c', color: '#c2410c', fontWeight: '700', background: '#fff', borderRadius: '9px' }}
+                      >
+                        {pinSaving ? 'Updating PIN...' : 'Update 4-Digit Security PIN'}
+                      </button>
+                    </form>
+
+                    {/* 2. Set / Change Password */}
+                    <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <Key size={17} /> Account Password
+                          </h4>
+                          {currentUser?.hasPasswordSet === 1 ? (
+                            <span style={{ fontSize: '0.74rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                              Password Active
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '0.74rem', background: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                              Not Set Yet
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.35' }}>
+                          Set a password to log in directly with your Email or Short ID without Google.
+                        </p>
+
+                        {passwordNotice && (
+                          <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <CheckCircle size={15} /> {passwordNotice}
+                          </div>
+                        )}
+                        {passwordError && (
+                          <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <AlertCircle size={15} /> {passwordError}
+                          </div>
+                        )}
+
+                        {currentUser?.hasPasswordSet === 1 && (
+                          <div style={{ marginBottom: '0.65rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Password *</label>
+                              <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                                {showCurrentPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                            </div>
+                            <input 
+                              type={showCurrentPassword ? 'text' : 'password'} 
+                              className="input" 
+                              placeholder="Enter current password" 
+                              value={passwordForm.currentPassword} 
+                              onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} 
+                              required 
+                              style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                            />
+                          </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: '600' }}>Password *</label>
+                              <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                                {showNewPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                            </div>
+                            <input 
+                              type={showNewPassword ? 'text' : 'password'} 
+                              className="input" 
+                              placeholder="Enter password" 
+                              value={passwordForm.newPassword} 
+                              onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
+                              required 
+                              style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <label style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm Password *</label>
+                              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                                {showConfirmPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                            </div>
+                            <input 
+                              type={showConfirmPassword ? 'text' : 'password'} 
+                              className="input" 
+                              placeholder="Re-type password" 
+                              value={passwordForm.confirmPassword} 
+                              onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
+                              required 
+                              style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit" 
+                        className="btn btn-outline" 
+                        disabled={passwordSaving} 
+                        style={{ width: '100%', padding: '0.65rem', fontSize: '0.86rem', fontWeight: '700', background: '#fff', borderRadius: '9px' }}
+                      >
+                        {passwordSaving ? 'Saving Password...' : (currentUser?.hasPasswordSet === 1 ? 'Update Password' : 'Save Password')}
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* 3. Passkey Biometric Login */}
+                  <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <div>
+                        <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                          <Fingerprint size={18} /> Passkey Biometric Login
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#166534' }}>
+                          Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleRegisterPasskey}
+                        disabled={passkeyRegistering}
+                        className="btn btn-outline"
+                        style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '9px' }}
+                      >
+                        <Fingerprint size={16} />
+                        {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
+                      </button>
+                    </div>
+
+                    {passkeyNotice && (
+                      <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <CheckCircle size={15} /> {passkeyNotice}
+                      </div>
+                    )}
+                    {passkeyError && (
+                      <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <AlertCircle size={15} /> {passkeyError}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer with Contact Admin & Close */}
+                  <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <a 
+                      href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20Customer%20PIN%20%2F%20Security%20Help" 
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                    >
+                      <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                    </a>
+
+                    <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: EXPORT & DATA BACKUP */}
+              {customerSettingsTab === 'export' && (
+                <div>
+                  {/* Summary Banner */}
+                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Download size={22} />
+                        </div>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>Export Your Orders & Khata Data</h4>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            Download complete personal spreadsheets, ledger statements, and account backups.
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handlePrintSummary}
+                        className="btn btn-outline"
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#cbd5e1', background: '#fff' }}
+                      >
+                        <Printer size={15} /> Print Statement
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Orders Placed</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--primary)' }}>{orders.length}</div>
+                      </div>
+                      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Active Dues</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '800', color: (khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#16a34a' }}>
+                          ₹{(khataOverview.overallDue || 0).toFixed(2)}
+                        </div>
+                      </div>
+                      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Linked Stores</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#7c3aed' }}>{(khataOverview.stores || []).length}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {exportNotice && (
+                    <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <CheckCircle size={18} />
+                      <div>{exportNotice}</div>
+                    </div>
+                  )}
+                  {exportError && (
+                    <div style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <AlertCircle size={18} />
+                      <div>{exportError}</div>
+                    </div>
+                  )}
+
+                  {/* STEP 1: DATE RANGE */}
+                  <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <CalendarRange size={18} color="var(--primary)" />
+                        <span>Step 1: Choose Date Range & Time Period</span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
+                        Selection: {exportDateRange === 'CUSTOM' ? `${exportStartDate} to ${exportEndDate}` : exportDateRange}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: exportDateRange === 'CUSTOM' ? '1rem' : '0' }}>
+                      {[
+                        { id: 'ALL', label: 'All Time (Full History)' },
+                        { id: 'TODAY', label: 'Today' },
+                        { id: '7DAYS', label: 'Last 7 Days' },
+                        { id: 'THIS_MONTH', label: 'This Month' },
+                        { id: 'LAST_MONTH', label: 'Last Month' },
+                        { id: 'CUSTOM', label: 'Custom Range' }
+                      ].map(preset => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setExportDateRange(preset.id)}
+                          style={{
+                            padding: '0.45rem 0.9rem',
+                            fontSize: '0.82rem',
+                            fontWeight: '700',
+                            borderRadius: '8px',
+                            border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #cbd5e1',
+                            background: exportDateRange === preset.id ? '#eff6ff' : '#ffffff',
+                            color: exportDateRange === preset.id ? 'var(--primary)' : '#475569',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {exportDateRange === 'CUSTOM' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        <div>
+                          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                            Start Date (From)
+                          </label>
+                          <input
+                            type="date"
+                            className="input"
+                            value={exportStartDate}
+                            onChange={e => setExportStartDate(e.target.value)}
+                            style={{ margin: 0, background: '#fff' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                            End Date (To)
+                          </label>
+                          <input
+                            type="date"
+                            className="input"
+                            value={exportEndDate}
+                            onChange={e => setExportEndDate(e.target.value)}
+                            style={{ margin: 0, background: '#fff' }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* STEP 2: WHAT TO EXPORT */}
+                  <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <FileSpreadsheet size={18} color="#16a34a" />
+                        <span>Step 2: Select What to Export</span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => setExportCategories({ orders: true, khata: true, profile: true, summary: true })}
+                          style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                        >
+                          Select All
+                        </button>
+                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <button
+                          type="button"
+                          onClick={() => setExportCategories({ orders: false, khata: false, profile: false, summary: false })}
+                          style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                        >
+                          Deselect All
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                      {[
+                        {
+                          key: 'orders',
+                          title: 'Orders & Receipts History',
+                          desc: 'Full list of orders placed, items purchased, totals and status',
+                          count: `${filterCustomerRecordsByDate(orders, 'createdAt').length} orders`,
+                          badgeColor: '#0284c7',
+                          badgeBg: '#e0f2fe'
+                        },
+                        {
+                          key: 'khata',
+                          title: 'Khata & Udhar Ledger',
+                          desc: 'Linked shop accounts, credit dues, and payment records',
+                          count: `${(khataOverview.stores || []).length} stores`,
+                          badgeColor: '#c2410c',
+                          badgeBg: '#ffedd5'
+                        },
+                        {
+                          key: 'profile',
+                          title: 'Profile & Delivery Details',
+                          desc: 'Customer identifier, phone, registered city, and addresses',
+                          count: 'Account Info',
+                          badgeColor: '#7c3aed',
+                          badgeBg: '#f5f3ff'
+                        },
+                        {
+                          key: 'summary',
+                          title: 'Expense & Account Statement',
+                          desc: 'Summary statement of total orders and outstanding dues',
+                          count: 'Statement',
+                          badgeColor: '#16a34a',
+                          badgeBg: '#dcfce7'
+                        }
+                      ].map(cat => {
+                        const isChecked = exportCategories[cat.key];
+                        return (
+                          <div
+                            key={cat.key}
+                            onClick={() => setExportCategories(prev => ({ ...prev, [cat.key]: !prev[cat.key] }))}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '0.75rem',
+                              padding: '0.85rem',
+                              borderRadius: '10px',
+                              border: isChecked ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
+                              background: isChecked ? '#f0fdf4' : '#ffffff',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{ marginTop: '2px', color: isChecked ? '#16a34a' : '#94a3b8' }}>
+                              {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
+                                <strong style={{ fontSize: '0.86rem', color: isChecked ? '#0f172a' : '#64748b' }}>{cat.title}</strong>
+                                <span style={{ fontSize: '0.7rem', fontWeight: '700', color: cat.badgeColor, background: cat.badgeBg, padding: '0.15rem 0.45rem', borderRadius: '5px' }}>
+                                  {cat.count}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: '1.3' }}>
+                                {cat.desc}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* STEP 3: EXPORT ACTION BUTTONS */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                    <button
+                      type="button"
+                      onClick={handleExportCSV}
+                      disabled={exportLoading || !Object.values(exportCategories).some(Boolean)}
+                      className="btn"
+                      style={{
+                        padding: '0.85rem 1.25rem',
+                        background: '#16a34a',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '0.92rem',
+                        fontWeight: '800',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                        cursor: exportLoading || !Object.values(exportCategories).some(Boolean) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <FileSpreadsheet size={18} />
+                      {exportLoading ? 'Generating Files...' : 'Export as Excel / CSV (Spreadsheets)'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleExportJSON}
+                      disabled={exportLoading || !Object.values(exportCategories).some(Boolean)}
+                      className="btn btn-outline"
+                      style={{
+                        padding: '0.85rem 1.25rem',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        borderColor: '#0f172a',
+                        borderRadius: '12px',
+                        fontSize: '0.92rem',
+                        fontWeight: '800',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        cursor: exportLoading || !Object.values(exportCategories).some(Boolean) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <Database size={18} color="var(--primary)" />
+                      {exportLoading ? 'Preparing Archive...' : 'Full Account Backup (.JSON)'}
+                    </button>
+                  </div>
+
+                  {/* Footer with Contact Admin & Close */}
+                  <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <a 
+                      href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20Customer%20Data%20Export%20Help" 
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                    >
+                      <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                    </a>
+
+                    <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

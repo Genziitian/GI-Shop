@@ -979,7 +979,7 @@ export default function Shopkeeper() {
             }}
             onClick={handleToggleStatus}
           >
-            {isOpen ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
+            {isOpen ? 'Shop is OPEN' : 'Shop is CLOSED'}
           </button>
 
           {/* Settings Button */}
@@ -1059,26 +1059,26 @@ export default function Shopkeeper() {
                         padding: '0.35rem 0.65rem',
                         fontWeight: '700'
                       }}>
-                        {order.status === 'PENDING' && '🕒 PENDING ACCEPTANCE (45m Window)'}
-                        {order.status === 'PACKING' && `⏳ PACKING (~${order.packingMinutes}m)`}
-                        {(order.status === 'COMPLETED' || order.status === 'READY') && '📦 READY (WAITING FOR CUSTOMER)'}
-                        {order.status === 'COLLECTED' && '✓ CUSTOMER COLLECTED'}
-                        {order.status === 'NOT_COLLECTED' && '✗ CUSTOMER MARKED NOT COLLECTED'}
-                        {order.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED BY CUSTOMER'}
-                        {order.status === 'AUTO_CANCELLED_EXPIRED' && '⛔ AUTO-CANCELLED (45m EXPIRED)'}
-                        {order.status === 'DECLINED' && `❌ DECLINED (${order.declineReason || 'Unavailable'})`}
+                        {order.status === 'PENDING' && 'PENDING ACCEPTANCE (45m Window)'}
+                        {order.status === 'PACKING' && `PACKING (~${order.packingMinutes}m)`}
+                        {(order.status === 'COMPLETED' || order.status === 'READY') && 'READY (WAITING FOR CUSTOMER)'}
+                        {order.status === 'COLLECTED' && 'CUSTOMER COLLECTED'}
+                        {order.status === 'NOT_COLLECTED' && 'CUSTOMER MARKED NOT COLLECTED'}
+                        {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED BY CUSTOMER'}
+                        {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
+                        {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
                       </span>
                     </div>
 
                     {order.status === 'PENDING' && (
                       <div style={{ background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
-                        ⚠️ <strong>Action Required:</strong> Please accept & set packing time within 45 minutes or this order will be automatically cancelled.
+                        <strong>Action Required:</strong> Please accept &amp; set packing time within 45 minutes or this order will be automatically cancelled.
                       </div>
                     )}
 
                     {order.status === 'AUTO_CANCELLED_EXPIRED' && (
                       <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#b91c1c' }}>
-                        ⛔ This order was automatically cancelled because 45 minutes elapsed without acceptance.
+                        This order was automatically cancelled because 45 minutes elapsed without acceptance.
                       </div>
                     )}
 
@@ -1115,7 +1115,7 @@ export default function Shopkeeper() {
                       {order.status === 'PACKING' && (
                         <>
                           <button type="button" className="btn" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleConvertToPOS(order)}>
-                            ⚡ Convert to Final POS Bill
+                            Convert to Final POS Bill
                           </button>
                           <button type="button" className="btn btn-outline" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={async () => { await completeShopOrder(order.id); loadOrdersData(); }}>
                             Mark Ready / Done
@@ -1311,7 +1311,7 @@ export default function Shopkeeper() {
                   style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
                   onClick={() => setShowMasterBrowser(!showMasterBrowser)}
                 >
-                  <Sparkles size={14} /> {showMasterBrowser ? 'Hide Master Library' : '⚡ Browse Master Grocery Library'}
+                  <Sparkles size={14} /> {showMasterBrowser ? 'Hide Master Library' : 'Browse Master Grocery Library'}
                 </button>
               </div>
 
@@ -1922,7 +1922,7 @@ export default function Shopkeeper() {
                     <div>
                       <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>{currentUser?.name || detailedShop?.ownerName}</h4>
                       <span style={{ fontSize: '0.78rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
-                        {isOwner ? '👑 Verified Shop Owner' : '🛡️ Enrolled Cashier'}
+                        {isOwner ? 'Verified Shop Owner' : 'Enrolled Cashier'}
                       </span>
                     </div>
                   </div>
@@ -1933,7 +1933,7 @@ export default function Shopkeeper() {
                       <div style={{ fontWeight: '700', color: '#0f172a', wordBreak: 'break-all' }}>
                         {currentUser?.email || detailedShop?.ownerEmail || 'Linked via Google'}
                       </div>
-                      <span style={{ fontSize: '0.74rem', color: '#16a34a', fontWeight: '600' }}>🔒 Synced with Google Account</span>
+                      <span style={{ fontSize: '0.74rem', color: '#16a34a', fontWeight: '600' }}>Synced with Google Account</span>
                     </div>
 
                     <div>
@@ -1961,7 +1961,7 @@ export default function Shopkeeper() {
                     <div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>ACCOUNT STATUS</div>
                       <div style={{ fontWeight: '700', color: '#16a34a' }}>
-                        🟢 Active & Verified
+                        Active & Verified
                       </div>
                     </div>
 
@@ -2098,11 +2098,11 @@ export default function Shopkeeper() {
                         </div>
                         {currentUser?.hasPasswordSet === 1 ? (
                           <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
-                            🟢 Password Active
+                            Password Active
                           </span>
                         ) : (
                           <span style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
-                            ⚠️ Not Set Yet
+                            Not Set Yet
                           </span>
                         )}
                       </div>
@@ -2342,12 +2342,12 @@ export default function Shopkeeper() {
                   {/* Date Range Chips */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: exportDateRange === 'CUSTOM' ? '1rem' : '0' }}>
                     {[
-                      { id: 'ALL', label: '📅 All Time (Full History)' },
-                      { id: 'TODAY', label: '⚡ Today' },
-                      { id: '7DAYS', label: '📆 Last 7 Days' },
-                      { id: 'THIS_MONTH', label: '🗓️ This Month' },
-                      { id: 'LAST_MONTH', label: '🗓️ Last Month' },
-                      { id: 'CUSTOM', label: '🎯 Custom Range' }
+                      { id: 'ALL', label: 'All Time (Full History)' },
+                      { id: 'TODAY', label: 'Today' },
+                      { id: '7DAYS', label: 'Last 7 Days' },
+                      { id: 'THIS_MONTH', label: 'This Month' },
+                      { id: 'LAST_MONTH', label: 'Last Month' },
+                      { id: 'CUSTOM', label: 'Custom Range' }
                     ].map(preset => (
                       <button
                         key={preset.id}

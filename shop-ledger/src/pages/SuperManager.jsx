@@ -257,7 +257,7 @@ export default function SuperManager() {
                             title="Reset 4-Digit Security PIN"
                             onClick={() => handleResetPin(shop)}
                           >
-                            🔑 Reset PIN
+                            Reset PIN
                           </button>
                           <button
                             type="button"
@@ -334,7 +334,7 @@ export default function SuperManager() {
                             title="Reset 4-Digit Security PIN"
                             onClick={() => handleResetPin(user)}
                           >
-                            🔑 Reset PIN
+                            Reset PIN
                           </button>
                           {user.role !== 'SuperManager' && (
                             <button

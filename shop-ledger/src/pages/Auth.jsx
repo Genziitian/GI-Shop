@@ -675,7 +675,7 @@ export default function Auth() {
                     background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dcfce7',
                     color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#16a34a'
                   }}>
-                    {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? '🏪 दुकानदार सेटअप' : '🏪 Shopkeeper Setup') : (language === 'hi' ? '🛒 ग्राहक सेटअप' : '🛒 Customer Setup')}
+                    {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकानदार सेटअप' : 'Shopkeeper Setup') : (language === 'hi' ? 'ग्राहक सेटअप' : 'Customer Setup')}
                   </span>
                 </div>
 
@@ -704,7 +704,7 @@ export default function Auth() {
                           disabled 
                           style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
                         />
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>🔒 {language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
                       </div>
 
                       {/* Full Name & Phone in 2-col on desktop */}
