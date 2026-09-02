@@ -52,7 +52,7 @@ const translations = {
     logIn: 'Log In',
     privacyPolicy: 'Privacy Policy',
     terms: 'Terms & Conditions',
-    accountDeletion: 'Account Deletion',
+    contactUs: 'Contact Us',
     footerCopyright: '© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.',
     welcomeUser: (name) => `👋 Welcome, ${name || 'Friend'}!`,
     chooseRole: 'Choose Your Role',
@@ -106,7 +106,7 @@ const translations = {
     logIn: 'लॉगिन करें',
     privacyPolicy: 'प्राइवेसी पॉलिसी',
     terms: 'नियम व शर्तें',
-    accountDeletion: 'खाता डिलीट करें',
+    contactUs: 'संपर्क करें (Contact Us)',
     footerCopyright: '© 2026 जीआई शॉप • अपनी दुकान, अपना हिसाब। सर्वाधिकार सुरक्षित।',
     welcomeUser: (name) => `👋 नमस्ते, ${name || 'मित्र'}!`,
     chooseRole: 'अपनी भूमिका चुनें',
@@ -1132,10 +1132,26 @@ export default function Auth() {
                 >
                   {t.terms}
                 </span>
+                <span>•</span>
+                <a 
+                  href="mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Inquiry"
+                  style={{ color: '#94a3b8', textDecoration: 'underline', fontWeight: '600' }}
+                  title="Mail to Pay.laxmikant@gmail.com for any queries"
+                >
+                  {t.contactUs}
+                </a>
+              </div>
+
+              {/* Support Email Query Note */}
+              <div style={{ textAlign: 'center', marginTop: '0.45rem', fontSize: '0.74rem', color: '#64748b' }}>
+                For any queries regarding usage:{' '}
+                <a href="mailto:Pay.laxmikant@gmail.com" style={{ color: '#16a34a', fontWeight: '700', textDecoration: 'none' }}>
+                  Pay.laxmikant@gmail.com
+                </a>
               </div>
 
               {/* Copyright Text */}
-              <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
+              <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
                 {t.footerCopyright}
               </div>
             </div>
