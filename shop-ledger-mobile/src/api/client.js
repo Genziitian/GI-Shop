@@ -1,10 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Default host for development
-// Android Emulator uses 10.0.2.2 to access host machine localhost
-// iOS Simulator / Web uses localhost
-const DEFAULT_HOST = Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001';
+// Production Backend Host
+const DEFAULT_HOST = 'https://gi-shop-api.onrender.com';
 
 const TOKEN_KEY = '@shop_ledger_jwt_token';
 const USER_KEY = '@shop_ledger_user_data';

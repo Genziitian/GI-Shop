@@ -537,9 +537,9 @@ app.post('/api/passkey/auth-verify', (req, res) => {
 
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email/Short ID and password are required' });
+  if (!email || !password) return res.status(400).json({ error: 'Email or Short ID and password are required' });
   const identifier = email.trim().toLowerCase();
-  db.get(`SELECT * FROM Users WHERE LOWER(email) = ? OR LOWER(shortId) = ? OR phone = ?`, [identifier, identifier, email.trim()], async (err, user) => {
+  db.get(`SELECT * FROM Users WHERE LOWER(email) = ? OR LOWER(shortId) = ?`, [identifier, identifier], async (err, user) => {
     if (err || !user) return res.status(401).json({ error: 'Invalid credentials. User not found.' });
     if (user.status === 'TERMINATED') {
       return res.status(403).json({ error: 'Your account has been deactivated by the platform administrator.' });

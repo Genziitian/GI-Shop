@@ -14,10 +14,9 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Store, User, ArrowRight, Settings, Lock, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
+import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import ServerSettingsModal from '../components/ServerSettingsModal';
 
 const GoogleIcon = () => (
   <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
@@ -26,13 +25,12 @@ const GoogleIcon = () => (
 );
 
 export default function AuthScreen() {
-  const { login, register, serverUrl } = useAuth();
+  const { login, register } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [loginStep, setLoginStep] = useState('IDENTIFIER'); // 'IDENTIFIER' | 'PASSWORD'
   const [role, setRole] = useState('Shopkeeper');
   const [loading, setLoading] = useState(false);
-  const [showServerModal, setShowServerModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -147,20 +145,8 @@ export default function AuthScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Language Selector (top right) */}
-            <View style={styles.topBarLogin}>
-              <View style={{ flex: 1 }} />
-              <TouchableOpacity
-                style={styles.settingsBtn}
-                onPress={() => setShowServerModal(true)}
-                activeOpacity={0.7}
-              >
-                <Settings size={18} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
             {/* App Icon */}
-            <View style={styles.logoContainer}>
+            <View style={[styles.logoContainer, { marginTop: 20 }]}>
               <Image
                 source={require('../../assets/icon.png')}
                 style={styles.logoImage}
@@ -329,11 +315,6 @@ export default function AuthScreen() {
             </Text>
           </ScrollView>
         </KeyboardAvoidingView>
-
-        <ServerSettingsModal
-          visible={showServerModal}
-          onClose={() => setShowServerModal(false)}
-        />
       </SafeAreaView>
     );
   }
@@ -350,26 +331,8 @@ export default function AuthScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Top Bar with Server Config */}
-          <View style={styles.topBar}>
-            <View style={styles.serverStatusTag}>
-              <View style={styles.statusDot} />
-              <Text style={styles.serverHostText} numberOfLines={1}>
-                {serverUrl}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.settingsBtn}
-              onPress={() => setShowServerModal(true)}
-              activeOpacity={0.7}
-            >
-              <Settings size={18} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-
           {/* Card Container */}
-          <View style={styles.card}>
+          <View style={[styles.card, { marginTop: 16 }]}>
             {/* Brand Logo & Name */}
             <View style={styles.brandContainer}>
               <View style={styles.logoIconBox}>
@@ -617,11 +580,6 @@ export default function AuthScreen() {
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <ServerSettingsModal
-        visible={showServerModal}
-        onClose={() => setShowServerModal(false)}
-      />
     </SafeAreaView>
   );
 }
