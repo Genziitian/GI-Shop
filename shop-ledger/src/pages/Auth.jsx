@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, googleLogin, getCities } from '../lib/api';
+import { login, googleLogin } from '../lib/api';
 import { signInWithGoogle } from '../lib/firebase';
 import { 
   Store, User, ArrowRight, ArrowLeft, Lock, Shield, Eye, EyeOff, 
@@ -129,7 +129,6 @@ export default function Auth() {
   const [rememberMe, setRememberMe] = useState(true);
   const [showContact, setShowContact] = useState(false);
   const [language, setLanguage] = useState('en'); // 'en' | 'hi'
-  const [cities, setCities] = useState(['Delhi', 'Mumbai', 'Bengaluru', 'Jaipur', 'Lucknow', 'Pune']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -149,7 +148,6 @@ export default function Auth() {
   const [onboardingForm, setOnboardingForm] = useState({
     name: '',
     phone: '',
-    city: 'Delhi',
     address: '',
     shopName: '',
     shopAddress: '',
@@ -160,7 +158,6 @@ export default function Auth() {
   });
 
   useEffect(() => {
-    getCities().then(setCities).catch(() => {});
     const savedIdentifier = localStorage.getItem('gi_remembered_identifier');
     if (savedIdentifier) {
       setLoginForm(prev => ({ ...prev, identifier: savedIdentifier }));
@@ -193,8 +190,7 @@ export default function Auth() {
         });
         setOnboardingForm(prev => ({
           ...prev,
-          name: res.googleUser.name || '',
-          city: cities[0] || 'Delhi'
+          name: res.googleUser.name || ''
         }));
       } else {
         localStorage.setItem('token', res.token);
@@ -283,7 +279,7 @@ export default function Auth() {
         role: onboarding.role,
         name: onboardingForm.name,
         phone: onboardingForm.phone,
-        city: onboardingForm.city,
+        city: 'Delhi',
         address: onboardingForm.address,
         shopName: onboardingForm.shopName,
         shopAddress: onboardingForm.shopAddress,
@@ -308,6 +304,425 @@ export default function Auth() {
     }
   };
 
+  // =========================================================================
+  // FULL PAGE ONBOARDING VIEW (When a new Google user is completing profile)
+  // =========================================================================
+  if (onboarding) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#f8fafc',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Full-Page Top Header */}
+        <header style={{
+          background: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          padding: '1rem 2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10
+        }}>
+          {/* Brand Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <img 
+              src={logoImg} 
+              alt="GI SHOP" 
+              style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'contain', border: '1px solid #e2e8f0' }} 
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', lineHeight: '1' }}>
+                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#16a34a' }}>GI</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0f172a' }}>SHOP</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Language Selector */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            background: '#f1f5f9',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            padding: '0.35rem 0.75rem',
+            fontSize: '0.82rem',
+            color: '#334155',
+            fontWeight: '600'
+          }}>
+            <Globe size={14} color="#64748b" />
+            <select 
+              value={language} 
+              onChange={e => setLanguage(e.target.value)}
+              style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontWeight: '600', color: '#334155' }}
+            >
+              <option value="en">English</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+            </select>
+          </div>
+        </header>
+
+        {/* Centered Spacious Form Container */}
+        <main style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2.5rem 1.25rem'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: onboarding.step === 'ROLE_SELECT' ? '600px' : '640px',
+            background: '#ffffff',
+            borderRadius: '20px',
+            border: '1.5px solid #e2e8f0',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
+            padding: '2.5rem 2.25rem'
+          }}>
+            {error && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#dc2626',
+                borderRadius: '12px',
+                padding: '0.85rem 1.15rem',
+                marginBottom: '1.5rem',
+                fontSize: '0.88rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem'
+              }}>
+                <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                <div>{error}</div>
+              </div>
+            )}
+
+            {/* STEP 1: ROLE SELECTION */}
+            {onboarding.step === 'ROLE_SELECT' && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                  <span style={{ display: 'inline-block', background: '#dcfce7', color: '#16a34a', padding: '0.35rem 0.95rem', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '800', marginBottom: '0.75rem' }}>
+                    {t.welcomeUser(onboarding.googleUser.name)}
+                  </span>
+                  <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
+                    {t.chooseRole}
+                  </h2>
+                  <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0 }}>
+                    {t.howToUse}
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2rem' }}>
+                  
+                  {/* Role Option 1: Customer */}
+                  <div
+                    onClick={() => setOnboarding({ ...onboarding, role: 'Customer', step: 'DETAILS_FORM' })}
+                    style={{
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '16px',
+                      padding: '1.5rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      background: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '1.25rem'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  >
+                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <User size={28} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmCustomer}</h4>
+                        <span style={{ fontSize: '0.74rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{t.shopperBadge}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: '1.45' }}>
+                        {t.customerDesc}
+                      </p>
+                    </div>
+                    <ArrowRight size={20} color="#16a34a" style={{ alignSelf: 'center' }} />
+                  </div>
+
+                  {/* Role Option 2: Shopkeeper */}
+                  <div
+                    onClick={() => setOnboarding({ ...onboarding, role: 'Shopkeeper', step: 'DETAILS_FORM' })}
+                    style={{
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '16px',
+                      padding: '1.5rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      background: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '1.25rem'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  >
+                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#ede9fe', color: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Store size={28} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmShopkeeper}</h4>
+                        <span style={{ fontSize: '0.74rem', background: '#ede9fe', color: '#6d28d9', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{t.ownerBadge}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: '1.45' }}>
+                        {t.shopkeeperDesc}
+                      </p>
+                    </div>
+                    <ArrowRight size={20} color="#16a34a" style={{ alignSelf: 'center' }} />
+                  </div>
+
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => { setOnboarding(null); setError(''); }}
+                    style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                  >
+                    {t.cancelAndBack}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: PROFILE DETAILS FORM (Full Page View) */}
+            {onboarding.step === 'DETAILS_FORM' && (
+              <form onSubmit={handleCompleteOnboarding}>
+                {/* Header Navigation */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem', paddingBottom: '1rem', borderBottom: '1.5px solid #f1f5f9' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setOnboarding({ ...onboarding, step: 'ROLE_SELECT' })}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#64748b', fontSize: '0.92rem', fontWeight: '700', padding: 0 }}
+                  >
+                    <ArrowLeft size={18} /> {language === 'hi' ? 'भूमिका बदलें' : 'Switch Role'}
+                  </button>
+                  <span style={{ 
+                    fontSize: '0.82rem', 
+                    fontWeight: '800', 
+                    padding: '0.3rem 0.85rem', 
+                    borderRadius: '8px',
+                    background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dcfce7',
+                    color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#16a34a'
+                  }}>
+                    {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? '🏪 दुकानदार सेटअप' : '🏪 Shopkeeper Setup') : (language === 'hi' ? '🛒 ग्राहक सेटअप' : '🛒 Customer Setup')}
+                  </span>
+                </div>
+
+                <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.6rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>
+                  {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकान की जानकारी भरें' : 'Configure Your Store') : (language === 'hi' ? 'अपनी प्रोफ़ाइल पूरी करें' : 'Complete Your Profile')}
+                </h3>
+                <p style={{ margin: '0 0 1.75rem 0', fontSize: '0.92rem', color: '#64748b' }}>
+                  {language === 'hi' ? 'खाता सक्रिय करने के लिए कुछ आवश्यक विवरण भरें।' : `A few details are needed to activate your ${onboarding.role.toLowerCase()} account.`}
+                </p>
+
+                {/* Google Account (Read Only) */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                    {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#94a3b8" />
+                  </label>
+                  <input 
+                    type="text" 
+                    className="input" 
+                    value={onboarding.googleUser.email} 
+                    disabled 
+                    style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>🔒 {language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
+                </div>
+
+                {/* Full Name */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                    {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
+                  </label>
+                  <input 
+                    name="name" 
+                    className="input" 
+                    placeholder="e.g. Ramesh Kumar" 
+                    value={onboardingForm.name} 
+                    onChange={handleOnboardingChange} 
+                    required 
+                  />
+                </div>
+
+                {/* Mobile Phone (Required) */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                    {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone Number *'}
+                  </label>
+                  <input 
+                    name="phone" 
+                    type="tel"
+                    className="input" 
+                    placeholder="10-digit mobile phone" 
+                    value={onboardingForm.phone} 
+                    onChange={handleOnboardingChange} 
+                    required 
+                  />
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'खाता आर्डर और बिल सूचनाओं के लिए उपयोग किया जाता है।' : 'Used for Khata orders and bill notifications.'}</span>
+                </div>
+
+                {/* SHOPKEEPER SPECIFIC FIELDS */}
+                {onboarding.role === 'Shopkeeper' && (
+                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.35rem', marginBottom: '1.5rem' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.98rem', color: '#16a34a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Store size={18} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
+                    </div>
+
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
+                      </label>
+                      <input 
+                        name="shopName" 
+                        className="input" 
+                        placeholder="e.g. Krishna Super Market" 
+                        value={onboardingForm.shopName} 
+                        onChange={handleOnboardingChange} 
+                        required 
+                        style={{ background: '#ffffff' }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
+                      </label>
+                      <input 
+                        name="shopAddress" 
+                        className="input" 
+                        placeholder="e.g. Shop #12, Main Market" 
+                        value={onboardingForm.shopAddress} 
+                        onChange={handleOnboardingChange} 
+                        required 
+                        style={{ background: '#ffffff' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
+                      </label>
+                      <input 
+                        name="timings" 
+                        className="input" 
+                        placeholder="e.g. 08:00 AM - 10:00 PM" 
+                        value={onboardingForm.timings} 
+                        onChange={handleOnboardingChange} 
+                        style={{ background: '#ffffff' }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* CUSTOMER SPECIFIC FIELDS */}
+                {onboarding.role === 'Customer' && (
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                      {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
+                    </label>
+                    <input 
+                      name="address" 
+                      className="input" 
+                      placeholder="e.g. Flat 301, Sunrise Tower" 
+                      value={onboardingForm.address} 
+                      onChange={handleOnboardingChange} 
+                    />
+                  </div>
+                )}
+
+                {/* OPTIONAL SECURITY PIN */}
+                <div style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.25rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#9a3412', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                    <Shield size={16} /> {language === 'hi' ? '4-अंकों का सुरक्षा पिन (वैकल्पिक)' : '4-Digit Security PIN (Optional)'}
+                  </label>
+                  <input 
+                    name="pin" 
+                    type="password" 
+                    maxLength="4" 
+                    className="input" 
+                    placeholder="e.g. 1234 (default: 1234)" 
+                    value={onboardingForm.pin} 
+                    onChange={handleOnboardingChange} 
+                    style={{ background: '#ffffff' }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: '#9a3412', marginTop: '4px', display: 'block' }}>
+                    {language === 'hi' ? 'ऐप लॉक व सुरक्षा के लिए उपयोग किया जाता है। आप इसे सेटिंग्स में भी बदल सकते हैं।' : 'Used for quick app lock & cashier mode security. Optional — you can set or change it later in settings.'}
+                  </span>
+                </div>
+
+                {/* OPTIONAL PASSWORD CREATION */}
+                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.75rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                    <Lock size={16} /> {language === 'hi' ? 'पासवर्ड बनाएं (वैकल्पिक)' : 'Create a Password (Optional)'}
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
+                    <input 
+                      name="password" 
+                      type="password" 
+                      className="input" 
+                      placeholder={language === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'} 
+                      value={onboardingForm.password} 
+                      onChange={handleOnboardingChange} 
+                      style={{ background: '#ffffff' }}
+                    />
+                    <input 
+                      name="confirmPassword" 
+                      type="password" 
+                      className="input" 
+                      placeholder={language === 'hi' ? 'पासवर्ड कन्फर्म करें' : 'Confirm password'} 
+                      value={onboardingForm.confirmPassword} 
+                      onChange={handleOnboardingChange} 
+                      style={{ background: '#ffffff' }}
+                    />
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                    {language === 'hi' ? 'यदि आप भविष्य में सीधे ईमेल/पासवर्ड से लॉगिन करना चाहते हैं तो पासवर्ड सेट करें।' : "Set a password if you'd like to log in with email/password directly later. Optional — you can set it anytime in settings."}
+                  </span>
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="btn" 
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    fontSize: '1.05rem',
+                    fontWeight: '800',
+                    background: '#16a34a',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                    cursor: 'pointer'
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
+                </button>
+              </form>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // DEFAULT SPLIT-SCREEN AUTH VIEW (Login / Sign Up)
+  // =========================================================================
   return (
     <div style={{
       minHeight: '100vh',
@@ -466,7 +881,7 @@ export default function Auth() {
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* RIGHT SIDE: INTERACTIVE AUTH & ONBOARDING CARD PANEL         */}
+      {/* RIGHT SIDE: INTERACTIVE AUTH CARD PANEL                       */}
       {/* ------------------------------------------------------------- */}
       <div style={{
         flex: '1',
@@ -526,629 +941,302 @@ export default function Auth() {
             </div>
           )}
 
-          {/* ----------------------------------------------------------- */}
-          {/* FLOW A: NEW GOOGLE USER ONBOARDING MODAL/SCREEN             */}
-          {/* ----------------------------------------------------------- */}
-          {onboarding ? (
-            <div>
-              {/* STEP 1: ROLE SELECTION */}
-              {onboarding.step === 'ROLE_SELECT' && (
-                <div>
-                  <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                    <span style={{ display: 'inline-block', background: '#dcfce7', color: '#16a34a', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', marginBottom: '0.6rem' }}>
-                      {t.welcomeUser(onboarding.googleUser.name)}
-                    </span>
-                    <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.35rem 0' }}>
-                      {t.chooseRole}
-                    </h2>
-                    <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
-                      {t.howToUse}
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-                    
-                    {/* Role Option 1: Customer */}
-                    <div
-                      onClick={() => setOnboarding({ ...onboarding, role: 'Customer', step: 'DETAILS_FORM' })}
-                      style={{
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '14px',
-                        padding: '1.25rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        background: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '1rem'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; }}
-                    >
-                      <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <User size={24} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmCustomer}</h4>
-                          <span style={{ fontSize: '0.7rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>{t.shopperBadge}</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                          {t.customerDesc}
-                        </p>
-                      </div>
-                      <ArrowRight size={18} color="#16a34a" style={{ alignSelf: 'center' }} />
-                    </div>
-
-                    {/* Role Option 2: Shopkeeper */}
-                    <div
-                      onClick={() => setOnboarding({ ...onboarding, role: 'Shopkeeper', step: 'DETAILS_FORM' })}
-                      style={{
-                        border: '2px solid #e2e8f0',
-                        borderRadius: '14px',
-                        padding: '1.25rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        background: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '1rem'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; }}
-                    >
-                      <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#ede9fe', color: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Store size={24} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmShopkeeper}</h4>
-                          <span style={{ fontSize: '0.7rem', background: '#ede9fe', color: '#6d28d9', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>{t.ownerBadge}</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
-                          {t.shopkeeperDesc}
-                        </p>
-                      </div>
-                      <ArrowRight size={18} color="#16a34a" style={{ alignSelf: 'center' }} />
-                    </div>
-
-                  </div>
-
-                  <div style={{ textAlign: 'center' }}>
-                    <button 
-                      type="button" 
-                      onClick={() => { setOnboarding(null); setError(''); }}
-                      style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
-                    >
-                      {t.cancelAndBack}
-                    </button>
-                  </div>
-                </div>
+          {/* Header Title */}
+          <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
+              {isLogin ? (
+                <>{t.welcome} <span style={{ color: '#16a34a' }}>{t.backWord}</span></>
+              ) : (
+                <>{t.create} <span style={{ color: '#16a34a' }}>{t.accountWord}</span></>
               )}
+            </h2>
+            <p style={{ fontSize: '0.92rem', color: '#64748b', margin: 0 }}>
+              {isLogin ? t.loginSubtitle : t.signupSubtitle}
+            </p>
+          </div>
 
-              {/* STEP 2: PROFILE DETAILS FORM */}
-              {onboarding.step === 'DETAILS_FORM' && (
-                <form onSubmit={handleCompleteOnboarding}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid #e2e8f0' }}>
-                    <button 
-                      type="button" 
-                      onClick={() => setOnboarding({ ...onboarding, step: 'ROLE_SELECT' })}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontSize: '0.85rem', fontWeight: '600', padding: 0 }}
-                    >
-                      <ArrowLeft size={16} /> {language === 'hi' ? 'भूमिका बदलें' : 'Switch Role'}
-                    </button>
-                    <span style={{ 
-                      fontSize: '0.78rem', 
-                      fontWeight: '800', 
-                      padding: '0.25rem 0.65rem', 
-                      borderRadius: '6px',
-                      background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dcfce7',
-                      color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#16a34a'
-                    }}>
-                      {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? '🏪 दुकानदार सेटअप' : '🏪 Shopkeeper Setup') : (language === 'hi' ? '🛒 ग्राहक सेटअप' : '🛒 Customer Setup')}
-                    </span>
+          {/* Continue with Google Button */}
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading || loading}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              padding: '0.85rem 1.25rem',
+              background: '#ffffff',
+              color: '#1e293b',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '12px',
+              fontSize: '0.95rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+              marginBottom: '1.25rem',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            {googleLoading ? t.connectingGoogle : t.continueGoogle}
+          </button>
+
+          {isLogin ? (
+            /* --- 2-STEP LOGIN FORM --- */
+            <div>
+              {loginStep === 'IDENTIFIER' ? (
+                /* STEP 1: EMAIL OR SHORT ID */
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!loginForm.identifier || !loginForm.identifier.trim()) {
+                    return setError(language === 'hi' ? 'कृपया अपना ईमेल या यूज़र आईडी दर्ज करें' : 'Please enter your Email or User Short ID');
+                  }
+                  setError('');
+                  setLoginStep('PASSWORD');
+                }}>
+                  {/* Divider: or continue with */}
+                  <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>
+                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                    <span style={{ padding: '0 0.85rem' }}>{t.orContinueWith}</span>
+                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
                   </div>
 
-                  <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
-                    {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकान की जानकारी भरें' : 'Configure Your Store') : (language === 'hi' ? 'अपनी प्रोफ़ाइल पूरी करें' : 'Complete Your Profile')}
-                  </h3>
-                  <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.85rem', color: '#64748b' }}>
-                    {language === 'hi' ? 'खाता सक्रिय करने के लिए कुछ आवश्यक विवरण भरें।' : `A few details are needed to activate your ${onboarding.role.toLowerCase()} account.`}
-                  </p>
-
-                  {/* Google Account (Read Only) */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                      {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={12} color="#94a3b8" />
+                  {/* Email ID or Short ID Input */}
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                      {t.emailOrShortId}
                     </label>
-                    <input 
-                      type="text" 
-                      className="input" 
-                      value={onboarding.googleUser.email} 
-                      disabled 
-                      style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '500' }}
-                    />
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>🔒 {language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
-                  </div>
-
-                  {/* Full Name */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                      {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
-                    </label>
-                    <input 
-                      name="name" 
-                      className="input" 
-                      placeholder="e.g. Ramesh Kumar" 
-                      value={onboardingForm.name} 
-                      onChange={handleOnboardingChange} 
-                      required 
-                    />
-                  </div>
-
-                  {/* Mobile Phone (Required) */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                      {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone Number *'}
-                    </label>
-                    <input 
-                      name="phone" 
-                      type="tel"
-                      className="input" 
-                      placeholder="10-digit mobile phone" 
-                      value={onboardingForm.phone} 
-                      onChange={handleOnboardingChange} 
-                      required 
-                    />
-                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{language === 'hi' ? 'खाता आर्डर और बिल सूचनाओं के लिए उपयोग किया जाता है।' : 'Used for Khata orders and bill notifications.'}</span>
-                  </div>
-
-                  {/* City (Required) */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                      {language === 'hi' ? 'शहर *' : 'City *'}
-                    </label>
-                    <select name="city" className="select" value={onboardingForm.city} onChange={handleOnboardingChange} required>
-                      {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-
-                  {/* SHOPKEEPER SPECIFIC FIELDS */}
-                  {onboarding.role === 'Shopkeeper' && (
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
-                      <div style={{ fontWeight: '800', fontSize: '0.9rem', color: '#16a34a', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Store size={16} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
-                      </div>
-
-                      <div style={{ marginBottom: '0.75rem' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
-                        </label>
-                        <input 
-                          name="shopName" 
-                          className="input" 
-                          placeholder="e.g. Krishna Super Market" 
-                          value={onboardingForm.shopName} 
-                          onChange={handleOnboardingChange} 
-                          required 
-                        />
-                      </div>
-
-                      <div style={{ marginBottom: '0.75rem' }}>
-                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
-                        </label>
-                        <input 
-                          name="shopAddress" 
-                          className="input" 
-                          placeholder="e.g. Shop #12, Main Market" 
-                          value={onboardingForm.shopAddress} 
-                          onChange={handleOnboardingChange} 
-                          required 
-                        />
-                      </div>
-
-                      <div>
-                        <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          {language === 'hi' ? 'दुकान का समय' : 'Shop Timings'}
-                        </label>
-                        <input 
-                          name="timings" 
-                          className="input" 
-                          placeholder="e.g. 08:00 AM - 10:00 PM" 
-                          value={onboardingForm.timings} 
-                          onChange={handleOnboardingChange} 
-                        />
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        name="identifier" 
+                        className="input" 
+                        placeholder={t.emailPlaceholder} 
+                        value={loginForm.identifier} 
+                        onChange={handleLoginChange} 
+                        required 
+                        autoFocus
+                        style={{ paddingRight: '2.5rem', borderRadius: '10px' }}
+                      />
+                      <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }}>
+                        <User size={18} />
                       </div>
                     </div>
-                  )}
-
-                  {/* CUSTOMER SPECIFIC FIELDS */}
-                  {onboarding.role === 'Customer' && (
-                    <div style={{ marginBottom: '1rem' }}>
-                      <label style={{ fontSize: '0.8rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                        {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
-                      </label>
-                      <input 
-                        name="address" 
-                        className="input" 
-                        placeholder="e.g. Flat 301, Sunrise Tower" 
-                        value={onboardingForm.address} 
-                        onChange={handleOnboardingChange} 
-                      />
-                    </div>
-                  )}
-
-                  {/* OPTIONAL SECURITY PIN */}
-                  <div style={{ background: '#fdfbf7', border: '1px solid #fed7aa', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#9a3412', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                      <Shield size={14} /> {language === 'hi' ? '4-अंकों का सुरक्षा पिन (वैकल्पिक)' : '4-Digit Security PIN (Optional)'}
-                    </label>
-                    <input 
-                      name="pin" 
-                      type="password" 
-                      maxLength="4" 
-                      className="input" 
-                      placeholder="e.g. 1234 (default: 1234)" 
-                      value={onboardingForm.pin} 
-                      onChange={handleOnboardingChange} 
-                    />
-                    <span style={{ fontSize: '0.72rem', color: '#9a3412' }}>
-                      {language === 'hi' ? 'ऐप लॉक व सुरक्षा के लिए उपयोग किया जाता है। आप इसे सेटिंग्स में भी बदल सकते हैं।' : 'Used for quick app lock & cashier mode security. Optional — you can set or change it later in settings.'}
-                    </span>
                   </div>
 
-                  {/* OPTIONAL PASSWORD CREATION */}
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.5rem' }}>
-                    <label style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                      <Lock size={14} /> {language === 'hi' ? 'पासवर्ड बनाएं (वैकल्पिक)' : 'Create a Password (Optional)'}
-                    </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                      <input 
-                        name="password" 
-                        type="password" 
-                        className="input" 
-                        placeholder={language === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'} 
-                        value={onboardingForm.password} 
-                        onChange={handleOnboardingChange} 
-                      />
-                      <input 
-                        name="confirmPassword" 
-                        type="password" 
-                        className="input" 
-                        placeholder={language === 'hi' ? 'पासवर्ड कन्फर्म करें' : 'Confirm password'} 
-                        value={onboardingForm.confirmPassword} 
-                        onChange={handleOnboardingChange} 
-                      />
-                    </div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                      {language === 'hi' ? 'यदि आप भविष्य में सीधे ईमेल/पासवर्ड से लॉगिन करना चाहते हैं तो पासवर्ड सेट करें।' : "Set a password if you'd like to log in with email/password directly later. Optional — you can set it anytime in settings."}
-                    </span>
-                  </div>
-
+                  {/* Green Next / Continue Button */}
                   <button 
                     type="submit" 
                     className="btn" 
                     style={{
                       width: '100%',
-                      padding: '0.95rem',
-                      fontSize: '1rem',
+                      padding: '0.9rem',
+                      fontSize: '1.05rem',
                       fontWeight: '800',
                       background: '#16a34a',
-                      borderRadius: '10px',
-                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.3)'
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {t.next} <ArrowRight size={18} />
+                  </button>
+                </form>
+              ) : (
+                /* STEP 2: PASSWORD + REMEMBER ME + FORGOT PASSWORD */
+                <form onSubmit={handleCredentialsLogin}>
+                  {/* Active Account Pill */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    padding: '0.65rem 0.9rem',
+                    marginBottom: '1.25rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>
+                      <User size={16} color="#16a34a" /> {loginForm.identifier}
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
+                      style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                    >
+                      {t.change}
+                    </button>
+                  </div>
+
+                  {/* Password Input */}
+                  <div style={{ marginBottom: '1.1rem' }}>
+                    <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                      {t.password}
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        name="password" 
+                        type={showPassword ? 'text' : 'password'}
+                        className="input" 
+                        placeholder={t.passwordPlaceholder} 
+                        value={loginForm.password} 
+                        onChange={handleLoginChange} 
+                        required 
+                        autoFocus
+                        style={{ paddingRight: '4.5rem', borderRadius: '10px' }}
+                      />
+                      <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }}>
+                        <Lock size={16} />
+                        <button 
+                              type="button" 
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Remember Me & Forgot Password Row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.82rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569', fontWeight: '600' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={rememberMe} 
+                        onChange={e => setRememberMe(e.target.checked)}
+                        style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
+                      />
+                      {t.rememberMe}
+                    </label>
+                    <span 
+                      style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
+                      onClick={() => alert(language === 'hi' ? 'कृपया अपने खाते तक पहुंचने या पासवर्ड रीसेट करने के लिए गूगल से लॉगिन करें।' : 'Please log in with Google to access or reset your account.')}
+                    >
+                      {t.forgotPassword}
+                    </span>
+                  </div>
+
+                  {/* Green Login Button */}
+                  <button 
+                    type="submit" 
+                    className="btn" 
+                    style={{
+                      width: '100%',
+                      padding: '0.9rem',
+                      fontSize: '1.05rem',
+                      fontWeight: '800',
+                      background: '#16a34a',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                      transition: 'all 0.15s ease'
                     }}
                     disabled={loading}
                   >
-                    {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
+                    {loading ? t.loggingIn : t.login} <ArrowRight size={18} />
                   </button>
+
+                  {/* Back button */}
+                  <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
+                      style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
+                    >
+                      <ArrowLeft size={14} /> {t.backToEmail}
+                    </button>
+                  </div>
                 </form>
               )}
             </div>
           ) : (
-            /* ----------------------------------------------------------- */
-            /* FLOW B: DEFAULT SIGN IN / SIGN UP HERO FORM CARD            */
-            /* ----------------------------------------------------------- */
-            <div>
-              {/* Header Title */}
-              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
-                  {isLogin ? (
-                    <>{t.welcome} <span style={{ color: '#16a34a' }}>{t.backWord}</span></>
-                  ) : (
-                    <>{t.create} <span style={{ color: '#16a34a' }}>{t.accountWord}</span></>
-                  )}
-                </h2>
-                <p style={{ fontSize: '0.92rem', color: '#64748b', margin: 0 }}>
-                  {isLogin ? t.loginSubtitle : t.signupSubtitle}
-                </p>
-              </div>
-
-              {/* Continue with Google Button */}
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={googleLoading || loading}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.75rem',
-                  padding: '0.85rem 1.25rem',
-                  background: '#ffffff',
-                  color: '#1e293b',
-                  border: '1.5px solid #e2e8f0',
-                  borderRadius: '12px',
-                  fontSize: '0.95rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-                  marginBottom: '1.25rem',
-                  transition: 'all 0.15s ease'
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                {googleLoading ? t.connectingGoogle : t.continueGoogle}
-              </button>
-
-              {isLogin ? (
-                /* --- 2-STEP LOGIN FORM --- */
-                <div>
-                  {loginStep === 'IDENTIFIER' ? (
-                    /* STEP 1: EMAIL OR SHORT ID */
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!loginForm.identifier || !loginForm.identifier.trim()) {
-                        return setError(language === 'hi' ? 'कृपया अपना ईमेल या यूज़र आईडी दर्ज करें' : 'Please enter your Email or User Short ID');
-                      }
-                      setError('');
-                      setLoginStep('PASSWORD');
-                    }}>
-                      {/* Divider: or continue with */}
-                      <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>
-                        <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                        <span style={{ padding: '0 0.85rem' }}>{t.orContinueWith}</span>
-                        <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-                      </div>
-
-                      {/* Email ID or Short ID Input */}
-                      <div style={{ marginBottom: '1.25rem' }}>
-                        <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          {t.emailOrShortId}
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                          <input 
-                            name="identifier" 
-                            className="input" 
-                            placeholder={t.emailPlaceholder} 
-                            value={loginForm.identifier} 
-                            onChange={handleLoginChange} 
-                            required 
-                            autoFocus
-                            style={{ paddingRight: '2.5rem', borderRadius: '10px' }}
-                          />
-                          <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }}>
-                            <User size={18} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Green Next / Continue Button */}
-                      <button 
-                        type="submit" 
-                        className="btn" 
-                        style={{
-                          width: '100%',
-                          padding: '0.9rem',
-                          fontSize: '1.05rem',
-                          fontWeight: '800',
-                          background: '#16a34a',
-                          borderRadius: '12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem',
-                          boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {t.next} <ArrowRight size={18} />
-                      </button>
-                    </form>
-                  ) : (
-                    /* STEP 2: PASSWORD + REMEMBER ME + FORGOT PASSWORD */
-                    <form onSubmit={handleCredentialsLogin}>
-                      {/* Active Account Pill */}
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '0.65rem 0.9rem',
-                        marginBottom: '1.25rem'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>
-                          <User size={16} color="#16a34a" /> {loginForm.identifier}
-                        </div>
-                        <button 
-                          type="button" 
-                          onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
-                          style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
-                        >
-                          {t.change}
-                        </button>
-                      </div>
-
-                      {/* Password Input */}
-                      <div style={{ marginBottom: '1.1rem' }}>
-                        <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
-                          {t.password}
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                          <input 
-                            name="password" 
-                            type={showPassword ? 'text' : 'password'}
-                            className="input" 
-                            placeholder={t.passwordPlaceholder} 
-                            value={loginForm.password} 
-                            onChange={handleLoginChange} 
-                            required 
-                            autoFocus
-                            style={{ paddingRight: '4.5rem', borderRadius: '10px' }}
-                          />
-                          <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }}>
-                            <Lock size={16} />
-                            <button 
-                              type="button" 
-                              onClick={() => setShowPassword(!showPassword)}
-                              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
-                            >
-                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Remember Me & Forgot Password Row */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.82rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569', fontWeight: '600' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={rememberMe} 
-                            onChange={e => setRememberMe(e.target.checked)}
-                            style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
-                          />
-                          {t.rememberMe}
-                        </label>
-                        <span 
-                          style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
-                          onClick={() => alert(language === 'hi' ? 'कृपया अपने खाते तक पहुंचने या पासवर्ड रीसेट करने के लिए गूगल से लॉगिन करें।' : 'Please log in with Google to access or reset your account.')}
-                        >
-                          {t.forgotPassword}
-                        </span>
-                      </div>
-
-                      {/* Green Login Button */}
-                      <button 
-                        type="submit" 
-                        className="btn" 
-                        style={{
-                          width: '100%',
-                          padding: '0.9rem',
-                          fontSize: '1.05rem',
-                          fontWeight: '800',
-                          background: '#16a34a',
-                          borderRadius: '12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem',
-                          boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
-                          transition: 'all 0.15s ease'
-                        }}
-                        disabled={loading}
-                      >
-                        {loading ? t.loggingIn : t.login} <ArrowRight size={18} />
-                      </button>
-
-                      {/* Back button */}
-                      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                        <button
-                          type="button"
-                          onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
-                          style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
-                        >
-                          <ArrowLeft size={14} /> {t.backToEmail}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              ) : (
-                /* --- SIGN UP ONBOARDING PROMPT --- */
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    background: '#f0fdf4',
-                    border: '1px solid #bbf7d0',
-                    borderRadius: '12px',
-                    padding: '1rem',
-                    textAlign: 'left',
-                    marginBottom: '1.5rem',
-                    fontSize: '0.86rem',
-                    color: '#166534'
-                  }}>
-                    <div style={{ fontWeight: '800', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Sparkles size={16} /> {language === 'hi' ? '1-क्लिक तेज़ रजिस्ट्रेशन' : '1-Click Fast Registration'}
-                    </div>
-                    <div>{language === 'hi' ? 'ऊपर "गूगल के साथ आगे बढ़ें" पर क्लिक करें। अगली स्क्रीन में आप ग्राहक या दुकानदार चुन सकेंगे!' : 'Click "Continue with Google" above. You will be able to choose whether you are a Customer or a Shopkeeper and configure your profile in the next screen!'}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Toggle Login / Signup */}
-              <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.92rem', color: '#64748b' }}>
-                {isLogin ? t.dontHaveAccount : t.alreadyHaveAccount}{' '}
-                <span
-                  style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '800' }}
-                  onClick={() => { setIsLogin(!isLogin); setError(''); }}
-                >
-                  {isLogin ? t.signUp : t.logIn}
-                </span>
-              </p>
-
-              {/* Privacy Policy & Terms Links */}
-              <div style={{ 
-                textAlign: 'center', 
-                marginTop: '1.75rem', 
-                paddingTop: '1rem', 
-                borderTop: '1px solid #f1f5f9', 
-                fontSize: '0.78rem', 
-                color: '#94a3b8',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.65rem'
+            /* --- SIGN UP ONBOARDING PROMPT --- */
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '12px',
+                padding: '1rem',
+                textAlign: 'left',
+                marginBottom: '1.5rem',
+                fontSize: '0.86rem',
+                color: '#166534'
               }}>
-                <span 
-                  style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
-                  onClick={() => navigate('/privacy')}
-                >
-                  {t.privacyPolicy}
-                </span>
-                <span>•</span>
-                <span 
-                  style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
-                  onClick={() => navigate('/terms')}
-                >
-                  {t.terms}
-                </span>
-                <span>•</span>
-                <span 
-                  style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
-                  onClick={() => setShowContact(true)}
-                >
-                  {t.contactUs}
-                </span>
-              </div>
-
-              {/* Copyright Text */}
-              <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
-                {t.footerCopyright}
+                <div style={{ fontWeight: '800', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Sparkles size={16} /> {language === 'hi' ? '1-क्लिक तेज़ रजिस्ट्रेशन' : '1-Click Fast Registration'}
+                </div>
+                <div>{language === 'hi' ? 'ऊपर "गूगल के साथ आगे बढ़ें" पर क्लिक करें। अगली स्क्रीन में आप ग्राहक या दुकानदार चुन सकेंगे!' : 'Click "Continue with Google" above. You will be able to choose whether you are a Customer or a Shopkeeper and configure your profile in the next screen!'}</div>
               </div>
             </div>
           )}
 
+          {/* Toggle Login / Signup */}
+          <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.92rem', color: '#64748b' }}>
+            {isLogin ? t.dontHaveAccount : t.alreadyHaveAccount}{' '}
+            <span
+              style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '800' }}
+              onClick={() => { setIsLogin(!isLogin); setError(''); }}
+            >
+              {isLogin ? t.signUp : t.logIn}
+            </span>
+          </p>
+
+          {/* Privacy Policy, Terms & Contact Links */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '1.75rem', 
+            paddingTop: '1rem', 
+            borderTop: '1px solid #f1f5f9', 
+            fontSize: '0.78rem', 
+            color: '#94a3b8',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.65rem'
+          }}>
+            <span 
+              style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => navigate('/privacy')}
+            >
+              {t.privacyPolicy}
+            </span>
+            <span>•</span>
+            <span 
+              style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => navigate('/terms')}
+            >
+              {t.terms}
+            </span>
+            <span>•</span>
+            <span 
+              style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+              onClick={() => setShowContact(true)}
+            >
+              {t.contactUs}
+            </span>
+          </div>
+
+          {/* Copyright Text */}
+          <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
+            {t.footerCopyright}
+          </div>
         </div>
       </div>
 
