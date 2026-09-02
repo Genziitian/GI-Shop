@@ -1109,40 +1109,6 @@ export default function Auth() {
             {googleLoading ? t.connectingGoogle : t.continueGoogle}
           </button>
 
-          {/* Sign In with Passkey Button */}
-          {passkeyAvailable && isLogin && (
-            <button
-              type="button"
-              onClick={handlePasskeyLogin}
-              disabled={passkeyLoading || googleLoading || loading}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.65rem',
-                padding: '0.85rem 1.25rem',
-                background: '#ffffff',
-                color: '#0f172a',
-                border: '1.5px solid #cbd5e1',
-                borderRadius: '12px',
-                fontSize: '0.95rem',
-                fontWeight: '700',
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-                marginBottom: '1.25rem',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-            >
-              <Fingerprint size={20} color="#0f172a" />
-              {passkeyLoading 
-                ? (language === 'hi' ? 'पासकी सत्यापन...' : 'Authenticating Passkey...') 
-                : (language === 'hi' ? 'पासकी से लॉगिन करें' : 'Sign in with Passkey')}
-            </button>
-          )}
-
           {isLogin ? (
             /* --- 2-STEP LOGIN FORM --- */
             <div>
