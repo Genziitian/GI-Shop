@@ -34,6 +34,8 @@ import {
   Lock,
   Settings,
   User,
+  ArrowLeft,
+  ChevronLeft,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
@@ -405,45 +407,86 @@ export default function CustomerExploreScreen({ navigation, route }) {
       )}
 
       {/* SHOP CATALOG MODAL */}
-      <Modal visible={!!activeShop} animationType="slide" onRequestClose={() => setActiveShop(null)}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <Modal
+        visible={!!activeShop}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        statusBarTranslucent={true}
+        onRequestClose={() => setActiveShop(null)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
           {activeShop && (
             <View style={{ flex: 1 }}>
-              {/* Header */}
-              <View style={styles.catalogHeader}>
-                <TouchableOpacity style={styles.backBtn} onPress={() => setActiveShop(null)}>
-                  <Text style={styles.backBtnText}>← Back to Shops</Text>
+              {/* Top Navigation Bar */}
+              <View style={styles.catalogNavBar}>
+                <TouchableOpacity
+                  style={styles.catalogNavBackBtn}
+                  onPress={() => setActiveShop(null)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                >
+                  <ArrowLeft size={20} color={colors.text} />
+                  <Text style={styles.catalogNavBackText}>Shops</Text>
                 </TouchableOpacity>
 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 8 }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <Text style={styles.catalogShopName}>{activeShop.shopName}</Text>
-                      <View style={[styles.openStatusBadge, { backgroundColor: activeShop.isOpen ? '#dcfce7' : '#fee2e2' }]}>
-                        <Text style={[styles.openStatusText, { color: activeShop.isOpen ? '#15803d' : '#b91c1c' }]}>
-                          {activeShop.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
-                        </Text>
-                      </View>
+                <View style={styles.catalogNavTitleBox}>
+                  <Text style={styles.catalogNavTitle} numberOfLines={1}>
+                    {activeShop.shopName}
+                  </Text>
+                </View>
+
+                <View style={[styles.openStatusBadge, { backgroundColor: activeShop.isOpen ? '#dcfce7' : '#fee2e2' }]}>
+                  <Text style={[styles.openStatusText, { color: activeShop.isOpen ? '#15803d' : '#b91c1c' }]}>
+                    {activeShop.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Shop Hero Detail Header */}
+              <View style={styles.catalogHeroHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                    <View style={styles.shopAvatarBox}>
+                      <Store size={22} color={colors.primary} />
                     </View>
-                    <Text style={styles.catalogShopSub}>
-                      ID: <Text style={{ color: colors.primary, fontWeight: '700' }}>{activeShop.shortId}</Text> • {activeShop.city} • {activeShop.shopAddress}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.catalogShopName}>{activeShop.shopName}</Text>
+                      <Text style={styles.catalogShortIdText}>
+                        Shop ID: <Text style={{ color: colors.primary, fontWeight: '700' }}>{activeShop.shortId}</Text>
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                {/* Catalog Search */}
-                <View style={[styles.searchBox, { marginHorizontal: 0, marginTop: 10 }]}>
-                  <Search size={14} color={colors.textMuted} />
+                <View style={styles.catalogInfoRow}>
+                  <MapPin size={13} color={colors.primary} />
+                  <Text style={styles.catalogInfoText} numberOfLines={1}>
+                    {activeShop.city ? `${activeShop.city} • ` : ''}{activeShop.shopAddress || 'Local Store Location'}
+                  </Text>
+                </View>
+
+                {activeShop.timings && (
+                  <View style={[styles.catalogInfoRow, { marginTop: 4 }]}>
+                    <Clock size={13} color={colors.textMuted} />
+                    <Text style={styles.catalogInfoText}>
+                      {activeShop.timings} {activeShop.shopPhone ? `• 📞 ${activeShop.shopPhone}` : ''}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Search Input Box */}
+                <View style={styles.catalogSearchContainer}>
+                  <Search size={16} color={colors.textMuted} />
                   <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search grocery items in this shop..."
+                    style={styles.catalogSearchInput}
+                    placeholder="Search products in this shop..."
                     placeholderTextColor={colors.textMuted}
                     value={catalogSearch}
                     onChangeText={setCatalogSearch}
                   />
                   {catalogSearch.length > 0 && (
-                    <TouchableOpacity onPress={() => setCatalogSearch('')}>
-                      <X size={14} color={colors.textMuted} />
+                    <TouchableOpacity onPress={() => setCatalogSearch('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <X size={16} color={colors.textMuted} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1114,6 +1157,86 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 4,
+  },
+  catalogNavBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  catalogNavBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  catalogNavBackText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  catalogNavTitleBox: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  catalogNavTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  catalogHeroHeader: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  shopAvatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: '#bfdbfe',
+    borderWidth: 1,
+  },
+  catalogShortIdText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  catalogInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  catalogInfoText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    flex: 1,
+  },
+  catalogSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 10,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    height: 42,
+    gap: 8,
+  },
+  catalogSearchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    paddingVertical: 0,
   },
   catalogHeader: {
     backgroundColor: colors.surface,
