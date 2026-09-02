@@ -2,19 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getAdminShops, getAdminUsers, getAdminCities, addAdminCity, deleteAdminCity,
-  terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin
+  terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin,
+  getSupportSettings, updateSupportSettings
 } from '../lib/api';
-import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound } from 'lucide-react';
+import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
 export default function SuperManager() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('shops'); // 'shops' | 'users' | 'cities'
+  const [activeTab, setActiveTab] = useState('shops'); // 'shops' | 'users' | 'cities' | 'support'
   const [shops, setShops] = useState([]);
   const [users, setUsers] = useState([]);
   const [cities, setCities] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Support Settings State
+  const [supportForm, setSupportForm] = useState({
+    supportPhone: '',
+    supportWhatsapp: '',
+    supportEmail: '',
+    supportHours: '09:00 AM - 09:00 PM'
+  });
+  const [supportSaving, setSupportSaving] = useState(false);
+  const [supportNotice, setSupportNotice] = useState('');
 
   // New City Input State
   const [newCityName, setNewCityName] = useState('');
@@ -24,16 +35,44 @@ export default function SuperManager() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [s, u, c] = await Promise.all([getAdminShops(), getAdminUsers(), getAdminCities()]);
+      const [s, u, c, supp] = await Promise.all([
+        getAdminShops(),
+        getAdminUsers(),
+        getAdminCities(),
+        getSupportSettings().catch(() => ({ supportPhone: '', supportWhatsapp: '', supportEmail: '', supportHours: '09:00 AM - 09:00 PM' }))
+      ]);
       setShops(s);
       setUsers(u);
       setCities(c);
+      if (supp) {
+        setSupportForm({
+          supportPhone: supp.supportPhone || '',
+          supportWhatsapp: supp.supportWhatsapp || '',
+          supportEmail: supp.supportEmail || '',
+          supportHours: supp.supportHours || '09:00 AM - 09:00 PM'
+        });
+      }
     } catch (e) {
       if (e.message.includes('Unauthorized') || e.message.includes('Forbidden')) {
         confirmLogout();
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveSupport = async (e) => {
+    e.preventDefault();
+    setSupportSaving(true);
+    setSupportNotice('');
+    try {
+      const res = await updateSupportSettings(supportForm);
+      setSupportNotice(res.message || 'Support contact settings updated successfully!');
+      setTimeout(() => setSupportNotice(''), 4000);
+    } catch (err) {
+      alert(err.message || 'Failed to update support settings.');
+    } finally {
+      setSupportSaving(false);
     }
   };
 
@@ -185,6 +224,15 @@ export default function SuperManager() {
                 onClick={() => setActiveTab('cities')}
               >
                 <MapPin size={18} /> Manage Cities ({cities.length})
+              </button>
+
+              <button
+                type="button"
+                className={`btn ${activeTab === 'support' ? '' : 'btn-outline'}`}
+                style={{ padding: '0.6rem 1.25rem' }}
+                onClick={() => setActiveTab('support')}
+              >
+                <Headphones size={18} /> Support Contacts
               </button>
             </div>
 
@@ -435,6 +483,103 @@ export default function SuperManager() {
                 {filteredCities.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No cities found matching search.</p>}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ================= TAB 4: SUPPORT CONTACT SETTINGS ================= */}
+        {activeTab === 'support' && (
+          <div className="panel" style={{ padding: '1.75rem', maxWidth: '720px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Headphones size={22} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Platform Support Contact Settings</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Configure the customer support helpline, WhatsApp number, and email displayed to all app & web users.</p>
+              </div>
+            </div>
+
+            {supportNotice && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.85rem 1rem', borderRadius: '10px', marginBottom: '1.25rem', fontSize: '0.9rem', fontWeight: '600' }}>
+                ✓ {supportNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveSupport}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label className="label" style={{ fontWeight: '700' }}>Support Phone Helpline</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ paddingLeft: '2.5rem' }}
+                      placeholder="e.g. +91 98765 43210"
+                      value={supportForm.supportPhone}
+                      onChange={e => setSupportForm({ ...supportForm, supportPhone: e.target.value })}
+                    />
+                    <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontWeight: '700' }}>Support WhatsApp Number</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ paddingLeft: '2.5rem' }}
+                      placeholder="e.g. 919876543210 (digits only)"
+                      value={supportForm.supportWhatsapp}
+                      onChange={e => setSupportForm({ ...supportForm, supportWhatsapp: e.target.value })}
+                    />
+                    <Phone size={16} color="#16a34a" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label className="label" style={{ fontWeight: '700' }}>Support Email Address</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="email"
+                      className="input"
+                      style={{ paddingLeft: '2.5rem' }}
+                      placeholder="e.g. support@yourdomain.com"
+                      value={supportForm.supportEmail}
+                      onChange={e => setSupportForm({ ...supportForm, supportEmail: e.target.value })}
+                    />
+                    <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label" style={{ fontWeight: '700' }}>Operational Hours / Timings</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      className="input"
+                      style={{ paddingLeft: '2.5rem' }}
+                      placeholder="e.g. 09:00 AM - 09:00 PM IST"
+                      value={supportForm.supportHours}
+                      onChange={e => setSupportForm({ ...supportForm, supportHours: e.target.value })}
+                    />
+                    <Clock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={supportSaving}
+                style={{ width: '100%', padding: '0.85rem', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <Save size={18} />
+                {supportSaving ? 'Saving Changes...' : 'Save Support Contact Settings'}
+              </button>
+            </form>
           </div>
         )}
       </div>

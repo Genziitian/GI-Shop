@@ -59,6 +59,10 @@ export const clearSession = async () => {
   await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
 };
 
+export const getSupportSettings = async () => {
+  return await fetchWithAuth('/support-settings');
+};
+
 // Generic Authenticated Fetch Wrapper
 export const fetchWithAuth = async (endpoint, options = {}) => {
   const token = await getToken();

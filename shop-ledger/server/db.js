@@ -254,6 +254,11 @@ if (DB_TYPE === 'mysql') {
         deviceLabel VARCHAR(255),
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_passkeys_userId (userId)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+      `CREATE TABLE IF NOT EXISTS PlatformSettings (
+        settingKey VARCHAR(255) PRIMARY KEY,
+        settingValue TEXT
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
     ];
 
@@ -471,6 +476,11 @@ if (DB_TYPE === 'mysql') {
       publicKey TEXT NOT NULL,
       deviceLabel TEXT,
       createdAt TEXT
+    )`);
+
+    sqliteDb.run(`CREATE TABLE IF NOT EXISTS PlatformSettings (
+      settingKey TEXT PRIMARY KEY,
+      settingValue TEXT
     )`);
 
     // Performance Indexes

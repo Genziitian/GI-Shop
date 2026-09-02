@@ -111,6 +111,10 @@ export const changePassword = (currentPassword, newPassword) => request('/user/c
 export const getCustomerKhata = () => request('/customer/khata');
 export const getCustomerShopKhata = (shopId) => request(`/customer/khata/${shopId}`);
 
+// Support Settings APIs
+export const getSupportSettings = () => request('/support-settings');
+export const updateSupportSettings = (data) => request('/admin/support-settings', { method: 'PUT', body: JSON.stringify(data) });
+
 // Timing Helpers for Shop Hours
 export function parseTimings(timingsStr) {
   if (!timingsStr) return { open: '08:00', close: '22:00' };

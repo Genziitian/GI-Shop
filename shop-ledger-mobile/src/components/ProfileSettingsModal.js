@@ -32,13 +32,38 @@ import {
 } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import { updateUserProfile, changePin } from '../api/client';
+import { updateUserProfile, changePin, getSupportSettings } from '../api/client';
 
 export default function ProfileSettingsModal({ visible, onClose }) {
   const { user, refreshUser, logout, lock } = useAuth();
 
   const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'security', 'settings', 'support'
   const [copiedId, setCopiedId] = useState(false);
+
+  // Dynamic SuperAdmin Support Settings State
+  const [supportData, setSupportData] = useState({
+    supportPhone: '',
+    supportWhatsapp: '',
+    supportEmail: '',
+    supportHours: '09:00 AM - 09:00 PM'
+  });
+
+  useEffect(() => {
+    if (visible) {
+      getSupportSettings()
+        .then(res => {
+          if (res) {
+            setSupportData({
+              supportPhone: res.supportPhone || '',
+              supportWhatsapp: res.supportWhatsapp || '',
+              supportEmail: res.supportEmail || '',
+              supportHours: res.supportHours || '09:00 AM - 09:00 PM'
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [visible]);
 
   // Profile Form
   const [form, setForm] = useState({
@@ -130,15 +155,33 @@ export default function ProfileSettingsModal({ visible, onClose }) {
   };
 
   const handleOpenWhatsAppSupport = () => {
+    const target = (supportData.supportWhatsapp || supportData.supportPhone || '').replace(/[^0-9]/g, '');
+    if (!target) {
+      if (supportData.supportEmail) {
+        Linking.openURL(`mailto:${supportData.supportEmail}`);
+      } else {
+        Alert.alert('Support Contact', 'Support contact details have not been configured by the Platform Administrator yet.');
+      }
+      return;
+    }
     const text = encodeURIComponent(`Hello GI SHOP Support, I need assistance with my account (${user?.shortId || user?.email || user?.phone}).`);
-    Linking.openURL(`https://wa.me/917323809242?text=${text}`).catch(() => {
-      Alert.alert('Support', 'Please contact support at Pay.laxmikant@gmail.com');
+    Linking.openURL(`https://wa.me/${target}?text=${text}`).catch(() => {
+      Alert.alert('Support', `Please email support at ${supportData.supportEmail || 'support@gishop.com'}`);
     });
   };
 
   const handleCallSupport = () => {
-    Linking.openURL('tel:+917323809242').catch(() => {
-      Alert.alert('Support', 'Please contact support at Pay.laxmikant@gmail.com');
+    const target = (supportData.supportPhone || '').trim();
+    if (!target) {
+      if (supportData.supportEmail) {
+        Linking.openURL(`mailto:${supportData.supportEmail}`);
+      } else {
+        Alert.alert('Support Contact', 'Support contact helpline has not been configured by the Platform Administrator yet.');
+      }
+      return;
+    }
+    Linking.openURL(`tel:${target}`).catch(() => {
+      Alert.alert('Support', `Please dial ${target}`);
     });
   };
 
@@ -495,7 +538,9 @@ export default function ProfileSettingsModal({ visible, onClose }) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.supportOptionTitle}>Chat on WhatsApp</Text>
-                    <Text style={styles.supportOptionSub}>Fast response • Instant resolution</Text>
+                    <Text style={styles.supportOptionSub}>
+                      {supportData.supportWhatsapp ? `+${supportData.supportWhatsapp} • Instant Chat` : 'Fast response • Instant resolution'}
+                    </Text>
                   </View>
                   <ChevronRight size={16} color={colors.textMuted} />
                 </TouchableOpacity>
@@ -506,10 +551,25 @@ export default function ProfileSettingsModal({ visible, onClose }) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.supportOptionTitle}>Call Support Helpline</Text>
-                    <Text style={styles.supportOptionSub}>+91 73238 09242 • 9:00 AM - 9:00 PM</Text>
+                    <Text style={styles.supportOptionSub}>
+                      {supportData.supportPhone ? `${supportData.supportPhone} • ${supportData.supportHours || '09:00 AM - 09:00 PM'}` : 'Contact SuperAdmin for support'}
+                    </Text>
                   </View>
                   <ChevronRight size={16} color={colors.textMuted} />
                 </TouchableOpacity>
+
+                {supportData.supportEmail ? (
+                  <TouchableOpacity style={styles.supportOptionBtn} onPress={() => Linking.openURL(`mailto:${supportData.supportEmail}`)}>
+                    <View style={[styles.supportIconCircle, { backgroundColor: '#fef3c7' }]}>
+                      <Mail size={18} color="#d97706" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.supportOptionTitle}>Email Support</Text>
+                      <Text style={styles.supportOptionSub}>{supportData.supportEmail}</Text>
+                    </View>
+                    <ChevronRight size={16} color={colors.textMuted} />
+                  </TouchableOpacity>
+                ) : null}
               </View>
 
               <View style={styles.sectionCard}>

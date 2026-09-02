@@ -1378,6 +1378,66 @@ app.delete('/api/admin/cities/:id', authenticate, (req, res) => {
   });
 });
 
+// --- PLATFORM SUPPORT CONTACT SETTINGS (SUPER MANAGER & PUBLIC) ---
+app.get('/api/support-settings', (req, res) => {
+  db.all(`SELECT settingKey, settingValue FROM PlatformSettings`, [], (err, rows) => {
+    const settings = {
+      supportPhone: '',
+      supportWhatsapp: '',
+      supportEmail: '',
+      supportHours: '09:00 AM - 09:00 PM'
+    };
+    if (rows && Array.isArray(rows)) {
+      rows.forEach(r => {
+        if (r.settingKey === 'support_phone') settings.supportPhone = r.settingValue || '';
+        if (r.settingKey === 'support_whatsapp') settings.supportWhatsapp = r.settingValue || '';
+        if (r.settingKey === 'support_email') settings.supportEmail = r.settingValue || '';
+        if (r.settingKey === 'support_hours') settings.supportHours = r.settingValue || '09:00 AM - 09:00 PM';
+      });
+    }
+    res.json(settings);
+  });
+});
+
+app.put('/api/admin/support-settings', authenticate, (req, res) => {
+  if (req.user.role !== 'SuperManager') return res.status(403).json({ error: 'Forbidden: Super Manager access required' });
+  const { supportPhone, supportWhatsapp, supportEmail, supportHours } = req.body;
+
+  const updates = [
+    ['support_phone', (supportPhone || '').toString().trim()],
+    ['support_whatsapp', (supportWhatsapp || '').toString().trim()],
+    ['support_email', (supportEmail || '').toString().trim()],
+    ['support_hours', (supportHours || '09:00 AM - 09:00 PM').toString().trim()]
+  ];
+
+  let pending = updates.length;
+  let hasError = false;
+
+  updates.forEach(([k, v]) => {
+    db.run(
+      `INSERT OR REPLACE INTO PlatformSettings (settingKey, settingValue) VALUES (?, ?)`,
+      [k, v],
+      (err) => {
+        if (err) hasError = true;
+        pending--;
+        if (pending === 0) {
+          if (hasError) return res.status(500).json({ error: 'Failed to update support settings' });
+          res.json({
+            success: true,
+            message: 'Platform support contact settings updated successfully!',
+            settings: {
+              supportPhone: updates[0][1],
+              supportWhatsapp: updates[1][1],
+              supportEmail: updates[2][1],
+              supportHours: updates[3][1]
+            }
+          });
+        }
+      }
+    );
+  });
+});
+
 // --- CUSTOMER PURCHASES TIMELINE API ---
 app.get('/api/customer/history', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
