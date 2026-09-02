@@ -12,7 +12,7 @@ import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGrocery
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
-  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail
+  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';

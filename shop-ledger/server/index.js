@@ -492,7 +492,7 @@ app.post('/api/passkey/auth-verify', (req, res) => {
         if (shop && shop.status === 'TERMINATED') {
           return res.status(403).json({ error: 'This shop has been deactivated.' });
         }
-        const token = jwt.sign({ id: user.id, role: user.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET);
+        const token = jwt.sign({ id: user.id, role: user.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET, { expiresIn: '30d' });
         res.json({ token, user, shop, isStaff: false });
       });
     } else {
@@ -505,7 +505,7 @@ app.post('/api/passkey/auth-verify', (req, res) => {
           phone: user.phone, 
           shopId: staffRole?.shopId || null, 
           staffRole: staffRole ? 'Cashier' : null 
-        }, JWT_SECRET);
+        }, JWT_SECRET, { expiresIn: '30d' });
         res.json({ token, user, shop: staffRole ? { id: staffRole.shopId, shopName: staffRole.shopName, city: staffRole.city } : null, isStaff: !!staffRole });
       });
     }
@@ -531,7 +531,7 @@ app.post('/api/login', (req, res) => {
         if (shop && shop.status === 'TERMINATED') {
           return res.status(403).json({ error: 'This shop has been deactivated by the platform administrator.' });
         }
-        const token = jwt.sign({ id: user.id, role: user.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET);
+        const token = jwt.sign({ id: user.id, role: user.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET, { expiresIn: '30d' });
         res.json({ token, user, shop, isStaff: false });
       });
     } else {
@@ -545,7 +545,7 @@ app.post('/api/login', (req, res) => {
           phone: user.phone, 
           shopId: staffRole ? staffRole.shopId : null,
           staffRole: staffRole ? staffRole.role : null
-        }, JWT_SECRET);
+        }, JWT_SECRET, { expiresIn: '30d' });
         res.json({ token, user, staffRole: staffRole || null });
       });
     }
@@ -597,7 +597,7 @@ app.post('/api/auth/google', async (req, res) => {
             if (shop && shop.status === 'TERMINATED') {
               return res.status(403).json({ error: 'This shop has been deactivated by the platform administrator.' });
             }
-            const token = jwt.sign({ id: existingUser.id, role: existingUser.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET);
+            const token = jwt.sign({ id: existingUser.id, role: existingUser.role, shopId: shop?.id, staffRole: 'Owner' }, JWT_SECRET, { expiresIn: '30d' });
             return res.json({ token, user: existingUser, shop, isStaff: false, isNewUser: false });
           });
         } else {
@@ -610,7 +610,7 @@ app.post('/api/auth/google', async (req, res) => {
               phone: existingUser.phone, 
               shopId: staffRole ? staffRole.shopId : null,
               staffRole: staffRole ? staffRole.role : null
-            }, JWT_SECRET);
+            }, JWT_SECRET, { expiresIn: '30d' });
             return res.json({ token, user: existingUser, staffRole: staffRole || null, isNewUser: false });
           });
         }
@@ -688,12 +688,12 @@ app.post('/api/auth/google', async (req, res) => {
                     isOpen: 1,
                     status: 'ACTIVE'
                   };
-                  const token = jwt.sign({ id: newUserId, role: targetRole, shopId: newShopId, staffRole: 'Owner' }, JWT_SECRET);
+                  const token = jwt.sign({ id: newUserId, role: targetRole, shopId: newShopId, staffRole: 'Owner' }, JWT_SECRET, { expiresIn: '30d' });
                   return res.json({ token, user: newUser, shop: newShop, isStaff: false, isNewUser: false });
                 }
               );
             } else {
-              const token = jwt.sign({ id: newUserId, role: targetRole, phone: userPhone, shopId: null, staffRole: null }, JWT_SECRET);
+              const token = jwt.sign({ id: newUserId, role: targetRole, phone: userPhone, shopId: null, staffRole: null }, JWT_SECRET, { expiresIn: '30d' });
               return res.json({ token, user: newUser, staffRole: null, isNewUser: false });
             }
           }
