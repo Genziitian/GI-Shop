@@ -1600,7 +1600,7 @@ export default function Shopkeeper() {
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <Key size={16} color="#16a34a" /> Change 4-Digit Security PIN
+                    <Key size={16} color="#16a34a" /> Change Account Password
                   </button>
                   {/* <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
                     <Lock size={16} color="#dc2626" /> Lock Screen Now

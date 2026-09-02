@@ -496,7 +496,7 @@ export default function MoreScreen({ navigation }) {
                   <KeyRound size={22} color="#a855f7" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemTitle}>Change Security PIN</Text>
+                  <Text style={styles.menuItemTitle}>Account Password</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>

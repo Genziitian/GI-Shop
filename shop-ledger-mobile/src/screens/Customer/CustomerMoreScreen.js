@@ -139,7 +139,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <Key size={18} color="#16a34a" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>Security PIN & Password</Text>
+              <Text style={styles.menuText}>Account Password</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
