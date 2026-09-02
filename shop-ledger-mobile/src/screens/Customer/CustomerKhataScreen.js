@@ -125,29 +125,6 @@ export default function CustomerKhataScreen({ navigation }) {
           }}
           ListHeaderComponent={
             <View style={{ marginBottom: 16 }}>
-              {/* Customer Identity Card */}
-              <TouchableOpacity
-                style={styles.profileCard}
-                onPress={() => setShowProfileModal(true)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.avatarIconBox}>
-                  <User size={20} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={styles.profileName}>{user?.name || 'Customer'}</Text>
-                    <View style={styles.editProfileBadge}>
-                      <Text style={styles.editProfileBadgeText}>✏️ Edit Profile</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.profileSub}>
-                    Short ID: <Text style={{ color: colors.primary, fontWeight: '700' }}>{user?.shortId || 'N/A'}</Text> • {user?.phone}
-                  </Text>
-                </View>
-                <ChevronRight size={18} color={colors.textMuted} />
-              </TouchableOpacity>
-
               {/* Total Due Banner */}
               <View style={styles.totalDueCard}>
                 <View style={{ flex: 1 }}>
