@@ -37,12 +37,18 @@ let firebaseAdminInitialized = false;
 let firebaseAuth = null;
 let firebaseMessaging = null;
 
+const getCredential = (sa) => {
+  if (typeof admin.cert === 'function') return admin.cert(sa);
+  if (admin.credential && typeof admin.credential.cert === 'function') return admin.credential.cert(sa);
+  return sa;
+};
+
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   try {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
     const serviceAccount = raw.startsWith('{') ? JSON.parse(raw) : JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
     const fbApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: getCredential(serviceAccount)
     });
     const { getAuth } = require('firebase-admin/auth');
     const { getMessaging } = require('firebase-admin/messaging');
@@ -69,7 +75,7 @@ if (!firebaseAdminInitialized) {
       try {
         const serviceAccount = JSON.parse(fs.readFileSync(saPath, 'utf8'));
         const fbApp = admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
+          credential: getCredential(serviceAccount)
         });
         const { getAuth } = require('firebase-admin/auth');
         const { getMessaging } = require('firebase-admin/messaging');
