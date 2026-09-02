@@ -1132,13 +1132,6 @@ export default function Auth() {
                 >
                   {t.terms}
                 </span>
-                <span>•</span>
-                <span 
-                  style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
-                  onClick={() => navigate('/delete')}
-                >
-                  {t.accountDeletion}
-                </span>
               </div>
 
               {/* Copyright Text */}
