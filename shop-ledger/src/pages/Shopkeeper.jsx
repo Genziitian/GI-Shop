@@ -740,7 +740,7 @@ export default function Shopkeeper() {
   const loadItemsData = async () => {
     try {
       const data = await getItems();
-      setItems(data);
+      setItems(Array.isArray(data) ? data : (data?.items || []));
     } catch (e) { console.error(e); }
   };
 
@@ -1452,23 +1452,23 @@ export default function Shopkeeper() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {items.map(item => (
-                  <div key={item.id} className="list-item" style={{ background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border)', padding: '0.65rem 0.85rem' }}>
+                {(items || []).map(item => (
+                  <div key={item.id || item._id} className="list-item" style={{ background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border)', padding: '0.65rem 0.85rem' }}>
                     <div>
                       <strong style={{ fontSize: '0.95rem' }}>{item.name}</strong>
-                      <span className="badge" style={{ marginLeft: '0.5rem' }}>₹{item.price.toFixed(2)} / {item.unit}</span>
+                      <span className="badge" style={{ marginLeft: '0.5rem' }}>₹{(Number(item?.price ?? item?.rate) || 0).toFixed(2)} / {item?.unit || 'unit'}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
                       <button type="button" className="btn btn-outline" style={{ padding: '0.35rem 0.65rem' }} onClick={() => setEditingItem(item)}>
                         <Edit2 size={14} />
                       </button>
-                      <button type="button" className="btn btn-danger" style={{ padding: '0.35rem 0.65rem' }} onClick={() => handleDeleteItem(item.id)}>
+                      <button type="button" className="btn btn-danger" style={{ padding: '0.35rem 0.65rem' }} onClick={() => handleDeleteItem(item.id || item._id)}>
                         <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
                 ))}
-                {items.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No products added yet. Use the auto-fill form above or browse the Master Library!</p>}
+                {(!items || items.length === 0) && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No products added yet. Use the auto-fill form above or browse the Master Library!</p>}
               </div>
             </div>
 
