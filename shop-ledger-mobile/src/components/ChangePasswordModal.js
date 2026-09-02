@@ -62,6 +62,8 @@ export default function ChangePasswordModal({ visible, onClose }) {
     }
   };
 
+  const hasExistingPassword = user?.hasPassword !== false && (Boolean(user?.email) || Boolean(user?.hasPassword));
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
@@ -73,7 +75,9 @@ export default function ChangePasswordModal({ visible, onClose }) {
             </View>
             <View>
               <Text style={styles.headerTitle}>Account Password</Text>
-              <Text style={styles.headerSubtitle}>Set or update your account password</Text>
+              <Text style={styles.headerSubtitle}>
+                {hasExistingPassword ? 'Update your account password' : 'Create a new account password'}
+              </Text>
             </View>
           </View>
           <TouchableOpacity
@@ -102,28 +106,32 @@ export default function ChangePasswordModal({ visible, onClose }) {
           ) : null}
 
           <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Change Password</Text>
+            <Text style={styles.sectionTitle}>
+              {hasExistingPassword ? 'Change Password' : 'Create Password'}
+            </Text>
             <Text style={styles.sectionSub}>
               Ensure your new password contains at least 6 characters.
             </Text>
 
-            {/* Current Password Field */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Current Password (If existing)</Text>
-              <View style={styles.passwordInputContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  placeholder="Enter current password"
-                  placeholderTextColor={colors.textMuted}
-                  secureTextEntry={!showCurrent}
-                />
-                <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)} style={styles.eyeBtn}>
-                  {showCurrent ? <EyeOff size={18} color={colors.textMuted} /> : <Eye size={18} color={colors.textMuted} />}
-                </TouchableOpacity>
+            {/* Current Password Field (Shown only when user has existing password) */}
+            {hasExistingPassword && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Current Password</Text>
+                <View style={styles.passwordInputContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholder="Enter current password"
+                    placeholderTextColor={colors.textMuted}
+                    secureTextEntry={!showCurrent}
+                  />
+                  <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)} style={styles.eyeBtn}>
+                    {showCurrent ? <EyeOff size={18} color={colors.textMuted} /> : <Eye size={18} color={colors.textMuted} />}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
             {/* New Password Field */}
             <View style={styles.fieldGroup}>
@@ -169,7 +177,9 @@ export default function ChangePasswordModal({ visible, onClose }) {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveBtnText}>Update Password</Text>
+                <Text style={styles.saveBtnText}>
+                  {hasExistingPassword ? 'Update Password' : 'Set Password'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
