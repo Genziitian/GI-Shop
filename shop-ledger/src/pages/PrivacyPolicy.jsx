@@ -87,20 +87,35 @@ export default function PrivacyPolicy() {
               <li>Visit our website at <a href="https://gi-shop.genziitian.in/" style={{ color: '#2563eb', textDecoration: 'underline' }}>https://gi-shop.genziitian.in/</a> or any website of ours that links to this Privacy Notice</li>
               <li>Download and use our mobile application (GI SHOP: POS &amp; Khata Ledger), or any other application of ours that links to this Privacy Notice</li>
               <li>
-                Use Fast POS billing, customer Khata credit ledger &amp; inventory manager for shops.. GI SHOP is a modern, ultra-fast Point of Sale (POS) billing, inventory management, and digital Khata (customer credit/debit ledger) application designed for grocery stores, kirana shops, retail outlets, and small businesses. Streamline your daily checkout, record udhar/credit transactions, manage stock, and give your customers instant access to itemized digital receipts. 
-                <br /><br />
-                <strong>━━━━━━━━━━━━━━━━━━━━━ 🌟 KEY FEATURES FOR SHOPKEEPERS ━━━━━━━━━━━━━━━━━━━━━</strong><br />
-                ⚡ HIGH-SPEED POS BILLING: • Quick-touch product grid and instant barcode/text search. • Smart Unit Conversion: Effortlessly sell by Piece, Kilogram (kg/g), or Litre (L/ml). • Bidirectional Price Calculation: Enter quantity or enter rupees directly (e.g., ₹30 worth of ₹60/kg automatically computes 0.5 kg). • Instant discounts, taxes, and multi-channel checkout: Cash, Online (UPI/Card), and Add to Book (Khata).<br />
-                📖 DIGITAL KHATA (UDHAR / CREDIT LEDGER): • Complete customer credit and repayment ledger. • Real-time outstanding balances and automatic total dues calculations. • Quick payment settlements (Full or Partial repayments). • Full chronological debit/credit transaction history with audit timestamps.<br />
-                📦 INVENTORY &amp; PRODUCT MANAGEMENT: • Real-time stock and catalog management with unit rates. • Add, update, and manage categories and prices with one tap.<br />
-                🧾 PRINTABLE DIGITAL RECEIPTS: • Generate professional itemized bills with shop name, timestamp, and payment method breakdown.<br /><br />
-                <strong>━━━━━━━━━━━━━━━━━━━━━ 👤 FOR CUSTOMERS ━━━━━━━━━━━━━━━━━━━━━</strong><br />
-                • Purchase History: View all past bills and itemized receipts across registered shops.<br />
-                • Khata Transparency: Check your outstanding balance and repayment history anytime.<br /><br />
-                <strong>━━━━━━━━━━━━━━━━━━━━━ 🔒 SECURITY &amp; PRIVACY ━━━━━━━━━━━━━━━━━━━━━</strong><br />
-                • Secure cloud synchronization with encrypted data transmission.<br />
-                • Reliable PIN lock protection to safeguard business records.<br />
-                Simplify your shop billing and customer ledger today with GI SHOP!
+                Use fast POS billing, customer Khata credit ledger &amp; inventory management for retail shops. GI SHOP is a modern Point of Sale (POS) billing, inventory management, and digital Khata (customer credit/debit ledger) service designed for grocery stores, kirana shops, retail outlets, and small businesses.
+                
+                <div style={{ margin: '1rem 0', padding: '1rem 1.25rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    Key Features for Shopkeepers
+                  </div>
+                  <ul style={{ paddingLeft: '1.25rem', margin: '0 0 1rem 0', display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.9rem' }}>
+                    <li><strong>High-Speed POS Billing:</strong> Quick-touch product grid, instant barcode/text search, smart unit conversions (Piece, Kg, Gram, Litre, Ml), bidirectional price calculation, instant discounts, taxes, and multi-channel checkout (Cash, Online UPI/Card, Khata).</li>
+                    <li><strong>Digital Khata (Credit/Debit Ledger):</strong> Complete customer credit and repayment ledger, real-time outstanding balance calculations, quick full or partial payment settlements, and chronological transaction history with audit timestamps.</li>
+                    <li><strong>Inventory &amp; Product Management:</strong> Real-time stock and catalog management with unit rates, categories, and one-tap price updates.</li>
+                    <li><strong>Printable Digital Receipts:</strong> Professional itemized invoices with shop name, timestamp, and payment method breakdown.</li>
+                  </ul>
+
+                  <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    Features for Customers
+                  </div>
+                  <ul style={{ paddingLeft: '1.25rem', margin: '0 0 1rem 0', display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.9rem' }}>
+                    <li><strong>Purchase History:</strong> View all past bills and itemized receipts across registered shops.</li>
+                    <li><strong>Khata Transparency:</strong> Check outstanding balance and repayment history anytime.</li>
+                  </ul>
+
+                  <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    Security &amp; Data Privacy
+                  </div>
+                  <ul style={{ paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.9rem' }}>
+                    <li>Secure cloud synchronization with encrypted data transmission.</li>
+                    <li>PIN lock protection to safeguard business records and financial ledger data.</li>
+                  </ul>
+                </div>
               </li>
               <li>Engage with us in other related ways, including any marketing or events</li>
             </ul>
