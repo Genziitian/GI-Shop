@@ -1,12 +1,13 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Store, Tag, BookOpen, Clock } from 'lucide-react-native';
+import { Store, Tag, BookOpen, Clock, Menu } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import CustomerExploreScreen from '../screens/Customer/CustomerExploreScreen';
 import CustomerCompareScreen from '../screens/Customer/CustomerCompareScreen';
 import CustomerKhataScreen from '../screens/Customer/CustomerKhataScreen';
 import CustomerOrdersScreen from '../screens/Customer/CustomerOrdersScreen';
+import CustomerMoreScreen from '../screens/Customer/CustomerMoreScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -64,6 +65,14 @@ export default function CustomerNavigator() {
         options={{
           tabBarLabel: 'All Orders',
           tabBarIcon: ({ color, size }) => <Clock size={size || 20} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="CustomerMore"
+        component={CustomerMoreScreen}
+        options={{
+          tabBarLabel: 'More',
+          tabBarIcon: ({ color, size }) => <Menu size={size || 20} color={color} />,
         }}
       />
     </Tab.Navigator>

@@ -11,7 +11,7 @@ import {
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
   X, CheckCircle, AlertCircle, LogOut, Phone, ShieldCheck, UserCheck, 
   Tag, ArrowRight, AlertTriangle, Printer, FileText, Download, Key, Lock, User,
-  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail
+  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail, Menu
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
@@ -975,32 +975,9 @@ export default function Customer() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
       {/* Top Header */}
       <div className="nav-bar" style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
-            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#15803d', letterSpacing: '-0.02em' }}>GI SHOP</span>
-          </div>
-
-          <div style={{ height: '24px', width: '1px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
-
-          <div 
-            style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', padding: '3px 8px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}
-            onClick={handleOpenProfileModal}
-            title="Click to view/edit profile & PIN"
-          >
-            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <UserCheck size={18} />
-            </div>
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {currentUser?.name || 'Customer'}
-                <span style={{ fontSize: '0.68rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.1rem 0.45rem', borderRadius: '4px', border: '1px solid #bfdbfe', fontWeight: '700' }}>Settings</span>
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong> • {currentUser?.phone}
-              </div>
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#15803d', letterSpacing: '-0.02em' }}>GI SHOP</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -3570,6 +3547,71 @@ export default function Customer() {
           </div>
         )}
 
+        {/* TAB 5: MORE (Profile, Security, Export & Session) */}
+        {activeTab === 'more' && (
+          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border)' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>Account & Settings</h2>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Manage profile details, security PIN, data export, and session settings
+                </div>
+              </div>
+              <button type="button" className="btn" onClick={handleOpenProfileModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                <UserCheck size={16} /> Edit Profile & Security
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+              {/* Profile Overview Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <User size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{currentUser?.name || 'Customer'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong></div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <div>📞 Phone: <strong>{currentUser?.phone || 'N/A'}</strong></div>
+                  <div>📍 City: <strong>{currentUser?.city || 'Delhi'}</strong></div>
+                  <div>🏠 Address: <span>{currentUser?.address || 'Not specified'}</span></div>
+                </div>
+              </div>
+
+              {/* Security & PIN Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security & Lock</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>4-Digit PIN & Account Password</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <Key size={16} color="#16a34a" /> Change 4-Digit Security PIN
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                    <Lock size={16} color="#dc2626" /> Lock Screen / Account Now
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Actions */}
+            <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+              <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ fontWeight: 700, gap: '0.5rem' }}>
+                <LogOut size={16} /> Log Out Account
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* SMART QUANTITY & UNIT SELECTOR MODAL (Shopkeeper POS Experience for Customer) */}
         {selectedModalProduct && (
           <div className="modal-overlay">
@@ -3789,6 +3831,11 @@ export default function Customer() {
         <button type="button" className={`footer-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => { setActiveTab('orders'); setActiveShop(null); setSelectedKhataStore(null); }}>
           <Clock size={18} />
           <span>All Orders</span>
+        </button>
+
+        <button type="button" className={`footer-nav-item ${activeTab === 'more' ? 'active' : ''}`} onClick={() => { setActiveTab('more'); setActiveShop(null); setSelectedKhataStore(null); }}>
+          <Menu size={18} />
+          <span>More</span>
         </button>
       </div>
 

@@ -73,24 +73,10 @@ export default function CustomerCompareScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Uniform Top Header with App Name, Icon, Profile & Lock Button */}
+      {/* Uniform Top Header with App Name, Icon & Lock Button */}
       <Header
         title="GI SHOP"
         subtitle="Compare Prices in Shops"
-        rightComponent={
-          <TouchableOpacity
-            style={styles.profileBtn}
-            onPress={() => setShowProfileModal(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarText}>
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </Text>
-            </View>
-            <Settings size={14} color={colors.primaryDark} />
-          </TouchableOpacity>
-        }
       />
 
       {/* Compact City Dropdown Selector Bar */}

@@ -267,36 +267,21 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Uniform Top Header with App Name, Icon, Profile & Lock Button */}
+      {/* Uniform Top Header with App Name, Icon & Lock Button */}
       <Header
         title="GI SHOP"
         subtitle={user?.name ? `${user.name} • ID: ${user?.shortId || ''}` : 'Smart Grocery Discovery'}
         rightComponent={
-          <>
-            {totalCartCount > 0 && (
-              <TouchableOpacity
-                style={styles.cartBadgeBtn}
-                onPress={() => setShowCartModal(true)}
-                activeOpacity={0.8}
-              >
-                <ShoppingCart size={15} color="#fff" />
-                <Text style={styles.cartBadgeText}>₹{totalCartAmount.toFixed(0)}</Text>
-              </TouchableOpacity>
-            )}
-
+          totalCartCount > 0 ? (
             <TouchableOpacity
-              style={styles.profileBtn}
-              onPress={() => setShowProfileModal(true)}
-              activeOpacity={0.7}
+              style={styles.cartBadgeBtn}
+              onPress={() => setShowCartModal(true)}
+              activeOpacity={0.8}
             >
-              <View style={styles.profileAvatar}>
-                <Text style={styles.profileAvatarText}>
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </Text>
-              </View>
-              <Settings size={14} color={colors.primaryDark} />
+              <ShoppingCart size={15} color="#fff" />
+              <Text style={styles.cartBadgeText}>₹{totalCartAmount.toFixed(0)}</Text>
             </TouchableOpacity>
-          </>
+          ) : null
         }
       />
 
