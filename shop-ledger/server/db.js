@@ -340,6 +340,7 @@ if (DB_TYPE === 'mysql') {
       phone TEXT UNIQUE,
       password TEXT,
       pin TEXT DEFAULT '1234',
+      hasPasswordSet INTEGER DEFAULT 0,
       role TEXT,
       city TEXT,
       address TEXT,
@@ -348,6 +349,7 @@ if (DB_TYPE === 'mysql') {
     )`);
 
     sqliteDb.run(`ALTER TABLE Users ADD COLUMN pin TEXT DEFAULT '1234'`, () => {});
+    sqliteDb.run(`ALTER TABLE Users ADD COLUMN hasPasswordSet INTEGER DEFAULT 0`, () => {});
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS Shops (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

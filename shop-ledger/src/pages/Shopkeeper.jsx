@@ -12,7 +12,7 @@ import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGrocery
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
-  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield
+  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
@@ -160,8 +160,16 @@ export default function Shopkeeper() {
     }
   };
 
-  // Password Form State
+  // PIN Visibility States
+  const [showCurrentPin, setShowCurrentPin] = useState(false);
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
+
+  // Password Form State & Visibility
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordNotice, setPasswordNotice] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -184,8 +192,9 @@ export default function Shopkeeper() {
     }
 
     try {
-      const res = await changePassword(null, passwordForm.newPassword);
+      const res = await changePassword(passwordForm.currentPassword || null, passwordForm.newPassword);
       setPasswordNotice(res.message || 'Password saved successfully!');
+      setCurrentUser(prev => prev ? ({ ...prev, hasPasswordSet: 1 }) : prev);
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setPasswordNotice(''), 4000);
     } catch (err) {
@@ -1557,9 +1566,14 @@ export default function Shopkeeper() {
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
                         <div>
-                          <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Current PIN</label>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Current PIN</label>
+                            <button type="button" onClick={() => setShowCurrentPin(!showCurrentPin)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', padding: 0 }}>
+                              {showCurrentPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                            </button>
+                          </div>
                           <input 
-                            type="password" 
+                            type={showCurrentPin ? 'text' : 'password'} 
                             maxLength="4" 
                             className="input" 
                             placeholder="••••" 
@@ -1570,9 +1584,14 @@ export default function Shopkeeper() {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>New PIN</label>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>New PIN</label>
+                            <button type="button" onClick={() => setShowNewPin(!showNewPin)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', padding: 0 }}>
+                              {showNewPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                            </button>
+                          </div>
                           <input 
-                            type="password" 
+                            type={showNewPin ? 'text' : 'password'} 
                             maxLength="4" 
                             className="input" 
                             placeholder="••••" 
@@ -1583,9 +1602,14 @@ export default function Shopkeeper() {
                           />
                         </div>
                         <div>
-                          <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Confirm PIN</label>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Confirm PIN</label>
+                            <button type="button" onClick={() => setShowConfirmPin(!showConfirmPin)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412', padding: 0 }}>
+                              {showConfirmPin ? <EyeOff size={13} /> : <Eye size={13} />}
+                            </button>
+                          </div>
                           <input 
-                            type="password" 
+                            type={showConfirmPin ? 'text' : 'password'} 
                             maxLength="4" 
                             className="input" 
                             placeholder="••••" 
@@ -1611,11 +1635,24 @@ export default function Shopkeeper() {
                   {/* 2. Set / Change Password */}
                   <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-                        <Key size={18} /> Account Password
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                        <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Key size={18} /> Account Password
+                        </div>
+                        {currentUser?.hasPasswordSet === 1 ? (
+                          <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                            🟢 Password Active
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                            ⚠️ Not Set Yet
+                          </span>
+                        )}
                       </div>
                       <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                        Set a password if you would like to log in with your Email ID or Short ID directly.
+                        {currentUser?.hasPasswordSet === 1 
+                          ? 'Enter your current password to set a new password for your account.' 
+                          : 'Set a password to log in directly with your Email ID or Short ID without Google.'}
                       </p>
 
                       {passwordNotice && (
@@ -1629,32 +1666,78 @@ export default function Shopkeeper() {
                         </div>
                       )}
 
+                      {/* Current Password Field (Only shown if user has an existing password set) */}
+                      {currentUser?.hasPasswordSet === 1 && (
+                        <div style={{ marginBottom: '0.65rem' }}>
+                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Password *</label>
+                          <div style={{ position: 'relative', marginTop: '3px' }}>
+                            <input 
+                              type={showCurrentPassword ? 'text' : 'password'} 
+                              className="input" 
+                              placeholder="Enter current password" 
+                              value={passwordForm.currentPassword} 
+                              onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} 
+                              required 
+                              style={{ margin: 0, paddingRight: '2.4rem', background: '#fff' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                            >
+                              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1rem' }}>
                         <div>
-                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>New Password</label>
-                          <input 
-                            type="password" 
-                            className="input" 
-                            placeholder="Enter password" 
-                            value={passwordForm.newPassword} 
-                            onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
-                            required 
-                            minLength={4}
-                            style={{ margin: 0, marginTop: '3px', background: '#fff' }}
-                          />
+                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                            {currentUser?.hasPasswordSet === 1 ? 'New Password *' : 'Password *'}
+                          </label>
+                          <div style={{ position: 'relative', marginTop: '3px' }}>
+                            <input 
+                              type={showNewPassword ? 'text' : 'password'} 
+                              className="input" 
+                              placeholder="Enter password" 
+                              value={passwordForm.newPassword} 
+                              onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
+                              required 
+                              minLength={4}
+                              style={{ margin: 0, paddingRight: '2.4rem', background: '#fff' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                            >
+                              {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
                         </div>
+
                         <div>
-                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm Password</label>
-                          <input 
-                            type="password" 
-                            className="input" 
-                            placeholder="Re-type password" 
-                            value={passwordForm.confirmPassword} 
-                            onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
-                            required 
-                            minLength={4}
-                            style={{ margin: 0, marginTop: '3px', background: '#fff' }}
-                          />
+                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm Password *</label>
+                          <div style={{ position: 'relative', marginTop: '3px' }}>
+                            <input 
+                              type={showConfirmPassword ? 'text' : 'password'} 
+                              className="input" 
+                              placeholder="Re-type password" 
+                              value={passwordForm.confirmPassword} 
+                              onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
+                              required 
+                              minLength={4}
+                              style={{ margin: 0, paddingRight: '2.4rem', background: '#fff' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                            >
+                              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1665,7 +1748,7 @@ export default function Shopkeeper() {
                       disabled={passwordSaving} 
                       style={{ width: '100%', padding: '0.65rem', fontSize: '0.86rem', fontWeight: '700', background: '#fff', borderRadius: '9px' }}
                     >
-                      {passwordSaving ? 'Saving Password...' : 'Save Password'}
+                      {passwordSaving ? 'Saving Password...' : (currentUser?.hasPasswordSet === 1 ? 'Update Password' : 'Save Password')}
                     </button>
                   </form>
                 </div>

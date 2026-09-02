@@ -368,11 +368,19 @@ app.post('/api/user/change-password', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'New password must be at least 4 characters long.' });
   }
 
-  db.get(`SELECT id, password FROM Users WHERE id = ?`, [req.user.id], async (err, user) => {
+  db.get(`SELECT id, password, COALESCE(hasPasswordSet, 0) as hasPasswordSet FROM Users WHERE id = ?`, [req.user.id], async (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
 
-    // If currentPassword is provided by user, verify it
-    if (currentPassword && currentPassword.trim()) {
+    // If user already has a customized password set, require current password verification
+    if (user.hasPasswordSet === 1) {
+      if (!currentPassword || !currentPassword.trim()) {
+        return res.status(400).json({ error: 'Current password is required to update your existing password.' });
+      }
+      const valid = await bcrypt.compare(currentPassword, user.password);
+      if (!valid) {
+        return res.status(400).json({ error: 'Current password is incorrect.' });
+      }
+    } else if (currentPassword && currentPassword.trim()) {
       const valid = await bcrypt.compare(currentPassword, user.password);
       if (!valid) {
         return res.status(400).json({ error: 'Current password is incorrect.' });
@@ -381,7 +389,7 @@ app.post('/api/user/change-password', authenticate, async (req, res) => {
 
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      db.run(`UPDATE Users SET password = ? WHERE id = ?`, [hashedPassword, req.user.id], (err) => {
+      db.run(`UPDATE Users SET password = ?, hasPasswordSet = 1 WHERE id = ?`, [hashedPassword, req.user.id], (err) => {
         if (err) return res.status(500).json({ error: 'Failed to update password' });
         res.json({ success: true, message: 'Password saved successfully! You can now log in with your email/phone and password.' });
       });
@@ -728,7 +736,7 @@ app.post('/api/notifications/register-token', authenticate, (req, res) => {
 });
 
 app.get('/api/me', authenticate, (req, res) => {
-  db.get(`SELECT id, shortId, name, email, phone, role, city, address, status, pin, (pin IS NOT NULL AND pin != '') as hasPinSet FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
+  db.get(`SELECT id, shortId, name, email, phone, role, city, address, status, pin, (pin IS NOT NULL AND pin != '') as hasPinSet, COALESCE(hasPasswordSet, 0) as hasPasswordSet FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
     if (user.role === 'Shopkeeper') {
       db.get(`SELECT * FROM Shops WHERE ownerId = ? AND status = 'ACTIVE'`, [user.id], (err, shop) => {
