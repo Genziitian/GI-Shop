@@ -1,55 +1,31 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Lock, Store, User, Settings } from 'lucide-react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { Lock } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
-import ProfileSettingsModal from './ProfileSettingsModal';
 
 export default function Header({ title, subtitle, rightElement, showLock = true, rightComponent }) {
   const { user, lock } = useAuth();
-  const [showProfileModal, setShowProfileModal] = useState(false);
-
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    return name.trim().charAt(0).toUpperCase();
-  };
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        style={styles.leftContainer}
-        onPress={() => setShowProfileModal(true)}
-        activeOpacity={0.8}
-      >
-        <View style={styles.iconBadge}>
-          {user?.role === 'Shopkeeper' ? (
-            <Store size={20} color={colors.primary} />
-          ) : (
-            <User size={20} color={colors.success} />
-          )}
-        </View>
+      <View style={styles.leftContainer}>
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.appLogoIcon}
+        />
         <View style={styles.textContainer}>
           <Text style={styles.title} numberOfLines={1}>
-            {title || user?.shop?.shopName || user?.name || 'GI SHOP'}
+            {title || 'GI SHOP'}
           </Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle || user?.shop?.shopName || 'Smart Billing & Khata'}
+          </Text>
         </View>
-      </TouchableOpacity>
+      </View>
 
       <View style={styles.rightContainer}>
         {rightComponent || rightElement}
-
-        {/* Top Right Profile & Settings Button */}
-        <TouchableOpacity
-          style={styles.profileBtn}
-          onPress={() => setShowProfileModal(true)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.profileAvatar}>
-            <Text style={styles.profileAvatarText}>{getInitials(user?.name)}</Text>
-          </View>
-          <Settings size={14} color={colors.primaryDark} />
-        </TouchableOpacity>
 
         {showLock && (
           <TouchableOpacity
@@ -62,11 +38,6 @@ export default function Header({ title, subtitle, rightElement, showLock = true,
           </TouchableOpacity>
         )}
       </View>
-
-      <ProfileSettingsModal
-        visible={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-      />
     </View>
   );
 }
@@ -88,22 +59,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  iconBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  appLogoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   textContainer: {
     flex: 1,
   },
   title: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
+    letterSpacing: -0.2,
   },
   subtitle: {
     fontSize: 12,
@@ -114,30 +85,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  profileBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    gap: 4,
-  },
-  profileAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileAvatarText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#fff',
   },
   lockBtn: {
     flexDirection: 'row',

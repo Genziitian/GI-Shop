@@ -130,15 +130,15 @@ export default function ProfileSettingsModal({ visible, onClose }) {
   };
 
   const handleOpenWhatsAppSupport = () => {
-    const text = encodeURIComponent(`Hello GI SHOP Support, I need assistance with my customer account (${user?.shortId || user?.phone}).`);
-    Linking.openURL(`https://wa.me/919123456789?text=${text}`).catch(() => {
-      Alert.alert('Support', 'Please contact support at support@gishop.local');
+    const text = encodeURIComponent(`Hello GI SHOP Support, I need assistance with my account (${user?.shortId || user?.email || user?.phone}).`);
+    Linking.openURL(`https://wa.me/917323809242?text=${text}`).catch(() => {
+      Alert.alert('Support', 'Please contact support at Pay.laxmikant@gmail.com');
     });
   };
 
   const handleCallSupport = () => {
-    Linking.openURL('tel:+919123456789').catch(() => {
-      Alert.alert('Support', 'Please dial +91 9123456789');
+    Linking.openURL('tel:+917323809242').catch(() => {
+      Alert.alert('Support', 'Please contact support at Pay.laxmikant@gmail.com');
     });
   };
 
@@ -506,7 +506,7 @@ export default function ProfileSettingsModal({ visible, onClose }) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.supportOptionTitle}>Call Support Helpline</Text>
-                    <Text style={styles.supportOptionSub}>+91 91234 56789 • 9:00 AM - 9:00 PM</Text>
+                    <Text style={styles.supportOptionSub}>+91 73238 09242 • 9:00 AM - 9:00 PM</Text>
                   </View>
                   <ChevronRight size={16} color={colors.textMuted} />
                 </TouchableOpacity>

@@ -30,6 +30,7 @@ import {
   Search,
   KeyRound,
   ShieldCheck,
+  Settings,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import {
@@ -47,12 +48,14 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import EditProductModal from '../../components/EditProductModal';
+import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 
 export default function MoreScreen({ navigation }) {
   const { user, logout, changePin } = useAuth();
 
   // Active Sub-View: 'hub' | 'items' | 'staff' | 'profile' | 'pin'
   const [activeSubView, setActiveSubView] = useState('hub');
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Shop Status
   const [isOpen, setIsOpen] = useState(user?.shop?.isOpen === 1 || user?.staffRole?.isOpen === 1);
@@ -437,7 +440,25 @@ export default function MoreScreen({ navigation }) {
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
-              {/* 3. Change Security PIN */}
+              {/* 3. Profile & Settings */}
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => setShowProfileModal(true)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: '#e0f2fe' }]}>
+                  <Settings size={22} color="#0284c7" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuItemTitle}>Profile & Settings</Text>
+                  <Text style={styles.menuItemSub}>
+                    Account details, preferences, security & support
+                  </Text>
+                </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              {/* 4. Change Security PIN */}
               <TouchableOpacity
                 style={styles.menuItem}
                 onPress={() => {
@@ -853,6 +874,12 @@ export default function MoreScreen({ navigation }) {
         product={selectedProduct}
         onClose={() => setShowItemModal(false)}
         onSave={handleSaveItem}
+      />
+
+      {/* Profile & Settings Modal */}
+      <ProfileSettingsModal
+        visible={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
     </SafeAreaView>
   );
