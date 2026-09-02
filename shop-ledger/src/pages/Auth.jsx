@@ -377,7 +377,7 @@ export default function Auth() {
     setError('');
     setLoading(true);
     try {
-      const res = await login({ email: loginForm.identifier, password: loginForm.password });
+      const res = await login({ email: loginForm.identifier.trim().toLowerCase(), password: loginForm.password });
       
       // Save or Clear Remembered Identifier based on checkbox
       if (rememberMe && loginForm.identifier) {

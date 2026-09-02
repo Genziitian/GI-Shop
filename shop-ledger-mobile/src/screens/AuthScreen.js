@@ -14,7 +14,7 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Store, User, ArrowRight, Settings, Lock, Mail, Phone, MapPin } from 'lucide-react-native';
+import { Store, User, ArrowRight, Settings, Lock, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import ServerSettingsModal from '../components/ServerSettingsModal';
@@ -34,6 +34,7 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [showServerModal, setShowServerModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Form Fields
   const [name, setName] = useState('');
@@ -64,7 +65,7 @@ export default function AuthScreen() {
 
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim().toLowerCase(), password);
     } catch (err) {
       Alert.alert('Error', err.message || 'Login failed.');
     } finally {
@@ -97,7 +98,7 @@ export default function AuthScreen() {
     try {
       await register({
         name: name.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password,
         pin: pin.trim(),
@@ -247,15 +248,28 @@ export default function AuthScreen() {
                 {/* Password Input */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#94a3b8"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                    autoFocus
-                  />
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your password"
+                      placeholderTextColor="#94a3b8"
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                      autoFocus
+                    />
+                    <TouchableOpacity
+                      style={styles.inputIcon}
+                      onPress={() => setShowPassword(!showPassword)}
+                      activeOpacity={0.7}
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} color="#94a3b8" />
+                      ) : (
+                        <Eye size={18} color="#94a3b8" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Login Button */}
@@ -451,27 +465,53 @@ export default function AuthScreen() {
             {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#94a3b8"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  style={styles.inputIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} color="#94a3b8" />
+                  ) : (
+                    <Eye size={18} color="#94a3b8" />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Confirm Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#94a3b8"
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#94a3b8"
+                  secureTextEntry={!showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity
+                  style={styles.inputIcon}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  activeOpacity={0.7}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} color="#94a3b8" />
+                  ) : (
+                    <Eye size={18} color="#94a3b8" />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Security PIN */}

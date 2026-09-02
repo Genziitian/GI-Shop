@@ -87,9 +87,15 @@ export default function ServerSettingsModal({ visible, onClose }) {
               <View style={styles.quickHelpers}>
                 <TouchableOpacity
                   style={styles.quickPreset}
+                  onPress={() => setUrlInput('https://gi-shop-api.onrender.com')}
+                >
+                  <Text style={[styles.quickPresetText, { color: colors.primary, fontWeight: '700' }]}>☁️ Cloud (gi-shop-api.onrender.com)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickPreset}
                   onPress={() => setUrlInput('http://10.0.2.2:3001')}
                 >
-                  <Text style={styles.quickPresetText}>Android (10.0.2.2:3001)</Text>
+                  <Text style={styles.quickPresetText}>Android Local (10.0.2.2:3001)</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.quickPreset}
