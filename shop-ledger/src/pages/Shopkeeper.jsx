@@ -184,12 +184,12 @@ export default function Shopkeeper() {
     }
 
     try {
-      const res = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
-      setPasswordNotice(res.message || 'Password updated successfully!');
+      const res = await changePassword(null, passwordForm.newPassword);
+      setPasswordNotice(res.message || 'Password saved successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => setPasswordNotice(''), 4000);
     } catch (err) {
-      setPasswordError(err.message || 'Failed to update password');
+      setPasswordError(err.message || 'Failed to save password');
     } finally {
       setPasswordSaving(false);
     }
@@ -1629,28 +1629,17 @@ export default function Shopkeeper() {
                         </div>
                       )}
 
-                      <div style={{ marginBottom: '0.65rem' }}>
-                        <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Password (leave blank if first time)</label>
-                        <input 
-                          type="password" 
-                          className="input" 
-                          placeholder="Current password (if set)" 
-                          value={passwordForm.currentPassword} 
-                          onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} 
-                          style={{ margin: 0, marginTop: '3px', background: '#fff' }}
-                        />
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1rem' }}>
                         <div>
                           <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>New Password</label>
                           <input 
                             type="password" 
                             className="input" 
-                            placeholder="New password" 
+                            placeholder="Enter password" 
                             value={passwordForm.newPassword} 
                             onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
                             required 
+                            minLength={4}
                             style={{ margin: 0, marginTop: '3px', background: '#fff' }}
                           />
                         </div>
@@ -1659,10 +1648,11 @@ export default function Shopkeeper() {
                           <input 
                             type="password" 
                             className="input" 
-                            placeholder="Confirm password" 
+                            placeholder="Re-type password" 
                             value={passwordForm.confirmPassword} 
                             onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
                             required 
+                            minLength={4}
                             style={{ margin: 0, marginTop: '3px', background: '#fff' }}
                           />
                         </div>
@@ -1675,7 +1665,7 @@ export default function Shopkeeper() {
                       disabled={passwordSaving} 
                       style={{ width: '100%', padding: '0.65rem', fontSize: '0.86rem', fontWeight: '700', background: '#fff', borderRadius: '9px' }}
                     >
-                      {passwordSaving ? 'Updating Password...' : 'Save / Change Password'}
+                      {passwordSaving ? 'Saving Password...' : 'Save Password'}
                     </button>
                   </form>
                 </div>

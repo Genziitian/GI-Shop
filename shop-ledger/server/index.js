@@ -371,11 +371,8 @@ app.post('/api/user/change-password', authenticate, async (req, res) => {
   db.get(`SELECT id, password FROM Users WHERE id = ?`, [req.user.id], async (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
 
-    // If user already has a password set, verify currentPassword
-    if (user.password) {
-      if (!currentPassword) {
-        return res.status(400).json({ error: 'Current password is required to change password.' });
-      }
+    // If currentPassword is provided by user, verify it
+    if (currentPassword && currentPassword.trim()) {
       const valid = await bcrypt.compare(currentPassword, user.password);
       if (!valid) {
         return res.status(400).json({ error: 'Current password is incorrect.' });
@@ -386,7 +383,7 @@ app.post('/api/user/change-password', authenticate, async (req, res) => {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       db.run(`UPDATE Users SET password = ? WHERE id = ?`, [hashedPassword, req.user.id], (err) => {
         if (err) return res.status(500).json({ error: 'Failed to update password' });
-        res.json({ success: true, message: 'Password updated successfully! You can now log in with email and password.' });
+        res.json({ success: true, message: 'Password saved successfully! You can now log in with your email/phone and password.' });
       });
     } catch (e) {
       res.status(500).json({ error: 'Failed to hash and save password' });
@@ -437,7 +434,10 @@ app.post('/api/passkey/register-verify', authenticate, (req, res) => {
           VALUES (?, ?, ?, ?, ?, ?)`,
     [passkeyId, req.user.id, credentialId, publicKey, deviceLabel || 'Device Passkey', createdAt],
     function(err) {
-      if (err) return res.status(500).json({ error: 'Failed to save passkey credential' });
+      if (err) {
+        console.error('[Passkey Save Error]', err);
+        return res.status(500).json({ error: 'Failed to save passkey credential: ' + (err.message || err) });
+      }
       res.json({ success: true, message: 'Passkey registered successfully! You can now log in instantly using Face ID / Fingerprint.' });
     }
   );

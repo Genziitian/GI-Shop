@@ -48,6 +48,8 @@ if (DB_TYPE === 'mysql') {
     let s = sql;
     // Replace SQLite INSERT OR IGNORE with MySQL INSERT IGNORE
     s = s.replace(/INSERT\s+OR\s+IGNORE\s+INTO/gi, 'INSERT IGNORE INTO');
+    // Replace SQLite INSERT OR REPLACE with MySQL REPLACE INTO
+    s = s.replace(/INSERT\s+OR\s+REPLACE\s+INTO/gi, 'REPLACE INTO');
     return s;
   }
 
@@ -457,8 +459,19 @@ if (DB_TYPE === 'mysql') {
       UNIQUE(userId, token)
     )`);
 
+    sqliteDb.run(`CREATE TABLE IF NOT EXISTS UserPasskeys (
+      id TEXT PRIMARY KEY,
+      userId INTEGER NOT NULL,
+      credentialId TEXT UNIQUE NOT NULL,
+      publicKey TEXT NOT NULL,
+      deviceLabel TEXT,
+      createdAt TEXT
+    )`);
+
     // Performance Indexes
     sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON Users(email)`);
+    sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_passkeys_userId ON UserPasskeys(userId)`);
+    sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_passkeys_credId ON UserPasskeys(credentialId)`);
     sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_users_phone ON Users(phone)`);
     sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_users_shortId ON Users(shortId)`);
     sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_shops_ownerId ON Shops(ownerId)`);
