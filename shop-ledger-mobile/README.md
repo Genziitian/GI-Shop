@@ -38,8 +38,8 @@ Supports high-speed POS billing with smart unit conversion, offline-first respon
   - Android Emulator: Automatically targets `http://10.0.2.2:3001`.
   - iOS Simulator & Web: Targets `http://localhost:3001`.
   - Physical Devices: In-app **Server Settings** modal allows setting any local Wi-Fi IP (e.g., `http://192.168.1.50:3001`) with 1 tap without editing code or rebuilding.
-- **1-Click Demo Login:**
-  - Quick toggle buttons on login screen to immediately sign in as Demo Shopkeeper or Demo Customer.
+- **Real-Time Database Sync:**
+  - Connects to central database for live POS, khata ledger, and digital receipt tracking.
 
 ---
 
@@ -75,7 +75,7 @@ shop-ledger-mobile/
     │   ├── ShopkeeperNavigator.js # Bottom tabs for POS, Khata, and Inventory
     │   └── CustomerNavigator.js   # Stack navigator for Customer portal
     └── screens/
-        ├── AuthScreen.js       # Login / Registration with role selector & 1-click demo buttons
+        ├── AuthScreen.js       # Login / Registration with role selector & real DB authentication
         ├── Shopkeeper/
         │   ├── POSScreen.js       # Fast POS billing screen with cart & payment selection
         │   ├── KhataScreen.js     # Customer credit ledger, filters, & timeline profile
