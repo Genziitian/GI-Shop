@@ -548,20 +548,22 @@ export default function Shopkeeper() {
             <Settings size={16} /> Settings
           </button>
 
-          {/* Quick Screen Lock Button */}
-          <button 
-            type="button" 
-            className="btn btn-outline" 
-            onClick={() => {
-              setIsScreenLocked(true);
-              setUnlockPin('');
-              setUnlockError('');
-            }} 
-            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
-            title="Lock Register / Screen with your 4-digit PIN"
-          >
-            <Lock size={15} color="#e11d48" /> Lock
-          </button>
+          {/* Quick Screen Lock Button (Only visible if PIN is configured by user) */}
+          {(currentUser?.hasPinSet === 1 || currentUser?.hasPinSet === true || (currentUser?.pin && String(currentUser.pin).length === 4)) && (
+            <button 
+              type="button" 
+              className="btn btn-outline" 
+              onClick={() => {
+                setIsScreenLocked(true);
+                setUnlockPin('');
+                setUnlockError('');
+              }} 
+              style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
+              title="Lock Register / Screen with your 4-digit PIN"
+            >
+              <Lock size={15} color="#e11d48" /> Lock
+            </button>
+          )}
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
             <LogOut size={16} /> Logout
@@ -1174,118 +1176,101 @@ export default function Shopkeeper() {
       {/* Shop Details, Linked User & Security Settings Modal */}
       {showShopDetailsModal && (
         <div className="modal-overlay">
-          <div className="panel modal-dialog" style={{ width: '540px', maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.35rem', borderRadius: '18px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.15)' }}>
+          <div className="panel modal-dialog" style={{ width: '860px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.75rem', borderRadius: '22px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             {/* Modal Header */}
-            <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Store size={22} />
+            <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Store size={24} />
                 </div>
                 <div>
-                  <h3 className="title" style={{ margin: 0, fontSize: '1.2rem' }}>Shop & Owner Settings</h3>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  <h3 className="title" style={{ margin: 0, fontSize: '1.3rem' }}>Shop & Owner Settings</h3>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                     Shop ID: <strong style={{ color: 'var(--primary)' }}>{detailedShop?.shortId || currentShop?.shortId}</strong> • Owner: <strong>{detailedShop?.ownerName || currentUser?.name}</strong>
                   </div>
                 </div>
               </div>
-              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowShopDetailsModal(false)} />
+              <X size={22} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowShopDetailsModal(false)} />
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem', background: '#f1f5f9', padding: '0.3rem', borderRadius: '10px', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
               <button
                 type="button"
                 onClick={() => setSettingsTab('store')}
                 style={{
-                  padding: '0.5rem',
-                  fontSize: '0.82rem',
+                  padding: '0.6rem',
+                  fontSize: '0.88rem',
                   fontWeight: '700',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '9px',
                   cursor: 'pointer',
                   background: settingsTab === 'store' ? '#ffffff' : 'transparent',
                   color: settingsTab === 'store' ? 'var(--primary)' : 'var(--text-muted)',
-                  boxShadow: settingsTab === 'store' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                  boxShadow: settingsTab === 'store' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                   transition: 'all 0.15s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.35rem'
+                  gap: '0.4rem'
                 }}
               >
-                <Store size={15} /> Store Details
+                <Store size={16} /> Store Details
               </button>
 
               <button
                 type="button"
                 onClick={() => setSettingsTab('owner')}
                 style={{
-                  padding: '0.5rem',
-                  fontSize: '0.82rem',
+                  padding: '0.6rem',
+                  fontSize: '0.88rem',
                   fontWeight: '700',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '9px',
                   cursor: 'pointer',
                   background: settingsTab === 'owner' ? '#ffffff' : 'transparent',
                   color: settingsTab === 'owner' ? 'var(--primary)' : 'var(--text-muted)',
-                  boxShadow: settingsTab === 'owner' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                  boxShadow: settingsTab === 'owner' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                   transition: 'all 0.15s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.35rem'
+                  gap: '0.4rem'
                 }}
               >
-                <User size={15} /> Linked User
+                <User size={16} /> Linked User
               </button>
 
               <button
                 type="button"
                 onClick={() => setSettingsTab('security')}
                 style={{
-                  padding: '0.5rem',
-                  fontSize: '0.82rem',
+                  padding: '0.6rem',
+                  fontSize: '0.88rem',
                   fontWeight: '700',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '9px',
                   cursor: 'pointer',
                   background: settingsTab === 'security' ? '#ffffff' : 'transparent',
                   color: settingsTab === 'security' ? 'var(--primary)' : 'var(--text-muted)',
-                  boxShadow: settingsTab === 'security' ? '0 2px 4px rgba(0,0,0,0.06)' : 'none',
+                  boxShadow: settingsTab === 'security' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
                   transition: 'all 0.15s ease',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.35rem'
+                  gap: '0.4rem'
                 }}
               >
-                <Lock size={15} /> PIN & Security
+                <Shield size={16} /> PIN & Security
               </button>
             </div>
 
             {/* TAB 1: STORE DETAILS */}
             {settingsTab === 'store' && (
               <div>
-                {/* Quick Metrics & Role Badge */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.6rem' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>YOUR ACCESS ROLE</div>
-                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isOwner ? 'var(--primary)' : '#7c3aed', marginTop: '2px' }}>
-                      {isOwner ? '👑 Shop Owner' : '🛡️ Cashier (Staff)'}
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.6rem' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>STORE STATUS</div>
-                    <div style={{ fontWeight: '700', fontSize: '0.95rem', color: isOpen ? 'var(--success)' : 'var(--danger)', marginTop: '2px' }}>
-                      {isOpen ? '🟢 Open for Orders' : '🔴 Closed'}
-                    </div>
-                  </div>
-                </div>
-
                 {!isOwner && (
-                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#1e40af' }}>
-                    <Lock size={16} />
+                  <div style={{ background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Info size={18} />
                     <div>
                       <strong>View-Only Mode:</strong> You are logged in as a <strong>Cashier</strong>. Only the shop owner has permission to change store details, address, or timings.
                     </div>
@@ -1293,26 +1278,26 @@ export default function Shopkeeper() {
                 )}
 
                 {shopSaveNotice && (
-                  <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                    <CheckCircle size={16} /> {shopSaveNotice}
+                  <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle size={18} />
+                    <div>{shopSaveNotice}</div>
                   </div>
                 )}
 
-                <form onSubmit={handleSaveShopDetails}>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Name</label>
-                    <input 
-                      className="input" 
-                      value={shopForm.shopName} 
-                      onChange={e => setShopForm({ ...shopForm, shopName: e.target.value })} 
-                      disabled={!isOwner}
-                      required 
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <form onSubmit={handleSaveShopDetails} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                     <div>
-                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Contact Phone</label>
+                      <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Store Name</label>
+                      <input 
+                        className="input" 
+                        value={shopForm.shopName} 
+                        onChange={e => setShopForm({ ...shopForm, shopName: e.target.value })} 
+                        disabled={!isOwner}
+                        required 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Contact Phone</label>
                       <input 
                         className="input" 
                         value={shopForm.shopPhone} 
@@ -1321,16 +1306,15 @@ export default function Shopkeeper() {
                         required 
                       />
                     </div>
-
                     <div>
-                      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>City</label>
+                      <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>City / Region</label>
                       <select 
-                        className="select" 
+                        className="input" 
                         value={shopForm.city} 
                         onChange={e => setShopForm({ ...shopForm, city: e.target.value })} 
                         disabled={!isOwner}
-                        required 
-                        style={{ marginBottom: 0 }}
+                        required
+                        style={{ background: '#ffffff', width: '100%', marginBottom: 0 }}
                       >
                         {cities.map(c => (
                           <option key={c} value={c}>{c}</option>
@@ -1340,7 +1324,7 @@ export default function Shopkeeper() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Address</label>
+                    <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Shop Address</label>
                     <input 
                       className="input" 
                       value={shopForm.shopAddress} 
@@ -1351,12 +1335,12 @@ export default function Shopkeeper() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>Operating Timings</label>
+                    <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>Operating Timings</label>
                     
                     {/* 2 Time Pickers (Opens At & Closes At) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.45rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
                       <div>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Opens At (From)
                         </span>
                         <input 
@@ -1375,7 +1359,7 @@ export default function Shopkeeper() {
                       </div>
 
                       <div>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Closes At (To)
                         </span>
                         <input 
@@ -1396,7 +1380,7 @@ export default function Shopkeeper() {
 
                     {/* Quick Presets */}
                     {isOwner && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.45rem' }}>
                         {[
                           { label: '8 AM - 10 PM', open: '08:00', close: '22:00' },
                           { label: '9 AM - 9 PM', open: '09:00', close: '21:00' },
@@ -1412,9 +1396,9 @@ export default function Shopkeeper() {
                               setShopForm(prev => ({ ...prev, timings: formatTimings(p.open, p.close) }));
                             }}
                             style={{
-                              fontSize: '0.72rem',
+                              fontSize: '0.74rem',
                               fontWeight: '600',
-                              padding: '0.2rem 0.45rem',
+                              padding: '0.22rem 0.55rem',
                               borderRadius: '6px',
                               border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
                               background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
@@ -1428,25 +1412,34 @@ export default function Shopkeeper() {
                       </div>
                     )}
 
-                    <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <Clock size={13} /> {shopForm.timings || formatTimings(timeOpen, timeClose)}
+                    <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Clock size={14} /> {shopForm.timings || formatTimings(timeOpen, timeClose)}
                     </div>
                   </div>
 
-                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.75rem', marginTop: '0.5rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
                     <div>Total Active Inventory: <strong>{detailedShop?.totalItemsCount || items.length} products</strong></div>
                     <div>Active Staff Enrolled: <strong>{detailedShop?.totalStaffCount || staffList.length} cashiers</strong></div>
                   </div>
 
-                  <div className="flex-between">
-                    <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
-                      Close
-                    </button>
-                    {isOwner && (
-                      <button type="submit" className="btn" disabled={shopSaving}>
-                        {shopSaving ? 'Saving...' : 'Save Shop Changes'}
+                  <div className="flex-between" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <a 
+                      href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20Request" 
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                    >
+                      <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                    </a>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
+                        Close
                       </button>
-                    )}
+                      {isOwner && (
+                        <button type="submit" className="btn" disabled={shopSaving}>
+                          {shopSaving ? 'Saving...' : 'Save Shop Changes'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </form>
               </div>
@@ -1455,59 +1448,59 @@ export default function Shopkeeper() {
             {/* TAB 2: LINKED USER & OWNER PROFILE */}
             {settingsTab === 'owner' && (
               <div>
-                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid #e2e8f0' }}>
-                    <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.2rem' }}>
+                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.35rem' }}>
                       {(currentUser?.name || detailedShop?.ownerName || 'O')[0].toUpperCase()}
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>{currentUser?.name || detailedShop?.ownerName}</h4>
-                      <span style={{ fontSize: '0.75rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: '700' }}>
+                      <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>{currentUser?.name || detailedShop?.ownerName}</h4>
+                      <span style={{ fontSize: '0.78rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
                         {isOwner ? '👑 Verified Shop Owner' : '🛡️ Enrolled Cashier'}
                       </span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem', fontSize: '0.86rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', fontSize: '0.88rem' }}>
                     <div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>LINKED GOOGLE EMAIL</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>LINKED GOOGLE EMAIL</div>
                       <div style={{ fontWeight: '700', color: '#0f172a', wordBreak: 'break-all' }}>
                         {currentUser?.email || detailedShop?.ownerEmail || 'Linked via Google'}
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: '600' }}>🔒 Synced with Google Account</span>
+                      <span style={{ fontSize: '0.74rem', color: '#16a34a', fontWeight: '600' }}>🔒 Synced with Google Account</span>
                     </div>
 
                     <div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>USER SHORT ID</div>
-                      <div style={{ fontWeight: '700', color: 'var(--primary)', fontFamily: 'monospace', fontSize: '0.95rem' }}>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>USER SHORT ID</div>
+                      <div style={{ fontWeight: '700', color: 'var(--primary)', fontFamily: 'monospace', fontSize: '1rem' }}>
                         {currentUser?.shortId || detailedShop?.ownerShortId}
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Unique ID for Staff & Khata</span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Unique ID for Staff & Khata</span>
                     </div>
 
                     <div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>CONTACT PHONE</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>CONTACT PHONE</div>
                       <div style={{ fontWeight: '700', color: '#0f172a' }}>
                         {currentUser?.phone || detailedShop?.shopPhone || 'Not set'}
                       </div>
                     </div>
 
                     <div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>CITY & REGION</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>CITY & REGION</div>
                       <div style={{ fontWeight: '700', color: '#0f172a' }}>
                         {currentUser?.city || detailedShop?.city || 'Delhi'}
                       </div>
                     </div>
 
                     <div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>ACCOUNT STATUS</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>ACCOUNT STATUS</div>
                       <div style={{ fontWeight: '700', color: '#16a34a' }}>
                         🟢 Active & Verified
                       </div>
                     </div>
 
                     <div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '2px' }}>AUTHENTICATION TYPE</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>AUTHENTICATION TYPE</div>
                       <div style={{ fontWeight: '700', color: '#0f172a' }}>
                         Google OAuth + Passkey
                       </div>
@@ -1515,192 +1508,223 @@ export default function Shopkeeper() {
                   </div>
                 </div>
 
-                <div className="flex-between">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
-                    Close
-                  </button>
-                  <button type="button" className="btn" onClick={() => setSettingsTab('security')}>
-                    <Lock size={15} /> Manage PIN & Password
-                  </button>
+                <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <a 
+                    href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20Request" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                  >
+                    <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                  </a>
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
+                      Close
+                    </button>
+                    <button type="button" className="btn" onClick={() => setSettingsTab('security')}>
+                      <Lock size={15} /> Manage PIN & Password
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 3: PIN, PASSWORD & PASKEY SECURITY */}
+            {/* TAB 3: PIN, PASSWORD & PASSKEY SECURITY */}
             {settingsTab === 'security' && (
               <div>
-                {/* 1. Change 4-Digit Security PIN */}
-                <form onSubmit={handleChangePin} style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
-                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#9a3412', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
-                    <Shield size={16} /> 4-Digit Security PIN
-                  </div>
-                  <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.78rem', color: '#7c2d12' }}>
-                    Used for cashier mode verification and quick store security locks.
-                  </p>
-
-                  {pinNotice && (
-                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <CheckCircle size={15} /> {pinNotice}
-                    </div>
-                  )}
-                  {pinError && (
-                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <AlertCircle size={15} /> {pinError}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                {/* 2-Column Wide Grid for PIN & Password on Web Desktop */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                  
+                  {/* 1. Change 4-Digit Security PIN */}
+                  <form onSubmit={handleChangePin} style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
-                      <label style={{ fontSize: '0.75rem', color: '#7c2d12', fontWeight: '700' }}>Current PIN</label>
-                      <input 
-                        type="password" 
-                        maxLength="4" 
-                        className="input" 
-                        placeholder="••••" 
-                        value={pinForm.currentPin} 
-                        onChange={e => setPinForm({ ...pinForm, currentPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
-                        required 
-                        style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
-                      />
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#9a3412', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                        <Shield size={18} /> 4-Digit Security PIN
+                      </div>
+                      <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: '#7c2d12', lineHeight: '1.4' }}>
+                        Used for quick register screen locking and cashier authorization.
+                      </p>
+
+                      {pinNotice && (
+                        <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <CheckCircle size={15} /> {pinNotice}
+                        </div>
+                      )}
+                      {pinError && (
+                        <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <AlertCircle size={15} /> {pinError}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Current PIN</label>
+                          <input 
+                            type="password" 
+                            maxLength="4" 
+                            className="input" 
+                            placeholder="••••" 
+                            value={pinForm.currentPin} 
+                            onChange={e => setPinForm({ ...pinForm, currentPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                            required 
+                            style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>New PIN</label>
+                          <input 
+                            type="password" 
+                            maxLength="4" 
+                            className="input" 
+                            placeholder="••••" 
+                            value={pinForm.newPin} 
+                            onChange={e => setPinForm({ ...pinForm, newPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                            required 
+                            style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: '#7c2d12', fontWeight: '700' }}>Confirm PIN</label>
+                          <input 
+                            type="password" 
+                            maxLength="4" 
+                            className="input" 
+                            placeholder="••••" 
+                            value={pinForm.confirmPin} 
+                            onChange={e => setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
+                            required 
+                            style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
+                          />
+                        </div>
+                      </div>
                     </div>
+
+                    <button 
+                      type="submit" 
+                      className="btn btn-outline" 
+                      disabled={pinSaving} 
+                      style={{ width: '100%', padding: '0.65rem', fontSize: '0.86rem', borderColor: '#ea580c', color: '#c2410c', fontWeight: '700', background: '#fff', borderRadius: '9px' }}
+                    >
+                      {pinSaving ? 'Updating PIN...' : 'Update 4-Digit Security PIN'}
+                    </button>
+                  </form>
+
+                  {/* 2. Set / Change Password */}
+                  <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
-                      <label style={{ fontSize: '0.75rem', color: '#7c2d12', fontWeight: '700' }}>New PIN</label>
-                      <input 
-                        type="password" 
-                        maxLength="4" 
-                        className="input" 
-                        placeholder="••••" 
-                        value={pinForm.newPin} 
-                        onChange={e => setPinForm({ ...pinForm, newPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
-                        required 
-                        style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', color: '#7c2d12', fontWeight: '700' }}>Confirm PIN</label>
-                      <input 
-                        type="password" 
-                        maxLength="4" 
-                        className="input" 
-                        placeholder="••••" 
-                        value={pinForm.confirmPin} 
-                        onChange={e => setPinForm({ ...pinForm, confirmPin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
-                        required 
-                        style={{ margin: 0, marginTop: '3px', textAlign: 'center', letterSpacing: '2px', background: '#fff' }}
-                      />
-                    </div>
-                  </div>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                        <Key size={18} /> Account Password
+                      </div>
+                      <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                        Set a password if you would like to log in with your Email ID or Short ID directly.
+                      </p>
 
-                  <button 
-                    type="submit" 
-                    className="btn btn-outline" 
-                    disabled={pinSaving} 
-                    style={{ width: '100%', padding: '0.55rem', fontSize: '0.85rem', borderColor: '#ea580c', color: '#c2410c', fontWeight: '700', background: '#fff' }}
-                  >
-                    {pinSaving ? 'Updating PIN...' : 'Update 4-Digit Security PIN'}
-                  </button>
-                </form>
+                      {passwordNotice && (
+                        <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <CheckCircle size={15} /> {passwordNotice}
+                        </div>
+                      )}
+                      {passwordError && (
+                        <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <AlertCircle size={15} /> {passwordError}
+                        </div>
+                      )}
 
-                {/* 2. Set / Change Password */}
-                <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
-                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
-                    <Key size={16} /> Account Password
-                  </div>
-                  <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Set a password if you would like to log in with your Email ID or Short ID directly.
-                  </p>
+                      <div style={{ marginBottom: '0.65rem' }}>
+                        <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Password (leave blank if first time)</label>
+                        <input 
+                          type="password" 
+                          className="input" 
+                          placeholder="Current password (if set)" 
+                          value={passwordForm.currentPassword} 
+                          onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} 
+                          style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                        />
+                      </div>
 
-                  {passwordNotice && (
-                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <CheckCircle size={15} /> {passwordNotice}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.85rem' }}>
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>New Password</label>
+                          <input 
+                            type="password" 
+                            className="input" 
+                            placeholder="New password" 
+                            value={passwordForm.newPassword} 
+                            onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
+                            required 
+                            style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm Password</label>
+                          <input 
+                            type="password" 
+                            className="input" 
+                            placeholder="Confirm password" 
+                            value={passwordForm.confirmPassword} 
+                            onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
+                            required 
+                            style={{ margin: 0, marginTop: '3px', background: '#fff' }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  {passwordError && (
-                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.45rem 0.65rem', borderRadius: '6px', fontSize: '0.82rem', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <AlertCircle size={15} /> {passwordError}
-                    </div>
-                  )}
 
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Password (leave blank if first time)</label>
-                    <input 
-                      type="password" 
-                      className="input" 
-                      placeholder="Current password (if set)" 
-                      value={passwordForm.currentPassword} 
-                      onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} 
-                      style={{ margin: 0, marginTop: '3px', background: '#fff' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>New Password</label>
-                      <input 
-                        type="password" 
-                        className="input" 
-                        placeholder="New password" 
-                        value={passwordForm.newPassword} 
-                        onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} 
-                        required 
-                        style={{ margin: 0, marginTop: '3px', background: '#fff' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Confirm Password</label>
-                      <input 
-                        type="password" 
-                        className="input" 
-                        placeholder="Confirm password" 
-                        value={passwordForm.confirmPassword} 
-                        onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} 
-                        required 
-                        style={{ margin: 0, marginTop: '3px', background: '#fff' }}
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    className="btn btn-outline" 
-                    disabled={passwordSaving} 
-                    style={{ width: '100%', padding: '0.55rem', fontSize: '0.85rem', fontWeight: '700', background: '#fff' }}
-                  >
-                    {passwordSaving ? 'Updating Password...' : 'Save / Change Password'}
-                  </button>
-                </form>
+                    <button 
+                      type="submit" 
+                      className="btn btn-outline" 
+                      disabled={passwordSaving} 
+                      style={{ width: '100%', padding: '0.65rem', fontSize: '0.86rem', fontWeight: '700', background: '#fff', borderRadius: '9px' }}
+                    >
+                      {passwordSaving ? 'Updating Password...' : 'Save / Change Password'}
+                    </button>
+                  </form>
+                </div>
 
                 {/* 3. Passkey Biometric Security */}
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem', marginBottom: '1.25rem' }}>
-                  <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
-                    <Fingerprint size={16} /> Passkey Biometric Login
+                <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                        <Fingerprint size={18} /> Passkey Biometric Login
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.82rem', color: '#166534' }}>
+                        Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRegisterPasskey}
+                      disabled={passkeyRegistering}
+                      className="btn btn-outline"
+                      style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '9px' }}
+                    >
+                      <Fingerprint size={16} />
+                      {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
+                    </button>
                   </div>
-                  <p style={{ margin: '0 0 0.65rem 0', fontSize: '0.78rem', color: '#166534' }}>
-                    Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
-                  </p>
+
                   {passkeyNotice && (
-                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <CheckCircle size={14} /> {passkeyNotice}
+                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <CheckCircle size={15} /> {passkeyNotice}
                     </div>
                   )}
                   {passkeyError && (
-                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.4rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <AlertCircle size={14} /> {passkeyError}
+                    <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <AlertCircle size={15} /> {passkeyError}
                     </div>
                   )}
-                  <button
-                    type="button"
-                    onClick={handleRegisterPasskey}
-                    disabled={passkeyRegistering}
-                    className="btn btn-outline"
-                    style={{ width: '100%', padding: '0.55rem', fontSize: '0.85rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
-                  >
-                    <Fingerprint size={16} />
-                    {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
-                  </button>
                 </div>
 
-                <div className="flex-between">
+                {/* Footer with Contact Admin & Close */}
+                <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <a 
+                    href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20PIN%20Reset%20%2F%20Security%20Help" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                  >
+                    <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                  </a>
+
                   <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
                     Close
                   </button>
@@ -1967,12 +1991,33 @@ export default function Shopkeeper() {
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  padding: '0.5rem',
+                  padding: '0.35rem',
                   textDecoration: 'underline'
                 }}
               >
                 Switch Account / Log Out
               </button>
+
+              <a
+                href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20PIN%20Reset%20%2F%20Register%20Lock%20Help"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  color: '#93c5fd',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '8px',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                  marginTop: '0.25rem'
+                }}
+              >
+                <Mail size={13} /> Contact Admin (pay.laxmikant@gmail.com)
+              </a>
             </div>
           </div>
         </div>

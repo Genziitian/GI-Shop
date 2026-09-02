@@ -728,7 +728,7 @@ app.post('/api/notifications/register-token', authenticate, (req, res) => {
 });
 
 app.get('/api/me', authenticate, (req, res) => {
-  db.get(`SELECT id, shortId, name, email, phone, role, city, address, status FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
+  db.get(`SELECT id, shortId, name, email, phone, role, city, address, status, pin, (pin IS NOT NULL AND pin != '') as hasPinSet FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
     if (user.role === 'Shopkeeper') {
       db.get(`SELECT * FROM Shops WHERE ownerId = ? AND status = 'ACTIVE'`, [user.id], (err, shop) => {
