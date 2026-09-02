@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -149,7 +150,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
           <TouchableOpacity
             style={styles.menuRow}
-            onPress={() => setShowPrivacyModal(true)}
+            onPress={() => Linking.openURL('https://gi-shop.genziitian.in/privacy')}
             activeOpacity={0.7}
           >
             <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
@@ -157,14 +158,14 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>Privacy Policy</Text>
-              <Text style={styles.menuSubtext}>Data protection, encryption & usage terms</Text>
+              <Text style={styles.menuSubtext}>Official data privacy policy & security notice</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuRow}
-            onPress={() => setShowTermsModal(true)}
+            onPress={() => Linking.openURL('https://gi-shop.genziitian.in/terms')}
             activeOpacity={0.7}
           >
             <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
@@ -172,14 +173,14 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>Terms & Conditions</Text>
-              <Text style={styles.menuSubtext}>Service agreement & customer terms</Text>
+              <Text style={styles.menuSubtext}>Official terms of service & user guidelines</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.menuRow, { borderBottomWidth: 0 }]}
-            onPress={handleConfirmAccountDeletion}
+            onPress={() => Linking.openURL('https://gi-shop.genziitian.in/delete')}
             activeOpacity={0.7}
           >
             <View style={[styles.menuIconBox, { backgroundColor: '#fef2f2' }]}>
@@ -187,7 +188,7 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={[styles.menuText, { color: '#dc2626' }]}>Account Deletion Request</Text>
-              <Text style={styles.menuSubtext}>Permanently delete account, orders & personal data</Text>
+              <Text style={styles.menuSubtext}>Official account deletion & data wipe portal</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>

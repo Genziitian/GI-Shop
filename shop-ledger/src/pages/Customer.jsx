@@ -3607,13 +3607,13 @@ export default function Customer() {
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-outline" onClick={() => alert("GI SHOP PRIVACY POLICY\n\n1. Information Collection: We collect name, phone, city, address for store ordering.\n2. Data Security: Protected with AES-256 encryption.\n3. Privacy: No third-party data selling.")} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <ShieldCheck size={16} color="#16a34a" /> Privacy Policy
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => alert("GI SHOP TERMS & CONDITIONS\n\n1. Use: Local retail ledger management.\n2. Payment: Credit agreements are between customer and merchant.\n3. Security: Maintain 4-digit PIN confidentiality.")} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <FileText size={16} color="#0284c7" /> Terms & Conditions
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => { if (window.confirm("⚠️ Account Deletion Request\n\nAre you sure you want to request account deletion? Your data will be erased and you will be logged out.")) { alert("Deletion request submitted to admin."); handleLogout(); } }} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/delete')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
                     <Trash2 size={16} color="#dc2626" /> Account Deletion Request
                   </button>
                 </div>
