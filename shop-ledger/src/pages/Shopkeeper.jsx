@@ -5,14 +5,15 @@ import {
   getShopOrders, acceptShopOrder, declineShopOrder, completeShopOrder,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
   getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword,
-  parseTimings, formatTimings, verifyPin
+  parseTimings, formatTimings, verifyPin, getCustomers
 } from '../lib/api';
 import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
-  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff
+  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff,
+  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
@@ -137,7 +138,7 @@ export default function Shopkeeper() {
     }
   };
 
-  const [settingsTab, setSettingsTab] = useState('store'); // 'store' | 'owner' | 'security'
+  const [settingsTab, setSettingsTab] = useState('store'); // 'store' | 'owner' | 'security' | 'export'
 
   // PIN Form State
   const [pinForm, setPinForm] = useState({ currentPin: '', newPin: '', confirmPin: '' });
@@ -237,6 +238,394 @@ export default function Shopkeeper() {
     } finally {
       setPasskeyRegistering(false);
     }
+  };
+
+  // Data Export & Backup State
+  const [exportDateRange, setExportDateRange] = useState('ALL'); // 'ALL' | 'TODAY' | '7DAYS' | 'THIS_MONTH' | 'LAST_MONTH' | 'CUSTOM'
+  const [exportStartDate, setExportStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  });
+  const [exportEndDate, setExportEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [exportCategories, setExportCategories] = useState({
+    sales: true,
+    items: true,
+    khata: true,
+    orders: true,
+    staff: true,
+    summary: true
+  });
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportNotice, setExportNotice] = useState('');
+  const [exportError, setExportError] = useState('');
+
+  // Helper: Filter records by selected date range
+  const filterRecordsByDate = (records, dateField = 'date') => {
+    if (!Array.isArray(records)) return [];
+    if (exportDateRange === 'ALL') return records;
+
+    const now = new Date();
+    let start = new Date(0);
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    if (exportDateRange === 'TODAY') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    } else if (exportDateRange === '7DAYS') {
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      start.setHours(0, 0, 0, 0);
+    } else if (exportDateRange === 'THIS_MONTH') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    } else if (exportDateRange === 'LAST_MONTH') {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    } else if (exportDateRange === 'CUSTOM') {
+      if (exportStartDate) start = new Date(`${exportStartDate}T00:00:00`);
+      if (exportEndDate) end = new Date(`${exportEndDate}T23:59:59`);
+    }
+
+    return records.filter(item => {
+      const dStr = item[dateField] || item.createdAt || item.date || item.invitedAt;
+      if (!dStr) return true;
+      const d = new Date(dStr);
+      return !isNaN(d.getTime()) && d >= start && d <= end;
+    });
+  };
+
+  // Helper: CSV Downloader with UTF-8 BOM
+  const triggerCSVDownload = (filename, headers, rows) => {
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '""';
+      let str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const csvContent = '\uFEFF' + [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Helper: JSON Downloader
+  const triggerJSONDownload = (filename, data) => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // 1. Export as Excel / CSV Files
+  const handleExportCSV = async () => {
+    setExportLoading(true);
+    setExportNotice('');
+    setExportError('');
+
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const shopSlug = (currentShop?.shopName || 'Shop').replace(/\s+/g, '_');
+      let exportedCount = 0;
+
+      // 1. Export Sales
+      if (exportCategories.sales) {
+        const filteredSales = filterRecordsByDate(sales, 'date');
+        const salesHeaders = [
+          'Invoice / Sale ID', 'Date & Time', 'Customer Phone', 'Payment Mode',
+          'Subtotal (₹)', 'Discount (₹)', 'Total Amount (₹)', 'Cashier Name', 'Items Breakdown', 'Note'
+        ];
+        const salesRows = filteredSales.map(s => {
+          let itemsText = '';
+          try {
+            const parsed = JSON.parse(s.itemsJSON || '[]');
+            itemsText = parsed.map(i => `${i.name} (Qty: ${i.quantity || 1} ${i.unit || ''} @ ₹${i.price})`).join('; ');
+          } catch(e) { itemsText = s.itemsJSON || ''; }
+
+          return [
+            s.id || '',
+            s.date || '',
+            s.customerPhone || 'Walk-in Customer',
+            s.paymentMethod || 'Cash',
+            s.subtotal || s.total || 0,
+            s.discount || 0,
+            s.total || 0,
+            s.cashierName || 'Owner',
+            itemsText,
+            s.note || ''
+          ];
+        });
+
+        triggerCSVDownload(`${shopSlug}_Sales_Invoices_${exportDateRange}_${todayStr}.csv`, salesHeaders, salesRows);
+        exportedCount += salesRows.length;
+      }
+
+      // 2. Export Products / Inventory
+      if (exportCategories.items) {
+        const itemsHeaders = ['Item ID', 'Product Name', 'Price (₹)', 'Unit / Measurement'];
+        const itemsRows = items.map(i => [
+          i.id || '',
+          i.name || '',
+          i.price || 0,
+          i.unit || 'Piece'
+        ]);
+        triggerCSVDownload(`${shopSlug}_Products_Inventory_${todayStr}.csv`, itemsHeaders, itemsRows);
+        exportedCount += itemsRows.length;
+      }
+
+      // 3. Export Khata & Udhar Customers
+      if (exportCategories.khata) {
+        try {
+          const rawCusts = await getCustomers();
+          const khataHeaders = ['Customer Phone', 'Customer Name', 'Address', 'Account Status'];
+          const khataRows = rawCusts.map(c => [
+            c.customerPhone || c.phone || '',
+            c.name || 'Customer',
+            c.address || '',
+            c.status || 'ACTIVE'
+          ]);
+          triggerCSVDownload(`${shopSlug}_Khata_Customers_${todayStr}.csv`, khataHeaders, khataRows);
+          exportedCount += khataRows.length;
+        } catch(e) {}
+      }
+
+      // 4. Export Online Orders
+      if (exportCategories.orders) {
+        const filteredOrders = filterRecordsByDate(orders, 'createdAt');
+        const ordersHeaders = ['Order Number', 'Created At', 'Customer Name', 'Phone', 'Address', 'Status', 'Estimated Total (₹)', 'Items'];
+        const ordersRows = filteredOrders.map(o => {
+          let itemsText = '';
+          try {
+            const parsed = JSON.parse(o.itemsJSON || '[]');
+            itemsText = parsed.map(i => `${i.name} (Qty: ${i.quantity || 1})`).join('; ');
+          } catch(e) { itemsText = o.itemsJSON || ''; }
+
+          return [
+            o.orderNumber || o.id || '',
+            o.createdAt || '',
+            o.customerName || '',
+            o.customerPhone || '',
+            o.customerAddress || '',
+            o.status || 'PENDING',
+            o.estimatedTotal || 0,
+            itemsText
+          ];
+        });
+        triggerCSVDownload(`${shopSlug}_Orders_History_${todayStr}.csv`, ordersHeaders, ordersRows);
+        exportedCount += ordersRows.length;
+      }
+
+      // 5. Export Staff Roster
+      if (exportCategories.staff && isOwner) {
+        const staffHeaders = ['Staff ID', 'Staff Name', 'Phone', 'Role', 'Status', 'Invited Date'];
+        const staffRows = staffList.map(st => [
+          st.id || '',
+          st.userName || '',
+          st.userPhone || '',
+          st.role || 'Cashier',
+          st.status || 'ACTIVE',
+          st.invitedAt || ''
+        ]);
+        triggerCSVDownload(`${shopSlug}_Staff_Roster_${todayStr}.csv`, staffHeaders, staffRows);
+        exportedCount += staffRows.length;
+      }
+
+      // 6. Export Financial Summary
+      if (exportCategories.summary) {
+        const filteredSales = filterRecordsByDate(sales, 'date');
+        const totalRevenue = filteredSales.reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+        const cashRevenue = filteredSales.filter(s => s.paymentMethod === 'Cash').reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+        const upiRevenue = filteredSales.filter(s => s.paymentMethod === 'Online' || s.paymentMethod === 'UPI').reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+        const khataRevenue = filteredSales.filter(s => s.paymentMethod === 'Add to Book').reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+
+        const sumHeaders = ['Financial Metric', 'Value'];
+        const sumRows = [
+          ['Shop Name', currentShop?.shopName || 'GI Shop'],
+          ['Shop ID', currentShop?.shortId || ''],
+          ['Owner', currentUser?.name || ''],
+          ['Date Range Filter', exportDateRange],
+          ['Total Bills Generated', filteredSales.length],
+          ['Total Sales Revenue (₹)', totalRevenue.toFixed(2)],
+          ['Cash Sales (₹)', cashRevenue.toFixed(2)],
+          ['Online / UPI Sales (₹)', upiRevenue.toFixed(2)],
+          ['Khata / Credit Sales (₹)', khataRevenue.toFixed(2)],
+          ['Total Active Products in Inventory', items.length],
+          ['Export Timestamp', new Date().toLocaleString()]
+        ];
+        triggerCSVDownload(`${shopSlug}_Financial_Summary_${todayStr}.csv`, sumHeaders, sumRows);
+      }
+
+      setExportNotice(`✅ Export complete! CSV files generated and downloaded successfully.`);
+      setTimeout(() => setExportNotice(''), 6000);
+    } catch(err) {
+      setExportError(err.message || 'Failed to export CSV data.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // 2. Export Master JSON Full Backup
+  const handleExportJSON = async () => {
+    setExportLoading(true);
+    setExportNotice('');
+    setExportError('');
+
+    try {
+      let khataCustomers = [];
+      try { khataCustomers = await getCustomers(); } catch(e) {}
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const shopSlug = (currentShop?.shopName || 'Shop').replace(/\s+/g, '_');
+
+      const masterBackup = {
+        meta: {
+          exportVersion: '1.0',
+          exportedAt: new Date().toISOString(),
+          shopName: currentShop?.shopName,
+          shopId: currentShop?.shortId,
+          ownerName: currentUser?.name,
+          ownerEmail: currentUser?.email,
+          ownerPhone: currentUser?.phone,
+          city: currentShop?.city,
+          address: currentShop?.shopAddress,
+          timings: currentShop?.timings,
+          dateRangeApplied: exportDateRange
+        },
+        inventory: exportCategories.items ? items : undefined,
+        sales: exportCategories.sales ? filterRecordsByDate(sales, 'date') : undefined,
+        khataCustomers: exportCategories.khata ? khataCustomers : undefined,
+        orders: exportCategories.orders ? filterRecordsByDate(orders, 'createdAt') : undefined,
+        staff: (exportCategories.staff && isOwner) ? staffList : undefined
+      };
+
+      triggerJSONDownload(`${shopSlug}_Master_Backup_${exportDateRange}_${todayStr}.json`, masterBackup);
+      setExportNotice('✅ Full Master JSON Backup downloaded successfully!');
+      setTimeout(() => setExportNotice(''), 6000);
+    } catch(err) {
+      setExportError(err.message || 'Failed to generate JSON backup.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // 3. Print / PDF Summary Generator
+  const handlePrintSummary = () => {
+    const filteredSales = filterRecordsByDate(sales, 'date');
+    const totalRev = filteredSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const cashRev = filteredSales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const upiRev = filteredSales.filter(s => s.paymentMethod === 'Online' || s.paymentMethod === 'UPI').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const khataRev = filteredSales.filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+
+    const printWin = window.open('', '_blank', 'width=850,height=900');
+    if (!printWin) {
+      alert('Popup blocked! Please allow popups to print report.');
+      return;
+    }
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${currentShop?.shopName || 'Shop'} - Financial & Operations Report</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+          .title { font-size: 24px; font-weight: 800; color: #15803d; margin: 0; }
+          .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 12px; }
+          .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+          .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #f8fafc; }
+          .card-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+          .card-val { font-size: 20px; font-weight: 800; color: #0f172a; }
+          table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
+          th { background: #f1f5f9; font-weight: 700; }
+          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">${currentShop?.shopName || 'GI Shop'}</h1>
+            <div style="font-size: 13px; color: #475569; margin-top: 2px;">
+              Shop ID: <strong>${currentShop?.shortId || 'shp'}</strong> • Owner: ${currentUser?.name || 'Owner'} (${currentUser?.phone || ''})
+            </div>
+            <div style="font-size: 12px; color: #64748b;">${currentShop?.shopAddress || ''}, ${currentShop?.city || ''}</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="badge">Period: ${exportDateRange}</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">Total Revenue</div>
+            <div class="card-val" style="color: #15803d;">₹${totalRev.toFixed(2)}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Cash Sales</div>
+            <div class="card-val">₹${cashRev.toFixed(2)}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">UPI / Online</div>
+            <div class="card-val">₹${upiRev.toFixed(2)}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Khata / Credit</div>
+            <div class="card-val" style="color: #c2410c;">₹${khataRev.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <h3 style="margin: 16px 0 6px 0; font-size: 15px;">Recent Invoices & Transactions (${filteredSales.length} total)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Payment</th>
+              <th>Items</th>
+              <th>Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredSales.slice(0, 50).map(s => `
+              <tr>
+                <td>${s.id}</td>
+                <td>${s.date ? new Date(s.date).toLocaleDateString() : '-'}</td>
+                <td>${s.customerPhone || 'Walk-in'}</td>
+                <td><strong>${s.paymentMethod || 'Cash'}</strong></td>
+                <td>${s.note || '-'}</td>
+                <td style="font-weight: 700;">₹${Number(s.total || 0).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          GI SHOP Ledger & POS System • Official Business Record Export • Confidential
+        </div>
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
   };
 
   // Screen Lock / POS Register Lock State
@@ -1248,13 +1637,13 @@ export default function Shopkeeper() {
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
               <button
                 type="button"
                 onClick={() => setSettingsTab('store')}
                 style={{
-                  padding: '0.6rem',
-                  fontSize: '0.88rem',
+                  padding: '0.6rem 0.5rem',
+                  fontSize: '0.86rem',
                   fontWeight: '700',
                   border: 'none',
                   borderRadius: '9px',
@@ -1276,8 +1665,8 @@ export default function Shopkeeper() {
                 type="button"
                 onClick={() => setSettingsTab('owner')}
                 style={{
-                  padding: '0.6rem',
-                  fontSize: '0.88rem',
+                  padding: '0.6rem 0.5rem',
+                  fontSize: '0.86rem',
                   fontWeight: '700',
                   border: 'none',
                   borderRadius: '9px',
@@ -1299,8 +1688,8 @@ export default function Shopkeeper() {
                 type="button"
                 onClick={() => setSettingsTab('security')}
                 style={{
-                  padding: '0.6rem',
-                  fontSize: '0.88rem',
+                  padding: '0.6rem 0.5rem',
+                  fontSize: '0.86rem',
                   fontWeight: '700',
                   border: 'none',
                   borderRadius: '9px',
@@ -1316,6 +1705,29 @@ export default function Shopkeeper() {
                 }}
               >
                 <Shield size={16} /> PIN & Security
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSettingsTab('export')}
+                style={{
+                  padding: '0.6rem 0.5rem',
+                  fontSize: '0.86rem',
+                  fontWeight: '700',
+                  border: 'none',
+                  borderRadius: '9px',
+                  cursor: 'pointer',
+                  background: settingsTab === 'export' ? '#ffffff' : 'transparent',
+                  color: settingsTab === 'export' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: settingsTab === 'export' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                <Download size={16} /> Export & Backup
               </button>
             </div>
 
@@ -1838,6 +2250,331 @@ export default function Shopkeeper() {
                 <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <a 
                     href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20PIN%20Reset%20%2F%20Security%20Help" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                  >
+                    <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                  </a>
+
+                  <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: EXPORT & DATA BACKUP */}
+            {settingsTab === 'export' && (
+              <div>
+                {/* Header Information Banner */}
+                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Download size={22} />
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>Export Shop Data & Reports</h4>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                          Download complete Excel/CSV spreadsheets or Full JSON backups with custom date filtering.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={handlePrintSummary}
+                        className="btn btn-outline"
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#cbd5e1', background: '#fff' }}
+                      >
+                        <Printer size={15} /> Print Summary
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary Metric Counters */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Sales Invoices</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--primary)' }}>{sales.length}</div>
+                    </div>
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Products in Catalog</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#16a34a' }}>{items.length}</div>
+                    </div>
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Online Orders</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#0284c7' }}>{orders.length}</div>
+                    </div>
+                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Enrolled Staff</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#7c3aed' }}>{staffList.length}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notifications */}
+                {exportNotice && (
+                  <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle size={18} />
+                    <div>{exportNotice}</div>
+                  </div>
+                )}
+                {exportError && (
+                  <div style={{ background: '#fee2e2', border: '1px solid #fecaca', color: '#b91c1c', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertCircle size={18} />
+                    <div>{exportError}</div>
+                  </div>
+                )}
+
+                {/* STEP 1: DATE RANGE CONTROL */}
+                <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <CalendarRange size={18} color="var(--primary)" />
+                      <span>Step 1: Choose Date Range & Time Period</span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
+                      Current Selection: {exportDateRange === 'CUSTOM' ? `${exportStartDate} to ${exportEndDate}` : exportDateRange}
+                    </span>
+                  </div>
+
+                  {/* Date Range Chips */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: exportDateRange === 'CUSTOM' ? '1rem' : '0' }}>
+                    {[
+                      { id: 'ALL', label: '📅 All Time (Full History)' },
+                      { id: 'TODAY', label: '⚡ Today' },
+                      { id: '7DAYS', label: '📆 Last 7 Days' },
+                      { id: 'THIS_MONTH', label: '🗓️ This Month' },
+                      { id: 'LAST_MONTH', label: '🗓️ Last Month' },
+                      { id: 'CUSTOM', label: '🎯 Custom Range' }
+                    ].map(preset => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setExportDateRange(preset.id)}
+                        style={{
+                          padding: '0.45rem 0.9rem',
+                          fontSize: '0.82rem',
+                          fontWeight: '700',
+                          borderRadius: '8px',
+                          border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #cbd5e1',
+                          background: exportDateRange === preset.id ? '#eff6ff' : '#ffffff',
+                          color: exportDateRange === preset.id ? 'var(--primary)' : '#475569',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Date Pickers */}
+                  {exportDateRange === 'CUSTOM' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <div>
+                        <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                          Start Date (From)
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={exportStartDate}
+                          onChange={e => setExportStartDate(e.target.value)}
+                          style={{ margin: 0, background: '#fff' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                          End Date (To)
+                        </label>
+                        <input
+                          type="date"
+                          className="input"
+                          value={exportEndDate}
+                          onChange={e => setExportEndDate(e.target.value)}
+                          style={{ margin: 0, background: '#fff' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* STEP 2: WHAT TO EXPORT (CHECKBOX SELECTORS) */}
+                <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <FileSpreadsheet size={18} color="#16a34a" />
+                      <span>Step 2: Select What to Export</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => setExportCategories({ sales: true, items: true, khata: true, orders: true, staff: true, summary: true })}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Select All
+                      </button>
+                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <button
+                        type="button"
+                        onClick={() => setExportCategories({ sales: false, items: false, khata: false, orders: false, staff: false, summary: false })}
+                        style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Granular Item Checkboxes */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                    {[
+                      {
+                        key: 'sales',
+                        title: 'Sales & Billing Invoices',
+                        desc: 'All invoices, line items, payment mode, cashier, discounts',
+                        count: `${filterRecordsByDate(sales, 'date').length} records`,
+                        badgeColor: '#16a34a',
+                        badgeBg: '#dcfce7'
+                      },
+                      {
+                        key: 'items',
+                        title: 'Products & Catalog',
+                        desc: 'Master items inventory with pricing, units, and categories',
+                        count: `${items.length} items`,
+                        badgeColor: '#0284c7',
+                        badgeBg: '#e0f2fe'
+                      },
+                      {
+                        key: 'khata',
+                        title: 'Khata / Udhar Ledger',
+                        desc: 'Customer credit ledger, dues, payment balances & settlements',
+                        count: 'Full Khata book',
+                        badgeColor: '#c2410c',
+                        badgeBg: '#ffedd5'
+                      },
+                      {
+                        key: 'orders',
+                        title: 'Online Orders History',
+                        desc: 'Customer online order details, packing estimates, order status',
+                        count: `${filterRecordsByDate(orders, 'createdAt').length} orders`,
+                        badgeColor: '#7c3aed',
+                        badgeBg: '#f5f3ff'
+                      },
+                      {
+                        key: 'staff',
+                        title: 'Staff & Cashiers Roster',
+                        desc: 'Enrolled staff members, roles, permissions, invitation date',
+                        count: `${staffList.length} members`,
+                        badgeColor: '#0f766e',
+                        badgeBg: '#ccfbf1'
+                      },
+                      {
+                        key: 'summary',
+                        title: 'Financial & Revenue Summary',
+                        desc: 'Total revenue, Cash vs UPI vs Khata breakdown, bill stats',
+                        count: 'Analytics Report',
+                        badgeColor: '#d97706',
+                        badgeBg: '#fef3c7'
+                      }
+                    ].map(cat => {
+                      const isChecked = exportCategories[cat.key];
+                      return (
+                        <div
+                          key={cat.key}
+                          onClick={() => setExportCategories(prev => ({ ...prev, [cat.key]: !prev[cat.key] }))}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.75rem',
+                            padding: '0.85rem',
+                            borderRadius: '10px',
+                            border: isChecked ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
+                            background: isChecked ? '#f0fdf4' : '#ffffff',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ marginTop: '2px', color: isChecked ? '#16a34a' : '#94a3b8' }}>
+                            {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
+                              <strong style={{ fontSize: '0.86rem', color: isChecked ? '#0f172a' : '#64748b' }}>{cat.title}</strong>
+                              <span style={{ fontSize: '0.7rem', fontWeight: '700', color: cat.badgeColor, background: cat.badgeBg, padding: '0.15rem 0.45rem', borderRadius: '5px' }}>
+                                {cat.count}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: '1.3' }}>
+                              {cat.desc}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* STEP 3: EXPORT ACTION BUTTONS */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                  {/* CSV Export Button */}
+                  <button
+                    type="button"
+                    onClick={handleExportCSV}
+                    disabled={exportLoading || !Object.values(exportCategories).some(Boolean)}
+                    className="btn"
+                    style={{
+                      padding: '0.85rem 1.25rem',
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '0.92rem',
+                      fontWeight: '800',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                      cursor: exportLoading || !Object.values(exportCategories).some(Boolean) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <FileSpreadsheet size={18} />
+                    {exportLoading ? 'Generating Files...' : 'Export as Excel / CSV (Spreadsheets)'}
+                  </button>
+
+                  {/* JSON Backup Button */}
+                  <button
+                    type="button"
+                    onClick={handleExportJSON}
+                    disabled={exportLoading || !Object.values(exportCategories).some(Boolean)}
+                    className="btn btn-outline"
+                    style={{
+                      padding: '0.85rem 1.25rem',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      borderColor: '#0f172a',
+                      borderRadius: '12px',
+                      fontSize: '0.92rem',
+                      fontWeight: '800',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      cursor: exportLoading || !Object.values(exportCategories).some(Boolean) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <Database size={18} color="var(--primary)" />
+                    {exportLoading ? 'Preparing Archive...' : 'Full Master Backup (.JSON)'}
+                  </button>
+                </div>
+
+                {/* Footer with Contact Admin & Close */}
+                <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <a 
+                    href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20Data%20Export%20Help" 
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                   >
                     <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
