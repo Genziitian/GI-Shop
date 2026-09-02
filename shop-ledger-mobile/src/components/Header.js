@@ -4,7 +4,7 @@ import { Lock } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 
-export default function Header({ title, subtitle, rightElement, showLock = true, rightComponent }) {
+export default function Header({ title, subtitle, rightElement, showLock = false, rightComponent }) {
   const { user, lock } = useAuth();
 
   return (
@@ -27,7 +27,8 @@ export default function Header({ title, subtitle, rightElement, showLock = true,
       <View style={styles.rightContainer}>
         {rightComponent || rightElement}
 
-        {showLock && (
+        {/* Lock button feature disabled from UI per user preference */}
+        {/* {showLock && (
           <TouchableOpacity
             style={styles.lockBtn}
             onPress={lock}
@@ -36,7 +37,7 @@ export default function Header({ title, subtitle, rightElement, showLock = true,
             <Lock size={14} color={colors.primaryDark} />
             <Text style={styles.lockBtnText}>Lock</Text>
           </TouchableOpacity>
-        )}
+        )} */}
       </View>
     </View>
   );

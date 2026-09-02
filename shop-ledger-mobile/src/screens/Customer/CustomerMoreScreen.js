@@ -198,7 +198,8 @@ export default function CustomerMoreScreen({ navigation }) {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Session & Security</Text>
 
-          <TouchableOpacity
+          {/* Lock feature hidden from UI per user request */}
+          {/* <TouchableOpacity
             style={styles.menuRow}
             onPress={lock}
             activeOpacity={0.7}
@@ -211,7 +212,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <Text style={styles.menuSubtext}>Require 4-digit PIN to unlock screen</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[styles.menuRow, { borderBottomWidth: 0 }]}

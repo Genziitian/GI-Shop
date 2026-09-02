@@ -21,10 +21,10 @@ export default function RootNavigator() {
     );
   }
 
-  // If user is logged in but app is locked (manual lock or 1-min background auto-lock)
-  if (token && user && isLocked) {
-    return <PinLockScreen />;
-  }
+  // Lock feature disabled from UI per user preference (code preserved for future use)
+  // if (token && user && isLocked) {
+  //   return <PinLockScreen />;
+  // }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

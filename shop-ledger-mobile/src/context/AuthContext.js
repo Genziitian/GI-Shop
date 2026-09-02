@@ -56,10 +56,10 @@ export const AuthProvider = ({ children }) => {
       } else if (nextAppState === 'active') {
         if (backgroundedTimeRef.current && user && token) {
           const elapsed = Date.now() - backgroundedTimeRef.current;
-          // Auto-lock if app was in background for 1 minute (60,000 ms) or longer
-          if (elapsed >= 60000) {
-            setIsLocked(true);
-          }
+          // Auto-lock feature disabled from UI per user request
+          // if (elapsed >= 60000) {
+          //   setIsLocked(true);
+          // }
         }
         backgroundedTimeRef.current = null;
       }

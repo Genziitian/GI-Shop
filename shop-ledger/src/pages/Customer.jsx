@@ -1003,8 +1003,8 @@ export default function Customer() {
             </button>
           )}
 
-          {/* Quick Screen Lock Button */}
-          <button 
+          {/* Lock feature disabled from UI per user request */}
+          {/* <button 
             type="button" 
             className="btn btn-outline" 
             onClick={() => {
@@ -1017,7 +1017,7 @@ export default function Customer() {
             title="Lock Customer Account / Screen"
           >
             <Lock size={15} color="#e11d48" /> Lock
-          </button>
+          </button> */}
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}>
             <LogOut size={16} /> Logout
@@ -3590,9 +3590,9 @@ export default function Customer() {
                   <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <Key size={16} color="#16a34a" /> Change 4-Digit Security PIN
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                  {/* <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
                     <Lock size={16} color="#dc2626" /> Lock Screen / Account Now
-                  </button>
+                  </button> */}
                 </div>
               </div>
               {/* Legal & Privacy Card */}

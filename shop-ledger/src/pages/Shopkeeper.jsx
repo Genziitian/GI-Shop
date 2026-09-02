@@ -992,8 +992,8 @@ export default function Shopkeeper() {
             <Settings size={16} /> Settings
           </button>
 
-          {/* Quick Screen Lock Button */}
-          <button 
+          {/* Lock feature disabled from UI per user request */}
+          {/* <button 
             type="button" 
             className="btn btn-outline" 
             onClick={() => {
@@ -1006,7 +1006,7 @@ export default function Shopkeeper() {
             title="Lock Register / Screen"
           >
             <Lock size={15} color="#e11d48" /> Lock
-          </button>
+          </button> */}
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
             <LogOut size={16} /> Logout
@@ -1603,9 +1603,9 @@ export default function Shopkeeper() {
                   <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <Key size={16} color="#16a34a" /> Change 4-Digit Security PIN
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
+                  {/* <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
                     <Lock size={16} color="#dc2626" /> Lock Screen Now
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
