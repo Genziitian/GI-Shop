@@ -1,42 +1,6 @@
-const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
 const readline = require('readline');
-const path = require('path');
-const fs = require('fs');
-
-// Load environment variables if available
-const envFiles = [
-  path.join(__dirname, '.env'),
-  path.join(__dirname, '..', '.env'),
-  path.join(__dirname, '..', '..', '.env')
-];
-for (const envPath of envFiles) {
-  if (fs.existsSync(envPath)) {
-    try {
-      const envContent = fs.readFileSync(envPath, 'utf8');
-      envContent.split('\n').forEach(line => {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
-          const idx = trimmed.indexOf('=');
-          const key = trimmed.slice(0, idx).trim();
-          const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
-          if (!process.env[key]) process.env[key] = val;
-        }
-      });
-    } catch (e) {}
-  }
-}
-
-const DB_FILE = process.env.DATABASE_PATH 
-  ? path.resolve(process.cwd(), process.env.DATABASE_PATH)
-  : path.join(__dirname, 'database.sqlite');
-
-const db = new sqlite3.Database(DB_FILE, (err) => {
-  if (err) {
-    console.error('❌ Could not connect to database:', err.message);
-    process.exit(1);
-  }
-});
+const db = require('./db');
 
 function generateShortId(prefix = 'adm') {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -59,7 +23,7 @@ async function createAdmin(email, password, name, phone, pin, city) {
       } else {
         console.log(`⚠️ User with email "${email}" or phone "${phone}" exists as role "${existing.role}".`);
       }
-      db.close();
+      if (typeof db.close === 'function') db.close();
       process.exit(0);
     }
 
@@ -82,7 +46,7 @@ async function createAdmin(email, password, name, phone, pin, city) {
           console.log(`🏙️ City:     ${city}`);
           console.log('========================================\n');
         }
-        db.close();
+        if (typeof db.close === 'function') db.close();
         process.exit(insertErr ? 1 : 0);
       }
     );
