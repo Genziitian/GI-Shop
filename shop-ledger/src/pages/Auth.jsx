@@ -4,7 +4,7 @@ import { login, googleLogin, getCities } from '../lib/api';
 import { signInWithGoogle } from '../lib/firebase';
 import { 
   Store, User, ArrowRight, ArrowLeft, Lock, Shield, Eye, EyeOff, 
-  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3 
+  Globe, Sparkles, AlertCircle, Receipt, BookOpen, Users, RefreshCw, FileText, BarChart3, Mail, X 
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import authBg from '../assets/auth-bg.jpg';
@@ -127,6 +127,7 @@ export default function Auth() {
   const [loginStep, setLoginStep] = useState('IDENTIFIER'); // 'IDENTIFIER' | 'PASSWORD'
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [showContact, setShowContact] = useState(false);
   const [language, setLanguage] = useState('en'); // 'en' | 'hi'
   const [cities, setCities] = useState(['Delhi', 'Mumbai', 'Bengaluru', 'Jaipur', 'Lucknow', 'Pune']);
   const [error, setError] = useState('');
@@ -1133,25 +1134,16 @@ export default function Auth() {
                   {t.terms}
                 </span>
                 <span>•</span>
-                <a 
-                  href="mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Inquiry"
-                  style={{ color: '#94a3b8', textDecoration: 'underline', fontWeight: '600' }}
-                  title="Mail to Pay.laxmikant@gmail.com for any queries"
+                <span 
+                  style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                  onClick={() => setShowContact(true)}
                 >
                   {t.contactUs}
-                </a>
-              </div>
-
-              {/* Support Email Query Note */}
-              <div style={{ textAlign: 'center', marginTop: '0.45rem', fontSize: '0.74rem', color: '#64748b' }}>
-                For any queries regarding usage:{' '}
-                <a href="mailto:Pay.laxmikant@gmail.com" style={{ color: '#16a34a', fontWeight: '700', textDecoration: 'none' }}>
-                  Pay.laxmikant@gmail.com
-                </a>
+                </span>
               </div>
 
               {/* Copyright Text */}
-              <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
+              <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
                 {t.footerCopyright}
               </div>
             </div>
@@ -1159,6 +1151,125 @@ export default function Auth() {
 
         </div>
       </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* CONTACT & SUPPORT POPUP MODAL                                 */}
+      {/* ------------------------------------------------------------- */}
+      {showContact && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999,
+            padding: '1.25rem'
+          }} 
+          onClick={() => setShowContact(false)}
+        >
+          <div 
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px',
+              padding: '2rem 1.75rem',
+              maxWidth: '400px',
+              width: '100%',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              textAlign: 'center',
+              position: 'relative'
+            }} 
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Close Icon Button */}
+            <button
+              type="button"
+              onClick={() => setShowContact(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: '#f1f5f9',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748b'
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            {/* Email Icon */}
+            <div style={{
+              width: '54px',
+              height: '54px',
+              borderRadius: '16px',
+              background: '#dcfce7',
+              color: '#16a34a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem auto'
+            }}>
+              <Mail size={26} />
+            </div>
+
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+              {language === 'hi' ? 'सहायता व संपर्क' : 'Contact & Support'}
+            </h3>
+            
+            <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+              {language === 'hi' ? 'उपयोग या किसी भी प्रश्न के लिए हमें ईमेल करें:' : 'For any queries regarding usage or anything:'}
+            </p>
+
+            {/* Clickable Mailto Card */}
+            <a 
+              href="mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query"
+              style={{
+                display: 'block',
+                background: '#f0fdf4',
+                border: '1.5px solid #86efac',
+                borderRadius: '12px',
+                padding: '0.9rem 1rem',
+                fontWeight: '800',
+                fontSize: '1rem',
+                color: '#16a34a',
+                textDecoration: 'none',
+                marginBottom: '1.25rem',
+                wordBreak: 'break-all'
+              }}
+            >
+              Pay.laxmikant@gmail.com
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setShowContact(false)}
+              style={{
+                width: '100%',
+                padding: '0.85rem',
+                borderRadius: '10px',
+                background: '#16a34a',
+                color: '#ffffff',
+                fontWeight: '800',
+                fontSize: '0.95rem',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
+              }}
+            >
+              {language === 'hi' ? 'बंद करें' : 'Close'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
