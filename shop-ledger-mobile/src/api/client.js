@@ -170,6 +170,10 @@ export const getCustomers = async () => {
   return await fetchWithAuth('/api/shop/customers');
 };
 
+export const searchRegisteredCustomer = async (query) => {
+  return await fetchWithAuth(`/api/shop/customers/search-registered?query=${encodeURIComponent(query)}`);
+};
+
 export const saveCustomer = async (customerData) => {
   return await fetchWithAuth('/api/shop/customers', {
     method: 'POST',
@@ -234,6 +238,27 @@ export const declineShopOrder = async (orderId, reason) => {
 export const completeShopOrder = async (orderId) => {
   return await fetchWithAuth(`/api/shop/orders/${orderId}/complete`, {
     method: 'POST',
+  });
+};
+
+export const updateShopOrderItems = async (orderId, items) => {
+  return await fetchWithAuth(`/api/shop/orders/${orderId}/update-items`, {
+    method: 'POST',
+    body: JSON.stringify({ items }),
+  });
+};
+
+export const requestShopOrderPayment = async (orderId, discount, paymentMethod) => {
+  return await fetchWithAuth(`/api/shop/orders/${orderId}/get-payment`, {
+    method: 'POST',
+    body: JSON.stringify({ discount, paymentMethod }),
+  });
+};
+
+export const verifyShopOrderOTP = async (orderId, otp) => {
+  return await fetchWithAuth(`/api/shop/orders/${orderId}/verify-otp`, {
+    method: 'POST',
+    body: JSON.stringify({ otp }),
   });
 };
 

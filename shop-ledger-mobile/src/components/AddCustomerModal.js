@@ -11,16 +11,53 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { X, UserPlus, Contact, Lock, RotateCcw } from 'lucide-react-native';
+import { X, UserPlus, Contact, Lock, RotateCcw, UserCheck, Search } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
+import { searchRegisteredCustomer } from '../api/client';
 
 export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) {
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [customerShortId, setCustomerShortId] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [isImported, setIsImported] = useState(false);
   const [importedContactName, setImportedContactName] = useState('');
+
+  // App Customer Search State
+  const [appSearchQuery, setAppSearchQuery] = useState('');
+  const [appSearchResults, setAppSearchResults] = useState([]);
+  const [appSearchLoading, setAppSearchLoading] = useState(false);
+  const [appSearchNotice, setAppSearchNotice] = useState('');
+
+  const handleSearchAppCustomer = async () => {
+    if (!appSearchQuery.trim()) return;
+    setAppSearchLoading(true);
+    setAppSearchNotice('');
+    try {
+      const results = await searchRegisteredCustomer(appSearchQuery.trim());
+      setAppSearchResults(results || []);
+      if (!results || results.length === 0) {
+        setAppSearchNotice('No registered customer account found with that Email or Short ID on GI SHOP.');
+      }
+    } catch (e) {
+      setAppSearchNotice(e.message || 'Search failed. Check network or server.');
+    } finally {
+      setAppSearchLoading(false);
+    }
+  };
+
+  const handleSelectAppCustomer = (user) => {
+    setPhone(user.phone || '');
+    setName(user.name || '');
+    setCustomerShortId(user.shortId || '');
+    setCustomerEmail(user.email || '');
+    setIsImported(true);
+    setImportedContactName(`${user.name} (${user.shortId})`);
+    setAppSearchResults([]);
+    setAppSearchQuery('');
+  };
 
   const handleImportContact = async () => {
     try {
@@ -115,6 +152,8 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
     setIsImported(false);
     setPhone('');
     setName('');
+    setCustomerShortId('');
+    setCustomerEmail('');
     setImportedContactName('');
   };
 
@@ -122,6 +161,8 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
     setPhone('');
     setName('');
     setAddress('');
+    setCustomerShortId('');
+    setCustomerEmail('');
     setIsImported(false);
     setImportedContactName('');
   };
@@ -142,6 +183,8 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
         phone: phone.trim(),
         name: name.trim(),
         address: address.trim(),
+        customerShortId: customerShortId || undefined,
+        customerEmail: customerEmail || undefined,
       });
       handleResetModal();
       onClose();
@@ -169,6 +212,65 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
                   <X size={20} color={colors.textMuted} />
                 </TouchableOpacity>
+              </View>
+
+              {/* Registered App User Search Bar */}
+              <View style={styles.appSearchBox}>
+                <Text style={styles.appSearchTitle}>🔍 Link GI SHOP App Account (Short ID / Phone)</Text>
+                <View style={styles.appSearchRow}>
+                  <TextInput
+                    style={styles.appSearchInput}
+                    placeholder="Short ID, Email, or Phone..."
+                    value={appSearchQuery}
+                    onChangeText={setAppSearchQuery}
+                    onSubmitEditing={handleSearchAppCustomer}
+                  />
+                  <TouchableOpacity
+                    style={styles.appSearchBtn}
+                    onPress={handleSearchAppCustomer}
+                    disabled={appSearchLoading}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.appSearchBtnText}>
+                      {appSearchLoading ? '...' : 'Search'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {appSearchNotice ? (
+                  <Text style={styles.appSearchNoticeText}>{appSearchNotice}</Text>
+                ) : null}
+
+                {appSearchResults.length > 0 && (
+                  <View style={styles.searchResultsList}>
+                    {appSearchResults.map((user) => (
+                      <View key={user.id} style={styles.userCard}>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <Text style={styles.userNameText}>{user.name}</Text>
+                            <View style={[styles.roleBadge, user.role === 'Shopkeeper' ? styles.roleShopkeeper : styles.roleCustomer]}>
+                              <Text style={[styles.roleBadgeText, user.role === 'Shopkeeper' ? styles.roleShopkeeperText : styles.roleCustomerText]}>
+                                {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
+                              </Text>
+                            </View>
+                            <Text style={styles.userShortIdText}>ID: {user.shortId}</Text>
+                          </View>
+                          <Text style={styles.userSubText}>
+                            📞 {user.phone} {user.email ? `• ✉️ ${user.email}` : ''}
+                          </Text>
+                        </View>
+
+                        <TouchableOpacity
+                          style={styles.selectUserBtn}
+                          onPress={() => handleSelectAppCustomer(user)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.selectUserBtnText}>Select</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
 
               {/* Import from Contacts Banner / Button */}
@@ -414,6 +516,113 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     fontSize: 14,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  appSearchBox: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  appSearchTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: 8,
+  },
+  appSearchRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  appSearchInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    fontSize: 13,
+    backgroundColor: '#ffffff',
+  },
+  appSearchBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appSearchBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  appSearchNoticeText: {
+    fontSize: 12,
+    color: '#c2410c',
+    marginTop: 6,
+  },
+  searchResultsList: {
+    marginTop: 10,
+    maxHeight: 180,
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 6,
+  },
+  userNameText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  userShortIdText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  userSubText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  roleBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  roleShopkeeper: {
+    backgroundColor: '#f5f3ff',
+  },
+  roleShopkeeperText: {
+    color: '#7c3aed',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  roleCustomer: {
+    backgroundColor: '#eff6ff',
+  },
+  roleCustomerText: {
+    color: colors.primary,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  selectUserBtn: {
+    backgroundColor: '#16a34a',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  selectUserBtnText: {
+    fontSize: 12,
     fontWeight: '700',
     color: '#ffffff',
   },

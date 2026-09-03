@@ -38,6 +38,7 @@ import Header from '../../components/Header';
 import ProductUnitModal from '../../components/ProductUnitModal';
 import ReceiptModal from '../../components/ReceiptModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const PAYMENT_MODES = [
   { id: 'Cash', label: 'Cash', icon: Banknote },
@@ -166,25 +167,32 @@ export default function POSScreen({ navigation }) {
     if (cart.length === 0) {
       return Alert.alert('Empty Cart', 'Please add items to cart before completing bill.');
     }
-    if (paymentMethod === 'Add to Book' && !selectedCustomer) {
-      Alert.alert(
-        'Customer Details Required',
-        'Khata credit ("Add to Book") requires customer details. Please fill customer name & phone number.',
-        [
-          {
-            text: 'Fill Customer Details',
-            onPress: () => setShowAddCustomerModal(true),
-          },
-        ]
-      );
-      setShowAddCustomerModal(true);
-      return;
+    if (paymentMethod === 'Add to Book') {
+      if (!selectedCustomer) {
+        Alert.alert(
+          'Registered Customer Required',
+          'Khata credit ("Add to Book") requires selecting a registered app customer with a Short ID / Email.',
+          [{ text: 'Assign App Customer', onPress: () => setShowAddCustomerModal(true) }]
+        );
+        setShowAddCustomerModal(true);
+        return;
+      }
+      if (!selectedCustomer.shortId && !selectedCustomer.customerShortId) {
+        Alert.alert(
+          'Khata Restriction',
+          'Khata credit ("Add to Book") is strictly restricted to app-registered customers with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.\n\nPlease search and assign the customer by Email / Short ID.',
+          [{ text: 'Search & Link Account', onPress: () => setShowAddCustomerModal(true) }]
+        );
+        return;
+      }
     }
 
     setCompletingBill(true);
     try {
       const salePayload = {
         customerPhone: selectedCustomer ? (selectedCustomer.phone || selectedCustomer.customerPhone) : '',
+        customerShortId: selectedCustomer ? (selectedCustomer.shortId || selectedCustomer.customerShortId || '') : '',
+        customerEmail: selectedCustomer ? (selectedCustomer.email || selectedCustomer.customerEmail || '') : '',
         itemsJSON: JSON.stringify(cart),
         subtotal,
         discount: discountNum,
@@ -346,8 +354,11 @@ export default function POSScreen({ navigation }) {
             </View>
 
             {/* Product Grid */}
-            <View style={styles.productGrid}>
-              {filteredItems.map((item) => (
+            {loading ? (
+              <SkeletonLoader type="productGrid" count={6} />
+            ) : (
+              <View style={styles.productGrid}>
+                {filteredItems.map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.productTile}
@@ -371,6 +382,7 @@ export default function POSScreen({ navigation }) {
                 </View>
               )}
             </View>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

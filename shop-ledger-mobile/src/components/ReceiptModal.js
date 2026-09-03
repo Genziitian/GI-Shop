@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
+  Linking,
+  Alert,
 } from 'react-native';
-import { Receipt, CheckCircle, X, Printer } from 'lucide-react-native';
+import { Receipt, CheckCircle, X, Printer, MessageSquare } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 
 export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
@@ -26,6 +28,34 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
         timeStyle: 'short',
       })
     : new Date().toLocaleString();
+
+  const handleShareWhatsApp = () => {
+    const rawPhone = (receipt.customerPhone || receipt.phone || '').toString().trim();
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    const targetPhone = cleanPhone ? `91${cleanPhone}` : '';
+    const shopName = receipt.shopName || 'GI SHOP';
+    const totalAmt = (Number(receipt.total ?? receipt.estimatedTotal) || 0).toFixed(2);
+    const billId = receipt.orderNumber || receipt.id || 'N/A';
+
+    const itemLines = items.map(it => {
+      const name = it.item?.name || it.name || 'Item';
+      const qty = it.qty || 1;
+      const rate = it.rate || it.price || it.item?.price || 0;
+      const amt = (Number(it.amount || (qty * rate)) || 0).toFixed(2);
+      return `• ${name} x${qty} - ₹${amt}`;
+    }).join('\n');
+
+    const message = `Thank you for shopping with ${shopName}.\nHere is your invoice for today’s purchase.\n\n📄 *Bill #${billId}*\nDate: ${formattedDate}\n\n*ITEMS:*\n${itemLines}\n\n*Total Amount:* ₹${totalAmt} (${receipt.paymentMethod || 'Paid'})\n\nPlease find your bill attached above.\nWe hope to see you again.`;
+
+    const encodedMsg = encodeURIComponent(message);
+    const whatsappUrl = targetPhone 
+      ? `https://wa.me/${targetPhone}?text=${encodedMsg}` 
+      : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+
+    Linking.openURL(whatsappUrl).catch(() => {
+      Alert.alert('Error', 'Unable to open WhatsApp on this device.');
+    });
+  };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -54,8 +84,8 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                 {/* Metadata Row */}
                 <View style={styles.metaBox}>
                   <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Bill No:</Text>
-                    <Text style={styles.metaValue}>#{receipt.id || 'N/A'}</Text>
+                    <Text style={styles.metaLabel}>Ref / Bill No:</Text>
+                    <Text style={styles.metaValue}>#{receipt.orderNumber || receipt.id || 'N/A'}</Text>
                   </View>
                   <View style={styles.metaRow}>
                     <Text style={styles.metaLabel}>Date & Time:</Text>
@@ -85,7 +115,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                             : styles.paymentTagTextPaid,
                         ]}
                       >
-                        {receipt.paymentMethod}
+                        {receipt.paymentMethod || 'App Order'}
                       </Text>
                     </View>
                   </View>
@@ -102,11 +132,11 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                   <View style={styles.dividerDashed} />
 
                   {items.map((entry, index) => {
-                    const itemName = entry.item?.name || 'Item';
-                    const unit = entry.item?.unit || '';
-                    const rate = entry.rate || entry.item?.price || 0;
+                    const itemName = entry.item?.name || entry.name || 'Item';
+                    const unit = entry.item?.unit || entry.unit || '';
+                    const rate = entry.rate || entry.price || entry.item?.price || 0;
                     const qty = entry.qty || 1;
-                    const amount = entry.amount || qty * rate;
+                    const amount = entry.amount || (qty * rate);
 
                     return (
                       <View key={index} style={styles.itemRow}>
@@ -133,7 +163,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                 <View style={styles.summarySection}>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Subtotal</Text>
-                    <Text style={styles.summaryValue}>₹{(Number(receipt.subtotal) || 0).toFixed(2)}</Text>
+                    <Text style={styles.summaryValue}>₹{(Number(receipt.subtotal || receipt.total || receipt.estimatedTotal) || 0).toFixed(2)}</Text>
                   </View>
 
                   {receipt.discount > 0 && (
@@ -149,12 +179,32 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
 
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>TOTAL AMOUNT</Text>
-                    <Text style={styles.totalValue}>₹{(Number(receipt.total) || 0).toFixed(2)}</Text>
+                    <Text style={styles.totalValue}>₹{(Number(receipt.total ?? receipt.estimatedTotal) || 0).toFixed(2)}</Text>
                   </View>
                 </View>
 
                 {/* Action Buttons */}
                 <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#25D366',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      width: '100%',
+                    }}
+                    onPress={handleShareWhatsApp}
+                    activeOpacity={0.85}
+                  >
+                    <MessageSquare size={18} color="#ffffff" />
+                    <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '700' }}>
+                      Share Bill on WhatsApp {receipt.customerPhone ? `(${receipt.customerPhone})` : ''}
+                    </Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity
                     style={styles.newBillBtn}
                     onPress={() => {

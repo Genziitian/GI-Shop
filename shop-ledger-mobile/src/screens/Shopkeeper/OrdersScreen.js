@@ -28,8 +28,12 @@ import {
   acceptShopOrder,
   declineShopOrder,
   completeShopOrder,
+  updateShopOrderItems,
+  requestShopOrderPayment,
+  verifyShopOrderOTP,
 } from '../../api/client';
 import Header from '../../components/Header';
+import OrderDetailModal from '../../components/OrderDetailModal';
 
 export default function OrdersScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
@@ -39,10 +43,74 @@ export default function OrdersScreen({ navigation }) {
 
   // Modal State
   const [selectedOrderForAction, setSelectedOrderForAction] = useState(null);
+  const [selectedDetailOrder, setSelectedDetailOrder] = useState(null);
   const [orderActionType, setOrderActionType] = useState('ACCEPT'); // 'ACCEPT' | 'DECLINE'
   const [packingMinutes, setPackingMinutes] = useState(15);
   const [declineReason, setDeclineReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Get Payment & OTP state
+  const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [paymentOrder, setPaymentOrder] = useState(null);
+  const [paymentDiscount, setPaymentDiscount] = useState('0');
+  const [paymentMode, setPaymentMode] = useState('Cash');
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+
+  const [otpInputs, setOtpInputs] = useState({});
+  const [otpSubmitting, setOtpSubmitting] = useState({});
+
+  const handleToggleItemUnavailable = async (ord, itemIndex) => {
+    try {
+      const items = typeof ord.itemsJSON === 'string'
+        ? JSON.parse(ord.itemsJSON || '[]')
+        : (ord.items || []);
+      items[itemIndex].isUnavailable = !items[itemIndex].isUnavailable;
+      await updateShopOrderItems(ord.id, items);
+      loadOrders();
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Failed to update item availability');
+    }
+  };
+
+  const handleOpenPaymentModal = (ord) => {
+    setPaymentOrder(ord);
+    setPaymentDiscount('0');
+    setPaymentMode('Cash');
+    setPaymentModalVisible(true);
+  };
+
+  const handleConfirmSendPayment = async () => {
+    if (!paymentOrder) return;
+    setPaymentSubmitting(true);
+    try {
+      await requestShopOrderPayment(paymentOrder.id, paymentDiscount, paymentMode);
+      setPaymentModalVisible(false);
+      loadOrders();
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Failed to send payment request.');
+    } finally {
+      setPaymentSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtpHandover = async (orderId) => {
+    const enteredOtp = (otpInputs[orderId] || '').trim();
+    if (!enteredOtp || enteredOtp.length !== 4) {
+      Alert.alert('Invalid OTP', 'Please enter a valid 4-digit OTP code.');
+      return;
+    }
+
+    setOtpSubmitting(prev => ({ ...prev, [orderId]: true }));
+    try {
+      await verifyShopOrderOTP(orderId, enteredOtp);
+      Alert.alert('Success 🎉', 'OTP Verified! Order completed and sale recorded.');
+      loadOrders();
+    } catch (e) {
+      Alert.alert('Verification Failed ❌', e.message || 'Invalid 4-digit OTP code.');
+    } finally {
+      setOtpSubmitting(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
@@ -224,6 +292,25 @@ export default function OrdersScreen({ navigation }) {
                     </View>
                   </View>
 
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#eff6ff',
+                      borderColor: '#bfdbfe',
+                      borderWidth: 1,
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 8,
+                      marginVertical: 6,
+                      alignSelf: 'flex-start',
+                    }}
+                    onPress={() => setSelectedDetailOrder(ord)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '700' }}>
+                      📜 View Timeline &amp; Order Details
+                    </Text>
+                  </TouchableOpacity>
+
                   {/* Auto-cancel warning banner for Shopkeeper */}
                   {ord.status === 'PENDING' && (
                     <View style={styles.autoCancelWarningBox}>
@@ -245,16 +332,44 @@ export default function OrdersScreen({ navigation }) {
 
                   {/* Order Items */}
                   <View style={styles.orderItemsList}>
-                    {orderItems.map((it, idx) => (
-                      <View key={idx} style={styles.orderItemLine}>
-                        <Text style={styles.orderItemName}>
-                          • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
-                        </Text>
-                        <Text style={styles.orderItemPrice}>
-                          ₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}
-                        </Text>
-                      </View>
-                    ))}
+                    {orderItems.map((it, idx) => {
+                      const isUnavail = !!it.isUnavailable;
+                      return (
+                        <View key={idx} style={[styles.orderItemLine, { alignItems: 'center' }]}>
+                          <View style={{ flex: 1, paddingRight: 6 }}>
+                            <Text style={[styles.orderItemName, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                              • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
+                            </Text>
+                            {isUnavail && (
+                              <Text style={{ fontSize: 10, color: '#b91c1c', fontWeight: '700' }}>UNAVAILABLE</Text>
+                            )}
+                          </View>
+
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={[styles.orderItemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                              ₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}
+                            </Text>
+                            {(ord.status === 'PENDING' || ord.status === 'PACKING') && (
+                              <TouchableOpacity
+                                style={{
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 3,
+                                  borderRadius: 4,
+                                  backgroundColor: isUnavail ? '#f1f5f9' : '#fee2e2',
+                                  borderWidth: 1,
+                                  borderColor: isUnavail ? '#cbd5e1' : '#fca5a5',
+                                }}
+                                onPress={() => handleToggleItemUnavailable(ord, idx)}
+                              >
+                                <Text style={{ fontSize: 10, fontWeight: '700', color: isUnavail ? '#475569' : '#b91c1c' }}>
+                                  {isUnavail ? 'Mark Avail' : 'Mark Unavail'}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
                   </View>
 
                   <View style={styles.orderTotalRow}>
@@ -290,15 +405,93 @@ export default function OrdersScreen({ navigation }) {
                       activeOpacity={0.8}
                     >
                       <CheckCircle2 size={16} color="#ffffff" />
-                      <Text style={styles.completeBtnText}>Mark as Ready / Packed</Text>
+                      <Text style={styles.completeBtnText}>Mark Ready for Pickup</Text>
                     </TouchableOpacity>
                   )}
 
                   {(ord.status === 'READY' || ord.status === 'COMPLETED') && (
-                    <View style={{ backgroundColor: '#f0f9ff', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 11, color: '#0369a1', fontWeight: '600' }}>
-                        ⏳ Marked ready. Waiting for customer to confirm collection.
-                      </Text>
+                    <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
+                      {/* Before Payment Is Requested */}
+                      {!ord.paymentRequested ? (
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <View style={{ flex: 1, paddingRight: 6 }}>
+                            <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
+                              ✓ Order Ready for Pickup
+                            </Text>
+                            <Text style={{ fontSize: 11, color: '#854d0e', marginTop: 2 }}>
+                              ⚠️ No payment request sent yet.
+                            </Text>
+                          </View>
+
+                          <TouchableOpacity
+                            style={{ backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 }}
+                            onPress={() => handleOpenPaymentModal(ord)}
+                          >
+                            <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>
+                              💳 Get Payment
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        /* After Payment Is Requested */
+                        <View>
+                          <View style={{ marginBottom: 8 }}>
+                            <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
+                              ✓ Payment Requested
+                            </Text>
+                            <Text style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
+                              Amount: <Text style={{ fontWeight: '700' }}>₹{(Number(ord.requestedAmount) || 0).toFixed(2)}</Text> • Mode: <Text style={{ fontWeight: '700' }}>{ord.paymentMethod || 'Cash'}</Text>
+                            </Text>
+                          </View>
+
+                          {/* 4-Digit OTP Verification Input (Only shown after payment requested) */}
+                          <View style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderWidth: 1, borderRadius: 6, padding: 8, marginTop: 4 }}>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
+                              Enter Customer OTP
+                            </Text>
+                            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                              <TextInput
+                                style={{
+                                  borderWidth: 1,
+                                  borderColor: colors.border,
+                                  borderRadius: 6,
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 4,
+                                  width: 100,
+                                  fontSize: 16,
+                                  fontWeight: '800',
+                                  textAlign: 'center',
+                                  letterSpacing: 2,
+                                  color: colors.text,
+                                }}
+                                keyboardType="number-pad"
+                                maxLength={4}
+                                placeholder="[ _ _ _ _ ]"
+                                value={otpInputs[ord.id] || ''}
+                                onChangeText={(val) => setOtpInputs({ ...otpInputs, [ord.id]: val.replace(/\D/g, '') })}
+                              />
+                              <TouchableOpacity
+                                style={{
+                                  backgroundColor: colors.success,
+                                  paddingHorizontal: 12,
+                                  paddingVertical: 8,
+                                  borderRadius: 6,
+                                  flex: 1,
+                                  alignItems: 'center',
+                                }}
+                                disabled={otpSubmitting[ord.id]}
+                                onPress={() => handleVerifyOtpHandover(ord.id)}
+                              >
+                                {otpSubmitting[ord.id] ? (
+                                  <ActivityIndicator color="#fff" size="small" />
+                                ) : (
+                                  <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>Verify OTP &amp; Complete</Text>
+                                )}
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+                      )}
                     </View>
                   )}
 
@@ -424,6 +617,100 @@ export default function OrdersScreen({ navigation }) {
           </View>
         </View>
       </Modal>
+
+      {/* Get Payment Modal */}
+      <Modal
+        visible={paymentModalVisible && !!paymentOrder}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPaymentModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                💳 Request Payment #{paymentOrder?.orderNumber}
+              </Text>
+              <TouchableOpacity onPress={() => setPaymentModalVisible(false)}>
+                <X size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, color: colors.textMuted }}>Order Total:</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700' }}>₹{(Number(paymentOrder?.estimatedTotal) || 0).toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, color: colors.textMuted }}>Discount:</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: colors.danger }}>-₹{(parseFloat(paymentDiscount) || 0).toFixed(2)}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderColor: colors.border, paddingTop: 6, marginTop: 4 }}>
+                <Text style={{ fontSize: 14, fontWeight: '800' }}>Final Amount:</Text>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: colors.success }}>
+                  ₹{Math.max(0, (Number(paymentOrder?.estimatedTotal) || 0) - (parseFloat(paymentDiscount) || 0)).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.modalLabel}>Discount (₹):</Text>
+            <TextInput
+              style={styles.declineInput}
+              keyboardType="numeric"
+              placeholder="0"
+              value={paymentDiscount}
+              onChangeText={setPaymentDiscount}
+            />
+
+            <Text style={[styles.modalLabel, { marginTop: 12 }]}>Payment Mode:</Text>
+            <View style={{ gap: 8, marginBottom: 16 }}>
+              {['Cash', 'Online / UPI', 'Add to Book'].map((mode) => (
+                <TouchableOpacity
+                  key={mode}
+                  style={{
+                    padding: 10,
+                    borderRadius: 8,
+                    borderWidth: paymentMode === mode ? 2 : 1,
+                    borderColor: paymentMode === mode ? colors.primary : colors.border,
+                    backgroundColor: paymentMode === mode ? '#eff6ff' : '#fff',
+                  }}
+                  onPress={() => setPaymentMode(mode)}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: paymentMode === mode ? '700' : '400', color: colors.text }}>
+                    {mode === 'Add to Book' ? 'Add to Book (Khata Credit)' : mode}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setPaymentModalVisible(false)}
+              >
+                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalConfirmBtn, styles.btnSuccess]}
+                onPress={handleConfirmSendPayment}
+                disabled={paymentSubmitting}
+              >
+                <Text style={styles.modalConfirmBtnText}>
+                  {paymentSubmitting ? 'Sending...' : 'Confirm Request'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Order Details & Timestamped Journey Modal */}
+      <OrderDetailModal
+        visible={!!selectedDetailOrder}
+        order={selectedDetailOrder}
+        onClose={() => setSelectedDetailOrder(null)}
+      />
     </SafeAreaView>
   );
 }

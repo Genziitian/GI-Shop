@@ -181,9 +181,17 @@ export default function SuperManager() {
           </div>
         </div>
 
-        <button className="btn btn-outline" onClick={handleLogout} style={{ color: '#fff', borderColor: '#4338ca' }}>
-          <LogOut size={16} /> Logout
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <a
+            href="tel:7323809242"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#4ade80', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '0.35rem 0.75rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', textDecoration: 'none' }}
+          >
+            <Phone size={14} /> Contact Customer Care (7323809242)
+          </a>
+          <button className="btn btn-outline" onClick={handleLogout} style={{ color: '#fff', borderColor: '#4338ca' }}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
       </div>
 
       <div className="container" style={{ flex: 1, marginTop: '1.5rem', marginBottom: '2rem' }}>

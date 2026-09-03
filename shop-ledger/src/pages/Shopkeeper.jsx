@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   getMe, getItems, saveItem, deleteItem, editItem, toggleShopStatus, 
   getShopOrders, acceptShopOrder, declineShopOrder, completeShopOrder,
+  updateShopOrderItems, requestShopOrderPayment, verifyShopOrderOTP,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
   getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword,
   parseTimings, formatTimings, verifyPin, getCustomers
@@ -13,10 +14,11 @@ import {
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
   Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff,
-  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal
+  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal, MessageSquare
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
+import OrderTimelineModal from '../components/OrderTimelineModal';
 import logoImg from '../assets/logo.png';
 
 export default function Shopkeeper() {
@@ -49,6 +51,7 @@ export default function Shopkeeper() {
 
   // Orders Accept/Decline Modal
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedTimelineOrder, setSelectedTimelineOrder] = useState(null);
   const [packingMinutes, setPackingMinutes] = useState(15);
   const [declineReason, setDeclineReason] = useState('');
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -61,9 +64,10 @@ export default function Shopkeeper() {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   
-  // Note Modal State (Max 20 chars)
+  // Note Modal State (Max 20 chars) & Receipt Modal State
   const [selectedSaleForNote, setSelectedSaleForNote] = useState(null);
   const [noteInput, setNoteInput] = useState('');
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   // Item Form & Edit State (Owner only)
   const [newItemName, setNewItemName] = useState('');
@@ -825,6 +829,69 @@ export default function Shopkeeper() {
     setActiveTab('pos');
   };
 
+  // Get Payment & OTP verification state
+  const [showGetPaymentModal, setShowGetPaymentModal] = useState(false);
+  const [paymentOrder, setPaymentOrder] = useState(null);
+  const [paymentDiscount, setPaymentDiscount] = useState('0');
+  const [paymentMode, setPaymentMode] = useState('Cash');
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+
+  const [otpInputs, setOtpInputs] = useState({});
+  const [otpSubmitting, setOtpSubmitting] = useState({});
+  const [otpErrorNotice, setOtpErrorNotice] = useState({});
+
+  const handleToggleItemUnavailable = async (order, itemIndex) => {
+    try {
+      const items = JSON.parse(order.itemsJSON || '[]');
+      items[itemIndex].isUnavailable = !items[itemIndex].isUnavailable;
+      await updateShopOrderItems(order.id, items);
+      loadOrdersData();
+    } catch (e) {
+      alert(e.message || 'Failed to update item availability.');
+    }
+  };
+
+  const handleOpenGetPaymentModal = (order) => {
+    setPaymentOrder(order);
+    setPaymentDiscount('0');
+    setPaymentMode('Cash');
+    setShowGetPaymentModal(true);
+  };
+
+  const handleConfirmSendPaymentRequest = async () => {
+    if (!paymentOrder) return;
+    setPaymentSubmitting(true);
+    try {
+      await requestShopOrderPayment(paymentOrder.id, paymentDiscount, paymentMode);
+      setShowGetPaymentModal(false);
+      loadOrdersData();
+    } catch (e) {
+      alert(e.message || 'Failed to send payment request.');
+    } finally {
+      setPaymentSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtpHandover = async (orderId) => {
+    const enteredOtp = (otpInputs[orderId] || '').trim();
+    if (!enteredOtp || enteredOtp.length !== 4) {
+      setOtpErrorNotice(prev => ({ ...prev, [orderId]: 'Please enter a valid 4-digit OTP.' }));
+      return;
+    }
+
+    setOtpSubmitting(prev => ({ ...prev, [orderId]: true }));
+    setOtpErrorNotice(prev => ({ ...prev, [orderId]: '' }));
+
+    try {
+      await verifyShopOrderOTP(orderId, enteredOtp);
+      loadOrdersData();
+    } catch (e) {
+      setOtpErrorNotice(prev => ({ ...prev, [orderId]: e.message || 'Invalid OTP code.' }));
+    } finally {
+      setOtpSubmitting(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
   // Master Catalog Auto-Fill Handlers
   const handleSelectMasterSuggestion = (masterItem) => {
     setNewItemName(masterItem.name);
@@ -918,8 +985,25 @@ export default function Shopkeeper() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
-      {/* Top Header */}
-      <div className="nav-bar">
+      {/* Mobile App Header (Matches Native App Image 1) */}
+      <div className="mobile-app-header">
+        <div className="mobile-app-header-left">
+          <img src={logoImg} alt="GI SHOP" className="mobile-app-header-logo" />
+          <div style={{ minWidth: 0 }}>
+            <div className="mobile-app-header-title">GI SHOP</div>
+            <div className="mobile-app-header-subtitle">
+              Point of Sale &amp; Smart Billing
+            </div>
+          </div>
+        </div>
+
+        <div className="mobile-app-header-badge">
+          Shop ID: {currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="nav-bar desktop-only">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
@@ -982,6 +1066,22 @@ export default function Shopkeeper() {
             {isOpen ? 'Shop is OPEN' : 'Shop is CLOSED'}
           </button>
 
+          {/* Shop ID Badge */}
+          <span 
+            className="badge" 
+            style={{ 
+              background: '#eff6ff', 
+              color: 'var(--primary)', 
+              border: '1px solid #bfdbfe', 
+              padding: '0.4rem 0.75rem', 
+              fontSize: '0.85rem', 
+              fontWeight: '800', 
+              borderRadius: '8px' 
+            }}
+          >
+            Shop ID: {currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}
+          </span>
+
           {/* Settings Button */}
           <button 
             type="button" 
@@ -991,22 +1091,6 @@ export default function Shopkeeper() {
           >
             <Settings size={16} /> Settings
           </button>
-
-          {/* Lock feature disabled from UI per user request */}
-          {/* <button 
-            type="button" 
-            className="btn btn-outline" 
-            onClick={() => {
-              setIsScreenLocked(true);
-              setUnlockPin('');
-              setUnlockPassword('');
-              setUnlockError('');
-            }} 
-            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
-            title="Lock Register / Screen"
-          >
-            <Lock size={15} color="#e11d48" /> Lock
-          </button> */}
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
             <LogOut size={16} /> Logout
@@ -1044,30 +1128,40 @@ export default function Shopkeeper() {
                         </div>
                       </div>
 
-                      <span className="badge" style={{
-                        background: order.status === 'PENDING' ? '#eff6ff' 
-                          : (order.status === 'PACKING' ? '#fef3c7' 
-                          : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
-                          : (order.status === 'COLLECTED' ? '#dcfce7' 
-                          : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
-                        color: order.status === 'PENDING' ? 'var(--primary)' 
-                          : (order.status === 'PACKING' ? '#b45309' 
-                          : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
-                          : (order.status === 'COLLECTED' ? '#15803d' 
-                          : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
-                        borderColor: 'transparent',
-                        padding: '0.35rem 0.65rem',
-                        fontWeight: '700'
-                      }}>
-                        {order.status === 'PENDING' && 'PENDING ACCEPTANCE (45m Window)'}
-                        {order.status === 'PACKING' && `PACKING (~${order.packingMinutes}m)`}
-                        {(order.status === 'COMPLETED' || order.status === 'READY') && 'READY (WAITING FOR CUSTOMER)'}
-                        {order.status === 'COLLECTED' && 'CUSTOMER COLLECTED'}
-                        {order.status === 'NOT_COLLECTED' && 'CUSTOMER MARKED NOT COLLECTED'}
-                        {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED BY CUSTOMER'}
-                        {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
-                        {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          style={{ padding: '0.3rem 0.65rem', fontSize: '0.78rem', fontWeight: '700', background: '#fff' }}
+                          onClick={() => setSelectedTimelineOrder(order)}
+                        >
+                          📜 Timeline &amp; Details
+                        </button>
+                        <span className="badge" style={{
+                          background: order.status === 'PENDING' ? '#eff6ff' 
+                            : (order.status === 'PACKING' ? '#fef3c7' 
+                            : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
+                            : (order.status === 'COLLECTED' ? '#dcfce7' 
+                            : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
+                          color: order.status === 'PENDING' ? 'var(--primary)' 
+                            : (order.status === 'PACKING' ? '#b45309' 
+                            : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
+                            : (order.status === 'COLLECTED' ? '#15803d' 
+                            : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
+                          borderColor: 'transparent',
+                          padding: '0.35rem 0.65rem',
+                          fontWeight: '700'
+                        }}>
+                          {order.status === 'PENDING' && 'PENDING ACCEPTANCE (45m Window)'}
+                          {order.status === 'PACKING' && `PACKING (~${order.packingMinutes}m)`}
+                          {(order.status === 'COMPLETED' || order.status === 'READY') && 'READY (WAITING FOR CUSTOMER)'}
+                          {order.status === 'COLLECTED' && 'CUSTOMER COLLECTED'}
+                          {order.status === 'NOT_COLLECTED' && 'CUSTOMER MARKED NOT COLLECTED'}
+                          {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED BY CUSTOMER'}
+                          {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
+                          {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
+                        </span>
+                      </div>
                     </div>
 
                     {order.status === 'PENDING' && (
@@ -1082,21 +1176,44 @@ export default function Shopkeeper() {
                       </div>
                     )}
 
-                    <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
-                      {items.map((entry, idx) => (
-                        <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                          <span>{entry.item?.name || entry.name} x {entry.qty}</span>
-                          <span>₹{(Number(entry.amount || (entry.rate * entry.qty)) || 0).toFixed(2)}</span>
-                        </div>
-                      ))}
+                    <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>ORDER ITEMS</span>
+                        <span>{(['PENDING', 'PACKING'].includes(order.status)) ? 'Click to toggle item availability' : ''}</span>
+                      </div>
+                      {items.map((entry, idx) => {
+                        const itemName = entry.item?.name || entry.name || 'Item';
+                        const qty = entry.qty || 1;
+                        const rate = entry.rate || entry.price || (entry.item?.price) || 0;
+                        const amount = entry.amount || (rate * qty);
+                        const isUnavail = !!entry.isUnavailable;
+
+                        return (
+                          <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f8fafc', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#94a3b8' : 'inherit' }}>
+                            <div>
+                              <strong style={{ color: isUnavail ? '#94a3b8' : 'var(--text)' }}>{itemName}</strong> x {qty} @ ₹{Number(rate).toFixed(2)}
+                              {isUnavail && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', marginLeft: '0.5rem', fontSize: '0.7rem' }}>UNAVAILABLE</span>}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span>₹{Number(amount).toFixed(2)}</span>
+                              {(['PENDING', 'PACKING'].includes(order.status)) && (
+                                <button 
+                                  type="button" 
+                                  className={`btn ${isUnavail ? 'btn-outline' : 'btn-danger'}`}
+                                  style={{ padding: '0.15rem 0.45rem', fontSize: '0.72rem' }}
+                                  onClick={() => handleToggleItemUnavailable(order, idx)}
+                                >
+                                  {isUnavail ? 'Mark Available' : 'Mark Unavailable'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                       <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
-                        <span>Total:</span>
-                        <span style={{ color: 'var(--success)' }}>
-                          ₹{(Number(
-                            (order.estimatedTotal && order.estimatedTotal > 0)
-                              ? order.estimatedTotal
-                              : items.reduce((sum, entry) => sum + (entry.amount || (entry.rate * entry.qty) || ((entry.item?.price || 0) * (entry.qty || 1)) || 0), 0)
-                          ) || 0).toFixed(2)}
+                        <span>Total Payable:</span>
+                        <span style={{ color: 'var(--success)', fontSize: '1.1rem' }}>
+                          ₹{(Number(order.estimatedTotal || 0)).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -1115,37 +1232,72 @@ export default function Shopkeeper() {
 
                       {order.status === 'PACKING' && (
                         <>
-                          <button type="button" className="btn" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleConvertToPOS(order)}>
-                            Convert to Final POS Bill
-                          </button>
-                          <button type="button" className="btn btn-outline" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={async () => { await completeShopOrder(order.id); loadOrdersData(); }}>
-                            Mark Ready / Done
+                          <button type="button" className="btn btn-success" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={async () => { await completeShopOrder(order.id); loadOrdersData(); }}>
+                            Mark Ready for Pickup
                           </button>
                         </>
                       )}
 
                       {(order.status === 'READY' || order.status === 'COMPLETED') && (
-                        <span style={{ fontSize: '0.8rem', color: '#0369a1', fontWeight: '600' }}>
-                          ⏳ Order is marked Ready. Waiting for customer to confirm collection.
-                        </span>
-                      )}
+                        <div style={{ width: '100%', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginTop: '0.5rem' }}>
+                          
+                          {/* Before Payment Is Requested */}
+                          {!order.paymentRequested ? (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div>
+                                <strong style={{ color: '#166534', fontSize: '0.9rem' }}>✓ Order Ready for Pickup</strong>
+                                <div style={{ fontSize: '0.8rem', color: '#854d0e', marginTop: '2px' }}>
+                                  ⚠️ No payment request sent yet. Click "Get Payment" to request payment.
+                                </div>
+                              </div>
+                              <button type="button" className="btn btn-primary" style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', fontWeight: '700' }} onClick={() => handleOpenGetPaymentModal(order)}>
+                                💳 Get Payment
+                              </button>
+                            </div>
+                          ) : (
+                            /* After Payment Is Requested */
+                            <div>
+                              <div style={{ marginBottom: '0.5rem' }}>
+                                <strong style={{ color: '#166534', fontSize: '0.9rem' }}>✓ Payment Requested</strong>
+                                <div style={{ fontSize: '0.82rem', color: '#15803d', marginTop: '2px' }}>
+                                  Amount: <strong>₹{(Number(order.requestedAmount) || 0).toFixed(2)}</strong> • Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong>
+                                </div>
+                              </div>
 
-                      {order.status === 'COLLECTED' && (
-                        <span style={{ fontSize: '0.8rem', color: '#15803d', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <CheckCircle size={15} /> Order finalized and collected by customer. (Locked)
-                        </span>
-                      )}
-
-                      {order.status === 'NOT_COLLECTED' && (
-                        <span style={{ fontSize: '0.8rem', color: '#b91c1c', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <AlertTriangle size={15} /> Customer marked as not collected. (Locked)
-                        </span>
-                      )}
-
-                      {order.status === 'CANCELLED_BY_CUSTOMER' && (
-                        <span style={{ fontSize: '0.8rem', color: '#b91c1c', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <X size={15} /> Customer cancelled / took back this order. (Locked)
-                        </span>
+                              {/* 4-Digit OTP Verification Box (Only shown after payment is requested) */}
+                              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.65rem', marginTop: '0.5rem' }}>
+                                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text)', marginBottom: '0.4rem' }}>
+                                  Enter Customer OTP
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                  <input 
+                                    type="text"
+                                    maxLength={4}
+                                    className="input"
+                                    style={{ margin: 0, width: '120px', fontSize: '1.1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '4px', padding: '0.35rem' }}
+                                    placeholder="[ _ _ _ _ ]"
+                                    value={otpInputs[order.id] || ''}
+                                    onChange={(e) => setOtpInputs({ ...otpInputs, [order.id]: e.target.value.replace(/\D/g, '') })}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn btn-success"
+                                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', fontWeight: '700' }}
+                                    disabled={otpSubmitting[order.id]}
+                                    onClick={() => handleVerifyOtpHandover(order.id)}
+                                  >
+                                    {otpSubmitting[order.id] ? 'Verifying...' : 'Verify OTP & Complete'}
+                                  </button>
+                                </div>
+                                {otpErrorNotice[order.id] && (
+                                  <div style={{ fontSize: '0.78rem', color: '#b91c1c', marginTop: '0.3rem', fontWeight: '600' }}>
+                                    ⚠️ {otpErrorNotice[order.id]}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1238,16 +1390,26 @@ export default function Shopkeeper() {
                       <th style={{ textAlign: 'left', padding: '0.65rem' }}>Items Breakdown</th>
                       <th style={{ textAlign: 'right', padding: '0.65rem' }}>Amount</th>
                       <th style={{ textAlign: 'center', padding: '0.65rem' }}>Mode</th>
-                      <th style={{ textAlign: 'left', padding: '0.65rem' }}>Note (Max 20c)</th>
+                      <th style={{ textAlign: 'left', padding: '0.65rem' }}>Note & Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sales.map(sale => {
                       const items = JSON.parse(sale.itemsJSON || '[]');
                       return (
-                        <tr key={sale.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <tr 
+                          key={sale.id} 
+                          style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                          onClick={() => setSelectedReceipt(sale)}
+                        >
                           <td style={{ padding: '0.65rem' }}>
-                            <strong>#{sale.id}</strong><br/>
+                            <button 
+                              type="button" 
+                              style={{ color: 'var(--primary)', fontWeight: '700', cursor: 'pointer', border: 'none', background: 'transparent', padding: 0, fontSize: '0.9rem', textDecoration: 'underline' }}
+                              onClick={(e) => { e.stopPropagation(); setSelectedReceipt(sale); }}
+                            >
+                              #{sale.id}
+                            </button><br/>
                             <small style={{ color: 'var(--text-muted)' }}>{new Date(sale.date).toLocaleString()}</small>
                           </td>
                           <td style={{ padding: '0.65rem' }}>
@@ -1268,7 +1430,7 @@ export default function Shopkeeper() {
                             <span className="badge">{sale.paymentMethod}</span>
                           </td>
                           <td style={{ padding: '0.65rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '0.8rem', color: sale.note ? '#6366f1' : 'var(--text-muted)' }}>
                                 {sale.note ? `"${sale.note}"` : '—'}
                               </span>
@@ -1276,9 +1438,17 @@ export default function Shopkeeper() {
                                 type="button" 
                                 className="btn btn-outline" 
                                 style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }}
-                                onClick={() => { setSelectedSaleForNote(sale); setNoteInput(sale.note || ''); }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedSaleForNote(sale); setNoteInput(sale.note || ''); }}
                               >
                                 Edit Note
+                              </button>
+                              <button 
+                                type="button" 
+                                className="btn btn-outline" 
+                                style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedReceipt(sale); }}
+                              >
+                                View Bill →
                               </button>
                             </div>
                           </td>
@@ -1296,6 +1466,17 @@ export default function Shopkeeper() {
         {/* TAB 5: MANAGE ITEMS (OWNER ONLY) WITH MASTER GROCERY AUTO-FILL */}
         {activeTab === 'items' && isOwner && (
           <div>
+            <div className="mobile-only" style={{ marginBottom: '0.75rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', gap: '0.35rem' }} 
+                onClick={() => setActiveTab('more')}
+              >
+                ← Back to More
+              </button>
+            </div>
+
             {addedItemNotice && (
               <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
                 <CheckCircle size={18} /> {addedItemNotice}
@@ -1509,6 +1690,17 @@ export default function Shopkeeper() {
         {/* TAB 6: STAFF MANAGEMENT (OWNER ONLY) */}
         {activeTab === 'staff' && isOwner && (
           <div className="panel">
+            <div className="mobile-only" style={{ marginBottom: '0.75rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', gap: '0.35rem' }} 
+                onClick={() => setActiveTab('more')}
+              >
+                ← Back to More
+              </button>
+            </div>
+
             <h3 className="title">Invite Staff / Cashier</h3>
             <p className="subtitle">Search any customer by their Short ID or Phone number to invite them to join your shop as a Cashier.</p>
 
@@ -1553,21 +1745,52 @@ export default function Shopkeeper() {
             </div>
           </div>
         )}
-      </div>
 
         {/* TAB 7: MORE (Store Profile, Security PIN, Legal & Account) */}
         {activeTab === 'more' && (
-          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
+          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border)' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations & Settings</h2>
+                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations &amp; Settings</h2>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Manage shop details, security PIN, legal policies & account settings
+                  Manage shop details, operations, staff &amp; account settings
                 </div>
               </div>
-              <button type="button" className="btn" onClick={handleOpenProfileModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+              <button type="button" className="btn" onClick={handleOpenShopDetails} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
                 <Settings size={16} /> Edit Store Profile
               </button>
+            </div>
+
+            {/* Mobile-only Shop Open/Closed Quick Card */}
+            <div className="mobile-only-block" style={{ marginBottom: '1rem' }}>
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: isOpen ? '#dcfce7' : '#fee2e2', color: isOpen ? '#15803d' : '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Store size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)' }}>Store Status</div>
+                    <div style={{ fontSize: '0.78rem', color: isOpen ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
+                      {isOpen ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    background: isOpen ? '#fee2e2' : '#dcfce7',
+                    color: isOpen ? '#b91c1c' : '#15803d',
+                    border: `1px solid ${isOpen ? '#fecaca' : '#bbf7d0'}`
+                  }}
+                  onClick={handleToggleStatus}
+                >
+                  {isOpen ? 'Close Shop' : 'Open Shop'}
+                </button>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -1589,6 +1812,45 @@ export default function Shopkeeper() {
                 </div>
               </div>
 
+              {/* Management Actions (Owner only) */}
+              {isOwner && (
+                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Plus size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Shop Management</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Inventory &amp; staff controls</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <button 
+                      type="button" 
+                      className="btn btn-outline" 
+                      onClick={() => setActiveTab('items')} 
+                      style={{ width: '100%', justifyContent: 'space-between', padding: '0.65rem 0.85rem', fontSize: '0.85rem' }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                        <Plus size={16} color="var(--primary)" /> Items &amp; Products ({items.length})
+                      </span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Manage →</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-outline" 
+                      onClick={() => setActiveTab('staff')} 
+                      style={{ width: '100%', justifyContent: 'space-between', padding: '0.65rem 0.85rem', fontSize: '0.85rem' }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                        <UserPlus size={16} color="var(--primary)" /> Staff &amp; Cashiers ({staffList.length})
+                      </span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Manage →</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Security & Lock Card */}
               <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
@@ -1596,16 +1858,13 @@ export default function Shopkeeper() {
                     <ShieldCheck size={20} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security & Lock</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security &amp; Lock</div>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={handleOpenShopDetails} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
                     <Key size={16} color="#16a34a" /> Change Account Password
                   </button>
-                  {/* <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
-                    <Lock size={16} color="#dc2626" /> Lock Screen Now
-                  </button> */}
                 </div>
               </div>
 
@@ -1616,7 +1875,7 @@ export default function Shopkeeper() {
                     <Shield size={20} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal & Policies</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal &amp; Policies</div>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1624,7 +1883,7 @@ export default function Shopkeeper() {
                     <ShieldCheck size={16} color="#16a34a" /> Privacy Policy
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <FileText size={16} color="#0284c7" /> Terms & Conditions
+                    <FileText size={16} color="#0284c7" /> Terms &amp; Conditions
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/delete')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
                     <Trash2 size={16} color="#dc2626" /> Account Deletion Request
@@ -1641,6 +1900,7 @@ export default function Shopkeeper() {
             </div>
           </div>
         )}
+      </div>
 
       {/* Orders Accept / Decline Modal */}
       {showOrderModal && (
@@ -2677,16 +2937,21 @@ export default function Shopkeeper() {
         </div>
       )}
 
-      {/* App-Like Bottom Footer Navigation Bar */}
+      {/* App-Like Bottom Footer Navigation Bar (5 Tabs on Mobile) */}
       <div className="mobile-footer-nav">
         <button type="button" className={`footer-nav-item ${activeTab === 'pos' ? 'active' : ''}`} onClick={() => setActiveTab('pos')}>
-          <ShoppingCart size={18} />
-          <span>POS</span>
+          <ShoppingCart size={19} />
+          <span>POS Billing</span>
+        </button>
+
+        <button type="button" className={`footer-nav-item ${activeTab === 'khata' ? 'active' : ''}`} onClick={() => setActiveTab('khata')}>
+          <Users size={19} />
+          <span>Khata Ledger</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
           <div style={{ position: 'relative', display: 'inline-flex' }}>
-            <Clock size={18} />
+            <Clock size={19} />
             {pendingOrdersCount > 0 && (
               <span style={{ position: 'absolute', top: '-6px', right: '-8px', background: 'var(--danger)', color: '#fff', fontSize: '0.65rem', borderRadius: '10px', padding: '1px 4px', fontWeight: '700' }}>
                 {pendingOrdersCount}
@@ -2696,32 +2961,27 @@ export default function Shopkeeper() {
           <span>Orders</span>
         </button>
 
-        <button type="button" className={`footer-nav-item ${activeTab === 'khata' ? 'active' : ''}`} onClick={() => setActiveTab('khata')}>
-          <Users size={18} />
-          <span>Khata</span>
-        </button>
-
         <button type="button" className={`footer-nav-item ${activeTab === 'transactions' ? 'active' : ''}`} onClick={() => setActiveTab('transactions')}>
-          <BarChart2 size={18} />
+          <BarChart2 size={19} />
           <span>Analytics</span>
         </button>
 
         {isOwner && (
           <>
-            <button type="button" className={`footer-nav-item ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>
-              <Plus size={18} />
+            <button type="button" className={`footer-nav-item desktop-only ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>
+              <Plus size={19} />
               <span>Items</span>
             </button>
 
-            <button type="button" className={`footer-nav-item ${activeTab === 'staff' ? 'active' : ''}`} onClick={() => setActiveTab('staff')}>
-              <UserPlus size={18} />
+            <button type="button" className={`footer-nav-item desktop-only ${activeTab === 'staff' ? 'active' : ''}`} onClick={() => setActiveTab('staff')}>
+              <UserPlus size={19} />
               <span>Staff</span>
             </button>
           </>
         )}
 
-        <button type="button" className={`footer-nav-item ${activeTab === 'more' ? 'active' : ''}`} onClick={() => setActiveTab('more')}>
-          <MoreHorizontal size={18} />
+        <button type="button" className={`footer-nav-item ${['more', 'items', 'staff'].includes(activeTab) ? 'active' : ''}`} onClick={() => setActiveTab('more')}>
+          <MoreHorizontal size={19} />
           <span>More</span>
         </button>
       </div>
@@ -3041,29 +3301,243 @@ export default function Shopkeeper() {
               </button>
 
               <a
-                href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20PIN%20Reset%20%2F%20Register%20Lock%20Help"
+                href="tel:7323809242"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.4rem',
-                  color: '#93c5fd',
-                  fontSize: '0.8rem',
-                  fontWeight: '600',
+                  color: '#4ade80',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
                   textDecoration: 'none',
-                  padding: '0.4rem 0.75rem',
+                  padding: '0.45rem 0.85rem',
                   borderRadius: '8px',
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                  background: 'rgba(34, 197, 94, 0.15)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
                   marginTop: '0.25rem'
                 }}
               >
-                <Mail size={13} /> Contact Admin (pay.laxmikant@gmail.com)
+                <Phone size={14} /> Contact Customer Care (7323809242)
               </a>
             </div>
           </div>
         </div>
       )}
+
+      {/* DIGITAL RECEIPT / BILL DETAILS MODAL */}
+      {selectedReceipt && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="panel modal-dialog" style={{ width: '440px', maxWidth: '95vw', padding: '1.25rem', background: '#fff' }}>
+            <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 className="title" style={{ margin: 0, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Receipt size={20} color="var(--primary)" /> Sale Bill #{selectedReceipt.id}
+              </h3>
+              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setSelectedReceipt(null)} />
+            </div>
+
+            <div style={{ textAlign: 'center', borderBottom: '1px dashed var(--border)', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '1.15rem', color: 'var(--text)' }}>
+                {detailedShop?.shopName || currentShop?.shopName || 'GI Shop Store'}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {detailedShop?.shopAddress || currentShop?.shopAddress || ''}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', marginTop: '2px' }}>
+                Date: {new Date(selectedReceipt.date).toLocaleString()}
+              </div>
+            </div>
+
+            {/* Customer Info */}
+            <div style={{ background: '#f8fafc', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Customer Details</div>
+              <div style={{ fontWeight: '700' }}>
+                {selectedReceipt.customerPhone || 'Walk-in Customer'}
+                {selectedReceipt.customerShortId && (
+                  <span style={{ color: 'var(--primary)', marginLeft: '0.35rem' }}>
+                    ({selectedReceipt.customerShortId})
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Items Breakdown Table */}
+            <div style={{ marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                Items Breakdown
+              </div>
+              {(() => {
+                const items = JSON.parse(selectedReceipt.itemsJSON || '[]');
+                return items.map((c, i) => {
+                  const itemName = c.item?.name || c.name || 'Item';
+                  const qty = c.qty || 1;
+                  const unit = c.item?.unit || c.unit || '';
+                  const rate = c.rate || c.item?.price || 0;
+                  const lineTotal = (c.amount || (rate * qty)) || 0;
+
+                  return (
+                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                      <div>
+                        <div style={{ fontWeight: '600' }}>{itemName}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {qty} {unit} @ ₹{Number(rate).toFixed(2)}
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: '700' }}>
+                        ₹{Number(lineTotal).toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Payment Summary */}
+            <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.75rem', fontSize: '0.9rem' }}>
+              <div className="flex-between" style={{ marginBottom: '0.25rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
+                <span>₹{(Number(selectedReceipt.subtotal || selectedReceipt.total) || 0).toFixed(2)}</span>
+              </div>
+              {selectedReceipt.discount > 0 && (
+                <div className="flex-between" style={{ marginBottom: '0.25rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Discount:</span>
+                  <span style={{ color: 'var(--danger)' }}>-₹{(Number(selectedReceipt.discount) || 0).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex-between" style={{ fontWeight: '800', fontSize: '1.15rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
+                <span>Total Amount:</span>
+                <span style={{ color: 'var(--success)' }}>₹{(Number(selectedReceipt.total) || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex-between" style={{ marginTop: '0.5rem', fontSize: '0.82rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Payment Method:</span>
+                <span className="badge" style={{ fontSize: '0.8rem' }}>{selectedReceipt.paymentMethod}</span>
+              </div>
+              {selectedReceipt.note && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6366f1', background: '#eef2ff', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
+                  📝 Note: "{selectedReceipt.note}"
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.25rem' }}>
+              <button 
+                type="button" 
+                className="btn" 
+                style={{ background: '#25D366', color: '#fff', borderColor: '#25D366', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.65rem' }} 
+                onClick={() => {
+                  const rawPhone = (selectedReceipt.customerPhone || selectedReceipt.phone || '').toString().trim();
+                  const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+                  const targetPhone = cleanPhone ? `91${cleanPhone}` : '';
+                  const shopName = selectedReceipt.shopName || user?.shop?.shopName || 'GI SHOP';
+                  const totalAmt = (Number(selectedReceipt.total) || 0).toFixed(2);
+                  const billId = selectedReceipt.orderNumber || selectedReceipt.id || 'N/A';
+
+                  const itemsArr = Array.isArray(selectedReceipt.items) ? selectedReceipt.items : [];
+                  const itemLines = itemsArr.map(c => `• ${c.item?.name || c.name} x${c.qty} - ₹${(c.amount || (c.rate * c.qty) || 0).toFixed(2)}`).join('\n');
+                  const message = `Thank you for shopping with ${shopName}.\nHere is your invoice for today’s purchase.\n\n📄 *Bill #${billId}*\n\n*ITEMS:*\n${itemLines || 'Grocery items'}\n\n*Total Amount:* ₹${totalAmt} (${selectedReceipt.paymentMethod || 'Paid'})\n\nPlease find your bill attached as a PDF.\nWe hope to see you again.`;
+
+                  const encodedMsg = encodeURIComponent(message);
+                  const whatsappUrl = targetPhone 
+                    ? `https://wa.me/${targetPhone}?text=${encodedMsg}` 
+                    : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+
+                  window.open(whatsappUrl, '_blank');
+                }}
+              >
+                <MessageSquare size={18} /> Share Bill on WhatsApp {selectedReceipt.customerPhone ? `(${selectedReceipt.customerPhone})` : ''}
+              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSelectedReceipt(null)}>
+                  Close
+                </button>
+                <button type="button" className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }} onClick={() => window.print()}>
+                  <Printer size={16} /> Print / Save PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GET PAYMENT MODAL */}
+      {showGetPaymentModal && paymentOrder && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="panel modal-dialog" style={{ width: '440px', maxWidth: '95vw', padding: '1.25rem', background: '#fff' }}>
+            <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 className="title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                💳 Request Payment for Order #{paymentOrder.orderNumber}
+              </h3>
+              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowGetPaymentModal(false)} />
+            </div>
+
+            <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+              <div className="flex-between" style={{ marginBottom: '0.3rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Order Total:</span>
+                <strong>₹{(Number(paymentOrder.estimatedTotal) || 0).toFixed(2)}</strong>
+              </div>
+              <div className="flex-between" style={{ marginBottom: '0.3rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Discount Applied:</span>
+                <span style={{ color: 'var(--danger)', fontWeight: '700' }}>-₹{(parseFloat(paymentDiscount) || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex-between" style={{ borderTop: '1px solid var(--border)', paddingTop: '0.4rem', fontWeight: '800', fontSize: '1.05rem', color: 'var(--success)' }}>
+                <span>Final Payable Amount:</span>
+                <span>₹{Math.max(0, (Number(paymentOrder.estimatedTotal) || 0) - (parseFloat(paymentDiscount) || 0)).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>
+                Discount Amount (₹)
+              </label>
+              <input 
+                type="number"
+                min="0"
+                step="any"
+                className="input"
+                style={{ margin: 0, width: '100%' }}
+                value={paymentDiscount}
+                onChange={e => setPaymentDiscount(e.target.value)}
+                placeholder="e.g. 10"
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>
+                Select Payment Mode *
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {['Cash', 'Online / UPI', 'Add to Book'].map(mode => (
+                  <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem', borderRadius: '8px', border: paymentMode === mode ? '2px solid var(--primary)' : '1px solid var(--border)', background: paymentMode === mode ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: paymentMode === mode ? '700' : '400' }}>
+                    <input 
+                      type="radio" 
+                      name="paymentModeWeb" 
+                      checked={paymentMode === mode} 
+                      onChange={() => setPaymentMode(mode)} 
+                    />
+                    {mode === 'Add to Book' ? 'Add to Book (Khata Credit)' : mode}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowGetPaymentModal(false)}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn-success" style={{ flex: 1.5, fontWeight: '700' }} disabled={paymentSubmitting} onClick={handleConfirmSendPaymentRequest}>
+                {paymentSubmitting ? 'Sending...' : 'Confirm & Request Payment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Details & Timeline Journey Modal */}
+      <OrderTimelineModal 
+        visible={!!selectedTimelineOrder} 
+        order={selectedTimelineOrder} 
+        onClose={() => setSelectedTimelineOrder(null)} 
+      />
     </div>
   );
 }

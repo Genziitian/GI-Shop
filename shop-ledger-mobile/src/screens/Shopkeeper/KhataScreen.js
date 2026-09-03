@@ -42,6 +42,7 @@ import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import SettleDueModal from '../../components/SettleDueModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 const FILTERS = ['All', 'Highest', 'Lowest', 'No Due'];
 
@@ -75,9 +76,9 @@ export default function KhataScreen() {
             let due = 0;
             (led.sales || [])
               .filter((s) => s.paymentMethod === 'Add to Book')
-              .forEach((s) => (due += s.total || 0));
-            (led.settlements || []).forEach((s) => (due -= s.amount || 0));
-            return { ...c, totalDue: due, phone };
+              .forEach((s) => (due += (Number(s.total) || 0)));
+            (led.settlements || []).forEach((s) => (due -= (Number(s.amount) || 0)));
+            return { ...c, totalDue: Math.max(0, due), phone };
           } catch (e) {
             return { ...c, totalDue: 0, phone };
           }
@@ -123,11 +124,11 @@ export default function KhataScreen() {
       let running = 0;
       const finalLedger = combined.map((entry) => {
         if (entry.entryType === 'SALE' && entry.paymentMethod === 'Add to Book') {
-          running += entry.total || 0;
+          running += (Number(entry.total) || 0);
         } else if (entry.entryType === 'SETTLEMENT') {
-          running -= entry.amount || 0;
+          running -= (Number(entry.amount) || 0);
         }
-        return { ...entry, runningDue: running };
+        return { ...entry, runningDue: Math.max(0, running) };
       });
 
       // Reverse so newest appears on top in timeline
@@ -188,7 +189,7 @@ export default function KhataScreen() {
   if (filter === 'Lowest') displayed.sort((a, b) => a.totalDue - b.totalDue);
   if (filter === 'No Due') displayed = displayed.filter((c) => c.totalDue <= 0);
 
-  const totalOutstandingAll = customers.reduce((sum, c) => sum + Math.max(0, c.totalDue), 0);
+  const totalOutstandingAll = customers.reduce((sum, c) => sum + Math.max(0, Number(c.totalDue) || 0), 0);
 
   // -------------------------------------------------------------
   // CUSTOMER PROFILE / LEDGER TIMELINE VIEW
@@ -494,9 +495,7 @@ export default function KhataScreen() {
 
         {/* Customer List */}
         {loading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator color={colors.primary} size="large" />
-          </View>
+          <SkeletonLoader type="customerItem" count={5} />
         ) : (
           <FlatList
             data={displayed}

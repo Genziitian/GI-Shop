@@ -231,6 +231,8 @@ if (DB_TYPE === 'mysql') {
       `CREATE TABLE IF NOT EXISTS ShopCustomers (
         shopId INT,
         customerPhone VARCHAR(20),
+        customerShortId VARCHAR(50),
+        customerEmail VARCHAR(255),
         name VARCHAR(255),
         address TEXT,
         status VARCHAR(20) DEFAULT 'ACTIVE',
@@ -272,6 +274,9 @@ if (DB_TYPE === 'mysql') {
 
     // MySQL column migrations
     pool.query(`ALTER TABLE Users ADD COLUMN hasPasswordSet TINYINT(1) DEFAULT 0`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN otpCode VARCHAR(20) NULL`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN otpCreatedAt DATETIME NULL`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN timelineJSON LONGTEXT NULL`, () => {});
 
     // Seed baseline cities
     const defaultCities = ['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'];
@@ -418,6 +423,13 @@ if (DB_TYPE === 'mysql') {
     sqliteDb.run(`ALTER TABLE Orders ADD COLUMN cancelledAt TEXT`, () => {});
     sqliteDb.run(`ALTER TABLE Orders ADD COLUMN collectionStatus TEXT`, () => {});
     sqliteDb.run(`ALTER TABLE Orders ADD COLUMN collectedAt TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN otpCode TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN otpCreatedAt TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN paymentRequested INTEGER DEFAULT 0`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN requestedAmount REAL DEFAULT 0.00`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN requestedDiscount REAL DEFAULT 0.00`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN paymentMethod TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE Orders ADD COLUMN timelineJSON TEXT`, () => {});
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS ShopBlockedCustomers (
       shopId INTEGER,
@@ -454,11 +466,16 @@ if (DB_TYPE === 'mysql') {
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS ShopCustomers (
       shopId INTEGER,
       customerPhone TEXT,
+      customerShortId TEXT,
+      customerEmail TEXT,
       name TEXT,
       address TEXT,
       status TEXT DEFAULT 'ACTIVE',
       PRIMARY KEY(shopId, customerPhone)
     )`);
+
+    sqliteDb.run(`ALTER TABLE ShopCustomers ADD COLUMN customerShortId TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE ShopCustomers ADD COLUMN customerEmail TEXT`, () => {});
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS UserFCMTokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

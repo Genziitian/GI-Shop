@@ -30,6 +30,8 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
+import OrderDetailModal from '../../components/OrderDetailModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function CustomerOrdersScreen({ navigation }) {
   const { user } = useAuth();
@@ -40,8 +42,9 @@ export default function CustomerOrdersScreen({ navigation }) {
   const [dateFilter, setDateFilter] = useState('All');
   const [nowTick, setNowTick] = useState(Date.now());
 
-  // Digital Receipt Modal
+  // Digital Receipt & Timeline Order Modals
   const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [selectedDetailOrder, setSelectedDetailOrder] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
@@ -161,7 +164,7 @@ export default function CustomerOrdersScreen({ navigation }) {
     (o) => nowMs - new Date(o.createdAt || o.date).getTime() >= twentyFourHoursMs
   );
 
-  const totalSpent = sales.reduce((sum, s) => sum + (s.total || 0), 0);
+  const totalSpent = sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
   const filteredSales = sales.filter((s) => isDateMatch(s.date));
   const filteredPastOrders = pastOrders.filter((o) => isDateMatch(o.createdAt || o.date));
   const filteredRecentOrders = recentOrders.filter((o) => isDateMatch(o.createdAt || o.date));
@@ -219,7 +222,11 @@ export default function CustomerOrdersScreen({ navigation }) {
             ))}
           </View>
 
-          {/* SECTION 1: ACTIVE GROCERY REQUESTS (<24H) */}
+          {loading ? (
+            <SkeletonLoader type="orderCard" count={3} />
+          ) : (
+            <>
+              {/* SECTION 1: ACTIVE GROCERY REQUESTS (<24H) */}
           <View style={{ marginBottom: 20 }}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Active Grocery Requests</Text>
@@ -319,55 +326,77 @@ export default function CustomerOrdersScreen({ navigation }) {
 
                     {/* Items Box */}
                     <View style={styles.itemsBox}>
-                      {items.map((it, idx) => (
-                        <View key={idx} style={styles.itemLine}>
-                          <Text style={styles.itemName}>
-                            {it.item?.name || it.name} x {it.qty} {it.item?.unit || ''}
-                          </Text>
-                          <Text style={styles.itemPrice}>
-                            ₹{(it.amount || (it.rate * it.qty) || 0).toFixed(2)}
-                          </Text>
-                        </View>
-                      ))}
+                      {items.map((it, idx) => {
+                        const isUnavail = !!it.isUnavailable;
+                        return (
+                          <View key={idx} style={styles.itemLine}>
+                            <Text style={[styles.itemName, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                              {it.item?.name || it.name} x {it.qty} {it.item?.unit || ''} {isUnavail ? '(Unavailable)' : ''}
+                            </Text>
+                            <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                              ₹{(it.amount || (it.rate * it.qty) || 0).toFixed(2)}
+                            </Text>
+                          </View>
+                        );
+                      })}
                       <View style={styles.totalLine}>
                         <Text style={styles.totalLabel}>Total Payable:</Text>
                         <Text style={styles.totalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
                       </View>
                     </View>
 
-                    {/* Customer Collection Action */}
+                    {/* Customer 4-Digit OTP Box when Ready */}
                     {(order.status === 'READY' || order.status === 'COMPLETED') && (
-                      <View style={styles.confirmCollectBox}>
-                        <Text style={styles.confirmCollectTitle}>
-                          Shopkeeper marked this ready! Did you collect it?
+                      <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#166534', marginBottom: 2 }}>
+                          🎉 Your Order is Ready for Pickup!
                         </Text>
-                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-                          <TouchableOpacity
-                            style={[styles.confirmBtn, { backgroundColor: '#15803d' }]}
-                            onPress={() => handleCollectionStatus(order.id, 'COLLECTED')}
-                          >
-                            <CheckCircle size={13} color="#fff" />
-                            <Text style={styles.confirmBtnText}>✓ Mark Collected</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.confirmBtn, { backgroundColor: '#fee2e2', borderColor: '#fca5a5', borderWidth: 1 }]}
-                            onPress={() => handleCollectionStatus(order.id, 'NOT_COLLECTED')}
-                          >
-                            <Text style={[styles.confirmBtnText, { color: '#b91c1c' }]}>✗ Not Collected</Text>
-                          </TouchableOpacity>
+                        <Text style={{ fontSize: 11, color: '#15803d', marginBottom: 6 }}>
+                          Payment Mode: <Text style={{ fontWeight: '700' }}>{order.paymentMethod || 'Cash'}</Text> • Amount: <Text style={{ fontWeight: '700' }}>₹{(Number(order.requestedAmount || computedTotal) || 0).toFixed(2)}</Text>
+                        </Text>
+
+                        {/* 4-Digit OTP Display */}
+                        <View style={{ backgroundColor: '#ffffff', borderColor: '#22c55e', borderWidth: 2, borderRadius: 8, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <View>
+                            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase' }}>Handover 4-Digit OTP</Text>
+                            <Text style={{ fontSize: 22, fontWeight: '900', color: '#15803d', letterSpacing: 4 }}>
+                              {order.otpCode || '----'}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 10, color: colors.textMuted, maxWidth: 130, textAlign: 'right' }}>
+                            Share this 4-digit code with shopkeeper at pickup counter
+                          </Text>
                         </View>
                       </View>
                     )}
 
-                    {/* Cancel Action */}
-                    {(order.status === 'PENDING' || order.status === 'PACKING') && (
+                    {/* Timeline & Details Action */}
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                       <TouchableOpacity
-                        style={styles.cancelBtn}
-                        onPress={() => handleCancelOrder(order.id)}
+                        style={{
+                          backgroundColor: '#eff6ff',
+                          borderColor: '#bfdbfe',
+                          borderWidth: 1,
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 8,
+                        }}
+                        onPress={() => setSelectedDetailOrder(order)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.cancelBtnText}>Cancel / Take Back Order</Text>
+                        <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '700' }}>
+                          📜 View Timeline &amp; Details
+                        </Text>
                       </TouchableOpacity>
-                    )}
+                      {(order.status === 'PENDING' || order.status === 'PACKING') && (
+                        <TouchableOpacity
+                          style={styles.cancelBtn}
+                          onPress={() => handleCancelOrder(order.id)}
+                        >
+                          <Text style={styles.cancelBtnText}>Cancel / Take Back Order</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
                 );
               })
@@ -445,11 +474,16 @@ export default function CustomerOrdersScreen({ navigation }) {
               </>
             )}
           </View>
+          </>
+          )}
         </ScrollView>
       )}
 
       {/* DIGITAL RECEIPT MODAL */}
       <ReceiptModal visible={!!selectedReceipt} receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />
+
+      {/* ORDER TIMELINE & DETAILS MODAL */}
+      <OrderDetailModal visible={!!selectedDetailOrder} order={selectedDetailOrder} onClose={() => setSelectedDetailOrder(null)} />
     </SafeAreaView>
   );
 }

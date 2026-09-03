@@ -50,6 +50,7 @@ import {
 import Header from '../../components/Header';
 import ProductUnitModal from '../../components/ProductUnitModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function CustomerExploreScreen({ navigation, route }) {
   const { user, lock } = useAuth();
@@ -272,7 +273,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       {/* Uniform Top Header with App Name, Icon & Lock Button */}
       <Header
         title="GI SHOP"
-        subtitle={user?.name ? `${user.name} • ID: ${user?.shortId || ''}` : 'Smart Grocery Discovery'}
+        subtitle="Smart Grocery Discovery"
         rightComponent={
           totalCartCount > 0 ? (
             <TouchableOpacity
@@ -319,9 +320,8 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
       {/* Shop List */}
       {loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={{ marginTop: 10, color: colors.textMuted }}>Loading shops in {selectedCity}...</Text>
+        <View style={{ padding: 16 }}>
+          <SkeletonLoader type="shopCard" count={4} />
         </View>
       ) : (
         <FlatList
@@ -406,12 +406,21 @@ export default function CustomerExploreScreen({ navigation, route }) {
         />
       )}
 
+      {/* CATALOG LOADING SPINNER */}
+      <Modal visible={catalogLoading} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#ffffff', padding: 24, borderRadius: 16, alignItems: 'center', gap: 12 }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Loading Shop Catalog...</Text>
+          </View>
+        </View>
+      </Modal>
+
       {/* SHOP CATALOG MODAL */}
       <Modal
         visible={!!activeShop}
         animationType="slide"
-        presentationStyle="fullScreen"
-        statusBarTranslucent={true}
+        transparent={false}
         onRequestClose={() => setActiveShop(null)}
       >
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>

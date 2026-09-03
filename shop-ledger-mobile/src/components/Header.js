@@ -5,7 +5,13 @@ import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header({ title, subtitle, rightElement, showLock = false, rightComponent }) {
-  const { user, lock } = useAuth();
+  const { user, isShopkeeper } = useAuth();
+
+  const shortId = isShopkeeper 
+    ? (user?.shop?.shortId || user?.shortId || (user?.shop?.id ? `shp${user.shop.id}` : ''))
+    : (user?.shortId || (user?.id ? `cust${user.id}` : ''));
+
+  const idLabel = isShopkeeper ? 'Shop ID' : 'ID';
 
   return (
     <View style={styles.header}>
@@ -25,19 +31,15 @@ export default function Header({ title, subtitle, rightElement, showLock = false
       </View>
 
       <View style={styles.rightContainer}>
-        {rightComponent || rightElement}
+        {shortId ? (
+          <View style={styles.idBadge}>
+            <Text style={styles.idBadgeText}>
+              {idLabel}: {shortId}
+            </Text>
+          </View>
+        ) : null}
 
-        {/* Lock button feature disabled from UI per user preference */}
-        {/* {showLock && (
-          <TouchableOpacity
-            style={styles.lockBtn}
-            onPress={lock}
-            activeOpacity={0.7}
-          >
-            <Lock size={14} color={colors.primaryDark} />
-            <Text style={styles.lockBtnText}>Lock</Text>
-          </TouchableOpacity>
-        )} */}
+        {rightComponent || rightElement}
       </View>
     </View>
   );
@@ -86,6 +88,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  idBadge: {
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  idBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#15803d',
   },
   lockBtn: {
     flexDirection: 'row',

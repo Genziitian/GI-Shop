@@ -92,10 +92,10 @@ export const getCustomerDue = (phone) => {
   const sales = getSalesByCustomer(phone).filter(s => s.paymentMethod === 'Add to Book');
   const settlements = getSettlements().filter(s => s.customerPhone === phone);
   
-  const totalCredit = sales.reduce((sum, s) => sum + s.total, 0);
-  const totalPaid = settlements.reduce((sum, s) => sum + s.amount, 0);
+  const totalCredit = sales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+  const totalPaid = settlements.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
   
-  return totalCredit - totalPaid;
+  return Math.max(0, totalCredit - totalPaid);
 };
 
 export const getCustomerLedger = (phone) => {
@@ -108,10 +108,10 @@ export const getCustomerLedger = (phone) => {
   let runningDue = 0;
   return ledger.map(entry => {
     if (entry.type === 'SALE' && entry.paymentMethod === 'Add to Book') {
-      runningDue += entry.total;
+      runningDue += (Number(entry.total) || 0);
     } else if (entry.type === 'SETTLEMENT') {
-      runningDue -= entry.amount;
+      runningDue -= (Number(entry.amount) || 0);
     }
-    return { ...entry, runningDue };
+    return { ...entry, runningDue: Math.max(0, runningDue) };
   });
 };

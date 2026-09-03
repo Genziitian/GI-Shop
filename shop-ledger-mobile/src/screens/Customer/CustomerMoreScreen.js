@@ -98,7 +98,6 @@ export default function CustomerMoreScreen({ navigation }) {
         <TouchableOpacity
           style={styles.profileCard}
           onPress={() => {
-            setProfileModalTab('profile');
             setShowProfileModal(true);
           }}
           activeOpacity={0.7}
@@ -129,7 +128,7 @@ export default function CustomerMoreScreen({ navigation }) {
           <Text style={styles.sectionTitle}>Account & Security</Text>
 
           <TouchableOpacity
-            style={[styles.menuRow, { borderBottomWidth: 0 }]}
+            style={styles.menuRow}
             onPress={() => setShowPasswordModal(true)}
             activeOpacity={0.7}
           >
@@ -138,6 +137,21 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>Account Password</Text>
+            </View>
+            <ChevronRight size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.menuRow, { borderBottomWidth: 0 }]}
+            onPress={() => Linking.openURL('tel:7323809242')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconBox, { backgroundColor: '#dcfce7' }]}>
+              <Phone size={18} color="#15803d" />
+            </View>
+            <View style={styles.menuTextBox}>
+              <Text style={[styles.menuText, { color: '#15803d', fontWeight: '700' }]}>Contact Customer Care</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>Call 7323809242 for instant help</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>

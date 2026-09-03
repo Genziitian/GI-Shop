@@ -499,6 +499,22 @@ export default function MoreScreen({ navigation }) {
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
 
+              {/* 5. Contact Customer Care */}
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => Linking.openURL('tel:7323809242')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconBox, { backgroundColor: '#dcfce7' }]}>
+                  <Phone size={22} color="#15803d" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.menuItemTitle, { color: '#15803d', fontWeight: '700' }]}>Contact Customer Care</Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted }}>Call 7323809242 for instant help</Text>
+                </View>
+                <ChevronRight size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+
               {/* 5. Privacy Policy */}
               <TouchableOpacity
                 style={styles.menuItem}

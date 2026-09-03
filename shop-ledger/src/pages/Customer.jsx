@@ -11,9 +11,11 @@ import {
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
   X, CheckCircle, AlertCircle, LogOut, Phone, ShieldCheck, UserCheck, 
   Tag, ArrowRight, AlertTriangle, Printer, FileText, Download, Key, Lock, User,
-  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail, Menu
+  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail, Menu, Trash2
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
+import OrderTimelineModal from '../components/OrderTimelineModal';
+import { ShopCardSkeleton, ProductGridSkeleton, OrderCardSkeleton, KhataOverviewSkeleton } from '../components/SkeletonLoader';
 
 export default function Customer() {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ export default function Customer() {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState('Delhi');
   const [shops, setShops] = useState([]);
+  const [shopsLoading, setShopsLoading] = useState(true);
   const [shopSearch, setShopSearch] = useState('');
   
   // Selected Shop Showcase & Order Creator State
@@ -59,6 +62,7 @@ export default function Customer() {
   // Active Receipt & Order Modals
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedOrderForDetails, setSelectedOrderForDetails] = useState(null);
+  const [selectedTimelineOrder, setSelectedTimelineOrder] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Customer Profile Modal & Settings State
@@ -162,11 +166,14 @@ export default function Customer() {
   };
 
   const loadShops = async (city) => {
+    setShopsLoading(true);
     try {
       const data = await getShops(city);
       setShops(data);
     } catch (e) {
       console.error(e);
+    } finally {
+      setShopsLoading(false);
     }
   };
 
@@ -183,11 +190,14 @@ export default function Customer() {
   };
 
   const loadOrders = async () => {
+    setOrdersLoading(true);
     try {
       const data = await getCustomerOrders();
       setOrders(data);
     } catch (e) {
       console.error(e);
+    } finally {
+      setOrdersLoading(false);
     }
   };
 
@@ -1003,21 +1013,22 @@ export default function Customer() {
             </button>
           )}
 
-          {/* Lock feature disabled from UI per user request */}
-          {/* <button 
-            type="button" 
-            className="btn btn-outline" 
-            onClick={() => {
-              setIsScreenLocked(true);
-              setUnlockPin('');
-              setUnlockPassword('');
-              setUnlockError('');
-            }} 
-            style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderColor: '#cbd5e1' }}
-            title="Lock Customer Account / Screen"
-          >
-            <Lock size={15} color="#e11d48" /> Lock
-          </button> */}
+          {currentUser?.shortId && (
+            <span 
+              className="badge" 
+              style={{ 
+                background: '#eff6ff', 
+                color: 'var(--primary)', 
+                border: '1px solid #bfdbfe', 
+                padding: '0.35rem 0.65rem', 
+                fontSize: '0.82rem', 
+                fontWeight: '800', 
+                borderRadius: '8px' 
+              }}
+            >
+              ID: {currentUser.shortId}
+            </span>
+          )}
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}>
             <LogOut size={16} /> Logout
@@ -1080,8 +1091,11 @@ export default function Customer() {
               </div>
             </div>
 
-            <div className="grid grid-2">
-              {filteredShops.map(shop => (
+            {shopsLoading ? (
+              <ShopCardSkeleton count={6} />
+            ) : (
+              <div className="grid grid-2">
+                {filteredShops.map(shop => (
                 <div 
                   key={shop.id} 
                   className="panel" 
@@ -1126,6 +1140,7 @@ export default function Customer() {
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 
@@ -1152,8 +1167,11 @@ export default function Customer() {
             </div>
 
             {/* Compared Items Grid */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {Object.keys(groupedCompare).map(key => {
+            {compareLoading ? (
+              <ProductGridSkeleton count={6} />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {Object.keys(groupedCompare).map(key => {
                 const group = groupedCompare[key];
                 const sortedOffers = [...group.offers].sort((a, b) => a.price - b.price);
                 const lowestPrice = sortedOffers[0]?.price;
@@ -1267,6 +1285,7 @@ export default function Customer() {
                 </div>
               )}
             </div>
+            )}
           </div>
         )}
 
@@ -1533,8 +1552,11 @@ export default function Customer() {
                 </div>
 
                 {/* Stores List */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {khataOverview.stores.map((st) => (
+                {khataLoading ? (
+                  <KhataOverviewSkeleton />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {khataOverview.stores.map((st) => (
                     <div 
                       key={`khata-store-${st.shopId}`}
                       className="panel"
@@ -1658,6 +1680,7 @@ export default function Customer() {
                     </div>
                   )}
                 </div>
+                )}
 
               </div>
             ) : (
@@ -2051,7 +2074,9 @@ export default function Customer() {
           const filteredPurchases = purchases.filter(p => isDateMatchingFilter(p.date || p.createdAt));
           const totalFilteredAllOrdersCount = filteredPastOrders.length + filteredPurchases.length;
 
-          return (
+          return ordersLoading ? (
+            <OrderCardSkeleton count={3} />
+          ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               
               {/* Grand Total Spending Banner */}
@@ -2149,12 +2174,15 @@ export default function Customer() {
                           )}
 
                           <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
-                            {items.map((entry, idx) => (
-                              <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                                <span>{entry.item?.name || entry.name} x {entry.qty}</span>
-                                <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
-                              </div>
-                            ))}
+                            {items.map((entry, idx) => {
+                              const isUnavail = !!entry.isUnavailable;
+                              return (
+                                <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#94a3b8' : 'inherit' }}>
+                                  <span>{entry.item?.name || entry.name} x {entry.qty} {isUnavail ? '(Unavailable)' : ''}</span>
+                                  <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
+                                </div>
+                              );
+                            })}
                             <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
                               <span>Total Payable:</span>
                               <span style={{ color: 'var(--success)' }}>
@@ -2163,35 +2191,39 @@ export default function Customer() {
                             </div>
                           </div>
 
-                          {/* Customer Confirmation Action when Ready */}
+                          {/* Customer Confirmation & 4-Digit OTP Box when Ready */}
                           {(order.status === 'READY' || order.status === 'COMPLETED') && (
-                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.65rem 0.85rem', margin: '0.5rem 0' }}>
-                              <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.85rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <CheckCircle size={15} /> Shopkeeper marked this order ready! Did you collect it?
+                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0' }}>
+                              <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.9rem', marginBottom: '0.35rem' }}>
+                                🎉 Your Order is Packed &amp; Ready for Pickup!
                               </div>
-                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <button
-                                  type="button"
-                                  className="btn btn-success"
-                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: '700' }}
-                                  onClick={(e) => { e.stopPropagation(); handleUpdateCustomerCollection(order.id, 'COLLECTED'); }}
-                                >
-                                  ✓ Mark Collected
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-danger"
-                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-                                  onClick={(e) => { e.stopPropagation(); handleUpdateCustomerCollection(order.id, 'NOT_COLLECTED'); }}
-                                >
-                                  ✗ Not Collected
-                                </button>
+                              <div style={{ fontSize: '0.82rem', color: '#15803d', marginBottom: '0.5rem' }}>
+                                Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong> • Amount: <strong>₹{(Number(order.requestedAmount || order.estimatedTotal) || 0).toFixed(2)}</strong>
+                              </div>
+                              
+                              {/* 4-Digit OTP Box */}
+                              <div style={{ background: '#ffffff', border: '2px dashed #22c55e', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                <div>
+                                  <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Handover 4-Digit OTP</div>
+                                  <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#15803d', letterSpacing: '4px' }}>
+                                    {order.otpCode || '----'}
+                                  </div>
+                                </div>
+                                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Share this 4-digit code with shopkeeper at pickup</span>
                               </div>
                             </div>
                           )}
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            <div>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                className="btn btn-outline"
+                                style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: '700' }}
+                                onClick={() => setSelectedTimelineOrder(order)}
+                              >
+                                📜 Timeline &amp; Details
+                              </button>
                               {(order.status === 'PENDING' || order.status === 'PACKING') && (
                                 <button 
                                   type="button" 
@@ -2974,10 +3006,10 @@ export default function Customer() {
 
                     <div className="flex-between" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                       <a 
-                        href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Customer%20Support%20Request" 
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                        href="tel:7323809242" 
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#15803d', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                       >
-                        <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
+                        <Phone size={15} /> Contact Customer Care (7323809242)
                       </a>
 
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -4175,16 +4207,23 @@ export default function Customer() {
               <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
                 Forgot PIN or Password?{' '}
                 <a 
-                  href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20Customer%20PIN%20Reset%20Request" 
+                  href="tel:7323809242" 
                   style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: '600' }}
                 >
-                  Contact Admin Support
+                  Contact Customer Care (7323809242)
                 </a>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Order Details & Timestamped Journey Modal */}
+      <OrderTimelineModal 
+        visible={!!selectedTimelineOrder} 
+        order={selectedTimelineOrder} 
+        onClose={() => setSelectedTimelineOrder(null)} 
+      />
     </div>
   );
 }

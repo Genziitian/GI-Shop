@@ -67,10 +67,14 @@ export const getShopOrders = () => request('/shop/orders');
 export const acceptShopOrder = (id, packingMinutes) => request(`/shop/orders/${id}/accept`, { method: 'POST', body: JSON.stringify({ packingMinutes }) });
 export const declineShopOrder = (id, reason) => request(`/shop/orders/${id}/decline`, { method: 'POST', body: JSON.stringify({ reason }) });
 export const completeShopOrder = (id) => request(`/shop/orders/${id}/complete`, { method: 'POST' });
+export const updateShopOrderItems = (id, items) => request(`/shop/orders/${id}/update-items`, { method: 'POST', body: JSON.stringify({ items }) });
+export const requestShopOrderPayment = (id, discount, paymentMethod) => request(`/shop/orders/${id}/get-payment`, { method: 'POST', body: JSON.stringify({ discount, paymentMethod }) });
+export const verifyShopOrderOTP = (id, otp) => request(`/shop/orders/${id}/verify-otp`, { method: 'POST', body: JSON.stringify({ otp }) });
 export const cancelCustomerOrder = (id) => request(`/customer/orders/${id}/cancel`, { method: 'POST' });
 export const updateOrderCollection = (id, collectionStatus) => request(`/customer/orders/${id}/collection`, { method: 'POST', body: JSON.stringify({ collectionStatus }) });
 
 export const getCustomers = () => request('/shop/customers');
+export const searchRegisteredCustomer = (query) => request(`/shop/customers/search-registered?query=${encodeURIComponent(query)}`);
 export const saveCustomer = (data) => request('/shop/customers', { method: 'POST', body: JSON.stringify(data) });
 export const blockCustomer = (phone, reason) => request('/shop/customers/block', { method: 'PUT', body: JSON.stringify({ phone, reason }) });
 export const unblockCustomer = (phone) => request('/shop/customers/unblock', { method: 'PUT', body: JSON.stringify({ phone }) });

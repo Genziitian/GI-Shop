@@ -54,7 +54,13 @@ export default function AnalyticsScreen() {
   const loadSales = useCallback(async () => {
     try {
       const data = await getShopSales();
-      const salesArray = Array.isArray(data) ? data : (data?.sales || []);
+      const rawArray = Array.isArray(data) ? data : (data?.sales || []);
+      const salesArray = rawArray.map((s) => ({
+        ...s,
+        total: Number(s.total) || 0,
+        subtotal: Number(s.subtotal) || 0,
+        discount: Number(s.discount) || 0,
+      }));
       setSales(salesArray);
     } catch (e) {
       console.error('Failed to load sales:', e);
@@ -101,17 +107,17 @@ export default function AnalyticsScreen() {
     return true; // 'All Time'
   });
 
-  // Calculate Metrics
-  const totalSales = filteredSales.reduce((sum, s) => sum + (s.total || 0), 0);
+  // Calculate Metrics safely with numeric casting
+  const totalSales = filteredSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
   const cashSales = filteredSales
     .filter((s) => s.paymentMethod === 'Cash')
-    .reduce((sum, s) => sum + (s.total || 0), 0);
+    .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
   const onlineSales = filteredSales
-    .filter((s) => s.paymentMethod === 'Online')
-    .reduce((sum, s) => sum + (s.total || 0), 0);
+    .filter((s) => s.paymentMethod === 'Online' || s.paymentMethod === 'UPI')
+    .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
   const khataSales = filteredSales
     .filter((s) => s.paymentMethod === 'Add to Book')
-    .reduce((sum, s) => sum + (s.total || 0), 0);
+    .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
 
   const handleOpenNoteModal = (sale) => {
     setSelectedSaleForNote(sale);

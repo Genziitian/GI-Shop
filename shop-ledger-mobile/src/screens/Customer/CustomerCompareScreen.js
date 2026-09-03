@@ -56,7 +56,7 @@ export default function CustomerCompareScreen({ navigation }) {
       
       setResults(Object.values(groups));
     } catch (e) {
-      console.error('Failed to compare items:', e);
+      console.warn('Failed to compare items:', e);
       setResults([]);
     } finally {
       setLoading(false);
@@ -68,7 +68,7 @@ export default function CustomerCompareScreen({ navigation }) {
   }, [selectedCity, handleSearch]);
 
   const handleSelectShop = (shop) => {
-    navigation.navigate('CustomerExplore', { openShopId: shop.shopId });
+    navigation.navigate('CustomerExplore', { openShopId: shop.shopId || shop.id || shop.shopShortId });
   };
 
   return (
@@ -174,7 +174,7 @@ export default function CustomerCompareScreen({ navigation }) {
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <Text style={styles.storeName}>{shop.shopName}</Text>
                           <View style={styles.shortIdBadge}>
-                            <Text style={styles.shortIdBadgeText}>ID: {shop.shortId || `shp${shop.shopId}`}</Text>
+                            <Text style={styles.shortIdBadgeText}>ID: {shop.shopShortId || shop.shortId || `shp${shop.shopId}`}</Text>
                           </View>
                           {isLowest && (
                             <View style={styles.bestBadge}>

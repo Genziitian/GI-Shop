@@ -32,6 +32,7 @@ import { getCustomerKhata, getCustomerShopKhata } from '../../api/client';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
 import CustomerProfileModal from '../../components/CustomerProfileModal';
+import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function CustomerKhataScreen({ navigation }) {
   const { user } = useAuth();
@@ -109,9 +110,8 @@ export default function CustomerKhataScreen({ navigation }) {
       />
 
       {loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={{ marginTop: 10, color: colors.textMuted }}>Loading your store ledgers...</Text>
+        <View style={{ padding: 16 }}>
+          <SkeletonLoader type="shopCard" count={3} />
         </View>
       ) : (
         <FlatList
@@ -373,12 +373,42 @@ export default function CustomerKhataScreen({ navigation }) {
                     </View>
                   }
                   renderItem={({ item: entry }) => {
-                    const isSale = entry.type === 'SALE';
+                    const isSale = entry.type === 'SALE' || entry.type === 'PURCHASE';
                     const isSettlement = entry.type === 'SETTLEMENT';
                     const isOrder = entry.type === 'ORDER';
 
+                    const handlePressEntry = () => {
+                      if (isSettlement) return;
+                      let itemsParsed = [];
+                      if (Array.isArray(entry.items)) {
+                        itemsParsed = entry.items;
+                      } else if (typeof entry.itemsJSON === 'string') {
+                        try { itemsParsed = JSON.parse(entry.itemsJSON || '[]'); } catch (e) { itemsParsed = []; }
+                      } else if (entry.itemsJSON && Array.isArray(entry.itemsJSON)) {
+                        itemsParsed = entry.itemsJSON;
+                      }
+
+                      const receiptData = {
+                        ...entry,
+                        id: entry.id || entry.orderNumber,
+                        orderNumber: entry.orderNumber,
+                        items: itemsParsed,
+                        subtotal: entry.subtotal || entry.total || entry.estimatedTotal || 0,
+                        total: entry.total ?? entry.estimatedTotal ?? 0,
+                        paymentMethod: entry.paymentMethod || (entry.status ? `Order (${entry.status})` : 'App Order'),
+                        shopName: selectedStore?.shopName || 'Store Receipt',
+                        shopAddress: selectedStore?.shopAddress || '',
+                        date: entry.date || entry.createdAt
+                      };
+                      setSelectedReceipt(receiptData);
+                    };
+
                     return (
-                      <View style={styles.timelineCard}>
+                      <TouchableOpacity
+                        activeOpacity={isSettlement ? 1 : 0.7}
+                        onPress={handlePressEntry}
+                        style={styles.timelineCard}
+                      >
                         <View style={styles.timelineHeaderRow}>
                           <View style={styles.timelineIconBadge}>
                             {isSale ? (
@@ -399,7 +429,7 @@ export default function CustomerKhataScreen({ navigation }) {
                                 : `Order #${entry.orderNumber}`}
                             </Text>
                             <Text style={styles.timelineDate}>
-                              {new Date(entry.date).toLocaleString('en-IN', {
+                              {new Date(entry.date || entry.createdAt).toLocaleString('en-IN', {
                                 dateStyle: 'medium',
                                 timeStyle: 'short',
                               })}
@@ -423,22 +453,12 @@ export default function CustomerKhataScreen({ navigation }) {
                                 ? `-₹${(Number(entry?.amount) || 0).toFixed(2)}`
                                 : `₹${(Number(entry?.total ?? entry?.estimatedTotal) || 0).toFixed(2)}`}
                             </Text>
-                            {isSale && (
-                              <TouchableOpacity
-                                onPress={() =>
-                                  setSelectedReceipt({
-                                    ...entry,
-                                    shopName: selectedStore.shopName,
-                                    shopAddress: selectedStore.shopAddress,
-                                  })
-                                }
-                              >
-                                <Text style={styles.receiptLink}>Receipt →</Text>
-                              </TouchableOpacity>
+                            {!isSettlement && (
+                              <Text style={styles.receiptLink}>View Details →</Text>
                             )}
                           </View>
                         </View>
-                      </View>
+                      </TouchableOpacity>
                     );
                   }}
                 />

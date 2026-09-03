@@ -249,27 +249,32 @@ app.get('/api/shops/:id', (req, res) => {
 });
 
 app.get(['/api/items/compare', '/api/compare'], (req, res) => {
-  const { city, q } = req.query;
+  const city = (req.query.city || '').trim();
+  const q = (req.query.q || '').trim();
+
   let query = `
     SELECT Items.id, Items.name, Items.price, Items.unit,
            Shops.id as shopId, Shops.shortId as shopShortId, Shops.shopName, Shops.shopAddress, Shops.shopPhone, Shops.timings, Shops.isOpen, Shops.city
     FROM Items 
     JOIN Shops ON Items.shopId = Shops.id 
-    WHERE Shops.status = 'ACTIVE'
+    WHERE (Shops.status IS NULL OR Shops.status = 'ACTIVE')
   `;
   const params = [];
-  if (city) {
-    query += ` AND Shops.city = ?`;
+  if (city && city !== 'All') {
+    query += ` AND LOWER(Shops.city) = LOWER(?)`;
     params.push(city);
   }
   if (q) {
-    query += ` AND Items.name LIKE ?`;
+    query += ` AND LOWER(Items.name) LIKE LOWER(?)`;
     params.push(`%${q}%`);
   }
   query += ` ORDER BY Items.name ASC, Items.price ASC`;
 
   db.all(query, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Failed to compare items' });
+    if (err) {
+      console.warn('[Compare Items Query Error]:', err);
+      return res.json([]);
+    }
     res.json(rows || []);
   });
 });
@@ -923,10 +928,24 @@ app.post('/api/orders', authenticate, (req, res) => {
       db.get(`SELECT shortId, name, phone, address FROM Users WHERE id = ?`, [req.user.id], (err, cust) => {
         const orderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
         const now = new Date().toISOString();
+        const initialTimeline = JSON.stringify([
+          {
+            title: 'Order Created',
+            timestamp: now,
+            description: 'Customer placed the order',
+            status: 'CREATED'
+          },
+          {
+            title: 'Order Received by Shop',
+            timestamp: new Date(new Date(now).getTime() + 1000).toISOString(),
+            description: `Order #${orderNumber} received by shop`,
+            status: 'RECEIVED'
+          }
+        ]);
 
-        db.run(`INSERT INTO Orders (orderNumber, shopId, customerId, customerShortId, customerName, customerPhone, customerAddress, itemsJSON, estimatedTotal, status, createdAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
-          [orderNumber, shopId, req.user.id, cust.shortId, cust.name, cust.phone, cust.address || '', JSON.stringify(items), calculatedTotal, now], function(err) {
+        db.run(`INSERT INTO Orders (orderNumber, shopId, customerId, customerShortId, customerName, customerPhone, customerAddress, itemsJSON, estimatedTotal, status, timelineJSON, createdAt)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)`,
+          [orderNumber, shopId, req.user.id, cust.shortId, cust.name, cust.phone, cust.address || '', JSON.stringify(items), calculatedTotal, initialTimeline, now], function(err) {
             if (err) return res.status(500).json({ error: 'Failed to place order' });
             const newOrderId = this.lastID;
 
@@ -955,6 +974,31 @@ app.post('/api/orders', authenticate, (req, res) => {
     });
   });
 });
+
+// Helper: Append Event to Order Timeline
+function appendOrderTimeline(orderId, event, callback) {
+  db.get(`SELECT timelineJSON, createdAt FROM Orders WHERE id = ?`, [orderId], (err, row) => {
+    let timeline = [];
+    if (row && row.timelineJSON) {
+      try {
+        timeline = JSON.parse(row.timelineJSON);
+      } catch (e) {
+        timeline = [];
+      }
+    }
+    const newEntry = {
+      title: event.title,
+      timestamp: event.timestamp || new Date().toISOString(),
+      description: event.description || '',
+      status: event.status || ''
+    };
+    timeline.push(newEntry);
+    const jsonStr = JSON.stringify(timeline);
+    db.run(`UPDATE Orders SET timelineJSON = ? WHERE id = ?`, [jsonStr, orderId], () => {
+      if (callback) callback(timeline);
+    });
+  });
+}
 
 // --- 45-MINUTE AUTO-CANCEL FOR PENDING ORDERS ---
 const autoCancelExpiredOrders = (callback) => {
@@ -1022,6 +1066,11 @@ app.post('/api/customer/orders/:id/cancel', authenticate, (req, res) => {
 
     const now = new Date().toISOString();
     db.run(`UPDATE Orders SET status = 'CANCELLED_BY_CUSTOMER', cancelledAt = ? WHERE id = ?`, [now, orderId], () => {
+      appendOrderTimeline(orderId, {
+        status: 'CANCELLED_BY_CUSTOMER',
+        title: 'Order Cancelled',
+        description: 'Customer cancelled / took back the order'
+      });
       res.json({ success: true, status: 'CANCELLED_BY_CUSTOMER', message: 'Order cancelled / taken back successfully.' });
     });
   });
@@ -1057,7 +1106,13 @@ app.get('/api/shop/orders', authenticate, (req, res) => {
   const shopId = req.user.shopId;
   if (!shopId) return res.status(403).json({ error: 'No shop context' });
   autoCancelExpiredOrders(() => {
-    db.all(`SELECT * FROM Orders WHERE shopId = ? ORDER BY id DESC`, [shopId], (err, rows) => res.json(rows || []));
+    db.all(`SELECT * FROM Orders WHERE shopId = ? ORDER BY id DESC`, [shopId], (err, rows) => {
+      const sanitized = (rows || []).map(r => {
+        const { otpCode, ...rest } = r;
+        return rest;
+      });
+      res.json(sanitized);
+    });
   });
 });
 
@@ -1086,6 +1141,11 @@ app.post('/api/shop/orders/:id/accept', authenticate, (req, res) => {
     const packingMins = parseInt(packingMinutes) || 15;
     db.run(`UPDATE Orders SET status = 'PACKING', packingMinutes = ?, acceptedAt = ? WHERE id = ? AND shopId = ?`,
       [packingMins, now.toISOString(), req.params.id, shopId], () => {
+        appendOrderTimeline(req.params.id, {
+          status: 'ACCEPTED',
+          title: 'Order Accepted & Preparing',
+          description: `Shopkeeper accepted the order. Estimated preparation time: ${packingMins} minutes`
+        });
         if (order.customerId) {
           sendPushNotification(order.customerId, {
             title: '📦 Order is Packing!',
@@ -1106,6 +1166,11 @@ app.post('/api/shop/orders/:id/decline', authenticate, (req, res) => {
   db.get(`SELECT * FROM Orders WHERE id = ? AND shopId = ?`, [req.params.id, shopId], (err, order) => {
     db.run(`UPDATE Orders SET status = 'DECLINED', declineReason = ? WHERE id = ? AND shopId = ?`,
       [finalReason, req.params.id, shopId], () => {
+        appendOrderTimeline(req.params.id, {
+          status: 'DECLINED',
+          title: 'Order Declined',
+          description: `Shopkeeper declined order: ${finalReason}`
+        });
         if (order && order.customerId) {
           sendPushNotification(order.customerId, {
             title: '❌ Order Declined',
@@ -1115,6 +1180,50 @@ app.post('/api/shop/orders/:id/decline', authenticate, (req, res) => {
         }
         res.json({ success: true, status: 'DECLINED' });
       });
+  });
+});
+
+app.post('/api/shop/orders/:id/update-items', authenticate, (req, res) => {
+  const shopId = req.user.shopId;
+  const { items } = req.body; // array of items with isUnavailable flag
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Invalid items payload' });
+
+  db.get(`SELECT * FROM Orders WHERE id = ? AND shopId = ?`, [req.params.id, shopId], (err, order) => {
+    if (err || !order) return res.status(404).json({ error: 'Order not found' });
+    if (['COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(order.status)) {
+      return res.status(400).json({ error: 'Order is finalized and items cannot be modified.' });
+    }
+
+    const oldTotal = order.estimatedTotal || 0;
+    let recalculatedTotal = 0;
+    let unavailableCount = 0;
+    items.forEach((it) => {
+      if (it.isUnavailable || it.unavailable) {
+        unavailableCount++;
+      } else {
+        const rate = it.rate || it.price || (it.item?.price) || 0;
+        const qty = it.qty || 1;
+        recalculatedTotal += (it.amount || (rate * qty));
+      }
+    });
+
+    const itemsJSON = JSON.stringify(items);
+    db.run(
+      `UPDATE Orders SET itemsJSON = ?, estimatedTotal = ? WHERE id = ? AND shopId = ?`,
+      [itemsJSON, recalculatedTotal, req.params.id, shopId],
+      () => {
+        let desc = `Order items updated.`;
+        if (unavailableCount > 0) {
+          desc = `${unavailableCount} item(s) marked unavailable. Total updated from ₹${oldTotal.toFixed(2)} → ₹${recalculatedTotal.toFixed(2)}`;
+        }
+        appendOrderTimeline(req.params.id, {
+          status: 'ITEMS_UPDATED',
+          title: 'Items & Total Updated',
+          description: desc
+        });
+        res.json({ success: true, estimatedTotal: recalculatedTotal, itemsJSON });
+      }
+    );
   });
 });
 
@@ -1128,35 +1237,207 @@ app.post('/api/shop/orders/:id/complete', authenticate, (req, res) => {
     if (['COLLECTED', 'NOT_COLLECTED', 'DECLINED'].includes(order.status)) {
       return res.status(400).json({ error: 'This order is already finalized.' });
     }
-    db.run(`UPDATE Orders SET status = 'READY' WHERE id = ? AND shopId = ?`, [req.params.id, shopId], () => {
-      if (order.customerId) {
-        sendPushNotification(order.customerId, {
-          title: '✅ Order Ready for Pickup!',
-          body: `Your grocery order #${order.orderNumber} is packed and ready for pickup at the store!`,
-          data: { type: 'ORDER_READY', orderId: String(order.id), orderNumber: order.orderNumber }
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const nowIso = new Date().toISOString();
+
+    db.run(
+      `UPDATE Orders SET status = 'READY', otpCode = ?, otpCreatedAt = ? WHERE id = ? AND shopId = ?`,
+      [otp, nowIso, req.params.id, shopId],
+      () => {
+        appendOrderTimeline(req.params.id, {
+          status: 'READY',
+          title: 'Order Ready for Pickup',
+          description: 'Shopkeeper marked the order as packed and ready for pickup.'
+        });
+        if (order.customerId) {
+          sendPushNotification(order.customerId, {
+            title: '✅ Order Ready for Pickup!',
+            body: `Your order #${order.orderNumber} is packed and ready for pickup! Show 4-digit OTP: ${otp}`,
+            data: { type: 'ORDER_READY', orderId: String(order.id), orderNumber: order.orderNumber }
+          });
+        }
+        // Do NOT return otpCode to shopkeeper
+        res.json({ success: true, status: 'READY' });
+      }
+    );
+  });
+});
+
+app.post('/api/shop/orders/:id/get-payment', authenticate, (req, res) => {
+  const shopId = req.user.shopId;
+  const { discount, paymentMethod } = req.body;
+  const orderIdentifier = req.params.id;
+
+  db.get(`SELECT * FROM Orders WHERE (id = ? OR orderNumber = ?) AND shopId = ?`, [orderIdentifier, orderIdentifier, shopId], (err, order) => {
+    if (err || !order) return res.status(404).json({ error: 'Order not found' });
+    
+    const discNum = parseFloat(discount || 0);
+    const finalAmount = Math.max(0, (order.estimatedTotal || 0) - discNum);
+    const mode = paymentMethod || 'Cash';
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const nowIso = new Date().toISOString();
+
+    db.run(
+      `UPDATE Orders SET paymentRequested = 1, requestedDiscount = ?, requestedAmount = ?, paymentMethod = ?, otpCode = ?, otpCreatedAt = ? WHERE id = ? AND shopId = ?`,
+      [discNum, finalAmount, mode, otp, nowIso, order.id, shopId],
+      () => {
+        appendOrderTimeline(order.id, {
+          status: 'PAYMENT_REQUESTED',
+          title: 'Payment Requested',
+          description: `Amount requested: ₹${finalAmount.toFixed(2)}${discNum > 0 ? ` (Discount: ₹${discNum.toFixed(2)})` : ''}. Payment mode: ${mode}`
+        });
+        if (order.customerId) {
+          sendPushNotification(order.customerId, {
+            title: '💳 Payment Request Sent!',
+            body: `Shopkeeper requested ₹${finalAmount.toFixed(2)} (${mode}) for order #${order.orderNumber}. Click to view 4-digit OTP.`,
+            data: { type: 'PAYMENT_REQUESTED', orderId: String(order.id), orderNumber: order.orderNumber }
+          });
+        }
+        // Do NOT return otpCode to shopkeeper
+        res.json({
+          success: true,
+          paymentRequested: 1,
+          requestedAmount: finalAmount,
+          requestedDiscount: discNum,
+          paymentMethod: mode
         });
       }
-      res.json({ success: true, status: 'READY' });
-    });
+    );
+  });
+});
+
+app.post('/api/shop/orders/:id/verify-otp', authenticate, (req, res) => {
+  const shopId = req.user.shopId;
+  const { otp } = req.body;
+  const enteredOtp = (otp || '').toString().trim();
+  const orderIdentifier = req.params.id;
+
+  db.get(`SELECT * FROM Orders WHERE (id = ? OR orderNumber = ?) AND shopId = ?`, [orderIdentifier, orderIdentifier, shopId], (err, order) => {
+    if (err || !order) return res.status(404).json({ error: 'Order not found' });
+    
+    if (!enteredOtp) {
+      return res.status(400).json({ error: 'Please enter the 4-digit customer OTP.' });
+    }
+
+    if (!order.otpCode || order.otpCode !== enteredOtp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    // 24-hour expiration check (86,400,000 ms)
+    const otpTime = order.otpCreatedAt ? new Date(order.otpCreatedAt).getTime() : (order.createdAt ? new Date(order.createdAt).getTime() : Date.now());
+    const ageMs = Date.now() - otpTime;
+    const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+    if (ageMs > MAX_AGE_MS) {
+      return res.status(400).json({ error: 'OTP Expired. Please click Get Payment to issue a new request.' });
+    }
+
+    const now = new Date().toISOString();
+    const finalTotal = order.requestedAmount > 0 ? order.requestedAmount : (order.estimatedTotal || 0);
+    const mode = order.paymentMethod || 'Cash';
+    const disc = order.requestedDiscount || 0;
+
+    // 1. Mark Order as COMPLETED & COLLECTED
+    db.run(
+      `UPDATE Orders SET status = 'COMPLETED', collectionStatus = 'COLLECTED', collectedAt = ? WHERE id = ? AND shopId = ?`,
+      [now, order.id, shopId],
+      function() {
+        appendOrderTimeline(order.id, {
+          status: 'VERIFIED',
+          title: 'Customer Verified',
+          description: 'Customer 4-digit OTP successfully verified'
+        }, () => {
+          appendOrderTimeline(order.id, {
+            status: 'COMPLETED',
+            title: 'Order Delivered & Completed',
+            description: 'Order handed over and sale completed'
+          });
+        });
+        // 2. Automatically record POS sale in Sales table
+        db.run(
+          `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            shopId,
+            order.customerPhone || '',
+            order.customerShortId || '',
+            order.itemsJSON,
+            order.estimatedTotal,
+            disc,
+            finalTotal,
+            mode,
+            `Order #${order.orderNumber}`,
+            req.user.name || 'Shopkeeper',
+            now
+          ],
+          function() {
+            // If payment mode is Add to Book, add to ShopCustomers
+            if (mode === 'Add to Book' && (order.customerPhone || order.customerShortId)) {
+              db.run(
+                `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
+                 ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?`,
+                [shopId, order.customerPhone || '', order.customerShortId || '', '', order.customerName || 'App Customer', order.customerAddress || '', order.customerShortId || '']
+              );
+            }
+
+            if (order.customerId) {
+              sendPushNotification(order.customerId, {
+                title: '🎉 Order Completed & Collected!',
+                body: `Order #${order.orderNumber} has been verified and handed over! Thank you for shopping with us.`,
+                data: { type: 'ORDER_COMPLETED', orderId: String(order.id), orderNumber: order.orderNumber }
+              });
+            }
+
+            res.json({ success: true, status: 'COMPLETED', collectionStatus: 'COLLECTED', message: 'OTP verified! Order completed and sale recorded.' });
+          }
+        );
+      }
+    );
   });
 });
 
 // --- CUSTOMER MANAGEMENT & BLOCKING ---
+app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
+  const query = (req.query.query || '').trim();
+  if (!query) return res.json([]);
+
+  const sql = `SELECT id, shortId, name, email, phone, city, role FROM Users 
+               WHERE status = 'ACTIVE' 
+               AND (
+                 LOWER(email) = LOWER(?) 
+                 OR LOWER(shortId) = LOWER(?) 
+                 OR phone = ? 
+                 OR LOWER(shortId) LIKE LOWER(?) 
+                 OR LOWER(email) LIKE LOWER(?)
+                 OR LOWER(name) LIKE LOWER(?)
+               )`;
+  const searchPattern = `%${query}%`;
+  db.all(sql, [query, query, query, searchPattern, searchPattern, searchPattern], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Search failed' });
+    res.json(rows || []);
+  });
+});
+
 app.get('/api/shop/customers', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  db.all(`SELECT ShopCustomers.*, Users.shortId, 
+  db.all(`SELECT ShopCustomers.*, 
+          COALESCE(ShopCustomers.customerShortId, Users.shortId) as shortId,
+          COALESCE(ShopCustomers.customerEmail, Users.email) as email,
           (SELECT COUNT(*) FROM ShopBlockedCustomers WHERE ShopBlockedCustomers.shopId = ? AND ShopBlockedCustomers.customerPhone = ShopCustomers.customerPhone) as isBlocked
           FROM ShopCustomers 
-          LEFT JOIN Users ON ShopCustomers.customerPhone = Users.phone
+          LEFT JOIN Users ON ShopCustomers.customerPhone = Users.phone OR (ShopCustomers.customerShortId IS NOT NULL AND ShopCustomers.customerShortId = Users.shortId)
           WHERE ShopCustomers.shopId = ? AND ShopCustomers.status = 'ACTIVE'`, [shopId, shopId], (err, rows) => res.json(rows || []));
 });
 
 app.post('/api/shop/customers', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  const { phone, name, address } = req.body;
-  db.run(`INSERT INTO ShopCustomers (shopId, customerPhone, name, address, status) VALUES (?, ?, ?, ?, 'ACTIVE')
-          ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', name=?, address=?`,
-    [shopId, phone, name, address, name, address], () => res.json({ success: true }));
+  const { phone, customerShortId, customerEmail, name, address } = req.body;
+  const sId = customerShortId || null;
+  const cEmail = customerEmail || null;
+  db.run(`INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
+          ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?, address=?`,
+    [shopId, phone, sId, cEmail, name, address, sId, cEmail, name, address], () => res.json({ success: true }));
 });
 
 app.put('/api/shop/customers/block', authenticate, (req, res) => {
@@ -1183,22 +1464,49 @@ app.put('/api/shop/customers/terminate', authenticate, (req, res) => {
 // --- SALES & KHATA APIs ---
 app.post('/api/shop/sales', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  const { customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note } = req.body;
+  const { customerPhone, customerShortId, customerEmail, itemsJSON, subtotal, discount, total, paymentMethod, note } = req.body;
   const date = new Date().toISOString();
   const cashierName = req.user.role === 'Shopkeeper' ? 'Shopkeeper' : (req.user.staffRole || 'Cashier');
 
   // Verify 20-char note limit
   const sanitizedNote = (note || '').slice(0, 20);
 
+  if (paymentMethod === 'Add to Book') {
+    // Check if customer is registered and has shortId
+    const findQuery = customerShortId 
+      ? `SELECT id, shortId, email, phone, name FROM Users WHERE shortId = ? AND status = 'ACTIVE'`
+      : `SELECT id, shortId, email, phone, name FROM Users WHERE phone = ? AND status = 'ACTIVE'`;
+    const findParam = customerShortId || customerPhone;
+
+    db.get(findQuery, [findParam], (err, user) => {
+      if (err || !user || !user.shortId) {
+        return res.status(400).json({ error: 'Khata credit billing ("Add to Book") requires selecting a registered app customer with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.' });
+      }
+
+      const activeShortId = user.shortId;
+      const activeEmail = user.email || customerEmail || '';
+      const activePhone = user.phone || customerPhone || '';
+
+      db.run(`INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [shopId, activePhone, activeShortId, itemsJSON, subtotal, discount, total, paymentMethod, sanitizedNote, cashierName, date], function(err) {
+          if (err) return res.status(500).json({ error: 'Failed to record sale' });
+          
+          db.run(`INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
+                  ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?`, 
+            [shopId, activePhone, activeShortId, activeEmail, user.name || 'App Customer', activeShortId, activeEmail]);
+
+          res.json({ id: this.lastID, date, total, paymentMethod, note: sanitizedNote, customerShortId: activeShortId });
+        });
+    });
+    return;
+  }
+
+  // Non-Khata payment methods (Cash, Online/UPI)
   db.run(`INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [shopId, customerPhone || '', customerShortId || '', itemsJSON, subtotal, discount, total, paymentMethod, sanitizedNote, cashierName, date], function(err) {
       if (err) return res.status(500).json({ error: 'Failed to record sale' });
-      
-      if (paymentMethod === 'Add to Book' && customerPhone) {
-        db.run(`INSERT OR IGNORE INTO ShopCustomers (shopId, customerPhone, name, address, status) VALUES (?, ?, ?, ?, 'ACTIVE')`, 
-          [shopId, customerPhone, 'Walk-in Customer', '']);
-      }
       res.json({ id: this.lastID, date, total, paymentMethod, note: sanitizedNote });
     });
 });
@@ -1225,7 +1533,17 @@ app.get('/api/shop/ledger/:phone', authenticate, (req, res) => {
   const phone = req.params.phone;
   db.all(`SELECT * FROM Sales WHERE shopId=? AND customerPhone=?`, [shopId, phone], (err, sales) => {
     db.all(`SELECT * FROM Settlements WHERE shopId=? AND customerPhone=?`, [shopId, phone], (err, settlements) => {
-      res.json({ sales: sales || [], settlements: settlements || [] });
+      const parsedSales = (sales || []).map((s) => ({
+        ...s,
+        total: Number(s.total) || 0,
+        subtotal: Number(s.subtotal) || 0,
+        discount: Number(s.discount) || 0,
+      }));
+      const parsedSettlements = (settlements || []).map((st) => ({
+        ...st,
+        amount: Number(st.amount) || 0,
+      }));
+      res.json({ sales: parsedSales, settlements: parsedSettlements });
     });
   });
 });
@@ -1276,20 +1594,27 @@ app.get('/api/shop/sales', authenticate, (req, res) => {
   db.all(query, params, (err, sales) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch sales' });
     
-    // Compute Financial Metrics
-    const totalSales = sales.reduce((sum, s) => sum + (s.total || 0), 0);
-    const cashSales = sales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (s.total || 0), 0);
-    const onlineSales = sales.filter(s => s.paymentMethod === 'Online' || s.paymentMethod === 'UPI').reduce((sum, s) => sum + (s.total || 0), 0);
-    const khataSales = sales.filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (s.total || 0), 0);
+    const parsedSales = (sales || []).map((s) => ({
+      ...s,
+      total: Number(s.total) || 0,
+      subtotal: Number(s.subtotal) || 0,
+      discount: Number(s.discount) || 0,
+    }));
+
+    // Compute Financial Metrics safely with numeric casting
+    const totalSales = parsedSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const cashSales = parsedSales.filter(s => s.paymentMethod === 'Cash').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const onlineSales = parsedSales.filter(s => s.paymentMethod === 'Online' || s.paymentMethod === 'UPI').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const khataSales = parsedSales.filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
 
     res.json({
-      sales: sales || [],
+      sales: parsedSales,
       analytics: {
         totalSales,
         cashSales,
         onlineSales,
         khataSales,
-        count: sales.length,
+        count: parsedSales.length,
         isCashierLimited: isCashier
       }
     });
@@ -1442,10 +1767,11 @@ app.put('/api/admin/support-settings', authenticate, (req, res) => {
 app.get('/api/customer/history', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
   const phone = req.user.phone;
+  const shortId = req.user.shortId || '';
   db.all(`SELECT Sales.*, Shops.shopName, Shops.city as shopCity, Shops.shopAddress, Shops.shopPhone 
           FROM Sales JOIN Shops ON Sales.shopId = Shops.id 
-          WHERE Sales.customerPhone = ? AND Shops.status = 'ACTIVE' 
-          ORDER BY Sales.date DESC`, [phone], (err, sales) => {
+          WHERE (Sales.customerPhone = ? OR (Sales.customerShortId IS NOT NULL AND Sales.customerShortId != '' AND Sales.customerShortId = ?)) AND Shops.status = 'ACTIVE' 
+          ORDER BY Sales.date DESC`, [phone, shortId], (err, sales) => {
     res.json({ sales: sales || [] });
   });
 });
@@ -1454,13 +1780,14 @@ app.get('/api/customer/history', authenticate, (req, res) => {
 app.get('/api/customer/khata', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
   const phone = req.user.phone;
+  const shortId = req.user.shortId || '';
 
   db.all(`SELECT id, shortId, shopName, city, shopAddress, shopPhone, timings, isOpen, status FROM Shops WHERE status = 'ACTIVE'`, [], (err, shops) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch shops' });
 
-    db.all(`SELECT * FROM Sales WHERE customerPhone = ?`, [phone], (err, sales) => {
+    db.all(`SELECT * FROM Sales WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)`, [phone, shortId], (err, sales) => {
       db.all(`SELECT * FROM Settlements WHERE customerPhone = ?`, [phone], (err, settlements) => {
-        db.all(`SELECT * FROM Orders WHERE customerPhone = ?`, [phone], (err, orders) => {
+        db.all(`SELECT * FROM Orders WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)`, [phone, shortId], (err, orders) => {
           
           const khataStores = [];
           let overallDue = 0;
@@ -1470,10 +1797,10 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
             const shopSettlements = (settlements || []).filter(st => st.shopId === shop.id);
             const shopOrders = (orders || []).filter(o => o.shopId === shop.id);
 
-            const totalBook = shopSales.filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (s.total || 0), 0);
-            const totalPaid = shopSettlements.reduce((sum, st) => sum + (st.amount || 0), 0);
+            const totalBook = shopSales.filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+            const totalPaid = shopSettlements.reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
             const totalDue = Math.max(0, totalBook - totalPaid);
-            const totalPurchases = shopSales.reduce((sum, s) => sum + (s.total || 0), 0);
+            const totalPurchases = shopSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
 
             // Include if customer has transactions or orders or khata with this shop
             if (shopSales.length > 0 || shopSettlements.length > 0 || shopOrders.length > 0 || totalDue > 0) {
@@ -1514,17 +1841,18 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
 app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
   const phone = req.user.phone;
+  const shortId = req.user.shortId || '';
   const shopId = parseInt(req.params.shopId);
 
   db.get(`SELECT id, shortId, shopName, city, shopAddress, shopPhone, timings, isOpen, status FROM Shops WHERE id = ?`, [shopId], (err, shop) => {
     if (err || !shop) return res.status(404).json({ error: 'Shop not found' });
 
-    db.all(`SELECT * FROM Sales WHERE shopId = ? AND customerPhone = ? ORDER BY date DESC`, [shopId, phone], (err, sales) => {
+    db.all(`SELECT * FROM Sales WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)) ORDER BY date DESC`, [shopId, phone, shortId], (err, sales) => {
       db.all(`SELECT * FROM Settlements WHERE shopId = ? AND customerPhone = ? ORDER BY date DESC`, [shopId, phone], (err, settlements) => {
-        db.all(`SELECT * FROM Orders WHERE shopId = ? AND customerPhone = ? ORDER BY createdAt DESC`, [shopId, phone], (err, orders) => {
+        db.all(`SELECT * FROM Orders WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)) ORDER BY createdAt DESC`, [shopId, phone, shortId], (err, orders) => {
           
-          const totalBook = (sales || []).filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (s.total || 0), 0);
-          const totalPaid = (settlements || []).reduce((sum, st) => sum + (st.amount || 0), 0);
+          const totalBook = (sales || []).filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+          const totalPaid = (settlements || []).reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
           const totalDue = Math.max(0, totalBook - totalPaid);
 
           // Combined unified timeline
