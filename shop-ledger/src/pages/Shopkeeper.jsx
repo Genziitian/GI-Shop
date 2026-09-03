@@ -1466,7 +1466,7 @@ export default function Shopkeeper() {
         {/* TAB 5: MANAGE ITEMS (OWNER ONLY) WITH MASTER GROCERY AUTO-FILL */}
         {activeTab === 'items' && isOwner && (
           <div>
-            <div className="mobile-only" style={{ marginBottom: '0.75rem' }}>
+            <div style={{ marginBottom: '0.75rem' }}>
               <button 
                 type="button" 
                 className="btn btn-outline" 
@@ -1690,7 +1690,7 @@ export default function Shopkeeper() {
         {/* TAB 6: STAFF MANAGEMENT (OWNER ONLY) */}
         {activeTab === 'staff' && isOwner && (
           <div className="panel">
-            <div className="mobile-only" style={{ marginBottom: '0.75rem' }}>
+            <div style={{ marginBottom: '0.75rem' }}>
               <button 
                 type="button" 
                 className="btn btn-outline" 
@@ -2965,20 +2965,6 @@ export default function Shopkeeper() {
           <BarChart2 size={19} />
           <span>Analytics</span>
         </button>
-
-        {isOwner && (
-          <>
-            <button type="button" className={`footer-nav-item desktop-only ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>
-              <Plus size={19} />
-              <span>Items</span>
-            </button>
-
-            <button type="button" className={`footer-nav-item desktop-only ${activeTab === 'staff' ? 'active' : ''}`} onClick={() => setActiveTab('staff')}>
-              <UserPlus size={19} />
-              <span>Staff</span>
-            </button>
-          </>
-        )}
 
         <button type="button" className={`footer-nav-item ${['more', 'items', 'staff'].includes(activeTab) ? 'active' : ''}`} onClick={() => setActiveTab('more')}>
           <MoreHorizontal size={19} />
