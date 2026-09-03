@@ -193,9 +193,10 @@ export default function Customer() {
     setOrdersLoading(true);
     try {
       const data = await getCustomerOrders();
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : (Array.isArray(data?.orders) ? data.orders : []));
     } catch (e) {
-      console.error(e);
+      console.error('Failed to load orders:', e);
+      setOrders([]);
     } finally {
       setOrdersLoading(false);
     }
@@ -204,9 +205,10 @@ export default function Customer() {
   const loadPurchases = async () => {
     try {
       const data = await getCustomerHistory();
-      setPurchases(data.sales || []);
+      setPurchases(Array.isArray(data?.sales) ? data.sales : (Array.isArray(data) ? data : []));
     } catch (e) {
-      console.error(e);
+      console.error('Failed to load purchases:', e);
+      setPurchases([]);
     }
   };
 
@@ -293,11 +295,14 @@ export default function Customer() {
   }, [selectedCity]);
 
   useEffect(() => {
-    if (activeTab === 'orders') loadOrders();
-    if (activeTab === 'purchases') loadPurchases();
+    if (activeTab === 'orders') {
+      loadOrders();
+      loadPurchases();
+    }
     if (activeTab === 'khata') loadKhataData();
     if (activeTab === 'explore') loadShops(selectedCity);
     if (activeTab === 'compare') loadCompareData(selectedCity, compareQuery);
+    if (activeTab === 'more') loadUserData();
   }, [activeTab]);
 
   const handleLogout = () => {
@@ -957,29 +962,33 @@ export default function Customer() {
     }
   };
 
-  const totalCartItemCount = Object.values(orderList).reduce((sum, e) => sum + e.qty, 0);
-  const totalOrderAmount = Object.values(orderList).reduce((sum, e) => sum + e.amount, 0);
+  const totalCartItemCount = Object.values(orderList || {}).reduce((sum, e) => sum + (e?.qty || 0), 0);
+  const totalOrderAmount = Object.values(orderList || {}).reduce((sum, e) => sum + (e?.amount || 0), 0);
 
-  const filteredShops = shops.filter(s => 
-    s.shopName.toLowerCase().includes(shopSearch.toLowerCase()) ||
-    s.shortId.toLowerCase().includes(shopSearch.toLowerCase()) ||
-    s.shopAddress.toLowerCase().includes(shopSearch.toLowerCase())
+  const safeShops = Array.isArray(shops) ? shops : [];
+  const filteredShops = safeShops.filter(s => 
+    (s?.shopName || '').toLowerCase().includes((shopSearch || '').toLowerCase()) ||
+    (s?.shortId || '').toLowerCase().includes((shopSearch || '').toLowerCase()) ||
+    (s?.shopAddress || '').toLowerCase().includes((shopSearch || '').toLowerCase())
   );
 
-  const filteredShopItems = activeShop ? (activeShop.items || []).filter(i => 
-    i.name.toLowerCase().includes(itemSearch.toLowerCase())
+  const filteredShopItems = activeShop ? (Array.isArray(activeShop.items) ? activeShop.items : []).filter(i => 
+    (i?.name || '').toLowerCase().includes((itemSearch || '').toLowerCase())
   ) : [];
 
   // Group compare results by product name
   const groupedCompare = {};
-  compareResults.forEach(item => {
+  const safeCompareResults = Array.isArray(compareResults) ? compareResults : [];
+  safeCompareResults.forEach(item => {
+    if (!item?.name) return;
     const key = item.name.toLowerCase().trim();
     if (!groupedCompare[key]) groupedCompare[key] = { displayName: item.name, unit: item.unit, offers: [] };
     groupedCompare[key].offers.push(item);
   });
 
   // Spending Analytics
-  const totalSpentAll = purchases.reduce((sum, p) => sum + (p.total || 0), 0);
+  const safePurchases = Array.isArray(purchases) ? purchases : [];
+  const totalSpentAll = safePurchases.reduce((sum, p) => sum + (Number(p?.total) || 0), 0);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
@@ -2044,14 +2053,23 @@ export default function Customer() {
           const now = new Date();
           const nowMs = now.getTime();
           const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-          const recentOrders = orders.filter(o => (nowMs - new Date(o.createdAt || o.date).getTime()) < twentyFourHoursMs);
-          const pastOrders = orders.filter(o => (nowMs - new Date(o.createdAt || o.date).getTime()) >= twentyFourHoursMs);
-          const grandTotal = totalSpentAll + orders.reduce((sum, o) => sum + (o.estimatedTotal || 0), 0);
+          const safeOrd = Array.isArray(orders) ? orders : [];
+          const safePurch = Array.isArray(purchases) ? purchases : [];
+          const recentOrders = safeOrd.filter(o => {
+            const d = new Date(o.createdAt || o.date);
+            return !isNaN(d.getTime()) && (nowMs - d.getTime()) < twentyFourHoursMs;
+          });
+          const pastOrders = safeOrd.filter(o => {
+            const d = new Date(o.createdAt || o.date);
+            return isNaN(d.getTime()) || (nowMs - d.getTime()) >= twentyFourHoursMs;
+          });
+          const grandTotal = (safePurch.reduce((sum, p) => sum + (Number(p?.total) || 0), 0)) + safeOrd.reduce((sum, o) => sum + (Number(o?.estimatedTotal) || 0), 0);
 
           // Date Filter helper
           const isDateMatchingFilter = (dateStr) => {
             if (!dateStr || ordersDateFilter === 'All') return true;
             const itemDate = new Date(dateStr);
+            if (isNaN(itemDate.getTime())) return true;
             
             if (ordersDateFilter === 'Today') {
               const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -2082,7 +2100,7 @@ export default function Customer() {
           };
 
           const filteredPastOrders = pastOrders.filter(o => isDateMatchingFilter(o.createdAt || o.date));
-          const filteredPurchases = purchases.filter(p => isDateMatchingFilter(p.date || p.createdAt));
+          const filteredPurchases = safePurch.filter(p => isDateMatchingFilter(p.date || p.createdAt));
           const totalFilteredAllOrdersCount = filteredPastOrders.length + filteredPurchases.length;
 
           return ordersLoading ? (
@@ -3590,32 +3608,42 @@ export default function Customer() {
 
         {/* TAB 5: MORE (Profile, Security, Export & Session) */}
         {activeTab === 'more' && (
-          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border)' }}>
+          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>Account & Settings</h2>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>Account &amp; Settings</h2>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Manage profile details, security PIN, data export, and session settings
                 </div>
               </div>
-              <button type="button" className="btn" onClick={handleOpenProfileModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
-                <UserCheck size={16} /> Edit Profile & Security
+              <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.82rem', padding: '0.4rem 0.75rem' }}>
+                <UserCheck size={15} color="var(--primary)" /> Edit Profile
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
               {/* Profile Overview Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <User size={20} />
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <User size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>{currentUser?.name || 'Customer'}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong></div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{currentUser?.name || 'Customer'}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Short ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong></div>
-                  </div>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    onClick={handleOpenProfileModal}
+                    style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem', color: 'var(--primary)' }}
+                  >
+                    Edit
+                  </button>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <div>📞 Phone: <strong>{currentUser?.phone || 'N/A'}</strong></div>
                   <div>📍 City: <strong>{currentUser?.city || 'Delhi'}</strong></div>
                   <div>🏠 Address: <span>{currentUser?.address || 'Not specified'}</span></div>
@@ -3623,51 +3651,49 @@ export default function Customer() {
               </div>
 
               {/* Security & PIN Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShieldCheck size={20} />
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={18} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security & Lock</div>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Security &amp; Lock</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <Key size={16} color="#16a34a" /> Change Account Password
+                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
+                    <Key size={15} color="#16a34a" /> Change Account Password
                   </button>
-                  {/* <button type="button" className="btn btn-outline" onClick={() => setIsScreenLocked(true)} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
-                    <Lock size={16} color="#dc2626" /> Lock Screen / Account Now
-                  </button> */}
                 </div>
               </div>
+
               {/* Legal & Privacy Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Shield size={20} />
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={18} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal & Privacy</div>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Legal &amp; Privacy</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <ShieldCheck size={16} color="#16a34a" /> Privacy Policy
+                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
+                    <ShieldCheck size={15} color="#16a34a" /> Privacy Policy
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <FileText size={16} color="#0284c7" /> Terms & Conditions
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
+                    <FileText size={15} color="#0284c7" /> Terms &amp; Conditions
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => navigate('/delete')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
-                    <Trash2 size={16} color="#dc2626" /> Account Deletion Request
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/delete')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', color: '#dc2626', background: '#fff' }}>
+                    <Trash2 size={15} color="#dc2626" /> Account Deletion Request
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Account Actions */}
-            <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-              <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ fontWeight: 700, gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', justifyContent: 'flex-end', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
+              <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ fontWeight: 700, gap: '0.5rem', width: '100%', maxWidth: '280px', justifyContent: 'center' }}>
                 <LogOut size={16} /> Log Out Account
               </button>
             </div>
