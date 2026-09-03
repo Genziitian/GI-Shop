@@ -1029,21 +1029,12 @@ export default function Shopkeeper() {
             onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
             title="Click to view and edit shop details"
           >
-            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Store size={18} />
             </div>
             <div>
-              <div style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text)' }}>
                 {currentShop?.shopName || 'Shop Dashboard'}
-                <span className="badge" style={{ background: isOwner ? '#eff6ff' : '#f5f3ff', color: isOwner ? 'var(--primary)' : '#7c3aed', fontSize: '0.72rem' }}>
-                  {isOwner ? 'Owner' : 'Cashier'}
-                </span>
-                <Info size={13} color="var(--text-muted)" />
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Shop ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}</strong>
-                {currentUser?.name ? ` • User: ${currentUser.name}` : ''}
-                {currentUser?.shortId ? ` (${currentUser.shortId})` : ''}
               </div>
             </div>
           </div>
