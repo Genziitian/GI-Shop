@@ -448,28 +448,28 @@ export default function POSScreen({ navigation }) {
               showsVerticalScrollIndicator={false}
             >
               {/* Customer Row in Modal */}
-              <View style={styles.modalCustomerCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <UserCheck size={16} color={colors.primary} />
-                    <Text style={styles.modalCustTitle}>Billing Customer:</Text>
+              <TouchableOpacity
+                style={styles.modalCustomerCard}
+                onPress={() => setShowAddCustomerModal(true)}
+                activeOpacity={0.8}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                    <UserCheck size={18} color={colors.primary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.modalCustTitle}>Billing Customer</Text>
+                      <Text style={styles.modalCustValue} numberOfLines={1}>
+                        {selectedCustomer
+                          ? `${selectedCustomer.name} (${selectedCustomer.phone || selectedCustomer.customerPhone})`
+                          : 'Walk-in / Cash Customer'}
+                      </Text>
+                    </View>
                   </View>
-                  <TouchableOpacity
-                    style={{ backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#bfdbfe' }}
-                    onPress={() => setShowAddCustomerModal(true)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#2563eb' }}>
-                      {selectedCustomer ? '✏️ Change Customer' : '+ Select / Add Customer'}
-                    </Text>
-                  </TouchableOpacity>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#2563eb', marginLeft: 8 }}>
+                    {selectedCustomer ? 'Edit ✏️' : '+ Add'}
+                  </Text>
                 </View>
-                <Text style={styles.modalCustValue} numberOfLines={1}>
-                  {selectedCustomer
-                    ? `${selectedCustomer.name} (${selectedCustomer.phone || selectedCustomer.customerPhone})`
-                    : 'Walk-in / Cash Customer'}
-                </Text>
-              </View>
+              </TouchableOpacity>
 
               {/* Cart Items List with Stepper */}
               <View style={styles.modalItemsSection}>
