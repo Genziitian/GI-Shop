@@ -251,7 +251,7 @@ export default function OrdersScreen({ navigation }) {
                           • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
                         </Text>
                         <Text style={styles.orderItemPrice}>
-                          ₹{(it.amount || ((it.rate || it.price) * it.qty) || 0).toFixed(2)}
+                          ₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}
                         </Text>
                       </View>
                     ))}
@@ -259,7 +259,7 @@ export default function OrdersScreen({ navigation }) {
 
                   <View style={styles.orderTotalRow}>
                     <Text style={styles.orderTotalLabel}>Total Payable:</Text>
-                    <Text style={styles.orderTotalValue}>₹{(ord.estimatedTotal || ord.total || 0).toFixed(2)}</Text>
+                    <Text style={styles.orderTotalValue}>₹{(Number(ord.estimatedTotal ?? ord.total) || 0).toFixed(2)}</Text>
                   </View>
 
                   {/* Action Buttons */}

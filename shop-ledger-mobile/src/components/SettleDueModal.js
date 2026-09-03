@@ -78,7 +78,7 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
               {/* Outstanding Card */}
               <View style={styles.dueCard}>
                 <Text style={styles.dueLabel}>Current Outstanding</Text>
-                <Text style={styles.dueValue}>₹{due.toFixed(2)}</Text>
+                <Text style={styles.dueValue}>₹{(Number(due) || 0).toFixed(2)}</Text>
               </View>
 
               {/* Quick Preset Buttons */}
@@ -94,7 +94,7 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
                       amount === due.toString() && styles.presetBtnTextActive,
                     ]}
                   >
-                    Full (₹{due.toFixed(0)})
+                    Full (₹{(Number(due) || 0).toFixed(0)})
                   </Text>
                 </TouchableOpacity>
 

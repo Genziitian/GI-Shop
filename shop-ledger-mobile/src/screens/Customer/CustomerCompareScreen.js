@@ -158,7 +158,7 @@ export default function CustomerCompareScreen({ navigation }) {
                 {group.lowestPrice ? (
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.bestPriceLabel}>Best Available</Text>
-                    <Text style={styles.bestPriceValue}>₹{group.lowestPrice.toFixed(2)}</Text>
+                    <Text style={styles.bestPriceValue}>₹{(Number(group?.lowestPrice) || 0).toFixed(2)}</Text>
                   </View>
                 ) : null}
               </View>
@@ -186,7 +186,7 @@ export default function CustomerCompareScreen({ navigation }) {
                       </View>
 
                       <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                        <Text style={styles.offerRate}>₹{shop.price.toFixed(2)}</Text>
+                        <Text style={styles.offerRate}>₹{(Number(shop?.price) || 0).toFixed(2)}</Text>
                         <TouchableOpacity
                           style={[styles.shopOrderBtn, !shop.isOpen && { backgroundColor: '#cbd5e1' }]}
                           disabled={!shop.isOpen}

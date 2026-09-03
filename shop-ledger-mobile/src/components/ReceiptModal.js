@@ -120,7 +120,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                           {qty} {unit}
                         </Text>
                         <Text style={[styles.itemAmt, { flex: 1, textAlign: 'right' }]}>
-                          ₹{amount.toFixed(2)}
+                          ₹{(Number(amount) || 0).toFixed(2)}
                         </Text>
                       </View>
                     );
@@ -133,7 +133,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                 <View style={styles.summarySection}>
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Subtotal</Text>
-                    <Text style={styles.summaryValue}>₹{(receipt.subtotal || 0).toFixed(2)}</Text>
+                    <Text style={styles.summaryValue}>₹{(Number(receipt.subtotal) || 0).toFixed(2)}</Text>
                   </View>
 
                   {receipt.discount > 0 && (
@@ -142,14 +142,14 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                         Discount
                       </Text>
                       <Text style={[styles.summaryValue, { color: colors.success }]}>
-                        -₹{receipt.discount.toFixed(2)}
+                        -₹{(Number(receipt.discount) || 0).toFixed(2)}
                       </Text>
                     </View>
                   )}
 
                   <View style={[styles.summaryRow, styles.totalRow]}>
                     <Text style={styles.totalLabel}>TOTAL AMOUNT</Text>
-                    <Text style={styles.totalValue}>₹{(receipt.total || 0).toFixed(2)}</Text>
+                    <Text style={styles.totalValue}>₹{(Number(receipt.total) || 0).toFixed(2)}</Text>
                   </View>
                 </View>
 

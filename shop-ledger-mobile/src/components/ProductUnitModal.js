@@ -268,7 +268,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
               <TouchableOpacity style={styles.addBtn} onPress={handleAdd} activeOpacity={0.8}>
                 <Check size={20} color="#fff" style={{ marginRight: 6 }} />
                 <Text style={styles.addBtnText}>
-                  Add ₹{parseFloat(priceInput || 0).toFixed(2)} to Cart
+                  Add ₹{(Number(priceInput) || 0).toFixed(2)} to Cart
                 </Text>
               </TouchableOpacity>
             </KeyboardAvoidingView>

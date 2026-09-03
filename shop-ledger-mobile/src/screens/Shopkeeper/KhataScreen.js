@@ -169,7 +169,7 @@ export default function KhataScreen() {
       return;
     }
     const cleanPhone = cust.phone.replace(/\D/g, '');
-    const dueAmt = parseFloat(cust.totalDue || 0).toFixed(2);
+    const dueAmt = (Number(cust?.totalDue) || 0).toFixed(2);
     const shopTitle = user?.shopName || 'our store';
     const message = encodeURIComponent(
       `Hello ${cust.name || 'Customer'},\n\nThis is a gentle payment reminder from *${shopTitle}*.\n\nYou have an outstanding khata due of *₹${dueAmt}*.\nPlease submit/clear your payment at your earliest convenience.\n\nThank you!`
@@ -241,7 +241,7 @@ export default function KhataScreen() {
                       : { color: colors.success },
                   ]}
                 >
-                  ₹{selectedCustomer.totalDue.toFixed(2)}
+                  ₹{(Number(selectedCustomer?.totalDue) || 0).toFixed(2)}
                 </Text>
 
                 {selectedCustomer.totalDue > 0 && (
@@ -375,13 +375,13 @@ export default function KhataScreen() {
                           ]}
                         >
                           {isCreditBook
-                            ? `+₹${entry.total.toFixed(2)}`
+                            ? `+₹${(Number(entry?.total) || 0).toFixed(2)}`
                             : !isSale
-                            ? `-₹${entry.amount.toFixed(2)}`
-                            : `₹${entry.total.toFixed(2)}`}
+                            ? `-₹${(Number(entry?.amount) || 0).toFixed(2)}`
+                            : `₹${(Number(entry?.total) || 0).toFixed(2)}`}
                         </Text>
                         <Text style={styles.runningBalanceText}>
-                          Balance: ₹{entry.runningDue?.toFixed(2)}
+                          Balance: ₹{(Number(entry?.runningDue) || 0).toFixed(2)}
                         </Text>
                       </View>
                     </View>
@@ -396,7 +396,7 @@ export default function KhataScreen() {
                             </Text>
                             <Text style={styles.subItemDetails}>
                               {pi.qty} {pi.item?.unit} @ ₹{pi.rate} = ₹
-                              {(pi.amount || pi.qty * pi.rate).toFixed(2)}
+                              {(Number(pi.amount || pi.qty * pi.rate) || 0).toFixed(2)}
                             </Text>
                           </View>
                         ))}
@@ -446,7 +446,7 @@ export default function KhataScreen() {
         <View style={styles.heroCard}>
           <View>
             <Text style={styles.heroLabel}>Total Outstanding Khata</Text>
-            <Text style={styles.heroValue}>₹{totalOutstandingAll.toFixed(2)}</Text>
+            <Text style={styles.heroValue}>₹{(Number(totalOutstandingAll) || 0).toFixed(2)}</Text>
             <Text style={styles.heroSub}>{customers.length} Enrolled Customers</Text>
           </View>
 
@@ -532,7 +532,7 @@ export default function KhataScreen() {
                         : { color: colors.success },
                     ]}
                   >
-                    ₹{item.totalDue.toFixed(2)}
+                    ₹{(Number(item?.totalDue) || 0).toFixed(2)}
                   </Text>
 
                   {item.totalDue > 0 && (

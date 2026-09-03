@@ -196,7 +196,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>Total Sales</Text>
               <TrendingUp size={16} color={colors.primary} />
             </View>
-            <Text style={styles.metricValue}>₹{totalSales.toFixed(2)}</Text>
+            <Text style={styles.metricValue}>₹{(Number(totalSales) || 0).toFixed(2)}</Text>
             <Text style={styles.metricSub}>{filteredSales.length} Transactions</Text>
           </View>
 
@@ -206,7 +206,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>Cash Sales</Text>
               <Banknote size={16} color={colors.success} />
             </View>
-            <Text style={styles.metricValue}>₹{cashSales.toFixed(2)}</Text>
+            <Text style={styles.metricValue}>₹{(Number(cashSales) || 0).toFixed(2)}</Text>
             <Text style={styles.metricSub}>Direct Cash</Text>
           </View>
 
@@ -216,7 +216,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>Online / UPI</Text>
               <CreditCard size={16} color={colors.warning} />
             </View>
-            <Text style={styles.metricValue}>₹{onlineSales.toFixed(2)}</Text>
+            <Text style={styles.metricValue}>₹{(Number(onlineSales) || 0).toFixed(2)}</Text>
             <Text style={styles.metricSub}>Digital Payments</Text>
           </View>
 
@@ -226,7 +226,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>Khata (Credit)</Text>
               <BookOpen size={16} color={colors.danger} />
             </View>
-            <Text style={styles.metricValue}>₹{khataSales.toFixed(2)}</Text>
+            <Text style={styles.metricValue}>₹{(Number(khataSales) || 0).toFixed(2)}</Text>
             <Text style={styles.metricSub}>Added to Book</Text>
           </View>
         </View>
@@ -281,7 +281,7 @@ export default function AnalyticsScreen() {
                     </View>
 
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.saleTotal}>₹{(item.total || 0).toFixed(2)}</Text>
+                      <Text style={styles.saleTotal}>₹{(Number(item?.total) || 0).toFixed(2)}</Text>
                       <View
                         style={[
                           styles.paymentTag,
