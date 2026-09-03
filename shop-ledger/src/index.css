@@ -891,6 +891,10 @@ input[type="number"] {
     grid-template-columns: 1fr !important;
     gap: 0 !important;
   }
+  .shop-showcase-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
   .pos-cart-panel {
     display: none !important;
   }

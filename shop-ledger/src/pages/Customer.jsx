@@ -1199,78 +1199,79 @@ export default function Customer() {
                           <div 
                             key={offer.id} 
                             style={{ 
-                              background: '#f8fafc', 
-                              border: `1px solid ${isBestPrice ? '#bbf7d0' : 'var(--border)'}`, 
-                              borderRadius: '8px', 
-                              padding: '0.75rem 1rem', 
+                              background: '#ffffff', 
+                              border: isBestPrice ? '1px solid #86efac' : '1px solid var(--border)', 
+                              borderRadius: '10px', 
+                              padding: '0.85rem', 
                               display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center',
-                              flexWrap: 'wrap',
-                              gap: '0.5rem'
+                              flexDirection: 'column',
+                              gap: '0.6rem'
                             }}
                           >
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <strong style={{ fontSize: '0.95rem' }}>{offer.shopName}</strong>
-                                <span className="badge" style={{ fontSize: '0.7rem' }}>{offer.shopShortId}</span>
-                                {isBestPrice && (
-                                  <span className="badge" style={{ background: '#dcfce7', color: '#15803d', borderColor: '#bbf7d0', fontSize: '0.7rem' }}>
-                                    🏆 Lowest Price
+                            {/* Top row: Store Name & Price */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                  <strong style={{ fontSize: '0.95rem', color: 'var(--text)' }}>{offer.shopName}</strong>
+                                  <span className="badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{offer.shopShortId}</span>
+                                  {isBestPrice && (
+                                    <span className="badge" style={{ background: '#dcfce7', color: '#15803d', borderColor: '#bbf7d0', fontSize: '0.68rem', padding: '1px 5px' }}>
+                                      🏆 Lowest Price
+                                    </span>
+                                  )}
+                                  <span className="badge" style={{
+                                    background: offer.isOpen ? '#dcfce7' : '#fee2e2',
+                                    color: offer.isOpen ? '#15803d' : '#b91c1c',
+                                    fontSize: '0.68rem',
+                                    padding: '1px 5px'
+                                  }}>
+                                    {offer.isOpen ? 'OPEN' : 'CLOSED'}
                                   </span>
-                                )}
-                                <span className="badge" style={{
-                                  background: offer.isOpen ? '#dcfce7' : '#fee2e2',
-                                  color: offer.isOpen ? '#15803d' : '#b91c1c',
-                                  fontSize: '0.7rem'
-                                }}>
-                                  {offer.isOpen ? 'OPEN' : 'CLOSED'}
-                                </span>
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                                  {offer.shopAddress} • {offer.timings}
+                                </div>
                               </div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                {offer.shopAddress} • {offer.timings}
-                              </div>
-                            </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <div style={{ textAlign: 'right' }}>
-                                <strong style={{ fontSize: '1.15rem', color: isBestPrice ? 'var(--success)' : 'var(--text)' }}>
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <strong style={{ fontSize: '1.2rem', color: isBestPrice ? 'var(--success)' : 'var(--text)' }}>
                                   ₹{(Number(offer?.price) || 0).toFixed(2)}
                                 </strong>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>/{offer.unit}</div>
                               </div>
+                            </div>
 
-                              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            {/* Actions Row */}
+                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px dashed #f1f5f9', paddingTop: '0.5rem' }}>
+                              <button 
+                                type="button" 
+                                className="btn btn-outline" 
+                                style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem', flex: 1, maxWidth: '160px' }}
+                                onClick={() => handleOpenShop({ id: offer.shopId, shopName: offer.shopName })}
+                              >
+                                Check More Items
+                              </button>
+
+                              {inCartQty > 0 ? (
                                 <button 
                                   type="button" 
-                                  className="btn btn-outline" 
-                                  style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
-                                  onClick={() => handleOpenShop({ id: offer.shopId, shopName: offer.shopName })}
+                                  className="btn" 
+                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', background: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                  onClick={() => setShowCartModal(true)}
                                 >
-                                  Check More Items
+                                  <ShoppingCart size={13} /> In Cart ({inCartQty})
                                 </button>
-
-                                {inCartQty > 0 ? (
-                                  <button 
-                                    type="button" 
-                                    className="btn" 
-                                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', background: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                                    onClick={() => setShowCartModal(true)}
-                                  >
-                                    <ShoppingCart size={13} /> In Cart ({inCartQty})
-                                  </button>
-                                ) : (
-                                  <button 
-                                    type="button" 
-                                    className="btn" 
-                                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-                                    disabled={!offer.isOpen}
-                                    onClick={() => handleAddItemToCart({ id: offer.id, name: offer.name, price: offer.price, unit: offer.unit }, { id: offer.shopId, shopName: offer.shopName })}
-                                  >
-                                    + Add
-                                  </button>
-                                )}
-                              </div>
+                              ) : (
+                                <button 
+                                  type="button" 
+                                  className="btn" 
+                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+                                  disabled={!offer.isOpen}
+                                  onClick={() => handleAddItemToCart({ id: offer.id, name: offer.name, price: offer.price, unit: offer.unit }, { id: offer.shopId, shopName: offer.shopName })}
+                                >
+                                  + Add
+                                </button>
+                              )}
                             </div>
                           </div>
                         );
@@ -1515,38 +1516,38 @@ export default function Customer() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
                 {/* Overall Outstanding Due Banner */}
-                <div className="panel" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: '#fff', padding: '1.5rem', borderRadius: '12px' }}>
-                  <div className="flex-between" style={{ flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                <div className="panel" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: '#fff', padding: '1.25rem', borderRadius: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem' }}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <BookOpen size={22} color="#38bdf8" />
-                        <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#fff', fontWeight: '800' }}>My Khata Ledger</h2>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+                        <BookOpen size={20} color="#38bdf8" />
+                        <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800' }}>My Khata Ledger</h2>
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
                         Live synchronized credit ledger across all your local shops
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.07)', padding: '0.75rem 1.25rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: '600' }}>Total Amount Due to Pay</div>
-                      <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '1.8rem', color: khataOverview.overallDue > 0 ? '#f87171' : '#4ade80', fontWeight: '900' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.07)', padding: '0.65rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+                      <div style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: '600' }}>Total Amount Due to Pay</div>
+                      <h2 style={{ margin: '0.15rem 0 0 0', fontSize: '1.5rem', color: khataOverview.overallDue > 0 ? '#f87171' : '#4ade80', fontWeight: '900' }}>
                         ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
                       </h2>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                      <span className="badge" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span className="badge" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.72rem', padding: '2px 8px' }}>
                         {khataOverview.stores.length} Enrolled Stores
                       </span>
-                      <span className="badge" style={{ background: khataOverview.stores.filter(s => s.totalDue > 0).length > 0 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(34, 197, 94, 0.25)', color: '#fff' }}>
+                      <span className="badge" style={{ background: khataOverview.stores.filter(s => s.totalDue > 0).length > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)', color: '#fff', fontSize: '0.72rem', padding: '2px 8px' }}>
                         {khataOverview.stores.filter(s => s.totalDue > 0).length} Stores with Due
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <ShieldCheck size={14} color="#38bdf8" /> Official Store Records (Read-Only)
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <ShieldCheck size={13} color="#38bdf8" /> Official Store Records (Read-Only)
                     </div>
                   </div>
                 </div>
@@ -1555,108 +1556,118 @@ export default function Customer() {
                 {khataLoading ? (
                   <KhataOverviewSkeleton />
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                     {khataOverview.stores.map((st) => (
                     <div 
                       key={`khata-store-${st.shopId}`}
                       className="panel"
                       style={{ 
-                        padding: '1.25rem', 
+                        padding: '1rem', 
                         cursor: 'pointer',
+                        borderRadius: '12px',
                         transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                         borderLeft: st.totalDue > 0 ? '4px solid var(--danger)' : '4px solid var(--success)'
                       }}
                       onClick={() => loadStoreKhataDetails(st)}
                     >
-                      <div className="flex-between" style={{ flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
-                        
-                        {/* Store Info (Left) */}
-                        <div style={{ flex: 1, minWidth: '240px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text)' }}>{st.shopName}</h3>
-                            <span className="badge" style={{ fontSize: '0.7rem', background: '#eff6ff', color: 'var(--primary)', fontWeight: '700' }}>
+                      {/* Store Top Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text)', fontWeight: 800 }}>{st.shopName}</h3>
+                            <span className="badge" style={{ fontSize: '0.68rem', background: '#eff6ff', color: 'var(--primary)', fontWeight: '700', padding: '1px 6px' }}>
                               ID: {st.shortId || `shp${st.shopId}`}
                             </span>
-                            <span className="badge" style={{ fontSize: '0.7rem', background: st.isOpen ? '#dcfce7' : '#fee2e2', color: st.isOpen ? '#15803d' : '#b91c1c' }}>
+                            <span className="badge" style={{ fontSize: '0.68rem', background: st.isOpen ? '#dcfce7' : '#fee2e2', color: st.isOpen ? '#15803d' : '#b91c1c', padding: '1px 6px' }}>
                               {st.isOpen ? 'Open' : 'Closed'}
                             </span>
                           </div>
-
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                          <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                             {st.shopAddress ? `${st.shopAddress}, ${st.city}` : st.city} {st.timings ? `• ${st.timings}` : ''}
                           </div>
+                        </div>
+                      </div>
 
-                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
-                            {st.shopPhone && (
-                              <a 
-                                href={`tel:${st.shopPhone}`}
-                                className="btn btn-outline"
-                                style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Phone size={13} /> Call Now
-                              </a>
-                            )}
-                            {st.shopPhone && (
-                              <a 
-                                href={`https://wa.me/91${st.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${st.shopName}, I would like to check my khata and place an order.`)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="btn btn-outline"
-                                style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none', color: '#16a34a', borderColor: '#bbf7d0', background: '#f0fdf4' }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MessageCircle size={13} /> WhatsApp
-                              </a>
-                            )}
+                      {/* Contact Buttons */}
+                      {st.shopPhone && (
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                          <a 
+                            href={`tel:${st.shopPhone}`}
+                            className="btn btn-outline"
+                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Phone size={12} /> Call Now
+                          </a>
+                          <a 
+                            href={`https://wa.me/91${st.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${st.shopName}, I would like to check my khata and place an order.`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn btn-outline"
+                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none', color: '#16a34a', borderColor: '#bbf7d0', background: '#f0fdf4' }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MessageCircle size={12} /> WhatsApp
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Highlighted Due Amount Box */}
+                      <div style={{ 
+                        background: st.totalDue > 0 ? '#fff5f5' : '#f0fdf4', 
+                        border: `1px solid ${st.totalDue > 0 ? '#fed7d7' : '#bbf7d0'}`, 
+                        borderRadius: '8px', 
+                        padding: '0.65rem 0.85rem', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginBottom: '0.75rem'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: '800', color: st.totalDue > 0 ? '#dc2626' : '#15803d', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {st.totalDue > 0 ? 'Amount Due to Pay' : 'Account Status'}
+                          </div>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: st.totalDue > 0 ? '#dc2626' : '#15803d', lineHeight: 1.1, marginTop: '2px' }}>
+                            {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
                           </div>
                         </div>
 
-                        {/* Amount Due (Right) */}
-                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
-                          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: st.totalDue > 0 ? 'var(--danger)' : 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {st.totalDue > 0 ? 'Amount Due to Pay' : 'Account Status'}
-                          </div>
-                          <div style={{ fontSize: '1.5rem', fontWeight: '900', color: st.totalDue > 0 ? 'var(--danger)' : 'var(--success)', margin: '0.2rem 0' }}>
-                            {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
-                          </div>
-                          {st.totalDue === 0 && (
-                            <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: '700' }}>
+                        <div>
+                          {st.totalDue === 0 ? (
+                            <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.72rem', fontWeight: '700' }}>
                               ✓ No Due Clear
                             </span>
-                          )}
-                          {st.totalDue > 0 && (
-                            <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', fontSize: '0.75rem', fontWeight: '700' }}>
+                          ) : (
+                            <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', fontSize: '0.72rem', fontWeight: '700' }}>
                               Pending Due
                             </span>
                           )}
                         </div>
-
                       </div>
 
                       {/* Store Card Footer with Action Buttons */}
-                      <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border)', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', paddingTop: '0.6rem', borderTop: '1px dashed var(--border)' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           Khata Credit: <strong>₹{(Number(st?.totalBook) || 0).toFixed(2)}</strong> • Paid: <strong>₹{(Number(st?.totalPaid) || 0).toFixed(2)}</strong>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                           <button 
                             type="button" 
                             className="btn" 
-                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', background: '#0284c7' }}
+                            style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem', background: '#0284c7' }}
                             onClick={(e) => { e.stopPropagation(); handleStartNewOrderFromStore(st); }}
                           >
-                            <Plus size={14} /> New Order +
+                            <Plus size={13} /> New Order +
                           </button>
                           
                           <button 
                             type="button" 
                             className="btn btn-outline" 
-                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
+                            style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem' }}
                             onClick={(e) => { e.stopPropagation(); loadStoreKhataDetails(st); }}
                           >
-                            <BookOpen size={14} /> View History →
+                            <BookOpen size={13} /> View History →
                           </button>
                         </div>
                       </div>
@@ -3889,6 +3900,48 @@ export default function Customer() {
           <span>More</span>
         </button>
       </div>
+
+      {/* FLOATING MOBILE CART BAR */}
+      {Object.keys(orderList).length > 0 && activeCartShop && (
+        <div 
+          className="mobile-only"
+          style={{
+            position: 'fixed',
+            bottom: 'calc(4.2rem + max(env(safe-area-inset-bottom, 0px), constant(safe-area-inset-bottom, 0px)))',
+            left: '0.75rem',
+            right: '0.75rem',
+            zIndex: 900
+          }}
+        >
+          <button
+            type="button"
+            className="btn"
+            style={{
+              width: '100%',
+              background: '#16a34a',
+              color: '#fff',
+              padding: '0.75rem 1rem',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 8px 20px -4px rgba(22, 163, 74, 0.45)',
+              fontWeight: 700,
+              fontSize: '0.9rem'
+            }}
+            onClick={() => setShowCartModal(true)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShoppingCart size={18} />
+              <span>{Object.keys(orderList).length} {Object.keys(orderList).length === 1 ? 'item' : 'items'} in Cart</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span>₹{(Number(totalOrderAmount) || 0).toFixed(2)}</span>
+              <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>• View Cart →</span>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
