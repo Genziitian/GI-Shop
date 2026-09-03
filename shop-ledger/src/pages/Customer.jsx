@@ -1167,7 +1167,7 @@ export default function Customer() {
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Best Available Rate</div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--success)' }}>₹{lowestPrice.toFixed(2)}</div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--success)' }}>₹{(Number(lowestPrice) || 0).toFixed(2)}</div>
                       </div>
                     </div>
 
@@ -1217,7 +1217,7 @@ export default function Customer() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                               <div style={{ textAlign: 'right' }}>
                                 <strong style={{ fontSize: '1.15rem', color: isBestPrice ? 'var(--success)' : 'var(--text)' }}>
-                                  ₹{offer.price.toFixed(2)}
+                                  ₹{(Number(offer?.price) || 0).toFixed(2)}
                                 </strong>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>/{offer.unit}</div>
                               </div>
@@ -1394,13 +1394,13 @@ export default function Customer() {
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text)' }}>{item.name}</div>
                           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>₹{item.price.toFixed(2)}</strong>
+                            <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>₹{(Number(item?.price) || 0).toFixed(2)}</strong>
                             <span>/ {item.unit}</span>
                           </div>
 
                           {isAdded && (
                             <div style={{ marginTop: '0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
-                              <CheckCircle size={12} /> In List: {currentQty} {item.unit} (₹{currentEntry.amount.toFixed(2)})
+                              <CheckCircle size={12} /> In List: {currentQty} {item.unit} (₹{(Number(currentEntry?.amount) || 0).toFixed(2)})
                             </div>
                           )}
                         </div>
@@ -1460,7 +1460,7 @@ export default function Customer() {
                             <div>{entry.item.name}</div>
                             <small style={{ color: 'var(--text-muted)' }}>{entry.qty} x ₹{entry.rate}</small>
                           </div>
-                          <strong>₹{entry.amount.toFixed(2)}</strong>
+                          <strong>₹{(Number(entry?.amount) || 0).toFixed(2)}</strong>
                         </div>
                       ))}
                     </div>
@@ -1470,7 +1470,7 @@ export default function Customer() {
                 <div style={{ borderTop: '2px solid var(--border)', paddingTop: '0.75rem', marginBottom: '1rem' }}>
                   <div className="flex-between" style={{ fontSize: '1.1rem', fontWeight: '700' }}>
                     <span>Estimated Total:</span>
-                    <span style={{ color: 'var(--success)' }}>₹{totalOrderAmount.toFixed(2)}</span>
+                    <span style={{ color: 'var(--success)' }}>₹{(Number(totalOrderAmount) || 0).toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -1511,7 +1511,7 @@ export default function Customer() {
                     <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.07)', padding: '0.75rem 1.25rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <div style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: '600' }}>Total Amount Due to Pay</div>
                       <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '1.8rem', color: khataOverview.overallDue > 0 ? '#f87171' : '#4ade80', fontWeight: '900' }}>
-                        ₹{khataOverview.overallDue.toFixed(2)}
+                        ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
                       </h2>
                     </div>
                   </div>
@@ -1596,7 +1596,7 @@ export default function Customer() {
                             {st.totalDue > 0 ? 'Amount Due to Pay' : 'Account Status'}
                           </div>
                           <div style={{ fontSize: '1.5rem', fontWeight: '900', color: st.totalDue > 0 ? 'var(--danger)' : 'var(--success)', margin: '0.2rem 0' }}>
-                            {st.totalDue > 0 ? `₹${st.totalDue.toFixed(2)}` : '₹0.00'}
+                            {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
                           </div>
                           {st.totalDue === 0 && (
                             <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.75rem', fontWeight: '700' }}>
@@ -1615,7 +1615,7 @@ export default function Customer() {
                       {/* Store Card Footer with Action Buttons */}
                       <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border)', flexWrap: 'wrap', gap: '0.5rem' }}>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          Khata Credit: <strong>₹{(st.totalBook || 0).toFixed(2)}</strong> • Paid: <strong>₹{(st.totalPaid || 0).toFixed(2)}</strong>
+                          Khata Credit: <strong>₹{(Number(st?.totalBook) || 0).toFixed(2)}</strong> • Paid: <strong>₹{(Number(st?.totalPaid) || 0).toFixed(2)}</strong>
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1725,11 +1725,11 @@ export default function Customer() {
                     {/* Due metric */}
                     <div style={{ background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border)', textAlign: 'right' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Amount Due to Pay</div>
-                      <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', color: (storeKhataDetails?.totalDue ?? selectedKhataStore.totalDue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '900' }}>
-                        ₹{(storeKhataDetails?.totalDue ?? selectedKhataStore.totalDue ?? 0).toFixed(2)}
+                      <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', color: (storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '900' }}>
+                        ₹{(Number(storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue) || 0).toFixed(2)}
                       </h2>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Credit Taken: ₹{(storeKhataDetails?.totalBook ?? selectedKhataStore.totalBook ?? 0).toFixed(2)} • Paid: ₹{(storeKhataDetails?.totalPaid ?? selectedKhataStore.totalPaid ?? 0).toFixed(2)}
+                        Credit Taken: ₹{(Number(storeKhataDetails?.totalBook ?? selectedKhataStore?.totalBook) || 0).toFixed(2)} • Paid: ₹{(Number(storeKhataDetails?.totalPaid ?? selectedKhataStore?.totalPaid) || 0).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -1865,7 +1865,7 @@ export default function Customer() {
 
                                   <div style={{ textAlign: 'right' }}>
                                     <h3 style={{ margin: 0, color: isKhataMethod ? 'var(--danger)' : 'var(--success)' }}>
-                                      {isKhataMethod ? `+₹${entry.total.toFixed(2)} Due` : `₹${entry.total.toFixed(2)}`}
+                                      {isKhataMethod ? `+₹${(Number(entry?.total) || 0).toFixed(2)} Due` : `₹${(Number(entry?.total) || 0).toFixed(2)}`}
                                     </h3>
                                   </div>
                                 </div>
@@ -1874,7 +1874,7 @@ export default function Customer() {
                                   {items.map((c, i) => (
                                     <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                                       <span>{c.item?.name || c.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>x {c.qty} {c.item?.unit}</span></span>
-                                      <span>₹{((c.rate || c.item?.price) * c.qty).toFixed(2)}</span>
+                                      <span>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1918,7 +1918,7 @@ export default function Customer() {
                                   </div>
 
                                   <div style={{ textAlign: 'right' }}>
-                                    <h3 style={{ margin: 0, color: '#15803d', fontWeight: '800' }}>-₹{entry.amount.toFixed(2)}</h3>
+                                    <h3 style={{ margin: 0, color: '#15803d', fontWeight: '800' }}>-₹{(Number(entry?.amount) || 0).toFixed(2)}</h3>
                                     <span style={{ fontSize: '0.75rem', color: '#166534' }}>Paid / Cleared</span>
                                   </div>
                                 </div>
@@ -1946,7 +1946,11 @@ export default function Customer() {
 
                                   <div style={{ textAlign: 'right' }}>
                                     <h3 style={{ margin: 0, color: 'var(--primary)' }}>
-                                      ₹{((entry.estimatedTotal && entry.estimatedTotal > 0) ? entry.estimatedTotal : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)).toFixed(2)}
+                                      ₹{(Number(
+                                        (entry.estimatedTotal && entry.estimatedTotal > 0)
+                                          ? entry.estimatedTotal
+                                          : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)
+                                      ) || 0).toFixed(2)}
                                     </h3>
                                     <span className="badge" style={{ fontSize: '0.75rem', background: '#eff6ff', color: 'var(--primary)' }}>
                                       {entry.status}
@@ -1958,7 +1962,7 @@ export default function Customer() {
                                   {items.map((it, i) => (
                                     <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                                       <span>{it.item?.name || it.name} x {it.qty}</span>
-                                      <span>₹{(it.amount || ((it.rate || it.price) * it.qty) || 0).toFixed(2)}</span>
+                                      <span>₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -2055,7 +2059,7 @@ export default function Customer() {
                 <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Purchases &amp; Orders Value</div>
-                    <h2 style={{ margin: 0, color: 'var(--success)', fontSize: '1.75rem' }}>₹{grandTotal.toFixed(2)}</h2>
+                    <h2 style={{ margin: 0, color: 'var(--success)', fontSize: '1.75rem' }}>₹{(Number(grandTotal) || 0).toFixed(2)}</h2>
                   </div>
                   <div style={{ display: 'flex', gap: '1.5rem', textAlign: 'right' }}>
                     <div>
@@ -2366,7 +2370,7 @@ export default function Customer() {
                             </div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <h3 style={{ margin: 0, color: 'var(--success)' }}>₹{purchase.total.toFixed(2)}</h3>
+                            <h3 style={{ margin: 0, color: 'var(--success)' }}>₹{(Number(purchase?.total) || 0).toFixed(2)}</h3>
                             <span className="badge" style={{ fontSize: '0.75rem' }}>{purchase.paymentMethod}</span>
                           </div>
                         </div>
@@ -2375,7 +2379,7 @@ export default function Customer() {
                           {items.map((c, i) => (
                             <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                               <span>{c.item?.name || c.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>x {c.qty} {c.item?.unit}</span></span>
-                              <span>₹{((c.rate || c.item?.price) * c.qty).toFixed(2)}</span>
+                              <span>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
@@ -2670,7 +2674,7 @@ export default function Customer() {
                           <Plus size={12} />
                         </button>
                       </div>
-                      <strong style={{ fontSize: '0.95rem', minWidth: '55px', textAlign: 'right' }}>₹{entry.amount.toFixed(2)}</strong>
+                      <strong style={{ fontSize: '0.95rem', minWidth: '55px', textAlign: 'right' }}>₹{(Number(entry?.amount) || 0).toFixed(2)}</strong>
                     </div>
                   </div>
                 ))}
@@ -2679,7 +2683,7 @@ export default function Customer() {
               <div style={{ borderTop: '2px solid var(--border)', paddingTop: '0.75rem', marginBottom: '1.25rem' }}>
                 <div className="flex-between" style={{ fontSize: '1.15rem', fontWeight: '700' }}>
                   <span>Estimated Total:</span>
-                  <span style={{ color: 'var(--success)' }}>₹{totalOrderAmount.toFixed(2)}</span>
+                  <span style={{ color: 'var(--success)' }}>₹{(Number(totalOrderAmount) || 0).toFixed(2)}</span>
                 </div>
               </div>
 
@@ -2760,16 +2764,16 @@ export default function Customer() {
                 {JSON.parse(selectedReceipt.itemsJSON || '[]').map((c, i) => (
                   <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.35rem' }}>
                     <span>{c.item?.name || c.name} ({c.qty} {c.item?.unit})</span>
-                    <span>₹{((c.rate || c.item?.price) * c.qty).toFixed(2)}</span>
+                    <span>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
 
               <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.75rem', fontSize: '0.9rem' }}>
-                <div className="flex-between"><span>Subtotal:</span><span>₹{(selectedReceipt.subtotal || selectedReceipt.total).toFixed(2)}</span></div>
-                {selectedReceipt.discount > 0 && <div className="flex-between"><span>Discount:</span><span>-₹{selectedReceipt.discount.toFixed(2)}</span></div>}
+                <div className="flex-between"><span>Subtotal:</span><span>₹{(Number(selectedReceipt.subtotal || selectedReceipt.total) || 0).toFixed(2)}</span></div>
+                {selectedReceipt.discount > 0 && <div className="flex-between"><span>Discount:</span><span>-₹{(Number(selectedReceipt.discount) || 0).toFixed(2)}</span></div>}
                 <div className="flex-between" style={{ fontWeight: '700', fontSize: '1.1rem', marginTop: '0.5rem' }}>
-                  <span>Total:</span><span style={{ color: 'var(--success)' }}>₹{selectedReceipt.total.toFixed(2)}</span>
+                  <span>Total:</span><span style={{ color: 'var(--success)' }}>₹{(Number(selectedReceipt.total) || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex-between" style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   <span>Payment Method:</span><span>{selectedReceipt.paymentMethod}</span>
@@ -3638,7 +3642,7 @@ export default function Customer() {
               </div>
 
               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                Shop Rate: <strong style={{ color: 'var(--primary)', fontSize: '1.05rem' }}>₹{selectedModalProduct.price.toFixed(2)}</strong> / {selectedModalProduct.unit}
+                Shop Rate: <strong style={{ color: 'var(--primary)', fontSize: '1.05rem' }}>₹{(Number(selectedModalProduct?.price) || 0).toFixed(2)}</strong> / {selectedModalProduct.unit}
               </div>
 
               {/* 1. PIECE MODE */}

@@ -458,10 +458,10 @@ export default function Shopkeeper() {
           ['Owner', currentUser?.name || ''],
           ['Date Range Filter', exportDateRange],
           ['Total Bills Generated', filteredSales.length],
-          ['Total Sales Revenue (₹)', totalRevenue.toFixed(2)],
-          ['Cash Sales (₹)', cashRevenue.toFixed(2)],
-          ['Online / UPI Sales (₹)', upiRevenue.toFixed(2)],
-          ['Khata / Credit Sales (₹)', khataRevenue.toFixed(2)],
+          ['Total Sales Revenue (₹)', (Number(totalRevenue) || 0).toFixed(2)],
+          ['Cash Sales (₹)', (Number(cashRevenue) || 0).toFixed(2)],
+          ['Online / UPI Sales (₹)', (Number(upiRevenue) || 0).toFixed(2)],
+          ['Khata / Credit Sales (₹)', (Number(khataRevenue) || 0).toFixed(2)],
           ['Total Active Products in Inventory', items.length],
           ['Export Timestamp', new Date().toLocaleString()]
         ];
@@ -574,19 +574,19 @@ export default function Shopkeeper() {
         <div class="grid">
           <div class="card">
             <div class="card-title">Total Revenue</div>
-            <div class="card-val" style="color: #15803d;">₹${totalRev.toFixed(2)}</div>
+            <div class="card-val" style="color: #15803d;">₹${(Number(totalRev) || 0).toFixed(2)}</div>
           </div>
           <div class="card">
             <div class="card-title">Cash Sales</div>
-            <div class="card-val">₹${cashRev.toFixed(2)}</div>
+            <div class="card-val">₹${(Number(cashRev) || 0).toFixed(2)}</div>
           </div>
           <div class="card">
             <div class="card-title">UPI / Online</div>
-            <div class="card-val">₹${upiRev.toFixed(2)}</div>
+            <div class="card-val">₹${(Number(upiRev) || 0).toFixed(2)}</div>
           </div>
           <div class="card">
             <div class="card-title">Khata / Credit</div>
-            <div class="card-val" style="color: #c2410c;">₹${khataRev.toFixed(2)}</div>
+            <div class="card-val" style="color: #c2410c;">₹${(Number(khataRev) || 0).toFixed(2)}</div>
           </div>
         </div>
 
@@ -1086,16 +1086,17 @@ export default function Shopkeeper() {
                       {items.map((entry, idx) => (
                         <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                           <span>{entry.item?.name || entry.name} x {entry.qty}</span>
-                          <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
+                          <span>₹{(Number(entry.amount || (entry.rate * entry.qty)) || 0).toFixed(2)}</span>
                         </div>
                       ))}
                       <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
                         <span>Total:</span>
                         <span style={{ color: 'var(--success)' }}>
-                          ₹{((order.estimatedTotal && order.estimatedTotal > 0)
-                            ? order.estimatedTotal
-                            : items.reduce((sum, entry) => sum + (entry.amount || (entry.rate * entry.qty) || ((entry.item?.price || 0) * (entry.qty || 1)) || 0), 0)
-                          ).toFixed(2)}
+                          ₹{(Number(
+                            (order.estimatedTotal && order.estimatedTotal > 0)
+                              ? order.estimatedTotal
+                              : items.reduce((sum, entry) => sum + (entry.amount || (entry.rate * entry.qty) || ((entry.item?.price || 0) * (entry.qty || 1)) || 0), 0)
+                          ) || 0).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -1165,23 +1166,23 @@ export default function Shopkeeper() {
             <div className="grid grid-4" style={{ marginBottom: '1.25rem' }}>
               <div className="panel" style={{ background: '#f8fafc' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Total Revenue</div>
-                <h3 style={{ margin: '0.25rem 0', color: 'var(--primary)', fontSize: '1.4rem' }}>₹{(analytics.totalSales || 0).toFixed(2)}</h3>
+                <h3 style={{ margin: '0.25rem 0', color: 'var(--primary)', fontSize: '1.4rem' }}>₹{(Number(analytics.totalSales) || 0).toFixed(2)}</h3>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{analytics.count || 0} transactions</div>
               </div>
 
               <div className="panel" style={{ background: '#f8fafc' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Cash Collected</div>
-                <h3 style={{ margin: '0.25rem 0', color: 'var(--success)', fontSize: '1.4rem' }}>₹{(analytics.cashSales || 0).toFixed(2)}</h3>
+                <h3 style={{ margin: '0.25rem 0', color: 'var(--success)', fontSize: '1.4rem' }}>₹{(Number(analytics.cashSales) || 0).toFixed(2)}</h3>
               </div>
 
               <div className="panel" style={{ background: '#f8fafc' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Online / UPI</div>
-                <h3 style={{ margin: '0.25rem 0', color: '#7c3aed', fontSize: '1.4rem' }}>₹{(analytics.onlineSales || 0).toFixed(2)}</h3>
+                <h3 style={{ margin: '0.25rem 0', color: '#7c3aed', fontSize: '1.4rem' }}>₹{(Number(analytics.onlineSales) || 0).toFixed(2)}</h3>
               </div>
 
               <div className="panel" style={{ background: '#f8fafc' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Khata (In Book)</div>
-                <h3 style={{ margin: '0.25rem 0', color: 'var(--warning)', fontSize: '1.4rem' }}>₹{(analytics.khataSales || 0).toFixed(2)}</h3>
+                <h3 style={{ margin: '0.25rem 0', color: 'var(--warning)', fontSize: '1.4rem' }}>₹{(Number(analytics.khataSales) || 0).toFixed(2)}</h3>
               </div>
             </div>
 
@@ -1261,7 +1262,7 @@ export default function Shopkeeper() {
                             ))}
                           </td>
                           <td style={{ textAlign: 'right', padding: '0.65rem', fontWeight: '700', color: 'var(--success)' }}>
-                            ₹{sale.total.toFixed(2)}
+                            ₹{(Number(sale?.total) || 0).toFixed(2)}
                           </td>
                           <td style={{ textAlign: 'center', padding: '0.65rem' }}>
                             <span className="badge">{sale.paymentMethod}</span>
