@@ -138,8 +138,8 @@ export default function MoreScreen({ navigation }) {
         isOwner ? getStaff().catch(() => []) : Promise.resolve([]),
         getMyDetailedShop().catch(() => null),
       ]);
-      setItems(Array.isArray(itemsData) ? itemsData : []);
-      setStaffList(Array.isArray(staffData) ? staffData : []);
+      setItems(Array.isArray(itemsData) ? itemsData : (itemsData?.items || []));
+      setStaffList(Array.isArray(staffData) ? staffData : (staffData?.staff || staffData?.cashiers || []));
       if (detailedShopData) {
         setDetailedShop(detailedShopData);
         setIsOpen(detailedShopData.isOpen === 1);
@@ -347,7 +347,7 @@ export default function MoreScreen({ navigation }) {
   const safeItems = Array.isArray(items) ? items : [];
   const safeStaff = Array.isArray(staffList) ? staffList : [];
   const filteredItems = safeItems.filter((i) =>
-    i.name.toLowerCase().includes(itemsSearch.toLowerCase())
+    (i?.name || '').toLowerCase().includes((itemsSearch || '').toLowerCase())
   );
 
   return (
@@ -682,8 +682,8 @@ export default function MoreScreen({ navigation }) {
             </View>
 
             {/* Items List */}
-            {filteredItems.map((it) => (
-              <View key={it.id} style={styles.productCard}>
+            {filteredItems.map((it, idx) => (
+              <View key={it.id || it._id || idx} style={styles.productCard}>
                 <View style={styles.productIconBox}>
                   <Package size={20} color={colors.primary} />
                 </View>
@@ -692,7 +692,7 @@ export default function MoreScreen({ navigation }) {
                   <Text style={styles.productName}>{it.name}</Text>
                   <View style={styles.rateBadge}>
                     <Text style={styles.rateBadgeText}>
-                      ₹{it.price} / {it.unit}
+                      ₹{(Number(it?.price ?? it?.rate) || 0).toFixed(2)} / {it?.unit || 'unit'}
                     </Text>
                   </View>
                 </View>

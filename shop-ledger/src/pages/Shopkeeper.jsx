@@ -747,7 +747,7 @@ export default function Shopkeeper() {
   const loadOrdersData = async () => {
     try {
       const data = await getShopOrders();
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : (data?.orders || []));
     } catch (e) { console.error(e); }
   };
 
@@ -761,15 +761,15 @@ export default function Shopkeeper() {
         params.range = range;
       }
       const data = await getSales(params);
-      setSales(data.sales || []);
-      setAnalytics(data.analytics || {});
+      setSales(Array.isArray(data?.sales) ? data.sales : (Array.isArray(data) ? data : []));
+      setAnalytics(data?.analytics || {});
     } catch (e) { console.error(e); }
   };
 
   const loadStaffData = async () => {
     try {
       const data = await getStaff();
-      setStaffList(data);
+      setStaffList(Array.isArray(data) ? data : (data?.staff || data?.cashiers || []));
     } catch (e) { console.error(e); }
   };
 
