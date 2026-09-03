@@ -167,10 +167,18 @@ export default function POSScreen({ navigation }) {
       return Alert.alert('Empty Cart', 'Please add items to cart before completing bill.');
     }
     if (paymentMethod === 'Add to Book' && !selectedCustomer) {
-      return Alert.alert(
-        'Customer Required',
-        'You must select or add a customer to record this bill to Khata (Add to Book).'
+      Alert.alert(
+        'Customer Details Required',
+        'Khata credit ("Add to Book") requires customer details. Please fill customer name & phone number.',
+        [
+          {
+            text: 'Fill Customer Details',
+            onPress: () => setShowAddCustomerModal(true),
+          },
+        ]
       );
+      setShowAddCustomerModal(true);
+      return;
     }
 
     setCompletingBill(true);
@@ -441,9 +449,20 @@ export default function POSScreen({ navigation }) {
             >
               {/* Customer Row in Modal */}
               <View style={styles.modalCustomerCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <UserCheck size={16} color={colors.primary} />
-                  <Text style={styles.modalCustTitle}>Billing Customer:</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <UserCheck size={16} color={colors.primary} />
+                    <Text style={styles.modalCustTitle}>Billing Customer:</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={{ backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#bfdbfe' }}
+                    onPress={() => setShowAddCustomerModal(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#2563eb' }}>
+                      {selectedCustomer ? '✏️ Change Customer' : '+ Select / Add Customer'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <Text style={styles.modalCustValue} numberOfLines={1}>
                   {selectedCustomer
@@ -534,7 +553,22 @@ export default function POSScreen({ navigation }) {
                         styles.paymentModeBtn,
                         active && styles.paymentModeBtnActive,
                       ]}
-                      onPress={() => setPaymentMethod(mode.id)}
+                      onPress={() => {
+                        setPaymentMethod(mode.id);
+                        if (mode.id === 'Add to Book' && !selectedCustomer) {
+                          Alert.alert(
+                            'Customer Details Required',
+                            'Khata credit ("Add to Book") requires customer details. Please fill customer name & phone number.',
+                            [
+                              {
+                                text: 'Fill Customer Details',
+                                onPress: () => setShowAddCustomerModal(true),
+                              },
+                            ]
+                          );
+                          setShowAddCustomerModal(true);
+                        }
+                      }}
                       activeOpacity={0.7}
                     >
                       <Icon

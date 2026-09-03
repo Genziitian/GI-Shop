@@ -168,8 +168,10 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
   const removeCartItem = (index) => setCart(cart.filter((_, i) => i !== index));
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return alert('Cart is empty!');
-    if (paymentMethod === 'Add to Book' && !selectedCustomer) return alert('You must select a customer to Add to Book.');
+    if (paymentMethod === 'Add to Book' && !selectedCustomer) {
+      alert('Customer Details Required: Khata credit ("Add to Book") requires customer details. Please enter customer phone or name in the Customer field.');
+      return;
+    }
     
     const sanitizedNote = saleNote.slice(0, 20);
 
