@@ -1330,24 +1330,24 @@ export default function Shopkeeper() {
             </div>
 
             {/* Date Filters Bar */}
-            <div className="panel" style={{ marginBottom: '1.25rem', padding: '0.75rem 1rem' }}>
-              <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: '600' }}>
-                  <Calendar size={16} /> Date Filter:
+            <div className="panel" style={{ marginBottom: '1rem', padding: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text)' }}>
+                  <Calendar size={16} color="var(--primary)" /> Date Filter
                 </div>
 
                 {!isOwner ? (
-                  <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)' }}>
+                  <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)', alignSelf: 'flex-start' }}>
                     Today Only (Cashier Access)
                   </span>
                 ) : (
-                  <div className="filter-pills-scroll">
+                  <div className="filter-pills-scroll" style={{ width: '100%', overflowX: 'auto', display: 'flex', gap: '0.4rem', paddingBottom: '4px' }}>
                     {['Today', 'Yesterday', '7Days', '15Days', '1Month', '3Months', '1Year', 'Custom'].map(r => (
                       <button
                         key={r}
                         type="button"
                         className={`btn ${dateRange === r ? '' : 'btn-outline'}`}
-                        style={{ padding: '0.35rem 0.7rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                        style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', whiteSpace: 'nowrap', borderRadius: '8px', flexShrink: 0 }}
                         onClick={() => setDateRange(r)}
                       >
                         {r === '7Days' ? '7 Days' : (r === '15Days' ? '15 Days' : (r === '1Month' ? '1 Month' : (r === '3Months' ? '3 Months' : (r === '1Year' ? '1 Year' : r))))}
@@ -1369,10 +1369,15 @@ export default function Shopkeeper() {
               )}
             </div>
 
-            {/* Sales Table with 20-char Notes */}
-            <div className="panel">
-              <h3 className="title" style={{ marginBottom: '0.75rem', fontSize: '1.1rem' }}>Itemized Sales History</h3>
-              <div className="table-responsive">
+            {/* Sales Section */}
+            <div className="panel" style={{ padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h3 className="title" style={{ margin: 0, fontSize: '1.05rem' }}>Itemized Sales History</h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{sales.length} Bills</span>
+              </div>
+
+              {/* Desktop Spreadsheet Table View */}
+              <div className="table-responsive desktop-only-block">
                 <table style={{ width: '100%', minWidth: '600px', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '2px solid var(--border)', background: '#f8fafc' }}>
@@ -1448,8 +1453,122 @@ export default function Shopkeeper() {
                     })}
                   </tbody>
                 </table>
-                {sales.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No sales recorded for this period.</p>}
               </div>
+
+              {/* Mobile-Optimized Sales Cards (Zero Table Cut-Off) */}
+              <div className="mobile-only-block">
+                {sales.map(sale => {
+                  const items = JSON.parse(sale.itemsJSON || '[]');
+                  const methodColor = sale.paymentMethod === 'Cash' ? '#16a34a' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#7c3aed' : '#d97706';
+                  const methodBg = sale.paymentMethod === 'Cash' ? '#dcfce7' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#f5f3ff' : '#fef3c7';
+
+                  return (
+                    <div 
+                      key={sale.id}
+                      style={{ 
+                        background: '#ffffff', 
+                        border: '1px solid var(--border)', 
+                        borderRadius: '12px', 
+                        padding: '0.85rem', 
+                        marginBottom: '0.65rem',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setSelectedReceipt(sale)}
+                    >
+                      {/* Card Header: Bill ID & Amount */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.45rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--primary)' }}>
+                              #{sale.id}
+                            </span>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              fontWeight: 700, 
+                              color: methodColor, 
+                              background: methodBg, 
+                              padding: '2px 6px', 
+                              borderRadius: '4px' 
+                            }}>
+                              {sale.paymentMethod || 'Cash'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {new Date(sale.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--success)' }}>
+                            ₹{(Number(sale?.total) || 0).toFixed(2)}
+                          </div>
+                          {sale.discount > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--danger)' }}>
+                              -₹{Number(sale.discount).toFixed(2)} off
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Customer Info */}
+                      <div style={{ fontSize: '0.8rem', color: '#334155', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span>👤 {sale.customerPhone || 'Walk-in Customer'}</span>
+                        {sale.customerShortId && (
+                          <span className="badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>
+                            {sale.customerShortId}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Items Summary */}
+                      <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.45rem 0.6rem', marginBottom: '0.5rem', fontSize: '0.78rem', color: '#475569' }}>
+                        {items.slice(0, 3).map((c, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: i < 2 ? '2px' : 0 }}>
+                            <span>{c.item?.name || c.name} ({c.qty} {c.item?.unit || ''})</span>
+                            <span style={{ fontWeight: 600 }}>₹{(Number(c.qty) * Number(c.rate || c.item?.price || 0)).toFixed(2)}</span>
+                          </div>
+                        ))}
+                        {items.length > 3 && (
+                          <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, marginTop: '2px' }}>
+                            + {items.length - 3} more items
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notes & Actions */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: '0.75rem', color: sale.note ? '#4f46e5' : 'var(--text-muted)', fontStyle: sale.note ? 'italic' : 'normal', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {sale.note ? `Note: "${sale.note}"` : ''}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                          <button 
+                            type="button" 
+                            className="btn btn-outline" 
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem' }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedSaleForNote(sale); setNoteInput(sale.note || ''); }}
+                          >
+                            Note
+                          </button>
+                          <button 
+                            type="button" 
+                            className="btn btn-outline" 
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedReceipt(sale); }}
+                          >
+                            Bill →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {sales.length === 0 && (
+                <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No sales recorded for this period.</p>
+              )}
             </div>
           </div>
         )}
@@ -1739,29 +1858,29 @@ export default function Shopkeeper() {
 
         {/* TAB 7: MORE (Store Profile, Security PIN, Legal & Account) */}
         {activeTab === 'more' && (
-          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1.25rem', marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border)' }}>
+          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations &amp; Settings</h2>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations &amp; Settings</h2>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                   Manage shop details, operations, staff &amp; account settings
                 </div>
               </div>
-              <button type="button" className="btn" onClick={handleOpenShopDetails} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
-                <Settings size={16} /> Edit Store Profile
+              <button type="button" className="btn btn-outline" onClick={handleOpenShopDetails} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.82rem', padding: '0.4rem 0.75rem' }}>
+                <Settings size={15} color="var(--primary)" /> Edit Store Profile
               </button>
             </div>
 
             {/* Mobile-only Shop Open/Closed Quick Card */}
-            <div className="mobile-only-block" style={{ marginBottom: '1rem' }}>
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: isOpen ? '#dcfce7' : '#fee2e2', color: isOpen ? '#15803d' : '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="mobile-only-block" style={{ marginBottom: '0.85rem' }}>
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: isOpen ? '#dcfce7' : '#fee2e2', color: isOpen ? '#15803d' : '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Store size={18} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)' }}>Store Status</div>
-                    <div style={{ fontSize: '0.78rem', color: isOpen ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>Store Status</div>
+                    <div style={{ fontSize: '0.76rem', color: isOpen ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
                       {isOpen ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
                     </div>
                   </div>
@@ -1770,8 +1889,8 @@ export default function Shopkeeper() {
                   type="button"
                   className="btn"
                   style={{
-                    padding: '0.4rem 0.8rem',
-                    fontSize: '0.8rem',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.78rem',
                     fontWeight: 700,
                     background: isOpen ? '#fee2e2' : '#dcfce7',
                     color: isOpen ? '#b91c1c' : '#15803d',
@@ -1784,19 +1903,29 @@ export default function Shopkeeper() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
               {/* Store Details Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Store size={20} />
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Store size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>{currentShop?.shopName || 'My Shop'}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Short ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId}</strong></div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{currentShop?.shopName || 'My Shop'}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Short ID: <strong style={{ color: 'var(--primary)' }}>{currentShop?.shortId}</strong></div>
-                  </div>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    onClick={handleOpenShopDetails}
+                    style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem', color: 'var(--primary)' }}
+                  >
+                    Edit
+                  </button>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <div>📞 Phone: <strong>{currentShop?.shopPhone || currentUser?.phone || 'N/A'}</strong></div>
                   <div>📍 City: <strong>{currentShop?.city || 'Delhi'}</strong></div>
                   <div>🕒 Timings: <span>{currentShop?.timings || '08:00 AM - 10:00 PM'}</span></div>
@@ -1805,87 +1934,87 @@ export default function Shopkeeper() {
 
               {/* Management Actions (Owner only) */}
               {isOwner && (
-                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Plus size={20} />
+                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Plus size={18} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Shop Management</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Inventory &amp; staff controls</div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Shop Management</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Inventory &amp; staff controls</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <button 
                       type="button" 
                       className="btn btn-outline" 
                       onClick={() => setActiveTab('items')} 
-                      style={{ width: '100%', justifyContent: 'space-between', padding: '0.65rem 0.85rem', fontSize: '0.85rem' }}
+                      style={{ width: '100%', justifyContent: 'space-between', padding: '0.6rem 0.8rem', fontSize: '0.82rem', background: '#fff' }}
                     >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                        <Plus size={16} color="var(--primary)" /> Items &amp; Products ({items.length})
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 600 }}>
+                        <Plus size={15} color="var(--primary)" /> Items &amp; Products ({items.length})
                       </span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Manage →</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Manage →</span>
                     </button>
                     <button 
                       type="button" 
                       className="btn btn-outline" 
                       onClick={() => setActiveTab('staff')} 
-                      style={{ width: '100%', justifyContent: 'space-between', padding: '0.65rem 0.85rem', fontSize: '0.85rem' }}
+                      style={{ width: '100%', justifyContent: 'space-between', padding: '0.6rem 0.8rem', fontSize: '0.82rem', background: '#fff' }}
                     >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                        <UserPlus size={16} color="var(--primary)" /> Staff &amp; Cashiers ({staffList.length})
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 600 }}>
+                        <UserPlus size={15} color="var(--primary)" /> Staff &amp; Cashiers ({staffList.length})
                       </span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Manage →</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Manage →</span>
                     </button>
                   </div>
                 </div>
               )}
 
               {/* Security & Lock Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShieldCheck size={20} />
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={18} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Security &amp; Lock</div>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Security &amp; Lock</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-outline" onClick={handleOpenShopDetails} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <Key size={16} color="#16a34a" /> Change Account Password
+                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={handleOpenShopDetails} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
+                    <Key size={15} color="#16a34a" /> Change Account Password
                   </button>
                 </div>
               </div>
 
               {/* Legal & Privacy Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1.15rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Shield size={20} />
+              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={18} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>Legal &amp; Policies</div>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Legal &amp; Policies</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <ShieldCheck size={16} color="#16a34a" /> Privacy Policy
+                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
+                    <ShieldCheck size={15} color="#16a34a" /> Privacy Policy
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem' }}>
-                    <FileText size={16} color="#0284c7" /> Terms &amp; Conditions
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
+                    <FileText size={15} color="#0284c7" /> Terms &amp; Conditions
                   </button>
-                  <button type="button" className="btn btn-outline" onClick={() => navigate('/delete')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.85rem', color: '#dc2626' }}>
-                    <Trash2 size={16} color="#dc2626" /> Account Deletion Request
+                  <button type="button" className="btn btn-outline" onClick={() => navigate('/delete')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', color: '#dc2626', background: '#fff' }}>
+                    <Trash2 size={15} color="#dc2626" /> Account Deletion Request
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Account Actions */}
-            <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', justifyContent: 'flex-end', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-              <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ fontWeight: 700, gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', justifyContent: 'flex-end', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
+              <button type="button" className="btn btn-danger" onClick={handleLogout} style={{ fontWeight: 700, gap: '0.5rem', width: '100%', maxWidth: '280px', justifyContent: 'center' }}>
                 <LogOut size={16} /> Log Out Account
               </button>
             </div>
@@ -2932,12 +3061,12 @@ export default function Shopkeeper() {
       <div className="mobile-footer-nav">
         <button type="button" className={`footer-nav-item ${activeTab === 'pos' ? 'active' : ''}`} onClick={() => setActiveTab('pos')}>
           <ShoppingCart size={19} />
-          <span>POS Billing</span>
+          <span>POS</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'khata' ? 'active' : ''}`} onClick={() => setActiveTab('khata')}>
           <Users size={19} />
-          <span>Khata Ledger</span>
+          <span>Khata</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
