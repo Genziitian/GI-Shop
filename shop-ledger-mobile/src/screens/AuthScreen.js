@@ -19,6 +19,32 @@ import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import CitySelector from '../components/CitySelector';
 
+let GoogleSignin = null;
+let statusCodes = {
+  SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  PLAY_SERVICES_NOT_AVAILABLE: 'PLAY_SERVICES_NOT_AVAILABLE',
+};
+
+const getGoogleSigninModule = () => {
+  if (GoogleSignin) return { GoogleSignin, statusCodes };
+  try {
+    const mod = require('@react-native-google-signin/google-signin');
+    if (mod && mod.GoogleSignin) {
+      GoogleSignin = mod.GoogleSignin;
+      statusCodes = mod.statusCodes || statusCodes;
+      GoogleSignin.configure({
+        webClientId: '548472173128-5eq1e76kbtuc0fe0srki8kdkl6p26vho.apps.googleusercontent.com',
+        offlineAccess: false,
+      });
+      return { GoogleSignin, statusCodes };
+    }
+  } catch (e) {
+    console.warn('[GoogleSignin] Native module not registered in current environment (e.g. Expo Go):', e.message);
+  }
+  return null;
+};
+
 const GoogleIcon = () => (
   <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
     <Text style={{ fontSize: 16, fontWeight: '700' }}>G</Text>
@@ -26,7 +52,7 @@ const GoogleIcon = () => (
 );
 
 export default function AuthScreen() {
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [loginStep, setLoginStep] = useState('IDENTIFIER'); // 'IDENTIFIER' | 'PASSWORD'
@@ -133,11 +159,43 @@ export default function AuthScreen() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const googleAuthUrl = 'https://gi-shop.genziitian.in/auth?provider=google';
-      await Linking.openURL(googleAuthUrl);
-    } catch (e) {
-      Alert.alert('Google Sign-In', 'Redirecting to secure Google authentication portal...');
-      Linking.openURL('https://gi-shop.genziitian.in/auth');
+      setLoading(true);
+      const gModule = getGoogleSigninModule();
+      if (!gModule || !gModule.GoogleSignin) {
+        Alert.alert(
+          'Google Sign-In',
+          'Native Google Sign-In is enabled in the standalone APK / Google Play release. In Expo Go, please sign in using your Email & Password.'
+        );
+        return;
+      }
+
+      const { GoogleSignin: gSignin, statusCodes: codes } = gModule;
+      await gSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const signInResult = await gSignin.signIn();
+      const idToken = signInResult.data?.idToken || signInResult.idToken;
+
+      if (!idToken) {
+        throw new Error('Google Sign-In did not return an ID token.');
+      }
+
+      await loginWithGoogle({
+        idToken,
+        role: role || 'Customer',
+      });
+    } catch (error) {
+      const gModule = getGoogleSigninModule();
+      const codes = gModule?.statusCodes || statusCodes;
+      if (error.code === codes.SIGN_IN_CANCELLED) {
+        // User cancelled the sign-in flow, do nothing
+      } else if (error.code === codes.IN_PROGRESS) {
+        // Sign-in already in progress
+      } else if (error.code === codes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Google Play Services', 'Google Play Services is not available or outdated on this device.');
+      } else {
+        Alert.alert('Google Sign-In Error', error.message || 'Failed to sign in with Google.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 

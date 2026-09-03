@@ -402,11 +402,11 @@ export default function MoreScreen({ navigation }) {
                       {user?.shop?.shopName || detailedShop?.shopName || 'GI SHOP Store'}
                     </Text>
                     <View style={styles.editPill}>
-                      <Text style={styles.editPillText}>Edit ✏️</Text>
+                      <Text style={styles.editPillText}>Edit</Text>
                     </View>
                   </View>
                   <Text style={styles.shopMetaText}>
-                    ID: <Text style={{ color: colors.primary, fontWeight: '800' }}>{user?.shop?.shortId || detailedShop?.shortId || user?.shortId}</Text> • {isOwner ? '👑 Shop Owner' : '🛡️ Cashier'}
+                    ID: <Text style={{ color: colors.primary, fontWeight: '800' }}>{user?.shop?.shortId || detailedShop?.shortId || user?.shortId}</Text> • {isOwner ? 'Shop Owner' : 'Cashier'}
                   </Text>
                 </View>
               </TouchableOpacity>

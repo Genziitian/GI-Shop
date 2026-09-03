@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { 
   getAdminShops, getAdminUsers, getAdminCities, addAdminCity, deleteAdminCity,
   terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin,
-  getSupportSettings, updateSupportSettings
+  getSupportSettings, updateSupportSettings, getAdminSyncedContacts
 } from '../lib/api';
-import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save } from 'lucide-react';
+import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
 export default function SuperManager() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('shops'); // 'shops' | 'users' | 'cities' | 'support'
+  const [activeTab, setActiveTab] = useState('shops'); // 'shops' | 'users' | 'cities' | 'support' | 'contacts'
   const [shops, setShops] = useState([]);
   const [users, setUsers] = useState([]);
   const [cities, setCities] = useState([]);
+  const [syncedContacts, setSyncedContacts] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -35,15 +36,17 @@ export default function SuperManager() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [s, u, c, supp] = await Promise.all([
+      const [s, u, c, supp, contacts] = await Promise.all([
         getAdminShops(),
         getAdminUsers(),
         getAdminCities(),
-        getSupportSettings().catch(() => ({ supportPhone: '', supportWhatsapp: '', supportEmail: '', supportHours: '09:00 AM - 09:00 PM' }))
+        getSupportSettings().catch(() => ({ supportPhone: '', supportWhatsapp: '', supportEmail: '', supportHours: '09:00 AM - 09:00 PM' })),
+        getAdminSyncedContacts().catch(() => [])
       ]);
       setShops(s);
       setUsers(u);
       setCities(c);
+      setSyncedContacts(contacts || []);
       if (supp) {
         setSupportForm({
           supportPhone: supp.supportPhone || '',
@@ -240,7 +243,16 @@ export default function SuperManager() {
                 style={{ padding: '0.6rem 1.25rem' }}
                 onClick={() => setActiveTab('support')}
               >
-                <Headphones size={18} /> Support Contacts
+                <Headphones size={18} /> Support Settings
+              </button>
+
+              <button
+                type="button"
+                className={`btn ${activeTab === 'contacts' ? '' : 'btn-outline'}`}
+                style={{ padding: '0.6rem 1.25rem' }}
+                onClick={() => setActiveTab('contacts')}
+              >
+                <Contact size={18} /> Synced Contacts ({syncedContacts.length})
               </button>
             </div>
 
@@ -588,6 +600,190 @@ export default function SuperManager() {
                 {supportSaving ? 'Saving Changes...' : 'Save Support Contact Settings'}
               </button>
             </form>
+          </div>
+        )}
+
+        {/* TAB 5: SYNCED CONTACTS DIRECTORY */}
+        {activeTab === 'contacts' && (
+          <div>
+            {/* Quick Metrics */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div className="card" style={{ padding: '1.25rem', background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+                <div style={{ fontSize: '0.85rem', color: '#1e40af', fontWeight: '600', marginBottom: '0.35rem' }}>
+                  Total Synced Contacts
+                </div>
+                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#1e3a8a' }}>
+                  {syncedContacts.length}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#3b82f6', marginTop: '0.2rem' }}>
+                  Imported via Device Contacts
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: '1.25rem', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '0.85rem', color: '#166534', fontWeight: '600', marginBottom: '0.35rem' }}>
+                  Unique Phone Numbers
+                </div>
+                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#14532d' }}>
+                  {new Set(syncedContacts.map(c => c.contactPhone)).size}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#22c55e', marginTop: '0.2rem' }}>
+                  Distinct customer leads
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: '1.25rem', background: '#faf5ff', border: '1px solid #e9d5ff' }}>
+                <div style={{ fontSize: '0.85rem', color: '#6b21a8', fontWeight: '600', marginBottom: '0.35rem' }}>
+                  Contributing Shops
+                </div>
+                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#581c87' }}>
+                  {new Set(syncedContacts.map(c => c.shopId || c.shopName)).size}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#a855f7', marginTop: '0.2rem' }}>
+                  Shops syncing device contacts
+                </div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="flex-between" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div>
+                  <h3 className="title" style={{ margin: 0 }}>Device Contacts Central Directory</h3>
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Contacts imported by shopkeepers from their mobile phone address books into GI SHOP.
+                  </p>
+                </div>
+                <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: '700', padding: '0.35rem 0.75rem' }}>
+                  {syncedContacts.filter(c => {
+                    const q = search.toLowerCase();
+                    return (
+                      (c.contactName || '').toLowerCase().includes(q) ||
+                      (c.contactPhone || '').includes(q) ||
+                      (c.shopName || '').toLowerCase().includes(q) ||
+                      (c.shopkeeperName || '').toLowerCase().includes(q) ||
+                      (c.city || '').toLowerCase().includes(q)
+                    );
+                  }).length} Matching Contacts
+                </span>
+              </div>
+
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '40px' }}>#</th>
+                      <th>Customer Contact</th>
+                      <th>Phone Number</th>
+                      <th>Importing Shop</th>
+                      <th>City</th>
+                      <th>Shopkeeper</th>
+                      <th>Source</th>
+                      <th>Synced Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {syncedContacts
+                      .filter(c => {
+                        const q = search.toLowerCase();
+                        return (
+                          (c.contactName || '').toLowerCase().includes(q) ||
+                          (c.contactPhone || '').includes(q) ||
+                          (c.shopName || '').toLowerCase().includes(q) ||
+                          (c.shopkeeperName || '').toLowerCase().includes(q) ||
+                          (c.city || '').toLowerCase().includes(q)
+                        );
+                      })
+                      .map((c, idx) => (
+                        <tr key={c.id || idx}>
+                          <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{idx + 1}</td>
+                          <td>
+                            <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>
+                              {c.contactName || 'Unnamed Contact'}
+                            </strong>
+                            {c.contactEmail ? (
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{c.contactEmail}</div>
+                            ) : null}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <strong style={{ fontFamily: 'monospace', fontSize: '0.92rem' }}>
+                                📞 +91 {c.contactPhone}
+                              </strong>
+                              <a
+                                href={`https://wa.me/91${c.contactPhone}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  fontSize: '0.75rem',
+                                  padding: '0.15rem 0.4rem',
+                                  borderRadius: '4px',
+                                  background: '#dcfce7',
+                                  color: '#15803d',
+                                  fontWeight: '700',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                WhatsApp
+                              </a>
+                            </div>
+                          </td>
+                          <td>
+                            <strong>{c.shopName || 'Shop #' + c.shopId}</strong>
+                          </td>
+                          <td>
+                            <span className="badge" style={{ background: '#f1f5f9', color: '#475569' }}>
+                              📍 {c.city || 'N/A'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.85rem' }}>
+                              {c.shopkeeperName || 'Shopkeeper'}
+                            </div>
+                            {c.shopkeeperPhone ? (
+                              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                                {c.shopkeeperPhone}
+                              </div>
+                            ) : null}
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                padding: '0.2rem 0.5rem',
+                                borderRadius: '6px',
+                                fontSize: '0.78rem',
+                                fontWeight: '700',
+                                background: '#eff6ff',
+                                color: '#2563eb'
+                              }}
+                            >
+                              <Smartphone size={13} />
+                              {c.source === 'DEVICE_IMPORT' ? 'Device Contacts' : c.source}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            {c.syncedAt ? new Date(c.syncedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                          </td>
+                        </tr>
+                      ))}
+
+                    {syncedContacts.length === 0 && (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                          <Smartphone size={40} style={{ margin: '0 auto 0.75rem auto', display: 'block', color: '#cbd5e1' }} />
+                          <strong style={{ display: 'block', fontSize: '1rem', color: '#475569', marginBottom: '0.25rem' }}>
+                            No Synced Contacts Yet
+                          </strong>
+                          When shopkeepers tap "Import from Device Contacts" on their phone, contacts will sync and display here.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>

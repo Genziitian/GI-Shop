@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { X, UserPlus, Contact, Lock, RotateCcw, UserCheck, Search } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
-import { searchRegisteredCustomer } from '../api/client';
+import { searchRegisteredCustomer, syncContacts } from '../api/client';
 
 export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) {
   const [phone, setPhone] = useState('');
@@ -61,9 +61,60 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
 
   const handleImportContact = async () => {
     try {
-      // 1. Try Web Contact Picker API if supported
+      let Contacts = null;
+      try {
+        Contacts = require('expo-contacts');
+      } catch (e) {
+        console.warn('expo-contacts native module not available:', e);
+      }
+
+      // 1. Native Mobile Device Contact Picker (Android / iOS)
+      if (Contacts && typeof Contacts.requestPermissionsAsync === 'function' && Platform.OS !== 'web') {
+        const { status } = await Contacts.requestPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Permission Denied',
+            'Permission to access device contacts was denied. Please allow contacts permission in your phone settings to import customers directly.'
+          );
+          return;
+        }
+
+        const contact = await Contacts.presentContactPickerAsync();
+        if (contact) {
+          const contactName = contact.name || [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Customer';
+          const rawPhone = (contact.phoneNumbers && contact.phoneNumbers.length > 0) ? contact.phoneNumbers[0].number : '';
+          const cleanedPhone = rawPhone ? rawPhone.replace(/\D/g, '').slice(-10) : '';
+          const contactEmail = (contact.emails && contact.emails.length > 0) ? contact.emails[0].email : '';
+
+          if (cleanedPhone && cleanedPhone.length === 10) {
+            setPhone(cleanedPhone);
+            setName(contactName);
+            setCustomerEmail(contactEmail || '');
+            setImportedContactName(contactName);
+            setIsImported(true);
+
+            // Sync to central directory
+            syncContacts({
+              name: contactName,
+              phone: cleanedPhone,
+              email: contactEmail || '',
+              source: 'DEVICE_IMPORT'
+            }).catch(() => {});
+            return;
+          } else if (!rawPhone) {
+            Alert.alert('No Phone Number', `The selected contact (${contactName}) has no phone number attached.`);
+            return;
+          } else {
+            Alert.alert('Invalid Number', `The phone number for ${contactName} (${rawPhone}) is not a valid 10-digit number.`);
+            return;
+          }
+        }
+        return;
+      }
+
+      // 2. Web Contact Picker API (if supported in Chrome/Edge on Android/Desktop)
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && 'contacts' in navigator && 'select' in navigator.contacts) {
-        const props = ['name', 'tel'];
+        const props = ['name', 'tel', 'email'];
         const opts = { multiple: false };
         const contacts = await navigator.contacts.select(props, opts);
         if (contacts && contacts.length > 0) {
@@ -71,17 +122,35 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
           const rawName = Array.isArray(selected.name) ? selected.name[0] : selected.name || '';
           const rawTel = Array.isArray(selected.tel) ? selected.tel[0] : selected.tel || '';
           const cleanedPhone = rawTel.replace(/\D/g, '').slice(-10);
-          if (cleanedPhone) {
+          const rawEmail = Array.isArray(selected.email) ? selected.email[0] : selected.email || '';
+          if (cleanedPhone && cleanedPhone.length === 10) {
             setPhone(cleanedPhone);
             setName(rawName || 'Customer');
+            setCustomerEmail(rawEmail || '');
             setImportedContactName(rawName || 'Customer');
             setIsImported(true);
+
+            syncContacts({
+              name: rawName || 'Customer',
+              phone: cleanedPhone,
+              email: rawEmail || '',
+              source: 'DEVICE_IMPORT'
+            }).catch(() => {});
             return;
           }
         }
       }
 
-      // 2. Interactive Prompt / Fallback Contact Entry
+      // Fallback for Expo Go when native module is missing
+      if (Platform.OS !== 'web' && !Contacts) {
+        Alert.alert(
+          'Device Contacts',
+          'Device Contacts import is active in the standalone APK and Google Play build. In Expo Go, please enter the customer Name & Phone number directly.'
+        );
+        return;
+      }
+
+      // 3. Fallback Interactive Prompt for Web
       if (Platform.OS === 'web') {
         const val = window.prompt('Enter contact details to import (e.g. Ramesh Kumar, 9876543210):');
         if (val) {
@@ -102,49 +171,20 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
             setName(importedName);
             setImportedContactName(importedName);
             setIsImported(true);
+
+            syncContacts({
+              name: importedName,
+              phone: importedPhone,
+              source: 'DEVICE_IMPORT'
+            }).catch(() => {});
           } else {
             alert('Please enter a valid 10-digit phone number.');
           }
         }
-      } else if (Alert.prompt) {
-        Alert.prompt(
-          'Import Contact',
-          'Enter contact Name & 10-digit Phone (e.g. Ramesh Kumar, 9876543210):',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Import',
-              onPress: (text) => {
-                if (!text) return;
-                const parts = text.split(',');
-                let importedName = '';
-                let importedPhone = '';
-                if (parts.length >= 2) {
-                  importedName = parts[0].trim();
-                  importedPhone = parts[1].replace(/\D/g, '').slice(-10);
-                } else {
-                  const digits = text.replace(/\D/g, '').slice(-10);
-                  importedPhone = digits;
-                  importedName = text.replace(/\d+/g, '').trim() || 'Imported Contact';
-                }
-
-                if (!importedPhone || importedPhone.length < 10) {
-                  Alert.alert('Invalid Number', 'Please provide a valid 10-digit mobile number.');
-                  return;
-                }
-
-                setPhone(importedPhone);
-                setName(importedName);
-                setImportedContactName(importedName);
-                setIsImported(true);
-              },
-            },
-          ],
-          'plain-text'
-        );
       }
-    } catch (e) {
-      console.warn('Contact import error:', e);
+    } catch (err) {
+      console.error('Contact import error:', err);
+      Alert.alert('Contacts', err.message || 'Could not access device contacts.');
     }
   };
 
@@ -216,7 +256,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
 
               {/* Registered App User Search Bar */}
               <View style={styles.appSearchBox}>
-                <Text style={styles.appSearchTitle}>🔍 Link GI SHOP App Account (Short ID / Phone)</Text>
+                <Text style={styles.appSearchTitle}>Link GI SHOP Account (Short ID / Phone / Email)</Text>
                 <View style={styles.appSearchRow}>
                   <TextInput
                     style={styles.appSearchInput}
@@ -253,10 +293,10 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                                 {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
                               </Text>
                             </View>
-                            <Text style={styles.userShortIdText}>ID: {user.shortId}</Text>
+                            <Text style={styles.userShortIdText}>ID: {user.shortId || user.shopShortId}</Text>
                           </View>
                           <Text style={styles.userSubText}>
-                            📞 {user.phone} {user.email ? `• ✉️ ${user.email}` : ''}
+                            {user.phone} {user.email ? `• ${user.email}` : ''}
                           </Text>
                         </View>
 
@@ -328,7 +368,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                   <Text style={styles.inputLabel}>Customer Name *</Text>
                   {isImported && (
                     <Text style={{ fontSize: 11, color: '#2563eb', fontWeight: '600' }}>
-                      ✏️ Editable Name
+                      Editable Name
                     </Text>
                   )}
                 </View>

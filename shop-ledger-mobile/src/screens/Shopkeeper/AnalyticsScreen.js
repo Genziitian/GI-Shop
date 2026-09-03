@@ -203,7 +203,6 @@ export default function AnalyticsScreen() {
               <TrendingUp size={16} color={colors.primary} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(totalSales) || 0).toFixed(2)}</Text>
-            <Text style={styles.metricSub}>{filteredSales.length} Transactions</Text>
           </View>
 
           {/* Cash Sales */}
@@ -213,7 +212,6 @@ export default function AnalyticsScreen() {
               <Banknote size={16} color={colors.success} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(cashSales) || 0).toFixed(2)}</Text>
-            <Text style={styles.metricSub}>Direct Cash</Text>
           </View>
 
           {/* Online / UPI Sales */}
@@ -223,7 +221,6 @@ export default function AnalyticsScreen() {
               <CreditCard size={16} color={colors.warning} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(onlineSales) || 0).toFixed(2)}</Text>
-            <Text style={styles.metricSub}>Digital Payments</Text>
           </View>
 
           {/* Khata Sales */}
@@ -233,7 +230,6 @@ export default function AnalyticsScreen() {
               <BookOpen size={16} color={colors.danger} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(khataSales) || 0).toFixed(2)}</Text>
-            <Text style={styles.metricSub}>Added to Book</Text>
           </View>
         </View>
 

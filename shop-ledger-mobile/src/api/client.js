@@ -181,6 +181,13 @@ export const saveCustomer = async (customerData) => {
   });
 };
 
+export const syncContacts = async (contactsData) => {
+  return await fetchWithAuth('/api/contacts/sync', {
+    method: 'POST',
+    body: JSON.stringify(contactsData),
+  });
+};
+
 export const terminateCustomer = async (phone) => {
   return await fetchWithAuth('/api/shop/customers/terminate', {
     method: 'PUT',

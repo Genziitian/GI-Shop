@@ -5,6 +5,7 @@ import {
   getUser,
   login as apiLogin,
   register as apiRegister,
+  googleLogin as apiGoogleLogin,
   clearSession,
   initBaseUrl,
   getBaseUrl,
@@ -118,6 +119,17 @@ export const AuthProvider = ({ children }) => {
     setServerUrl(getBaseUrl());
   };
 
+  const loginWithGoogle = async (googleAuthData) => {
+    const res = await apiGoogleLogin(googleAuthData);
+    if (res.token) {
+      setToken(res.token);
+      const userData = { ...res.user, shop: res.shop };
+      setUser(userData);
+      setIsLocked(false);
+    }
+    return res;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -133,6 +145,7 @@ export const AuthProvider = ({ children }) => {
         resetServerUrl,
         login: loginUser,
         register: registerUser,
+        loginWithGoogle,
         logout: logoutUser,
         isShopkeeper: user?.role === 'Shopkeeper',
         isCustomer: user?.role === 'Customer',

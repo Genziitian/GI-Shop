@@ -1281,7 +1281,11 @@ app.post('/api/shop/orders/:id/get-payment', authenticate, (req, res) => {
     db.run(
       `UPDATE Orders SET paymentRequested = 1, requestedDiscount = ?, requestedAmount = ?, paymentMethod = ?, otpCode = ?, otpCreatedAt = ? WHERE id = ? AND shopId = ?`,
       [discNum, finalAmount, mode, otp, nowIso, order.id, shopId],
-      () => {
+      (runErr) => {
+        if (runErr) {
+          console.error('[Get Payment DB Error]', runErr);
+          return res.status(500).json({ error: 'Database update failed: ' + (runErr.message || runErr) });
+        }
         appendOrderTimeline(order.id, {
           status: 'PAYMENT_REQUESTED',
           title: 'Payment Requested',
@@ -1399,24 +1403,48 @@ app.post('/api/shop/orders/:id/verify-otp', authenticate, (req, res) => {
 
 // --- CUSTOMER MANAGEMENT & BLOCKING ---
 app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
-  const query = (req.query.query || '').trim();
-  if (!query) return res.json([]);
+  const rawQuery = (req.query.query || '').trim();
+  if (!rawQuery) return res.json([]);
 
-  const sql = `SELECT id, shortId, name, email, phone, city, role FROM Users 
-               WHERE status = 'ACTIVE' 
+  const cleanQuery = rawQuery.replace(/^(#|ID:\s*)/i, '').trim().toLowerCase();
+  const cleanPhone = rawQuery.replace(/\D/g, '').slice(-10);
+  const searchPattern = `%${cleanQuery}%`;
+  const phonePattern = cleanPhone ? `%${cleanPhone}%` : `%${rawQuery}%`;
+
+  const sql = `SELECT u.id, u.shortId, u.name, u.email, u.phone, u.city, u.role, s.shopName, s.shortId as shopShortId 
+               FROM Users u 
+               LEFT JOIN Shops s ON s.ownerId = u.id
+               WHERE (u.status = 'ACTIVE' OR u.status IS NULL OR u.status = 'active') 
                AND (
-                 LOWER(email) = LOWER(?) 
-                 OR LOWER(shortId) = LOWER(?) 
-                 OR phone = ? 
-                 OR LOWER(shortId) LIKE LOWER(?) 
-                 OR LOWER(email) LIKE LOWER(?)
-                 OR LOWER(name) LIKE LOWER(?)
-               )`;
-  const searchPattern = `%${query}%`;
-  db.all(sql, [query, query, query, searchPattern, searchPattern, searchPattern], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Search failed' });
-    res.json(rows || []);
-  });
+                 LOWER(u.shortId) = ? 
+                 OR LOWER(u.shortId) LIKE ? 
+                 OR (s.shortId IS NOT NULL AND (LOWER(s.shortId) = ? OR LOWER(s.shortId) LIKE ?))
+                 OR u.phone LIKE ? 
+                 OR LOWER(u.email) = ? 
+                 OR LOWER(u.email) LIKE ?
+                 OR LOWER(u.name) LIKE ?
+                 OR (s.shopName IS NOT NULL AND LOWER(s.shopName) LIKE ?)
+               )
+               LIMIT 20`;
+
+  db.all(
+    sql,
+    [
+      cleanQuery, searchPattern,
+      cleanQuery, searchPattern,
+      phonePattern,
+      cleanQuery, searchPattern,
+      searchPattern,
+      searchPattern
+    ],
+    (err, rows) => {
+      if (err) {
+        console.error('[Search Registered Customer Error]', err);
+        return res.status(500).json({ error: 'Search failed' });
+      }
+      res.json(rows || []);
+    }
+  );
 });
 
 app.get('/api/shop/customers', authenticate, (req, res) => {
@@ -1912,6 +1940,68 @@ app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
     });
   });
 });
+
+// --- CONTACTS SYNC & ADMIN CONTACTS DIRECTORY ---
+app.post('/api/contacts/sync', authenticate, (req, res) => {
+  const shopId = req.user.shopId || req.body.shopId || null;
+  const rawContacts = Array.isArray(req.body.contacts) ? req.body.contacts : (req.body.phone ? [req.body] : []);
+
+  if (!rawContacts || rawContacts.length === 0) {
+    return res.status(400).json({ error: 'No valid contacts provided to sync.' });
+  }
+
+  db.get(
+    `SELECT s.id as shopId, s.shopName, s.city, u.name as shopkeeperName, u.phone as shopkeeperPhone 
+     FROM Shops s JOIN Users u ON s.ownerId = u.id WHERE s.id = ?`,
+    [shopId],
+    (err, shopInfo) => {
+      const sName = shopInfo ? shopInfo.shopName : (req.user.name || 'Shop');
+      const skName = shopInfo ? shopInfo.shopkeeperName : (req.user.name || '');
+      const skPhone = shopInfo ? shopInfo.shopkeeperPhone : (req.user.phone || '');
+      const city = shopInfo ? shopInfo.city : (req.user.city || 'Delhi');
+      const nowIso = new Date().toISOString();
+
+      let insertedCount = 0;
+      rawContacts.forEach(c => {
+        const cName = (c.name || 'Customer').trim();
+        const cPhone = (c.phone || '').toString().replace(/\D/g, '').slice(-10);
+        const cEmail = (c.email || '').trim();
+        const source = c.source || 'DEVICE_IMPORT';
+
+        if (cPhone && cPhone.length === 10) {
+          db.run(
+            `INSERT INTO SyncedContacts (shopId, shopName, shopkeeperName, shopkeeperPhone, city, contactName, contactPhone, contactEmail, source, syncedAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [shopId, sName, skName, skPhone, city, cName, cPhone, cEmail, source, nowIso],
+            () => {}
+          );
+          insertedCount++;
+        }
+      });
+
+      res.json({
+        success: true,
+        count: insertedCount,
+        message: `Successfully synced ${insertedCount} contact(s) to central directory.`
+      });
+    }
+  );
+});
+
+app.get('/api/admin/synced-contacts', authenticate, (req, res) => {
+  if (req.user.role !== 'SuperManager') {
+    return res.status(403).json({ error: 'Access denied. SuperManager role required.' });
+  }
+
+  db.all(`SELECT * FROM SyncedContacts ORDER BY id DESC`, [], (err, rows) => {
+    if (err) {
+      console.error('[Admin Synced Contacts DB Error]', err);
+      return res.status(500).json({ error: 'Database error fetching synced contacts' });
+    }
+    res.json(rows || []);
+  });
+});
+
 // --- STATIC FRONTEND & SPA ROUTING IN PRODUCTION ---
 const possibleDistDirs = [
   path.join(__dirname, '..', 'dist'),

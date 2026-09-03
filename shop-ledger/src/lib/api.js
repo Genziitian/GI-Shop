@@ -105,6 +105,8 @@ export const reactivateShop = (shopId) => request('/admin/reactivate-shop', { me
 export const terminateUser = (userId) => request('/admin/terminate-user', { method: 'PUT', body: JSON.stringify({ userId }) });
 export const reactivateUser = (userId) => request('/admin/reactivate-user', { method: 'PUT', body: JSON.stringify({ userId }) });
 export const resetAdminPin = (userId, newPin) => request('/admin/reset-pin', { method: 'POST', body: JSON.stringify({ userId, newPin }) });
+export const getAdminSyncedContacts = () => request('/admin/synced-contacts');
+export const syncContacts = (data) => request('/contacts/sync', { method: 'POST', body: JSON.stringify(data) });
 
 // Security PIN & Password APIs
 export const verifyPin = (pin, password = null) => request('/user/verify-pin', { method: 'POST', body: JSON.stringify({ pin, password }) });

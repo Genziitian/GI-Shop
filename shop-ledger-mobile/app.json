@@ -2,7 +2,7 @@
   "expo": {
     "name": "GI SHOP",
     "slug": "gi-shop-mobile",
-    "version": "1.0.1",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,14 +20,15 @@
     },
     "android": {
       "package": "com.gishop.app",
-      "versionCode": 3,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "READ_CONTACTS"
       ]
     },
     "web": {

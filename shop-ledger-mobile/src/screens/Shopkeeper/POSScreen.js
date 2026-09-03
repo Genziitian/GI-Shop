@@ -478,7 +478,7 @@ export default function POSScreen({ navigation }) {
                     </View>
                   </View>
                   <Text style={{ fontSize: 12, fontWeight: '700', color: '#2563eb', marginLeft: 8 }}>
-                    {selectedCustomer ? 'Edit ✏️' : '+ Add'}
+                    {selectedCustomer ? 'Edit' : '+ Add'}
                   </Text>
                 </View>
               </TouchableOpacity>

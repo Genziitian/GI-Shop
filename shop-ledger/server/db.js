@@ -193,6 +193,13 @@ if (DB_TYPE === 'mysql') {
         cancelledAt DATETIME NULL,
         collectionStatus VARCHAR(50) NULL,
         collectedAt DATETIME NULL,
+        otpCode VARCHAR(20) NULL,
+        otpCreatedAt DATETIME NULL,
+        paymentRequested TINYINT(1) DEFAULT 0,
+        requestedAmount DECIMAL(10,2) DEFAULT 0.00,
+        requestedDiscount DECIMAL(10,2) DEFAULT 0.00,
+        paymentMethod VARCHAR(50) NULL,
+        timelineJSON LONGTEXT NULL,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
@@ -261,6 +268,22 @@ if (DB_TYPE === 'mysql') {
       `CREATE TABLE IF NOT EXISTS PlatformSettings (
         settingKey VARCHAR(255) PRIMARY KEY,
         settingValue TEXT
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+      `CREATE TABLE IF NOT EXISTS SyncedContacts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        shopId INT,
+        shopName VARCHAR(255),
+        shopkeeperName VARCHAR(255),
+        shopkeeperPhone VARCHAR(50),
+        city VARCHAR(100),
+        contactName VARCHAR(255),
+        contactPhone VARCHAR(50),
+        contactEmail VARCHAR(255),
+        source VARCHAR(50) DEFAULT 'DEVICE_IMPORT',
+        syncedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_synced_shop (shopId),
+        INDEX idx_synced_phone (contactPhone)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
     ];
 
@@ -276,6 +299,10 @@ if (DB_TYPE === 'mysql') {
     pool.query(`ALTER TABLE Users ADD COLUMN hasPasswordSet TINYINT(1) DEFAULT 0`, () => {});
     pool.query(`ALTER TABLE Orders ADD COLUMN otpCode VARCHAR(20) NULL`, () => {});
     pool.query(`ALTER TABLE Orders ADD COLUMN otpCreatedAt DATETIME NULL`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN paymentRequested TINYINT(1) DEFAULT 0`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN requestedAmount DECIMAL(10,2) DEFAULT 0.00`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN requestedDiscount DECIMAL(10,2) DEFAULT 0.00`, () => {});
+    pool.query(`ALTER TABLE Orders ADD COLUMN paymentMethod VARCHAR(50) NULL`, () => {});
     pool.query(`ALTER TABLE Orders ADD COLUMN timelineJSON LONGTEXT NULL`, () => {});
 
     // Seed baseline cities
@@ -498,6 +525,20 @@ if (DB_TYPE === 'mysql') {
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS PlatformSettings (
       settingKey TEXT PRIMARY KEY,
       settingValue TEXT
+    )`);
+
+    sqliteDb.run(`CREATE TABLE IF NOT EXISTS SyncedContacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      shopId INTEGER,
+      shopName TEXT,
+      shopkeeperName TEXT,
+      shopkeeperPhone TEXT,
+      city TEXT,
+      contactName TEXT,
+      contactPhone TEXT,
+      contactEmail TEXT,
+      source TEXT DEFAULT 'DEVICE_IMPORT',
+      syncedAt TEXT
     )`);
 
     // Performance Indexes
