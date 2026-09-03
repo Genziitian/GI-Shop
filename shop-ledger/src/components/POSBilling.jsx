@@ -540,43 +540,25 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
           {items.length === 0 ? (
             <ProductGridSkeleton count={8} />
           ) : (
-            <>
-              {/* Desktop Product Grid */}
-              <div className="grid desktop-only" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <div className="pos-product-catalog-grid">
                 {filteredItems.map(item => (
                   <div 
                     key={item.id} 
-                    className="panel" 
-                    style={{ cursor: 'pointer', padding: '0.85rem', textAlign: 'center', transition: 'transform 0.1s', border: '1px solid var(--border)', background: '#fff' }} 
+                    className="pos-product-card" 
                     onClick={() => openModal(item)}
                   >
-                    <div style={{ fontWeight: '700', fontSize: '1rem', marginBottom: '0.35rem' }}>{item.name}</div>
-                    <div className="badge">₹{item.price} / {item.unit}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Mobile 3-Column Product Grid (Matches Mobile App Image 1) */}
-              <div className="pos-mobile-grid mobile-only">
-                {filteredItems.map(item => (
-                  <div 
-                    key={item.id} 
-                    className="pos-mobile-product-tile" 
-                    onClick={() => openModal(item)}
-                  >
-                    <div className="pos-mobile-product-name">{item.name}</div>
-                    <div className="pos-mobile-product-badge">
-                      ₹{Number(item.price).toFixed(2)}/{item.unit}
+                    <div className="pos-product-card-name">{item.name}</div>
+                    <div className="pos-product-card-badge">
+                      ₹{Number(item.price).toFixed(2)} / {item.unit}
                     </div>
                   </div>
                 ))}
                 {filteredItems.length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)' }}>
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
                     No matching products found
                   </div>
                 )}
               </div>
-            </>
           )}
         </div>
 
