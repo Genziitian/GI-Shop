@@ -122,6 +122,33 @@ const translations = {
   }
 };
 
+export const redirectUserToDashboard = (role, navigate) => {
+  const lastPath = localStorage.getItem('gi_last_path');
+  if (lastPath === '/shop' && (role === 'Shopkeeper' || role === 'Customer')) {
+    navigate('/shop', { replace: true });
+    return;
+  }
+  if (lastPath === '/admin' && role === 'SuperManager') {
+    navigate('/admin', { replace: true });
+    return;
+  }
+  if (lastPath === '/customer' && role === 'Customer') {
+    navigate('/customer', { replace: true });
+    return;
+  }
+
+  if (role === 'SuperManager') {
+    localStorage.setItem('gi_last_path', '/admin');
+    navigate('/admin', { replace: true });
+  } else if (role === 'Shopkeeper') {
+    localStorage.setItem('gi_last_path', '/shop');
+    navigate('/shop', { replace: true });
+  } else {
+    localStorage.setItem('gi_last_path', '/customer');
+    navigate('/customer', { replace: true });
+  }
+};
+
 export default function Auth() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -166,6 +193,21 @@ export default function Auth() {
   const [timeClose, setTimeClose] = useState('22:00');
 
   useEffect(() => {
+    // Auto-redirect if user already has an active session
+    const token = localStorage.getItem('token');
+    let userRole = localStorage.getItem('userRole');
+    if (!userRole && localStorage.getItem('userData')) {
+      try {
+        const u = JSON.parse(localStorage.getItem('userData'));
+        if (u?.role) userRole = u.role;
+      } catch (e) {}
+    }
+
+    if (token && userRole) {
+      redirectUserToDashboard(userRole, navigate);
+      return;
+    }
+
     const savedIdentifier = localStorage.getItem('gi_remembered_identifier');
     if (savedIdentifier) {
       setLoginForm(prev => ({ ...prev, identifier: savedIdentifier }));
@@ -206,9 +248,7 @@ export default function Auth() {
                       localStorage.setItem('userData', JSON.stringify(res.user));
                       if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-                      if (res.user.role === 'SuperManager') navigate('/admin');
-                      else if (res.user.role === 'Shopkeeper') navigate('/shop');
-                      else navigate('/customer');
+                      redirectUserToDashboard(res.user.role, navigate);
                     }
                   } catch (err) {
                     console.error('[Google One Tap Error]', err);
@@ -248,9 +288,7 @@ export default function Auth() {
                 localStorage.setItem('userData', JSON.stringify(res.user));
                 if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-                if (res.user.role === 'SuperManager') navigate('/admin');
-                else if (res.user.role === 'Shopkeeper') navigate('/shop');
-                else navigate('/customer');
+                redirectUserToDashboard(res.user.role, navigate);
               }
             })
             .catch(() => {});
@@ -280,9 +318,7 @@ export default function Auth() {
             localStorage.setItem('userData', JSON.stringify(res.user));
             if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-            if (res.user.role === 'SuperManager') navigate('/admin');
-            else if (res.user.role === 'Shopkeeper') navigate('/shop');
-            else navigate('/customer');
+            redirectUserToDashboard(res.user.role, navigate);
           }
         })
         .catch((err) => {
@@ -323,9 +359,7 @@ export default function Auth() {
       localStorage.setItem('userData', JSON.stringify(res.user));
       if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-      if (res.user.role === 'SuperManager') navigate('/admin');
-      else if (res.user.role === 'Shopkeeper') navigate('/shop');
-      else navigate('/customer');
+      redirectUserToDashboard(res.user.role, navigate);
     } catch (err) {
       console.error('[Passkey Login Error]', err);
       setError(err.message || 'Passkey authentication was not completed.');
@@ -359,9 +393,7 @@ export default function Auth() {
         localStorage.setItem('userData', JSON.stringify(res.user));
         if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-        if (res.user.role === 'SuperManager') navigate('/admin');
-        else if (res.user.role === 'Shopkeeper') navigate('/shop');
-        else navigate('/customer');
+        redirectUserToDashboard(res.user.role, navigate);
       }
     } catch (err) {
       console.error('[Google Sign-In Error]', err);
@@ -391,9 +423,7 @@ export default function Auth() {
       localStorage.setItem('userData', JSON.stringify(res.user));
       if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-      if (res.user.role === 'SuperManager') navigate('/admin');
-      else if (res.user.role === 'Shopkeeper') navigate('/shop');
-      else navigate('/customer');
+      redirectUserToDashboard(res.user.role, navigate);
     } catch (err) {
       setError(err.message || (language === 'hi' ? 'गलत विवरण। उपयोगकर्ता नहीं मिला।' : 'Invalid credentials. User not found.'));
     } finally {
@@ -441,9 +471,7 @@ export default function Auth() {
       localStorage.setItem('userData', JSON.stringify(res.user));
       if (res.shop) localStorage.setItem('shopData', JSON.stringify(res.shop));
 
-      if (res.user.role === 'SuperManager') navigate('/admin');
-      else if (res.user.role === 'Shopkeeper') navigate('/shop');
-      else navigate('/customer');
+      redirectUserToDashboard(res.user.role, navigate);
     } catch (err) {
       console.error('[Onboarding Error]', err);
       setError(err.message || (language === 'hi' ? 'प्रोफ़ाइल सेटअप पूरा करने में विफल' : 'Failed to complete profile setup'));

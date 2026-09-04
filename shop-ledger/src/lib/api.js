@@ -2,6 +2,8 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://l
 
 const getToken = () => localStorage.getItem('token');
 
+let isRedirectingToLogin = false;
+
 export const request = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
@@ -22,6 +24,18 @@ export const request = async (endpoint, options = {}) => {
 
   const data = await res.json();
   if (!res.ok) {
+    if (res.status === 401 && token && !endpoint.startsWith('/login') && !endpoint.startsWith('/auth/google')) {
+      if (!isRedirectingToLogin) {
+        isRedirectingToLogin = true;
+        console.warn('[API] Token expired or invalid. Clearing session and redirecting to login.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('shopData');
+        localStorage.removeItem('gi_last_path');
+        window.location.href = '/';
+      }
+    }
     throw new Error(data.error || 'API Error');
   }
   return data;

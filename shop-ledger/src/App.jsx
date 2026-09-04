@@ -11,11 +11,54 @@ import { requestNotificationPermissionAndToken, listenForForegroundMessages } fr
 import { registerNotificationToken } from './lib/api';
 import { Bell, X } from 'lucide-react';
 
+const getStoredUserRole = () => {
+  let role = localStorage.getItem('userRole');
+  if (!role && localStorage.getItem('userData')) {
+    try {
+      const u = JSON.parse(localStorage.getItem('userData'));
+      if (u?.role) role = u.role;
+    } catch (e) {}
+  }
+  return role;
+};
+
+const RootRedirect = () => {
+  const token = localStorage.getItem('token');
+  const userRole = getStoredUserRole();
+
+  if (token && userRole) {
+    const lastPath = localStorage.getItem('gi_last_path');
+    if (lastPath === '/shop' && (userRole === 'Shopkeeper' || userRole === 'Customer')) {
+      return <Navigate to="/shop" replace />;
+    }
+    if (lastPath === '/admin' && userRole === 'SuperManager') {
+      return <Navigate to="/admin" replace />;
+    }
+    if (lastPath === '/customer' && userRole === 'Customer') {
+      return <Navigate to="/customer" replace />;
+    }
+
+    if (userRole === 'SuperManager') return <Navigate to="/admin" replace />;
+    if (userRole === 'Shopkeeper') return <Navigate to="/shop" replace />;
+    if (userRole === 'Customer') return <Navigate to="/customer" replace />;
+  }
+
+  return <Auth />;
+};
+
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
-  const userRole = localStorage.getItem('userRole');
-  if (!token) return <Navigate to="/" />;
-  if (allowedRoles && !allowedRoles.includes(userRole)) return <Navigate to="/" />;
+  const userRole = getStoredUserRole();
+  if (!token) return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(userRole)) return <Navigate to="/" replace />;
+
+  if (typeof window !== 'undefined' && window.location.pathname) {
+    const path = window.location.pathname;
+    if (['/shop', '/customer', '/admin'].includes(path)) {
+      localStorage.setItem('gi_last_path', path);
+    }
+  }
+
   return children;
 };
 
@@ -103,7 +146,8 @@ function App() {
       )}
 
       <Routes>
-        <Route path="/" element={<Auth />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/login" element={<RootRedirect />} />
         <Route 
           path="/shop" 
           element={
