@@ -37,16 +37,16 @@ export default function SuperManager() {
     setLoading(true);
     try {
       const [s, u, c, supp, contacts] = await Promise.all([
-        getAdminShops(),
-        getAdminUsers(),
-        getAdminCities(),
+        getAdminShops().catch(err => { console.error('getAdminShops error:', err); return []; }),
+        getAdminUsers().catch(err => { console.error('getAdminUsers error:', err); return []; }),
+        getAdminCities().catch(err => { console.error('getAdminCities error:', err); return []; }),
         getSupportSettings().catch(() => ({ supportPhone: '', supportWhatsapp: '', supportEmail: '', supportHours: '09:00 AM - 09:00 PM' })),
         getAdminSyncedContacts().catch(() => [])
       ]);
-      setShops(s);
-      setUsers(u);
-      setCities(c);
-      setSyncedContacts(contacts || []);
+      setShops(Array.isArray(s) ? s : (Array.isArray(s?.shops) ? s.shops : []));
+      setUsers(Array.isArray(u) ? u : (Array.isArray(u?.users) ? u.users : []));
+      setCities(Array.isArray(c) ? c : (Array.isArray(c?.cities) ? c.cities : []));
+      setSyncedContacts(Array.isArray(contacts) ? contacts : (Array.isArray(contacts?.contacts) ? contacts.contacts : []));
       if (supp) {
         setSupportForm({
           supportPhone: supp.supportPhone || '',
@@ -56,7 +56,8 @@ export default function SuperManager() {
         });
       }
     } catch (e) {
-      if (e.message.includes('Unauthorized') || e.message.includes('Forbidden')) {
+      console.error('SuperManager loadData error:', e);
+      if (e?.message && (e.message.includes('Unauthorized') || e.message.includes('Forbidden'))) {
         confirmLogout();
       }
     } finally {
@@ -70,10 +71,10 @@ export default function SuperManager() {
     setSupportNotice('');
     try {
       const res = await updateSupportSettings(supportForm);
-      setSupportNotice(res.message || 'Support contact settings updated successfully!');
+      setSupportNotice(res?.message || 'Support contact settings updated successfully!');
       setTimeout(() => setSupportNotice(''), 4000);
     } catch (err) {
-      alert(err.message || 'Failed to update support settings.');
+      alert(err?.message || 'Failed to update support settings.');
     } finally {
       setSupportSaving(false);
     }
@@ -93,36 +94,46 @@ export default function SuperManager() {
   };
 
   const handleResetPin = async (userObj) => {
-    const customPin = prompt(`Enter new 4-digit PIN for ${userObj.name || userObj.ownerName} (${userObj.shortId}):`, '1234');
+    const name = userObj?.name || userObj?.ownerName || 'User';
+    const shortId = userObj?.shortId || userObj?.id || '';
+    const customPin = prompt(`Enter new 4-digit PIN for ${name} (${shortId}):`, '1234');
     if (customPin === null) return;
     if (!/^\d{4}$/.test(customPin.trim())) {
       return alert('PIN must be exactly 4 numeric digits.');
     }
     try {
-      const targetUserId = userObj.ownerId || userObj.id;
+      const targetUserId = userObj?.ownerId || userObj?.id;
       const res = await resetAdminPin(targetUserId, customPin.trim());
-      alert(res.message || `PIN reset successfully to ${customPin.trim()}!`);
+      alert(res?.message || `PIN reset successfully to ${customPin.trim()}!`);
     } catch (e) {
-      alert(e.message || 'Failed to reset PIN.');
+      alert(e?.message || 'Failed to reset PIN.');
     }
   };
 
   const handleToggleShop = async (shop) => {
-    const isTerminating = shop.status === 'ACTIVE';
-    if (!confirm(`Are you sure you want to ${isTerminating ? 'TERMINATE' : 'REACTIVATE'} "${shop.shopName}" (${shop.shortId})?`)) return;
+    const isTerminating = shop?.status === 'ACTIVE';
+    if (!confirm(`Are you sure you want to ${isTerminating ? 'TERMINATE' : 'REACTIVATE'} "${shop?.shopName || 'Shop'}" (${shop?.shortId || ''})?`)) return;
     
-    if (isTerminating) await terminateShop(shop.id);
-    else await reactivateShop(shop.id);
-    loadData();
+    try {
+      if (isTerminating) await terminateShop(shop.id);
+      else await reactivateShop(shop.id);
+      loadData();
+    } catch (e) {
+      alert(e?.message || 'Failed to update shop status.');
+    }
   };
 
   const handleToggleUser = async (user) => {
-    const isTerminating = user.status === 'ACTIVE';
-    if (!confirm(`Are you sure you want to ${isTerminating ? 'TERMINATE' : 'REACTIVATE'} user "${user.name}" (${user.shortId})?`)) return;
+    const isTerminating = user?.status === 'ACTIVE';
+    if (!confirm(`Are you sure you want to ${isTerminating ? 'TERMINATE' : 'REACTIVATE'} user "${user?.name || 'User'}" (${user?.shortId || ''})?`)) return;
 
-    if (isTerminating) await terminateUser(user.id);
-    else await reactivateUser(user.id);
-    loadData();
+    try {
+      if (isTerminating) await terminateUser(user.id);
+      else await reactivateUser(user.id);
+      loadData();
+    } catch (e) {
+      alert(e?.message || 'Failed to update user status.');
+    }
   };
 
   // City Management Handlers
@@ -132,45 +143,60 @@ export default function SuperManager() {
     setCityNotice('');
     try {
       const res = await addAdminCity(newCityName.trim());
-      setCityNotice(res.message || 'City added successfully!');
+      setCityNotice(res?.message || 'City added successfully!');
       setNewCityName('');
       setTimeout(() => setCityNotice(''), 3000);
       const updatedCities = await getAdminCities();
-      setCities(updatedCities);
+      setCities(Array.isArray(updatedCities) ? updatedCities : []);
     } catch (err) {
-      alert(err.message || 'Failed to add city.');
+      alert(err?.message || 'Failed to add city.');
     }
   };
 
   const handleDeleteCity = async (city) => {
-    if (!confirm(`Remove city "${city.name}" from the platform? Customers and shops in this city will be affected.`)) return;
+    if (!confirm(`Remove city "${city?.name}" from the platform? Customers and shops in this city will be affected.`)) return;
     try {
       await deleteAdminCity(city.id);
       const updatedCities = await getAdminCities();
-      setCities(updatedCities);
+      setCities(Array.isArray(updatedCities) ? updatedCities : []);
     } catch (err) {
-      alert(err.message || 'Failed to delete city.');
+      alert(err?.message || 'Failed to delete city.');
     }
   };
 
-  const filteredShops = shops.filter(s => 
-    s.shopName.toLowerCase().includes(search.toLowerCase()) ||
-    s.shortId.toLowerCase().includes(search.toLowerCase()) ||
-    s.city.toLowerCase().includes(search.toLowerCase()) ||
-    s.ownerName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const safeShops = Array.isArray(shops) ? shops : [];
+  const safeUsers = Array.isArray(users) ? users : [];
+  const safeCities = Array.isArray(cities) ? cities : [];
+  const safeContacts = Array.isArray(syncedContacts) ? syncedContacts : [];
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.shortId.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.phone.includes(search) ||
-    u.city?.toLowerCase().includes(search.toLowerCase())
-  );
+  const searchQuery = (search || '').toLowerCase().trim();
 
-  const filteredCities = cities.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredShops = safeShops.filter(s => {
+    if (!s) return false;
+    return (
+      (s.shopName || '').toLowerCase().includes(searchQuery) ||
+      (s.shortId || '').toLowerCase().includes(searchQuery) ||
+      (s.city || '').toLowerCase().includes(searchQuery) ||
+      (s.ownerName || '').toLowerCase().includes(searchQuery) ||
+      (s.ownerPhone || '').includes(searchQuery)
+    );
+  });
+
+  const filteredUsers = safeUsers.filter(u => {
+    if (!u) return false;
+    return (
+      (u.name || '').toLowerCase().includes(searchQuery) ||
+      (u.shortId || '').toLowerCase().includes(searchQuery) ||
+      (u.email || '').toLowerCase().includes(searchQuery) ||
+      (u.phone || '').includes(searchQuery) ||
+      (u.city || '').toLowerCase().includes(searchQuery)
+    );
+  });
+
+  const filteredCities = safeCities.filter(c => {
+    if (!c) return false;
+    return (c.name || '').toLowerCase().includes(searchQuery);
+  });
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -613,7 +639,7 @@ export default function SuperManager() {
                   Total Synced Contacts
                 </div>
                 <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#1e3a8a' }}>
-                  {syncedContacts.length}
+                  {safeContacts.length}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#3b82f6', marginTop: '0.2rem' }}>
                   Imported via Device Contacts
@@ -625,7 +651,7 @@ export default function SuperManager() {
                   Unique Phone Numbers
                 </div>
                 <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#14532d' }}>
-                  {new Set(syncedContacts.map(c => c.contactPhone)).size}
+                  {new Set(safeContacts.map(c => c?.contactPhone).filter(Boolean)).size}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#22c55e', marginTop: '0.2rem' }}>
                   Distinct customer leads
@@ -637,7 +663,7 @@ export default function SuperManager() {
                   Contributing Shops
                 </div>
                 <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#581c87' }}>
-                  {new Set(syncedContacts.map(c => c.shopId || c.shopName)).size}
+                  {new Set(safeContacts.map(c => c?.shopId || c?.shopName).filter(Boolean)).size}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#a855f7', marginTop: '0.2rem' }}>
                   Shops syncing device contacts
@@ -654,14 +680,14 @@ export default function SuperManager() {
                   </p>
                 </div>
                 <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: '700', padding: '0.35rem 0.75rem' }}>
-                  {syncedContacts.filter(c => {
-                    const q = search.toLowerCase();
+                  {safeContacts.filter(c => {
+                    const q = searchQuery;
                     return (
-                      (c.contactName || '').toLowerCase().includes(q) ||
-                      (c.contactPhone || '').includes(q) ||
-                      (c.shopName || '').toLowerCase().includes(q) ||
-                      (c.shopkeeperName || '').toLowerCase().includes(q) ||
-                      (c.city || '').toLowerCase().includes(q)
+                      (c?.contactName || '').toLowerCase().includes(q) ||
+                      (c?.contactPhone || '').includes(q) ||
+                      (c?.shopName || '').toLowerCase().includes(q) ||
+                      (c?.shopkeeperName || '').toLowerCase().includes(q) ||
+                      (c?.city || '').toLowerCase().includes(q)
                     );
                   }).length} Matching Contacts
                 </span>
@@ -682,15 +708,15 @@ export default function SuperManager() {
                     </tr>
                   </thead>
                   <tbody>
-                    {syncedContacts
+                    {safeContacts
                       .filter(c => {
-                        const q = search.toLowerCase();
+                        const q = searchQuery;
                         return (
-                          (c.contactName || '').toLowerCase().includes(q) ||
-                          (c.contactPhone || '').includes(q) ||
-                          (c.shopName || '').toLowerCase().includes(q) ||
-                          (c.shopkeeperName || '').toLowerCase().includes(q) ||
-                          (c.city || '').toLowerCase().includes(q)
+                          (c?.contactName || '').toLowerCase().includes(q) ||
+                          (c?.contactPhone || '').includes(q) ||
+                          (c?.shopName || '').toLowerCase().includes(q) ||
+                          (c?.shopkeeperName || '').toLowerCase().includes(q) ||
+                          (c?.city || '').toLowerCase().includes(q)
                         );
                       })
                       .map((c, idx) => (

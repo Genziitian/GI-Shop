@@ -128,6 +128,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/superadmin" element={<Navigate to="/admin" replace />} />
+        <Route path="/super-manager" element={<Navigate to="/admin" replace />} />
         <Route path="/delete" element={<DeleteAccount />} />
         <Route path="/delete-account" element={<DeleteAccount />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
