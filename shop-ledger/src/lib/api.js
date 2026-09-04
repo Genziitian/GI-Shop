@@ -120,6 +120,7 @@ export const terminateUser = (userId) => request('/admin/terminate-user', { meth
 export const reactivateUser = (userId) => request('/admin/reactivate-user', { method: 'PUT', body: JSON.stringify({ userId }) });
 export const resetAdminPin = (userId, newPin) => request('/admin/reset-pin', { method: 'POST', body: JSON.stringify({ userId, newPin }) });
 export const changeAdminShopCity = (shopId, newCity) => request('/admin/change-shop-city', { method: 'PUT', body: JSON.stringify({ shopId, newCity }) });
+export const deleteAdminShop = (shopId) => request(`/admin/shops/${shopId}`, { method: 'DELETE' });
 export const getAdminSyncedContacts = () => request('/admin/synced-contacts');
 export const syncContacts = (data) => request('/contacts/sync', { method: 'POST', body: JSON.stringify(data) });
 

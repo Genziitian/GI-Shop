@@ -730,6 +730,12 @@ export default function Shopkeeper() {
       } else if (me.staffRole) {
         setIsOwner(false);
         setIsOpen(me.staffRole.isOpen === 1);
+      } else if (!me.shop && !me.staffRole && me.user?.role === 'Customer') {
+        localStorage.setItem('userRole', 'Customer');
+        localStorage.removeItem('shopData');
+        localStorage.setItem('gi_last_path', '/customer');
+        navigate('/customer', { replace: true });
+        return;
       }
 
       loadItemsData();

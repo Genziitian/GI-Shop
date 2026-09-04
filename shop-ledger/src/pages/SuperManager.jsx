@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
   getAdminShops, getAdminUsers, getAdminCities, addAdminCity, deleteAdminCity,
   terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin,
-  changeAdminShopCity, getSupportSettings, updateSupportSettings, getAdminSyncedContacts
+  changeAdminShopCity, deleteAdminShop, getSupportSettings, updateSupportSettings, getAdminSyncedContacts
 } from '../lib/api';
-import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone } from 'lucide-react';
+import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone, UserCheck, AlertOctagon, ArrowRight, ArrowLeft } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
 export default function SuperManager() {
@@ -32,6 +32,16 @@ export default function SuperManager() {
   const [newCityName, setNewCityName] = useState('');
   const [cityNotice, setCityNotice] = useState('');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Delete Shop 3-Confirmation Modal State
+  const [shopToDelete, setShopToDelete] = useState(null);
+  const [deleteStep, setDeleteStep] = useState(1); // 1 | 2 | 3
+  const [confirmCheck1, setConfirmCheck1] = useState(false);
+  const [confirmCheck2, setConfirmCheck2] = useState(false);
+  const [confirmCheck3, setConfirmCheck3] = useState(false);
+  const [typedShopName, setTypedShopName] = useState('');
+  const [isDeletingShop, setIsDeletingShop] = useState(false);
+  const [shopDeleteNotice, setShopDeleteNotice] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -134,6 +144,42 @@ export default function SuperManager() {
       loadData();
     } catch (e) {
       alert(e?.message || 'Failed to update shop status.');
+    }
+  };
+
+  const handleOpenDeleteModal = (shop) => {
+    setShopToDelete(shop);
+    setDeleteStep(1);
+    setConfirmCheck1(false);
+    setConfirmCheck2(false);
+    setConfirmCheck3(false);
+    setTypedShopName('');
+    setIsDeletingShop(false);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (isDeletingShop) return;
+    setShopToDelete(null);
+    setDeleteStep(1);
+    setConfirmCheck1(false);
+    setConfirmCheck2(false);
+    setConfirmCheck3(false);
+    setTypedShopName('');
+  };
+
+  const handleConfirmDeleteShop = async () => {
+    if (!shopToDelete) return;
+    setIsDeletingShop(true);
+    try {
+      const res = await deleteAdminShop(shopToDelete.id);
+      setShopDeleteNotice(res?.message || `Shop "${shopToDelete.shopName}" deleted successfully. Linked owner has been converted to a Customer.`);
+      setTimeout(() => setShopDeleteNotice(''), 6000);
+      handleCloseDeleteModal();
+      loadData();
+    } catch (err) {
+      alert(err?.message || 'Failed to delete shop');
+    } finally {
+      setIsDeletingShop(false);
     }
   };
 
@@ -313,6 +359,11 @@ export default function SuperManager() {
         {/* TAB 1: SHOPS */}
         {activeTab === 'shops' && (
           <div className="panel">
+            {shopDeleteNotice && (
+              <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '10px', padding: '0.85rem 1.15rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.65rem', fontWeight: '600' }}>
+                <CheckCircle size={20} /> {shopDeleteNotice}
+              </div>
+            )}
             <h3 className="title" style={{ marginBottom: '1rem' }}>Registered Shops across Cities</h3>
             <div className="table-responsive">
               <table style={{ width: '100%', minWidth: '650px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
@@ -357,7 +408,7 @@ export default function SuperManager() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                           <button
                             type="button"
                             className="btn btn-outline"
@@ -383,6 +434,15 @@ export default function SuperManager() {
                             onClick={() => handleToggleShop(shop)}
                           >
                             {shop.status === 'ACTIVE' ? 'Terminate' : 'Reactivate'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{ padding: '0.4rem 0.65rem', fontSize: '0.78rem', borderColor: '#fca5a5', color: '#dc2626', background: '#fff1f2', display: 'flex', alignItems: 'center', gap: '3px' }}
+                            title="Permanently Delete Shop (3-Step Confirmation)"
+                            onClick={() => handleOpenDeleteModal(shop)}
+                          >
+                            <Trash2 size={13} /> Delete
                           </button>
                         </div>
                       </td>
@@ -868,6 +928,424 @@ export default function SuperManager() {
                 Yes, Log Out
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3-Step Shop Deletion Confirmation Modal */}
+      {shopToDelete && (
+        <div className="modal-overlay" style={{
+          zIndex: 9999,
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.7)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          overflowY: 'auto'
+        }} onClick={handleCloseDeleteModal}>
+          <div className="panel modal-dialog" style={{
+            width: '520px',
+            maxWidth: '100%',
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '2rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            position: 'relative'
+          }} onClick={e => e.stopPropagation()}>
+
+            {/* Header: Title & Close */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  background: '#fee2e2',
+                  color: '#dc2626',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <AlertOctagon size={24} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                    Permanently Delete Shop
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    3-Stage Safety Confirmation • Step {deleteStep} of 3
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCloseDeleteModal}
+                disabled={isDeletingShop}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <XCircle size={22} />
+              </button>
+            </div>
+
+            {/* Step Progress Pills */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '0.5rem',
+              marginBottom: '1.5rem',
+              background: '#f8fafc',
+              padding: '0.5rem',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                textAlign: 'center',
+                padding: '0.45rem 0.2rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                background: deleteStep === 1 ? '#ef4444' : (deleteStep > 1 ? '#dcfce7' : 'transparent'),
+                color: deleteStep === 1 ? '#ffffff' : (deleteStep > 1 ? '#15803d' : '#64748b')
+              }}>
+                1. Data Impact {deleteStep > 1 && '✓'}
+              </div>
+              <div style={{
+                textAlign: 'center',
+                padding: '0.45rem 0.2rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                background: deleteStep === 2 ? '#ef4444' : (deleteStep > 2 ? '#dcfce7' : 'transparent'),
+                color: deleteStep === 2 ? '#ffffff' : (deleteStep > 2 ? '#15803d' : '#64748b')
+              }}>
+                2. User Downgrade {deleteStep > 2 && '✓'}
+              </div>
+              <div style={{
+                textAlign: 'center',
+                padding: '0.45rem 0.2rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                background: deleteStep === 3 ? '#ef4444' : 'transparent',
+                color: deleteStep === 3 ? '#ffffff' : '#64748b'
+              }}>
+                3. Final Authorize
+              </div>
+            </div>
+
+            {/* Target Shop Summary Card */}
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '0.85rem 1rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem'
+            }}>
+              <div>
+                <div style={{ fontWeight: '800', fontSize: '1rem', color: '#0f172a' }}>
+                  {shopToDelete.shopName}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  ID: <span style={{ color: '#0284c7', fontWeight: '700' }}>{shopToDelete.shortId}</span> • City: <span style={{ fontWeight: '600', color: '#0369a1' }}>{shopToDelete.city}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Owner: <strong style={{ color: '#0f172a' }}>{shopToDelete.ownerName}</strong></div>
+                <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: '700' }}>
+                  ₹{(Number(shopToDelete.totalRevenue) || 0).toFixed(2)} ({shopToDelete.totalSalesCount || 0} bills)
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 1: Shop Data Impact Confirmation */}
+            {deleteStep === 1 && (
+              <div>
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  marginBottom: '1.25rem'
+                }}>
+                  <div style={{ fontWeight: '700', color: '#991b1b', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                    <AlertTriangle size={18} /> Confirmation 1 of 3: Permanent Data Loss
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.84rem', color: '#7f1d1d', lineHeight: '1.55' }}>
+                    <li>All catalog products, price lists, and stock barcode inventory will be erased.</li>
+                    <li>All customer orders, POS receipts, and customer dues / Khata ledgers will be deleted.</li>
+                    <li>Any cashiers or staff assigned to this store will be unlinked immediately.</li>
+                    <li><strong>This operation is permanent and CANNOT be recovered or undone.</strong></li>
+                  </ul>
+                </div>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem',
+                  cursor: 'pointer',
+                  padding: '0.85rem',
+                  background: confirmCheck1 ? '#fee2e2' : '#f8fafc',
+                  border: `1.5px solid ${confirmCheck1 ? '#ef4444' : '#cbd5e1'}`,
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  transition: 'all 0.2s'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={confirmCheck1}
+                    onChange={e => setConfirmCheck1(e.target.checked)}
+                    style={{ marginTop: '0.2rem', width: '18px', height: '18px', accentColor: '#ef4444' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#0f172a', lineHeight: '1.4' }}>
+                    I understand that deleting this shop will permanently destroy all its products, orders, and sales history.
+                  </span>
+                </label>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={handleCloseDeleteModal}
+                    style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    disabled={!confirmCheck1}
+                    onClick={() => setDeleteStep(2)}
+                    style={{
+                      padding: '0.75rem',
+                      fontWeight: '700',
+                      borderRadius: '10px',
+                      opacity: confirmCheck1 ? 1 : 0.5,
+                      cursor: confirmCheck1 ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    Next: Owner Downgrade (2/3) <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Owner Conversion to Normal Customer */}
+            {deleteStep === 2 && (
+              <div>
+                <div style={{
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  marginBottom: '1.25rem'
+                }}>
+                  <div style={{ fontWeight: '700', color: '#1e40af', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                    <UserCheck size={18} /> Confirmation 2 of 3: Convert Linked User to Normal Customer
+                  </div>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.84rem', color: '#1e3a8a', lineHeight: '1.45' }}>
+                    The shopkeeper <strong>{shopToDelete.ownerName}</strong> ({shopToDelete.ownerPhone}) will have their role converted:
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1rem',
+                    background: '#ffffff',
+                    padding: '0.65rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #dbeafe',
+                    margin: '0.5rem 0 0.75rem 0'
+                  }}>
+                    <span className="badge" style={{ background: '#fef3c7', color: '#92400e', fontWeight: '700' }}>
+                      Shopkeeper (Owner)
+                    </span>
+                    <ArrowRight size={18} color="#2563eb" />
+                    <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: '700' }}>
+                      Customer (Normal User)
+                    </span>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#1e3a8a', lineHeight: '1.45' }}>
+                    <li>The user will lose store ownership and access to the POS billing dashboard.</li>
+                    <li>Their login remains active so they can continue to discover stores and order groceries as a normal customer.</li>
+                  </ul>
+                </div>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem',
+                  cursor: 'pointer',
+                  padding: '0.85rem',
+                  background: confirmCheck2 ? '#eff6ff' : '#f8fafc',
+                  border: `1.5px solid ${confirmCheck2 ? '#2563eb' : '#cbd5e1'}`,
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  transition: 'all 0.2s'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={confirmCheck2}
+                    onChange={e => setConfirmCheck2(e.target.checked)}
+                    style={{ marginTop: '0.2rem', width: '18px', height: '18px', accentColor: '#2563eb' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#0f172a', lineHeight: '1.4' }}>
+                    I confirm that {shopToDelete.ownerName} will become a normal Customer account.
+                  </span>
+                </label>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setDeleteStep(1)}
+                    style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                  >
+                    <ArrowLeft size={16} /> Back (Step 1)
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    disabled={!confirmCheck2}
+                    onClick={() => setDeleteStep(3)}
+                    style={{
+                      padding: '0.75rem',
+                      fontWeight: '700',
+                      borderRadius: '10px',
+                      opacity: confirmCheck2 ? 1 : 0.5,
+                      cursor: confirmCheck2 ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    Next: Final Verify (3/3) <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Final Verification & Type Name Authorization */}
+            {deleteStep === 3 && (
+              <div>
+                <div style={{
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  marginBottom: '1.25rem'
+                }}>
+                  <div style={{ fontWeight: '700', color: '#991b1b', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                    <Shield size={18} /> Confirmation 3 of 3: Security Verification
+                  </div>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.84rem', color: '#7f1d1d', lineHeight: '1.4' }}>
+                    To authorize deletion, please type the exact shop name <strong>"{shopToDelete.shopName}"</strong> or type <strong>DELETE</strong>:
+                  </p>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder={`Type "${shopToDelete.shopName}" or "DELETE"`}
+                    value={typedShopName}
+                    onChange={e => setTypedShopName(e.target.value)}
+                    style={{
+                      margin: 0,
+                      background: '#ffffff',
+                      borderColor: (typedShopName.trim() === shopToDelete.shopName.trim() || typedShopName.trim().toUpperCase() === 'DELETE') ? '#22c55e' : '#f87171',
+                      fontWeight: '600',
+                      fontSize: '0.95rem'
+                    }}
+                  />
+                </div>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.75rem',
+                  cursor: 'pointer',
+                  padding: '0.85rem',
+                  background: confirmCheck3 ? '#fee2e2' : '#f8fafc',
+                  border: `1.5px solid ${confirmCheck3 ? '#ef4444' : '#cbd5e1'}`,
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  transition: 'all 0.2s'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={confirmCheck3}
+                    onChange={e => setConfirmCheck3(e.target.checked)}
+                    style={{ marginTop: '0.2rem', width: '18px', height: '18px', accentColor: '#dc2626' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#0f172a', lineHeight: '1.4' }}>
+                    I authorize the immediate permanent deletion of this shop and account downgrade.
+                  </span>
+                </label>
+
+                {(() => {
+                  const isMatch = typedShopName.trim() === shopToDelete.shopName.trim() || typedShopName.trim().toUpperCase() === 'DELETE';
+                  const canExecute = confirmCheck3 && isMatch && !isDeletingShop;
+
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '0.75rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={isDeletingShop}
+                        onClick={() => setDeleteStep(2)}
+                        style={{ padding: '0.75rem', fontWeight: '700', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                      >
+                        <ArrowLeft size={16} /> Back (Step 2)
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger"
+                        disabled={!canExecute}
+                        onClick={handleConfirmDeleteShop}
+                        style={{
+                          padding: '0.75rem',
+                          fontWeight: '800',
+                          borderRadius: '10px',
+                          background: canExecute ? '#dc2626' : '#94a3b8',
+                          borderColor: canExecute ? '#b91c1c' : '#94a3b8',
+                          cursor: canExecute ? 'pointer' : 'not-allowed',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                          boxShadow: canExecute ? '0 10px 15px -3px rgba(220, 38, 38, 0.4)' : 'none'
+                        }}
+                      >
+                        <Trash2 size={16} />
+                        {isDeletingShop ? 'Deleting Shop...' : 'Permanently Delete Shop'}
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
           </div>
         </div>
       )}

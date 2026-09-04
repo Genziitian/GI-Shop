@@ -1726,6 +1726,45 @@ app.put('/api/admin/change-shop-city', authenticate, (req, res) => {
   });
 });
 
+app.delete('/api/admin/shops/:id', authenticate, (req, res) => {
+  if (req.user.role !== 'SuperManager') return res.status(403).json({ error: 'Forbidden: Super Manager access required' });
+  const shopId = req.params.id;
+  if (!shopId) return res.status(400).json({ error: 'Shop ID is required' });
+
+  db.get(`SELECT * FROM Shops WHERE id = ?`, [shopId], (err, shop) => {
+    if (err || !shop) return res.status(404).json({ error: 'Shop not found' });
+
+    const ownerId = shop.ownerId;
+    const shopName = shop.shopName || 'Shop';
+
+    // 1. Convert linked shopkeeper account to normal Customer
+    if (ownerId) {
+      db.run(`UPDATE Users SET role = 'Customer' WHERE id = ?`, [ownerId], (uErr) => {
+        if (uErr) console.warn('[Admin Delete Shop] Error converting owner role:', uErr);
+      });
+    }
+
+    // 2. Cascade delete dependent shop records
+    db.run(`DELETE FROM ShopStaff WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM Items WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM Orders WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM Sales WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM Settlements WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM ShopBlockedCustomers WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM ShopCustomers WHERE shopId = ?`, [shopId], () => {});
+    db.run(`DELETE FROM SyncedContacts WHERE shopId = ?`, [shopId], () => {});
+
+    // 3. Delete the shop itself
+    db.run(`DELETE FROM Shops WHERE id = ?`, [shopId], function(delErr) {
+      if (delErr) return res.status(500).json({ error: 'Failed to delete shop from database' });
+      res.json({
+        success: true,
+        message: `Shop "${shopName}" deleted successfully. The linked owner account has been converted to a normal Customer.`
+      });
+    });
+  });
+});
+
 // --- SUPER MANAGER (ADMIN) CITY GOVERNANCE APIs ---
 app.get('/api/admin/cities', authenticate, (req, res) => {
   if (req.user.role !== 'SuperManager') return res.status(403).json({ error: 'Forbidden: Super Manager access required' });
