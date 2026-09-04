@@ -6,14 +6,14 @@ import {
   updateShopOrderItems, requestShopOrderPayment, verifyShopOrderOTP,
   getSales, updateSaleNote, inviteStaff, getStaff, deleteStaff,
   getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword,
-  parseTimings, formatTimings, verifyPin, getCustomers
+  parseTimings, formatTimings, verifyPin, getCustomers, updateUserProfile
 } from '../lib/api';
 import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
 import { 
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
-  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff,
+  Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff, Save,
   Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal, MessageSquare
 } from 'lucide-react';
 import POSBilling from '../components/POSBilling';
@@ -104,6 +104,12 @@ export default function Shopkeeper() {
   const [shopSaving, setShopSaving] = useState(false);
   const [shopSaveNotice, setShopSaveNotice] = useState('');
 
+  // Owner Personal Profile & Number Form State
+  const [ownerForm, setOwnerForm] = useState({ name: '', phone: '' });
+  const [ownerSaving, setOwnerSaving] = useState(false);
+  const [ownerNotice, setOwnerNotice] = useState('');
+  const [ownerError, setOwnerError] = useState('');
+
   const handleOpenShopDetails = async () => {
     try {
       const data = await getMyDetailedShop();
@@ -118,7 +124,13 @@ export default function Shopkeeper() {
         shopAddress: data.shopAddress || '',
         timings: data.timings || formatTimings(parsed.open, parsed.close)
       });
+      setOwnerForm({
+        name: currentUser?.name || data.ownerName || '',
+        phone: currentUser?.phone || data.ownerPhone || data.shopPhone || ''
+      });
       setShopSaveNotice('');
+      setOwnerNotice('');
+      setOwnerError('');
       setShowShopDetailsModal(true);
     } catch (e) {
       alert('Error fetching shop details');
@@ -128,10 +140,17 @@ export default function Shopkeeper() {
   const handleSaveShopDetails = async (e) => {
     e.preventDefault();
     if (!isOwner) return alert('Only the shop owner can edit shop details.');
+    const cleanPhone = (shopForm.shopPhone || '').replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      return alert('Please enter a valid 10-digit contact phone number.');
+    }
     setShopSaving(true);
     setShopSaveNotice('');
     try {
-      const res = await updateMyDetailedShop(shopForm);
+      const res = await updateMyDetailedShop({
+        ...shopForm,
+        shopPhone: cleanPhone
+      });
       setShopSaveNotice(res.message || 'Shop details updated successfully!');
       setTimeout(() => setShopSaveNotice(''), 3000);
       loadInitialData();
@@ -139,6 +158,37 @@ export default function Shopkeeper() {
       alert(e.message || 'Error updating shop details');
     } finally {
       setShopSaving(false);
+    }
+  };
+
+  const handleSaveOwnerProfile = async (e) => {
+    e.preventDefault();
+    const cleanPhone = (ownerForm.phone || '').replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      setOwnerError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setOwnerSaving(true);
+    setOwnerNotice('');
+    setOwnerError('');
+    try {
+      const res = await updateUserProfile({
+        name: ownerForm.name.trim(),
+        phone: cleanPhone,
+        city: currentUser?.city || detailedShop?.city || 'Delhi',
+        address: currentUser?.address || ''
+      });
+      if (res.user) {
+        setCurrentUser(res.user);
+        localStorage.setItem('userData', JSON.stringify(res.user));
+      }
+      setOwnerNotice('Owner phone number & profile updated successfully!');
+      setTimeout(() => setOwnerNotice(''), 3500);
+      loadInitialData();
+    } catch (err) {
+      setOwnerError(err.message || 'Failed to update phone number');
+    } finally {
+      setOwnerSaving(false);
     }
   };
 
@@ -2449,6 +2499,78 @@ export default function Shopkeeper() {
                     </div>
                   </div>
                 </div>
+
+                {/* Form to update Owner Profile & Phone */}
+                <form onSubmit={handleSaveOwnerProfile} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <Phone size={18} color="var(--primary)" />
+                    <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a' }}>Update Mobile Number & Profile</h4>
+                  </div>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    Updating your phone number will synchronize across your account login and your shop contact details.
+                  </p>
+
+                  {ownerNotice && (
+                    <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#15803d', padding: '0.65rem 0.85rem', borderRadius: '8px', fontSize: '0.84rem', fontWeight: '600', marginBottom: '1rem' }}>
+                      {ownerNotice}
+                    </div>
+                  )}
+
+                  {ownerError && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#b91c1c', padding: '0.65rem 0.85rem', borderRadius: '8px', fontSize: '0.84rem', fontWeight: '600', marginBottom: '1rem' }}>
+                      {ownerError}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: '600', display: 'block', marginBottom: '4px' }}>
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={ownerForm.name}
+                        onChange={(e) => setOwnerForm({ ...ownerForm, name: e.target.value })}
+                        required
+                        placeholder="Your full name"
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: '600', display: 'block', marginBottom: '4px' }}>
+                        10-Digit Phone Number
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={{ background: '#f1f5f9', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '8px 0 0 8px', padding: '0.5rem 0.75rem', fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          style={{ borderRadius: '0 8px 8px 0' }}
+                          value={ownerForm.phone}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setOwnerForm({ ...ownerForm, phone: val });
+                          }}
+                          placeholder="10-digit mobile number"
+                          maxLength={10}
+                          required
+                        />
+                      </div>
+                      <small style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                        Enter 10 numeric digits. Synced with your shop contact.
+                      </small>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                    <button type="submit" className="btn" disabled={ownerSaving} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Save size={15} /> {ownerSaving ? 'Saving...' : 'Update Phone & Details'}
+                    </button>
+                  </div>
+                </form>
 
                 <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <a 

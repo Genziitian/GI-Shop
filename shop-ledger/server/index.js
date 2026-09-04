@@ -325,21 +325,40 @@ app.post('/api/register', async (req, res) => {
 app.put('/api/user/profile', authenticate, (req, res) => {
   const { name, phone, city, address } = req.body;
   if (!name || !phone) return res.status(400).json({ error: 'Name and phone are required' });
-  
-  db.get(`SELECT role, city FROM Users WHERE id = ?`, [req.user.id], (err, currentUser) => {
-    if (err || !currentUser) return res.status(404).json({ error: 'User not found' });
 
-    // Shopkeeper cannot modify city - preserve registered city (SuperAdmin only)
-    const isShopkeeper = currentUser.role === 'Shopkeeper';
-    const targetCity = (isShopkeeper && currentUser.city) ? currentUser.city : (city || 'Delhi').trim();
+  const cleanPhone = phone.toString().replace(/\D/g, '').slice(-10);
+  if (cleanPhone.length !== 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit mobile phone number' });
+  }
 
-    db.run(`UPDATE Users SET name = ?, phone = ?, city = ?, address = ? WHERE id = ?`,
-      [name.trim(), phone.trim(), targetCity, (address || '').trim(), req.user.id], function(updateErr) {
-        if (updateErr) return res.status(500).json({ error: 'Failed to update profile' });
-        db.get(`SELECT id, shortId, name, email, phone, role, city, address, pin FROM Users WHERE id = ?`, [req.user.id], (err, updatedUser) => {
-          res.json({ success: true, message: 'Profile updated successfully!', user: updatedUser });
+  // Check if phone number is already registered by another account
+  db.get(`SELECT id FROM Users WHERE phone = ? AND id != ?`, [cleanPhone, req.user.id], (err, existingPhone) => {
+    if (err) return res.status(500).json({ error: 'Database error while checking phone number' });
+    if (existingPhone) {
+      return res.status(400).json({ error: 'This phone number is already registered with another account.' });
+    }
+
+    db.get(`SELECT role, city FROM Users WHERE id = ?`, [req.user.id], (err, currentUser) => {
+      if (err || !currentUser) return res.status(404).json({ error: 'User not found' });
+
+      // Shopkeeper cannot modify city - preserve registered city (SuperAdmin only)
+      const isShopkeeper = currentUser.role === 'Shopkeeper';
+      const targetCity = (isShopkeeper && currentUser.city) ? currentUser.city : (city || 'Delhi').trim();
+
+      db.run(`UPDATE Users SET name = ?, phone = ?, city = ?, address = ? WHERE id = ?`,
+        [name.trim(), cleanPhone, targetCity, (address || '').trim(), req.user.id], function(updateErr) {
+          if (updateErr) return res.status(500).json({ error: 'Failed to update profile: ' + (updateErr.message || updateErr) });
+
+          // If shopkeeper, also sync their shop's contact phone
+          if (isShopkeeper) {
+            db.run(`UPDATE Shops SET shopPhone = ? WHERE ownerId = ?`, [cleanPhone, req.user.id], () => {});
+          }
+
+          db.get(`SELECT id, shortId, name, email, phone, role, city, address, pin FROM Users WHERE id = ?`, [req.user.id], (err, updatedUser) => {
+            res.json({ success: true, message: 'Profile updated successfully!', user: updatedUser });
+          });
         });
-      });
+    });
   });
 });
 
@@ -874,11 +893,35 @@ app.get('/api/shop/details', authenticate, (req, res) => {
 app.put('/api/shop/details', authenticate, (req, res) => {
   if (req.user.role !== 'Shopkeeper') return res.status(403).json({ error: 'Forbidden: Only shop owner can edit shop details' });
   const { shopName, shopPhone, shopAddress, timings } = req.body;
-  // Shopkeeper cannot change city - city is locked to SuperAdmin governance
-  db.run(`UPDATE Shops SET shopName = ?, shopPhone = ?, shopAddress = ?, timings = ? WHERE id = ?`,
-    [shopName, shopPhone, shopAddress, timings, req.user.shopId], function(err) {
-      if (err) return res.status(500).json({ error: 'Failed to update shop details' });
-      res.json({ success: true, message: 'Shop details updated successfully!' });
+  const cleanPhone = (shopPhone || '').toString().replace(/\D/g, '').slice(-10);
+
+  if (cleanPhone && cleanPhone.length !== 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit shop contact phone number' });
+  }
+
+  // Check if phone number is already registered by another account
+  const checkDuplicate = (cb) => {
+    if (!cleanPhone) return cb(null);
+    db.get(`SELECT id FROM Users WHERE phone = ? AND id != ?`, [cleanPhone, req.user.id], (err, existing) => {
+      if (err) return res.status(500).json({ error: 'Database error while checking phone number' });
+      if (existing) return res.status(400).json({ error: 'This phone number is already registered with another account.' });
+      cb();
+    });
+  };
+
+  checkDuplicate(() => {
+    // Shopkeeper cannot change city - city is locked to SuperAdmin governance
+    db.run(`UPDATE Shops SET shopName = ?, shopPhone = ?, shopAddress = ?, timings = ? WHERE id = ?`,
+      [shopName, cleanPhone || shopPhone, shopAddress, timings, req.user.shopId], function(err) {
+        if (err) return res.status(500).json({ error: 'Failed to update shop details' });
+
+        // Keep shopkeeper user account phone in sync with their shop phone
+        if (cleanPhone) {
+          db.run(`UPDATE Users SET phone = ? WHERE id = ?`, [cleanPhone, req.user.id], () => {});
+        }
+
+        res.json({ success: true, message: 'Shop details updated successfully!' });
+    });
   });
 });
 

@@ -333,13 +333,22 @@ export default function Customer() {
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+    const cleanPhone = (profileForm.phone || '').replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      setProfileError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
     setProfileSaving(true);
     setProfileNotice('');
     setProfileError('');
     try {
-      const res = await updateUserProfile(profileForm);
+      const res = await updateUserProfile({
+        ...profileForm,
+        phone: cleanPhone
+      });
       if (res.user) {
         setCurrentUser(res.user);
+        localStorage.setItem('userData', JSON.stringify(res.user));
         if (res.user.city) setSelectedCity(res.user.city);
       }
       setProfileNotice('Profile details updated successfully!');
@@ -3003,8 +3012,9 @@ export default function Customer() {
                         <input 
                           type="tel" 
                           className="input" 
+                          placeholder="10-digit mobile number"
                           value={profileForm.phone} 
-                          onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} 
+                          onChange={e => setProfileForm({ ...profileForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} 
                           required 
                         />
                       </div>

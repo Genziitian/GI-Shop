@@ -107,8 +107,13 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
   };
 
   const handleSaveProfile = async () => {
-    if (!form.name.trim() || !form.phone.trim()) {
-      Alert.alert('Error', 'Name and Phone number are required.');
+    const cleanPhone = (form.phone || '').replace(/\D/g, '').slice(-10);
+    if (!form.name.trim()) {
+      Alert.alert('Error', 'Full name is required.');
+      return;
+    }
+    if (cleanPhone.length !== 10) {
+      Alert.alert('Invalid Phone Number', 'Please enter a valid 10-digit mobile number.');
       return;
     }
     setProfileSaving(true);
@@ -116,6 +121,8 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
     try {
       const payload = {
         ...form,
+        name: form.name.trim(),
+        phone: cleanPhone,
         city: user?.role === 'Shopkeeper' ? (user?.city || form.city) : form.city,
       };
       const res = await updateUserProfile(payload);
@@ -295,14 +302,36 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
 
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Mobile Phone</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.phone}
-                  onChangeText={(t) => setForm({ ...form, phone: t })}
-                  placeholder="10-digit mobile number"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="phone-pad"
-                />
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{
+                    backgroundColor: '#f1f5f9',
+                    borderWidth: 1,
+                    borderColor: '#cbd5e1',
+                    borderTopLeftRadius: 8,
+                    borderBottomLeftRadius: 8,
+                    paddingHorizontal: 12,
+                    height: 48,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#475569' }}>+91</Text>
+                  </View>
+                  <TextInput
+                    style={[styles.input, { flex: 1, borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeftWidth: 0 }]}
+                    value={form.phone}
+                    onChangeText={(t) => {
+                      const digits = t.replace(/\D/g, '').slice(0, 10);
+                      setForm({ ...form, phone: digits });
+                    }}
+                    placeholder="10-digit mobile number"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                  />
+                </View>
+                <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                  Enter 10 numeric digits. Used for OTP verification, delivery & khata updates.
+                </Text>
               </View>
 
               {user?.role === 'Shopkeeper' ? (
