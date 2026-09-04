@@ -171,7 +171,7 @@ export default function AuthScreen() {
         role: role || 'Customer',
         name: (onboardingName || onboardingUser.googleUser?.name || '').trim(),
         phone: onboardingPhone.trim(),
-        city: 'Delhi',
+        city: role === 'Shopkeeper' ? (onboardingCity || 'Delhi') : 'Delhi',
         address: onboardingAddress.trim(),
         shopName: onboardingShopName.trim(),
         shopAddress: onboardingShopAddress.trim(),
@@ -358,6 +358,16 @@ export default function AuthScreen() {
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Shop Address *</Text>
                     <TextInput style={styles.input} placeholder="e.g. Shop #12, Main Market" placeholderTextColor="#94a3b8" value={onboardingShopAddress} onChangeText={setOnboardingShopAddress} />
+                  </View>
+                  <View style={{ marginBottom: 14 }}>
+                    <CitySelector
+                      selectedCity={onboardingCity}
+                      onSelectCity={setOnboardingCity}
+                      label="Choose Shop City *"
+                    />
+                    <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                      Store city is locked after registration. Only SuperAdmin can modify it.
+                    </Text>
                   </View>
                 </>
               )}

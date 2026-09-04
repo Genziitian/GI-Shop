@@ -898,11 +898,23 @@ export default function MoreScreen({ navigation }) {
                 />
               </View>
 
-              <CitySelector
-                selectedCity={shopForm.city}
-                onSelectCity={(selected) => setShopForm({ ...shopForm, city: selected })}
-                disabled={!isOwner}
-              />
+              <View style={styles.formGroup}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <Text style={styles.formLabel}>Shop City / Region</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Lock size={12} color="#94a3b8" />
+                    <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600' }}>Locked (SuperAdmin only)</Text>
+                  </View>
+                </View>
+                <View style={[styles.formInput, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', justifyContent: 'center' }]}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#475569' }}>
+                    📍 {shopForm.city || 'Delhi'}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                  Store city is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.
+                </Text>
+              </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Shop Address</Text>

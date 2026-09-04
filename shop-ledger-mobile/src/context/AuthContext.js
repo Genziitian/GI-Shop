@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import {
   getToken,
   getUser,
+  storeUser,
   login as apiLogin,
   register as apiRegister,
   googleLogin as apiGoogleLogin,
@@ -130,6 +131,26 @@ export const AuthProvider = ({ children }) => {
     return res;
   };
 
+  const refreshUser = async (updatedData) => {
+    try {
+      let nextUser = updatedData;
+      if (!nextUser) {
+        const saved = await getUser();
+        nextUser = saved;
+      }
+      if (nextUser) {
+        setUser((prev) => {
+          const merged = { ...prev, ...nextUser };
+          storeUser(merged);
+          return merged;
+        });
+        return nextUser;
+      }
+    } catch (e) {
+      console.warn('Error refreshing user:', e);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -140,6 +161,8 @@ export const AuthProvider = ({ children }) => {
         lock: lockApp,
         unlock: unlockApp,
         changePin: changeUserPin,
+        refreshUser,
+        updateUser: refreshUser,
         serverUrl,
         updateServerUrl,
         resetServerUrl,

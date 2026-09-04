@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   getAdminShops, getAdminUsers, getAdminCities, addAdminCity, deleteAdminCity,
   terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin,
-  getSupportSettings, updateSupportSettings, getAdminSyncedContacts
+  changeAdminShopCity, getSupportSettings, updateSupportSettings, getAdminSyncedContacts
 } from '../lib/api';
 import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone } from 'lucide-react';
 import logoImg from '../assets/logo.png';
@@ -107,6 +107,20 @@ export default function SuperManager() {
       alert(res?.message || `PIN reset successfully to ${customPin.trim()}!`);
     } catch (e) {
       alert(e?.message || 'Failed to reset PIN.');
+    }
+  };
+
+  const handleChangeShopCity = async (shop) => {
+    const activeCityNames = cities.map(c => c.name || c).filter(Boolean);
+    const optionsText = activeCityNames.length > 0 ? activeCityNames.join(', ') : 'Delhi, Mumbai, Bengaluru';
+    const chosenCity = prompt(`Change city for "${shop?.shopName}" (${shop?.city}):\nAvailable platform cities:\n${optionsText}`, shop?.city || 'Delhi');
+    if (!chosenCity || chosenCity.trim() === shop?.city) return;
+    try {
+      const res = await changeAdminShopCity(shop.id, chosenCity.trim());
+      alert(res?.message || `Shop city successfully changed to ${chosenCity.trim()}!`);
+      loadData();
+    } catch (e) {
+      alert(e?.message || 'Failed to update shop city.');
     }
   };
 
@@ -344,6 +358,15 @@ export default function SuperManager() {
                       </td>
                       <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#38bdf8', color: '#0284c7' }}
+                            title="Change Shop City"
+                            onClick={() => handleChangeShopCity(shop)}
+                          >
+                            Change City
+                          </button>
                           <button
                             type="button"
                             className="btn btn-outline"

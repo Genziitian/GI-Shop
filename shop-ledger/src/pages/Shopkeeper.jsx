@@ -2240,19 +2240,22 @@ export default function Shopkeeper() {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>City / Region</label>
-                      <select 
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>City / Region</label>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <Lock size={11} /> Locked (SuperAdmin only)
+                        </span>
+                      </div>
+                      <input 
+                        type="text" 
                         className="input" 
-                        value={shopForm.city} 
-                        onChange={e => setShopForm({ ...shopForm, city: e.target.value })} 
-                        disabled={!isOwner}
-                        required
-                        style={{ background: '#ffffff', width: '100%', marginBottom: 0 }}
-                      >
-                        {cities.map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
+                        value={shopForm.city || 'Delhi'} 
+                        disabled 
+                        style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', marginBottom: '2px' }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block' }}>
+                        Store city is locked to protect records. Contact SuperAdmin to request a transfer.
+                      </span>
                     </div>
                   </div>
 

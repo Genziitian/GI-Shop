@@ -427,7 +427,7 @@ export default function Auth() {
         role: onboarding.role,
         name: onboardingForm.name,
         phone: onboardingForm.phone.trim(),
-        city: 'Delhi',
+        city: onboarding.role === 'Shopkeeper' ? (onboardingForm.city || 'Delhi') : 'Delhi',
         address: onboardingForm.address,
         shopName: onboardingForm.shopName,
         shopAddress: onboardingForm.shopAddress,
@@ -760,6 +760,27 @@ export default function Auth() {
                           required 
                           style={{ background: '#ffffff' }}
                         />
+                      </div>
+
+                      <div style={{ marginBottom: '0.85rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                          {language === 'hi' ? 'दुकान का शहर चुनें *' : 'Choose Shop City *'}
+                        </label>
+                        <select 
+                          name="city" 
+                          className="select" 
+                          value={onboardingForm.city || 'Delhi'} 
+                          onChange={handleOnboardingChange} 
+                          required 
+                          style={{ background: '#ffffff', width: '100%', marginBottom: '4px' }}
+                        >
+                          {cities.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                        <span style={{ fontSize: '0.74rem', color: '#64748b', display: 'block' }}>
+                          {language === 'hi' ? 'दुकान का शहर पंजीकरण के बाद लॉक रहेगा। केवल सुपरएडमिन इसे बदल सकता है।' : 'Store city is locked after registration. Only SuperAdmin can modify it.'}
+                        </span>
                       </div>
 
                       <div>

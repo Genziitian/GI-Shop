@@ -114,8 +114,14 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
     setProfileSaving(true);
     setProfileNotice('');
     try {
-      await updateUserProfile(form);
-      await refreshUser();
+      const payload = {
+        ...form,
+        city: user?.role === 'Shopkeeper' ? (user?.city || form.city) : form.city,
+      };
+      const res = await updateUserProfile(payload);
+      if (typeof refreshUser === 'function') {
+        await refreshUser(res?.user || payload);
+      }
       setProfileNotice('Profile details updated successfully!');
       setTimeout(() => setProfileNotice(''), 3500);
     } catch (e) {
@@ -299,11 +305,31 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                 />
               </View>
 
-              <CitySelector
-                selectedCity={form.city}
-                onSelectCity={(selected) => setForm({ ...form, city: selected })}
-                label="City / Location"
-              />
+              {user?.role === 'Shopkeeper' ? (
+                <View style={styles.fieldGroup}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={styles.fieldLabel}>Shop City / Region</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Lock size={12} color="#94a3b8" />
+                      <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600' }}>Locked (SuperAdmin only)</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.input, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', justifyContent: 'center' }]}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#475569' }}>
+                      📍 {form.city || user?.city || 'Delhi'}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                    Store location is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.
+                  </Text>
+                </View>
+              ) : (
+                <CitySelector
+                  selectedCity={form.city}
+                  onSelectCity={(selected) => setForm({ ...form, city: selected })}
+                  label="City / Location"
+                />
+              )}
 
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Delivery Address</Text>

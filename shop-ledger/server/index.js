@@ -326,13 +326,21 @@ app.put('/api/user/profile', authenticate, (req, res) => {
   const { name, phone, city, address } = req.body;
   if (!name || !phone) return res.status(400).json({ error: 'Name and phone are required' });
   
-  db.run(`UPDATE Users SET name = ?, phone = ?, city = ?, address = ? WHERE id = ?`,
-    [name.trim(), phone.trim(), (city || 'Delhi').trim(), (address || '').trim(), req.user.id], function(err) {
-      if (err) return res.status(500).json({ error: 'Failed to update profile' });
-      db.get(`SELECT id, shortId, name, email, phone, role, city, address, pin FROM Users WHERE id = ?`, [req.user.id], (err, updatedUser) => {
-        res.json({ success: true, message: 'Profile updated successfully!', user: updatedUser });
+  db.get(`SELECT role, city FROM Users WHERE id = ?`, [req.user.id], (err, currentUser) => {
+    if (err || !currentUser) return res.status(404).json({ error: 'User not found' });
+
+    // Shopkeeper cannot modify city - preserve registered city (SuperAdmin only)
+    const isShopkeeper = currentUser.role === 'Shopkeeper';
+    const targetCity = (isShopkeeper && currentUser.city) ? currentUser.city : (city || 'Delhi').trim();
+
+    db.run(`UPDATE Users SET name = ?, phone = ?, city = ?, address = ? WHERE id = ?`,
+      [name.trim(), phone.trim(), targetCity, (address || '').trim(), req.user.id], function(updateErr) {
+        if (updateErr) return res.status(500).json({ error: 'Failed to update profile' });
+        db.get(`SELECT id, shortId, name, email, phone, role, city, address, pin FROM Users WHERE id = ?`, [req.user.id], (err, updatedUser) => {
+          res.json({ success: true, message: 'Profile updated successfully!', user: updatedUser });
+        });
       });
-    });
+  });
 });
 
 app.post('/api/user/verify-pin', authenticate, async (req, res) => {
@@ -865,9 +873,10 @@ app.get('/api/shop/details', authenticate, (req, res) => {
 
 app.put('/api/shop/details', authenticate, (req, res) => {
   if (req.user.role !== 'Shopkeeper') return res.status(403).json({ error: 'Forbidden: Only shop owner can edit shop details' });
-  const { shopName, shopPhone, city, shopAddress, timings } = req.body;
-  db.run(`UPDATE Shops SET shopName = ?, shopPhone = ?, city = ?, shopAddress = ?, timings = ? WHERE id = ?`,
-    [shopName, shopPhone, city, shopAddress, timings, req.user.shopId], function(err) {
+  const { shopName, shopPhone, shopAddress, timings } = req.body;
+  // Shopkeeper cannot change city - city is locked to SuperAdmin governance
+  db.run(`UPDATE Shops SET shopName = ?, shopPhone = ?, shopAddress = ?, timings = ? WHERE id = ?`,
+    [shopName, shopPhone, shopAddress, timings, req.user.shopId], function(err) {
       if (err) return res.status(500).json({ error: 'Failed to update shop details' });
       res.json({ success: true, message: 'Shop details updated successfully!' });
   });
@@ -1700,6 +1709,20 @@ app.post('/api/admin/reset-pin', authenticate, (req, res) => {
   db.run(`UPDATE Users SET pin = ? WHERE id = ?`, [resetPin, userId], function(err) {
     if (err || this.changes === 0) return res.status(404).json({ error: 'User not found or PIN update failed' });
     res.json({ success: true, message: `Security PIN reset successfully to ${resetPin}!` });
+  });
+});
+
+app.put('/api/admin/change-shop-city', authenticate, (req, res) => {
+  if (req.user.role !== 'SuperManager') return res.status(403).json({ error: 'Forbidden: Super Manager access required' });
+  const { shopId, newCity } = req.body;
+  if (!shopId || !newCity) return res.status(400).json({ error: 'Shop ID and new city are required' });
+
+  db.run(`UPDATE Shops SET city = ? WHERE id = ?`, [newCity.trim(), shopId], function(err) {
+    if (err) return res.status(500).json({ error: 'Failed to update shop city' });
+    // Also sync the owner's city if shop has an ownerId
+    db.run(`UPDATE Users SET city = ? WHERE id = (SELECT ownerId FROM Shops WHERE id = ?)`, [newCity.trim(), shopId], () => {
+      res.json({ success: true, message: `Shop city successfully updated to ${newCity.trim()}!` });
+    });
   });
 });
 
