@@ -330,7 +330,7 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                   />
                 </View>
                 <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                  Enter 10 numeric digits. Used for OTP verification, delivery & khata updates.
+                  Enter 10 numeric digits. Used for delivery contact, store calls & khata records.
                 </Text>
               </View>
 
