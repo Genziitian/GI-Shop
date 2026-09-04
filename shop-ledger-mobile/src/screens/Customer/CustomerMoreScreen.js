@@ -28,9 +28,11 @@ import {
   FileText,
   Trash2,
   X,
+  Globe,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 import ChangePasswordModal from '../../components/ChangePasswordModal';
@@ -38,6 +40,7 @@ import { Modal } from 'react-native';
 
 export default function CustomerMoreScreen({ navigation }) {
   const { user, logout, lock } = useAuth();
+  const { t, language, setLanguage } = useTranslation();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -123,9 +126,84 @@ export default function CustomerMoreScreen({ navigation }) {
           <ChevronRight size={20} color={colors.textMuted} />
         </TouchableOpacity>
 
+        {/* APP LANGUAGE SELECTION CARD */}
+        <View style={styles.sectionCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
+              <Globe size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>{t('more.langCardTitle', 'Choose Language / भाषा चुनें')}</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>
+                {t('more.langCardSubtitle', 'Select your preferred language')}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => setLanguage('en')}
+              activeOpacity={0.8}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                borderRadius: 10,
+                borderWidth: 1.5,
+                borderColor: language === 'en' ? colors.primary : colors.border,
+                backgroundColor: language === 'en' ? '#eff6ff' : '#f8fafc',
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <Text style={{ fontSize: 14 }}>🇬🇧</Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: language === 'en' ? '800' : '600',
+                  color: language === 'en' ? colors.primary : colors.text,
+                }}
+              >
+                English
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setLanguage('hi')}
+              activeOpacity={0.8}
+              style={{
+                flex: 1,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                borderRadius: 10,
+                borderWidth: 1.5,
+                borderColor: language === 'hi' ? colors.primary : colors.border,
+                backgroundColor: language === 'hi' ? '#eff6ff' : '#f8fafc',
+                alignItems: 'center',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              <Text style={{ fontSize: 14 }}>🇮🇳</Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: language === 'hi' ? '800' : '600',
+                  color: language === 'hi' ? colors.primary : colors.text,
+                }}
+              >
+                हिंदी (Hindi)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* SECTION 1: ACCOUNT & SECURITY SETTINGS */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Account & Security</Text>
+          <Text style={styles.sectionTitle}>{t('more.securityLock', 'Account & Security')}</Text>
 
           <TouchableOpacity
             style={styles.menuRow}

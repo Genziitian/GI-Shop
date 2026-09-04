@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Store, Tag, BookOpen, Clock, Menu } from 'lucide-react-native';
 import { colors } from '../theme/colors';
+import { useTranslation } from '../context/LanguageContext';
 import CustomerExploreScreen from '../screens/Customer/CustomerExploreScreen';
 import CustomerCompareScreen from '../screens/Customer/CustomerCompareScreen';
 import CustomerKhataScreen from '../screens/Customer/CustomerKhataScreen';
@@ -13,6 +14,7 @@ const Tab = createBottomTabNavigator();
 
 export default function CustomerNavigator() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -39,7 +41,7 @@ export default function CustomerNavigator() {
         name="CustomerExplore"
         component={CustomerExploreScreen}
         options={{
-          tabBarLabel: 'Explore',
+          tabBarLabel: t('nav.shops', 'Explore'),
           tabBarIcon: ({ color, size }) => <Store size={size || 20} color={color} />,
         }}
       />
@@ -47,7 +49,7 @@ export default function CustomerNavigator() {
         name="CustomerCompare"
         component={CustomerCompareScreen}
         options={{
-          tabBarLabel: 'Compare',
+          tabBarLabel: t('nav.compare', 'Compare'),
           tabBarIcon: ({ color, size }) => <Tag size={size || 20} color={color} />,
         }}
       />
@@ -55,7 +57,7 @@ export default function CustomerNavigator() {
         name="CustomerKhata"
         component={CustomerKhataScreen}
         options={{
-          tabBarLabel: 'My Khata',
+          tabBarLabel: t('nav.khata', 'My Khata'),
           tabBarIcon: ({ color, size }) => <BookOpen size={size || 20} color={color} />,
         }}
       />
@@ -63,7 +65,7 @@ export default function CustomerNavigator() {
         name="CustomerOrders"
         component={CustomerOrdersScreen}
         options={{
-          tabBarLabel: 'All Orders',
+          tabBarLabel: t('nav.orders', 'All Orders'),
           tabBarIcon: ({ color, size }) => <Clock size={size || 20} color={color} />,
         }}
       />
@@ -71,7 +73,7 @@ export default function CustomerNavigator() {
         name="CustomerMore"
         component={CustomerMoreScreen}
         options={{
-          tabBarLabel: 'More',
+          tabBarLabel: t('nav.more', 'More'),
           tabBarIcon: ({ color, size }) => <Menu size={size || 20} color={color} />,
         }}
       />

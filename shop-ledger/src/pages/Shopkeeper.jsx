@@ -14,8 +14,9 @@ import {
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
   Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff, Save,
-  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal, MessageSquare
+  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal, MessageSquare, Globe
 } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
 import OrderTimelineModal from '../components/OrderTimelineModal';
@@ -23,6 +24,7 @@ import logoImg from '../assets/logo.png';
 
 export default function Shopkeeper() {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useTranslation();
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('userData');
@@ -1129,6 +1131,27 @@ export default function Shopkeeper() {
             Shop ID: {currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}
           </span>
 
+          {/* Quick Language Toggle Button */}
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+            style={{
+              padding: '0.4rem 0.75rem',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              borderColor: 'var(--border)',
+              background: '#f8fafc'
+            }}
+            title={language === 'en' ? 'हिंदी में बदलें (Switch to Hindi)' : 'Switch to English'}
+          >
+            <Globe size={15} color="var(--primary)" />
+            <span>{language === 'en' ? '🇮🇳 हिंदी' : '🇬🇧 English'}</span>
+          </button>
+
           {/* Settings Button */}
           <button 
             type="button" 
@@ -1136,11 +1159,11 @@ export default function Shopkeeper() {
             onClick={handleOpenShopDetails} 
             style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            <Settings size={16} /> Settings
+            <Settings size={16} /> {t('more.title', 'Settings')}
           </button>
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
-            <LogOut size={16} /> Logout
+            <LogOut size={16} /> {t('common.logout', 'Logout')}
           </button>
         </div>
       </div>
@@ -1960,6 +1983,71 @@ export default function Shopkeeper() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+              {/* Language Selection Card */}
+              <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Globe size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
+                        {t('more.langCardTitle', 'Choose Language / भाषा चुनें')}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        {t('more.langCardSubtitle', 'Select your preferred language for the application')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Language Selection Buttons */}
+                  <div style={{ display: 'inline-flex', background: '#e2e8f0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('en')}
+                      style={{
+                        border: 'none',
+                        background: language === 'en' ? '#ffffff' : 'transparent',
+                        color: language === 'en' ? 'var(--primary)' : '#475569',
+                        fontWeight: language === 'en' ? 800 : 600,
+                        padding: '0.45rem 1rem',
+                        borderRadius: '7px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        boxShadow: language === 'en' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                    >
+                      🇬🇧 English
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('hi')}
+                      style={{
+                        border: 'none',
+                        background: language === 'hi' ? 'var(--primary)' : 'transparent',
+                        color: language === 'hi' ? '#ffffff' : '#475569',
+                        fontWeight: language === 'hi' ? 800 : 600,
+                        padding: '0.45rem 1rem',
+                        borderRadius: '7px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        boxShadow: language === 'hi' ? '0 2px 4px rgba(0,0,0,0.12)' : 'none',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                    >
+                      🇮🇳 हिंदी (Hindi)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Store Details Card */}
               <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -3192,12 +3280,12 @@ export default function Shopkeeper() {
       <div className="mobile-footer-nav">
         <button type="button" className={`footer-nav-item ${activeTab === 'pos' ? 'active' : ''}`} onClick={() => setActiveTab('pos')}>
           <ShoppingCart size={19} />
-          <span>POS</span>
+          <span>{t('nav.pos', 'POS')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'khata' ? 'active' : ''}`} onClick={() => setActiveTab('khata')}>
           <Users size={19} />
-          <span>Khata</span>
+          <span>{t('nav.khata', 'Khata')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
@@ -3209,17 +3297,17 @@ export default function Shopkeeper() {
               </span>
             )}
           </div>
-          <span>Orders</span>
+          <span>{t('nav.orders', 'Orders')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'transactions' ? 'active' : ''}`} onClick={() => setActiveTab('transactions')}>
           <BarChart2 size={19} />
-          <span>Analytics</span>
+          <span>{t('nav.analytics', 'Analytics')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${['more', 'items', 'staff'].includes(activeTab) ? 'active' : ''}`} onClick={() => setActiveTab('more')}>
           <MoreHorizontal size={19} />
-          <span>More</span>
+          <span>{t('nav.more', 'More')}</span>
         </button>
       </div>
 

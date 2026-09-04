@@ -34,6 +34,7 @@ import {
   Settings,
   Shield,
   FileText,
+  Globe,
 } from 'lucide-react-native';
 import { Modal } from 'react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
@@ -50,6 +51,7 @@ import {
   toggleShopStatus,
 } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
 import EditProductModal from '../../components/EditProductModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
@@ -58,6 +60,7 @@ import CitySelector from '../../components/CitySelector';
 
 export default function MoreScreen({ navigation }) {
   const { user, logout, changePin } = useAuth();
+  const { t, language, setLanguage } = useTranslation();
 
   // Active Sub-View: 'hub' | 'items' | 'staff' | 'profile' | 'pin'
   const [activeSubView, setActiveSubView] = useState('hub');
@@ -427,6 +430,83 @@ export default function MoreScreen({ navigation }) {
                 >
                   <Text style={[styles.statusToggleBtnText, isOpen ? styles.statusToggleBtnTextOpen : styles.statusToggleBtnTextClosed]}>
                     {isOpen ? 'Close Shop' : 'Open Shop'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* APP LANGUAGE SELECTION CARD */}
+            <View style={[styles.shopStatusCard, { padding: 14, marginBottom: 12 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <View style={[styles.storeIconBox, { width: 38, height: 38, backgroundColor: '#eff6ff' }]}>
+                  <Globe size={20} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text }}>
+                    {t('more.langCardTitle', 'Choose Language / भाषा चुनें')}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>
+                    {t('more.langCardSubtitle', 'Select your preferred language')}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setLanguage('en')}
+                  activeOpacity={0.8}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: language === 'en' ? colors.primary : colors.border,
+                    backgroundColor: language === 'en' ? '#eff6ff' : '#f8fafc',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Text style={{ fontSize: 14 }}>🇬🇧</Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: language === 'en' ? '800' : '600',
+                      color: language === 'en' ? colors.primary : colors.text,
+                    }}
+                  >
+                    English
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setLanguage('hi')}
+                  activeOpacity={0.8}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: language === 'hi' ? colors.primary : colors.border,
+                    backgroundColor: language === 'hi' ? '#eff6ff' : '#f8fafc',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Text style={{ fontSize: 14 }}>🇮🇳</Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: language === 'hi' ? '800' : '600',
+                      color: language === 'hi' ? colors.primary : colors.text,
+                    }}
+                  >
+                    हिंदी (Hindi)
                   </Text>
                 </TouchableOpacity>
               </View>

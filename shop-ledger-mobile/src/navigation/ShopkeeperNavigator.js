@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShoppingCart, Users, ShoppingBag, BarChart2, MoreHorizontal } from 'lucide-react-native';
 import { colors } from '../theme/colors';
+import { useTranslation } from '../context/LanguageContext';
 import POSScreen from '../screens/Shopkeeper/POSScreen';
 import KhataScreen from '../screens/Shopkeeper/KhataScreen';
 import OrdersScreen from '../screens/Shopkeeper/OrdersScreen';
@@ -13,6 +14,7 @@ const Tab = createBottomTabNavigator();
 
 export default function ShopkeeperNavigator() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -38,7 +40,7 @@ export default function ShopkeeperNavigator() {
         name="POS"
         component={POSScreen}
         options={{
-          tabBarLabel: 'POS Billing',
+          tabBarLabel: t('nav.pos', 'POS Billing'),
           tabBarIcon: ({ color, size }) => <ShoppingCart size={size || 20} color={color} />,
         }}
       />
@@ -46,7 +48,7 @@ export default function ShopkeeperNavigator() {
         name="Khata"
         component={KhataScreen}
         options={{
-          tabBarLabel: 'Khata Ledger',
+          tabBarLabel: t('nav.khata', 'Khata Ledger'),
           tabBarIcon: ({ color, size }) => <Users size={size || 20} color={color} />,
         }}
       />
@@ -54,7 +56,7 @@ export default function ShopkeeperNavigator() {
         name="Orders"
         component={OrdersScreen}
         options={{
-          tabBarLabel: 'Orders',
+          tabBarLabel: t('nav.orders', 'Orders'),
           tabBarIcon: ({ color, size }) => <ShoppingBag size={size || 20} color={color} />,
         }}
       />
@@ -62,7 +64,7 @@ export default function ShopkeeperNavigator() {
         name="Analytics"
         component={AnalyticsScreen}
         options={{
-          tabBarLabel: 'Analytics',
+          tabBarLabel: t('nav.analytics', 'Analytics'),
           tabBarIcon: ({ color, size }) => <BarChart2 size={size || 20} color={color} />,
         }}
       />
@@ -70,7 +72,7 @@ export default function ShopkeeperNavigator() {
         name="More"
         component={MoreScreen}
         options={{
-          tabBarLabel: 'More',
+          tabBarLabel: t('nav.more', 'More'),
           tabBarIcon: ({ color, size }) => <MoreHorizontal size={size || 20} color={color} />,
         }}
       />

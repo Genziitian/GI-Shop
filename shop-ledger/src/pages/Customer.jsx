@@ -11,14 +11,16 @@ import {
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
   X, CheckCircle, AlertCircle, LogOut, Phone, ShieldCheck, UserCheck, 
   Tag, ArrowRight, AlertTriangle, Printer, FileText, Download, Key, Lock, User,
-  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail, Menu, Trash2
+  MessageCircle, BookOpen, Fingerprint, Eye, EyeOff, FileSpreadsheet, Database, CheckSquare, Square, CalendarRange, Shield, Mail, Menu, Trash2, Globe
 } from 'lucide-react';
+import { useTranslation } from '../lib/i18n';
 import logoImg from '../assets/logo.png';
 import OrderTimelineModal from '../components/OrderTimelineModal';
 import { ShopCardSkeleton, ProductGridSkeleton, OrderCardSkeleton, KhataOverviewSkeleton } from '../components/SkeletonLoader';
 
 export default function Customer() {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useTranslation();
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('user');
@@ -1048,8 +1050,29 @@ export default function Customer() {
             </span>
           )}
 
+          {/* Quick Language Toggle Button */}
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+            style={{
+              padding: '0.4rem 0.75rem',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              borderColor: 'var(--border)',
+              background: '#f8fafc'
+            }}
+            title={language === 'en' ? 'हिंदी में बदलें (Switch to Hindi)' : 'Switch to English'}
+          >
+            <Globe size={15} color="var(--primary)" />
+            <span>{language === 'en' ? '🇮🇳 हिंदी' : '🇬🇧 English'}</span>
+          </button>
+
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}>
-            <LogOut size={16} /> Logout
+            <LogOut size={16} /> {t('common.logout', 'Logout')}
           </button>
         </div>
       </div>
@@ -3632,6 +3655,71 @@ export default function Customer() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+              {/* Language Selection Card */}
+              <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Globe size={20} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
+                        {t('more.langCardTitle', 'Choose Language / भाषा चुनें')}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        {t('more.langCardSubtitle', 'Select your preferred language for the application')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Language Selection Buttons */}
+                  <div style={{ display: 'inline-flex', background: '#e2e8f0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('en')}
+                      style={{
+                        border: 'none',
+                        background: language === 'en' ? '#ffffff' : 'transparent',
+                        color: language === 'en' ? 'var(--primary)' : '#475569',
+                        fontWeight: language === 'en' ? 800 : 600,
+                        padding: '0.45rem 1rem',
+                        borderRadius: '7px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        boxShadow: language === 'en' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                    >
+                      🇬🇧 English
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLanguage('hi')}
+                      style={{
+                        border: 'none',
+                        background: language === 'hi' ? 'var(--primary)' : 'transparent',
+                        color: language === 'hi' ? '#ffffff' : '#475569',
+                        fontWeight: language === 'hi' ? 800 : 600,
+                        padding: '0.45rem 1rem',
+                        borderRadius: '7px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        boxShadow: language === 'hi' ? '0 2px 4px rgba(0,0,0,0.12)' : 'none',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem'
+                      }}
+                    >
+                      🇮🇳 हिंदी (Hindi)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Profile Overview Card */}
               <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -3913,27 +4001,27 @@ export default function Customer() {
       <div className="mobile-footer-nav">
         <button type="button" className={`footer-nav-item ${activeTab === 'explore' ? 'active' : ''}`} onClick={() => { setActiveTab('explore'); setActiveShop(null); setSelectedKhataStore(null); }}>
           <Store size={18} />
-          <span>Explore</span>
+          <span>{t('nav.shops', 'Explore')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'compare' ? 'active' : ''}`} onClick={() => { setActiveTab('compare'); setActiveShop(null); setSelectedKhataStore(null); }}>
           <Tag size={18} />
-          <span>Compare</span>
+          <span>{t('nav.compare', 'Compare')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'khata' ? 'active' : ''}`} onClick={() => { setActiveTab('khata'); setActiveShop(null); setSelectedKhataStore(null); }}>
           <BookOpen size={18} />
-          <span>My Khata</span>
+          <span>{t('nav.khata', 'My Khata')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => { setActiveTab('orders'); setActiveShop(null); setSelectedKhataStore(null); }}>
           <Clock size={18} />
-          <span>All Orders</span>
+          <span>{t('nav.orders', 'All Orders')}</span>
         </button>
 
         <button type="button" className={`footer-nav-item ${activeTab === 'more' ? 'active' : ''}`} onClick={() => { setActiveTab('more'); setActiveShop(null); setSelectedKhataStore(null); }}>
           <Menu size={18} />
-          <span>More</span>
+          <span>{t('nav.more', 'More')}</span>
         </button>
       </div>
 

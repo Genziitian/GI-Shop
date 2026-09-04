@@ -9,6 +9,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import { requestNotificationPermissionAndToken, listenForForegroundMessages } from './lib/firebase';
 import { registerNotificationToken } from './lib/api';
+import { LanguageProvider } from './lib/i18n';
 import { Bell, X } from 'lucide-react';
 
 const getStoredUserRole = () => {
@@ -92,7 +93,8 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
       {/* Floating Push Notification Toast */}
       {notification && (
         <div style={{
@@ -184,6 +186,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
+  </LanguageProvider>
   );
 }
 
