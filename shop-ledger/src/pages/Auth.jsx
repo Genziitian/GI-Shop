@@ -406,29 +406,16 @@ export default function Auth() {
     e.preventDefault();
     setError('');
 
-    if (!onboardingForm.phone || onboardingForm.phone.trim().length !== 10) {
-      return setError(language === 'hi' ? 'कृपया ठीक 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।' : 'Please enter a valid 10-digit mobile phone number.');
+    if (!onboardingForm.phone || !onboardingForm.phone.trim()) {
+      return setError(language === 'hi' ? 'कृपया अपना 10 अंकों का मोबाइल नंबर दर्ज करें।' : 'Please enter your 10-digit mobile phone number.');
     }
 
     if (onboarding.role === 'Shopkeeper') {
       if (!onboardingForm.shopName || !onboardingForm.shopName.trim()) {
-        return setError(language === 'hi' ? 'कृपया अपनी दुकान का नाम दर्ज करें।' : 'Please enter your Shop Name.');
+        return setError(language === 'hi' ? 'कृपया अपनी दुकान का नाम दर्ज करें।' : 'Please enter your shop name.');
       }
       if (!onboardingForm.shopAddress || !onboardingForm.shopAddress.trim()) {
-        return setError(language === 'hi' ? 'कृपया अपनी दुकान का पता दर्ज करें।' : 'Please enter your Shop Address.');
-      }
-    }
-
-    if (onboardingForm.pin && onboardingForm.pin.trim().length !== 4) {
-      return setError(language === 'hi' ? 'सुरक्षा पिन ठीक 4 अंकों का होना चाहिए।' : 'If setting a security PIN, it must be exactly 4 digits.');
-    }
-
-    if (onboardingForm.password) {
-      if (onboardingForm.password.length < 4) {
-        return setError(language === 'hi' ? 'पासवर्ड कम से कम 4 अक्षरों का होना चाहिए।' : 'Password should be at least 4 characters long.');
-      }
-      if (onboardingForm.password !== onboardingForm.confirmPassword) {
-        return setError(language === 'hi' ? 'पासवर्ड मेल नहीं खाते हैं।' : 'Passwords do not match.');
+        return setError(language === 'hi' ? 'कृपया अपनी दुकान का पता दर्ज करें।' : 'Please enter your shop address.');
       }
     }
 
@@ -439,14 +426,14 @@ export default function Auth() {
         onboardComplete: true,
         role: onboarding.role,
         name: onboardingForm.name,
-        phone: onboardingForm.phone,
+        phone: onboardingForm.phone.trim(),
         city: 'Delhi',
         address: onboardingForm.address,
         shopName: onboardingForm.shopName,
         shopAddress: onboardingForm.shopAddress,
         timings: onboardingForm.timings,
-        pin: onboardingForm.pin || '1234',
-        password: onboardingForm.password || null
+        pin: '1234',
+        password: null
       });
 
       localStorage.setItem('token', res.token);
@@ -688,286 +675,210 @@ export default function Auth() {
                   </p>
                 </div>
 
-                <form onSubmit={handleCompleteOnboarding}>
-                  <div className="onboarding-grid-2col">
-                    {/* LEFT COLUMN: IDENTITY & STORE INFORMATION */}
+                <form onSubmit={handleCompleteOnboarding} style={{ maxWidth: '580px', margin: '0 auto' }}>
+                  {/* Google Account (Read Only) */}
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                      {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#94a3b8" />
+                    </label>
+                    <input 
+                      type="text" 
+                      className="input" 
+                      value={onboarding.googleUser.email} 
+                      disabled 
+                      style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
+                  </div>
+
+                  {/* Full Name & Phone in 2-col on desktop */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                     <div>
-                      {/* Google Account (Read Only) */}
-                      <div style={{ marginBottom: '1.25rem' }}>
-                        <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
-                          {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#94a3b8" />
+                      <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
+                      </label>
+                      <input 
+                        name="name" 
+                        className="input" 
+                        placeholder="e.g. Ramesh Kumar" 
+                        value={onboardingForm.name} 
+                        onChange={handleOnboardingChange} 
+                        required 
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone *'}
+                      </label>
+                      <input 
+                        name="phone" 
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength="10"
+                        className="input" 
+                        placeholder="10-digit mobile" 
+                        value={onboardingForm.phone} 
+                        onChange={handleOnboardingChange} 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  {/* SHOPKEEPER STORE INFORMATION */}
+                  {onboarding.role === 'Shopkeeper' && (
+                    <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#16a34a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Store size={18} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
+                      </div>
+
+                      <div style={{ marginBottom: '0.85rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                          {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
                         </label>
                         <input 
-                          type="text" 
+                          name="shopName" 
                           className="input" 
-                          value={onboarding.googleUser.email} 
-                          disabled 
-                          style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
+                          placeholder="e.g. Krishna Super Market" 
+                          value={onboardingForm.shopName} 
+                          onChange={handleOnboardingChange} 
+                          required 
+                          style={{ background: '#ffffff' }}
                         />
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
                       </div>
 
-                      {/* Full Name & Phone in 2-col on desktop */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-                        <div>
-                          <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                            {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
-                          </label>
-                          <input 
-                            name="name" 
-                            className="input" 
-                            placeholder="e.g. Ramesh Kumar" 
-                            value={onboardingForm.name} 
-                            onChange={handleOnboardingChange} 
-                            required 
-                          />
-                        </div>
-
-                        <div>
-                          <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                            {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone *'}
-                          </label>
-                          <input 
-                            name="phone" 
-                            type="tel"
-                            inputMode="numeric"
-                            maxLength="10"
-                            className="input" 
-                            placeholder="10-digit mobile" 
-                            value={onboardingForm.phone} 
-                            onChange={handleOnboardingChange} 
-                            required 
-                          />
-                        </div>
+                      <div style={{ marginBottom: '0.85rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                          {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
+                        </label>
+                        <input 
+                          name="shopAddress" 
+                          className="input" 
+                          placeholder="e.g. Shop #12, Main Market" 
+                          value={onboardingForm.shopAddress} 
+                          onChange={handleOnboardingChange} 
+                          required 
+                          style={{ background: '#ffffff' }}
+                        />
                       </div>
 
-                      {/* SHOPKEEPER STORE INFORMATION */}
-                      {onboarding.role === 'Shopkeeper' && (
-                        <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem' }}>
-                          <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#16a34a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Store size={18} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
-                          </div>
-
-                          <div style={{ marginBottom: '0.85rem' }}>
-                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                              {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
-                            </label>
+                      <div>
+                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                          {language === 'hi' ? 'दुकान खुलने व बंद होने का समय *' : 'Shop Operating Hours *'}
+                        </label>
+                        
+                        {/* 2 Time Pickers (Opens At & Closes At) */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.5rem' }}>
+                          <div>
+                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                              {language === 'hi' ? 'खुलने का समय (Open)' : 'Opens At'}
+                            </span>
                             <input 
-                              name="shopName" 
+                              type="time" 
                               className="input" 
-                              placeholder="e.g. Krishna Super Market" 
-                              value={onboardingForm.shopName} 
-                              onChange={handleOnboardingChange} 
+                              value={timeOpen} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setTimeOpen(val);
+                                setOnboardingForm(prev => ({ ...prev, timings: formatTimings(val, timeClose) }));
+                              }} 
                               required 
-                              style={{ background: '#ffffff' }}
+                              style={{ background: '#ffffff', margin: 0 }}
                             />
-                          </div>
-
-                          <div style={{ marginBottom: '0.85rem' }}>
-                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                              {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
-                            </label>
-                            <input 
-                              name="shopAddress" 
-                              className="input" 
-                              placeholder="e.g. Shop #12, Main Market" 
-                              value={onboardingForm.shopAddress} 
-                              onChange={handleOnboardingChange} 
-                              required 
-                              style={{ background: '#ffffff' }}
-                            />
-                          </div>
-
-                          <div style={{ marginBottom: '0.85rem' }}>
-                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                              {language === 'hi' ? 'दुकान का शहर *' : 'Shop City *'}
-                            </label>
-                            <select 
-                              name="city" 
-                              className="select" 
-                              value={onboardingForm.city || 'Delhi'} 
-                              onChange={handleOnboardingChange} 
-                              required 
-                              style={{ background: '#ffffff', width: '100%', marginBottom: 0 }}
-                            >
-                              {cities.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                              ))}
-                            </select>
                           </div>
 
                           <div>
-                            <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                              {language === 'hi' ? 'दुकान खुलने व बंद होने का समय *' : 'Shop Operating Hours *'}
-                            </label>
-                            
-                            {/* 2 Time Pickers (Opens At & Closes At) */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.5rem' }}>
-                              <div>
-                                <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
-                                  {language === 'hi' ? 'खुलने का समय (Open)' : 'Opens At'}
-                                </span>
-                                <input 
-                                  type="time" 
-                                  className="input" 
-                                  value={timeOpen} 
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    setTimeOpen(val);
-                                    setOnboardingForm(prev => ({ ...prev, timings: formatTimings(val, timeClose) }));
-                                  }} 
-                                  required 
-                                  style={{ background: '#ffffff', margin: 0 }}
-                                />
-                              </div>
-
-                              <div>
-                                <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
-                                  {language === 'hi' ? 'बंद होने का समय (Close)' : 'Closes At'}
-                                </span>
-                                <input 
-                                  type="time" 
-                                  className="input" 
-                                  value={timeClose} 
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    setTimeClose(val);
-                                    setOnboardingForm(prev => ({ ...prev, timings: formatTimings(timeOpen, val) }));
-                                  }} 
-                                  required 
-                                  style={{ background: '#ffffff', margin: 0 }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Quick Presets */}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.4rem' }}>
-                              {[
-                                { label: '8 AM - 10 PM', open: '08:00', close: '22:00' },
-                                { label: '9 AM - 9 PM', open: '09:00', close: '21:00' },
-                                { label: '7 AM - 11 PM', open: '07:00', close: '23:00' },
-                                { label: '6 AM - 10 PM', open: '06:00', close: '22:00' }
-                              ].map(p => (
-                                <button
-                                  key={p.label}
-                                  type="button"
-                                  onClick={() => {
-                                    setTimeOpen(p.open);
-                                    setTimeClose(p.close);
-                                    setOnboardingForm(prev => ({ ...prev, timings: formatTimings(p.open, p.close) }));
-                                  }}
-                                  style={{
-                                    fontSize: '0.72rem',
-                                    fontWeight: '600',
-                                    padding: '0.2rem 0.45rem',
-                                    borderRadius: '6px',
-                                    border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
-                                    background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
-                                    color: (timeOpen === p.open && timeClose === p.close) ? '#15803d' : '#475569',
-                                    cursor: 'pointer'
-                                  }}
-                                >
-                                  {p.label}
-                                </button>
-                              ))}
-                            </div>
-
-                            <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                              <Clock size={13} /> {onboardingForm.timings || formatTimings(timeOpen, timeClose)}
-                            </div>
+                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                              {language === 'hi' ? 'बंद होने का समय (Close)' : 'Closes At'}
+                            </span>
+                            <input 
+                              type="time" 
+                              className="input" 
+                              value={timeClose} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setTimeClose(val);
+                                setOnboardingForm(prev => ({ ...prev, timings: formatTimings(timeOpen, val) }));
+                              }} 
+                              required 
+                              style={{ background: '#ffffff', margin: 0 }}
+                            />
                           </div>
                         </div>
-                      )}
 
-                      {/* CUSTOMER ADDRESS */}
-                      {onboarding.role === 'Customer' && (
-                        <div>
-                          <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
-                            {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
-                          </label>
-                          <input 
-                            name="address" 
-                            className="input" 
-                            placeholder="e.g. Flat 301, Sunrise Tower" 
-                            value={onboardingForm.address} 
-                            onChange={handleOnboardingChange} 
-                          />
+                        {/* Quick Presets */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                          {[
+                            { label: '8 AM - 10 PM', open: '08:00', close: '22:00' },
+                            { label: '9 AM - 9 PM', open: '09:00', close: '21:00' },
+                            { label: '7 AM - 11 PM', open: '07:00', close: '23:00' },
+                            { label: '6 AM - 10 PM', open: '06:00', close: '22:00' }
+                          ].map(p => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() => {
+                                setTimeOpen(p.open);
+                                setTimeClose(p.close);
+                                setOnboardingForm(prev => ({ ...prev, timings: formatTimings(p.open, p.close) }));
+                              }}
+                              style={{
+                                fontSize: '0.72rem',
+                                fontWeight: '600',
+                                padding: '0.2rem 0.45rem',
+                                borderRadius: '6px',
+                                border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
+                                background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
+                                color: (timeOpen === p.open && timeClose === p.close) ? '#15803d' : '#475569',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
                         </div>
-                      )}
-                    </div>
 
-                    {/* RIGHT COLUMN: SECURITY, PASSWORD & SUBMIT BUTTON */}
-                    <div>
-                      {/* OPTIONAL SECURITY PIN */}
-                      <div style={{ background: '#fdfbf7', border: '1.5px solid #fed7aa', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.25rem' }}>
-                        <label style={{ fontSize: '0.85rem', color: '#9a3412', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                          <Shield size={16} /> {language === 'hi' ? '4-अंकों का सुरक्षा पिन (वैकल्पिक)' : '4-Digit Security PIN (Optional)'}
-                        </label>
-                        <input 
-                          name="pin" 
-                          type="password" 
-                          maxLength="4" 
-                          className="input" 
-                          placeholder="e.g. 1234 (default: 1234)" 
-                          value={onboardingForm.pin} 
-                          onChange={handleOnboardingChange} 
-                          style={{ background: '#ffffff' }}
-                        />
-                        <span style={{ fontSize: '0.74rem', color: '#9a3412', marginTop: '4px', display: 'block' }}>
-                          {language === 'hi' ? 'ऐप लॉक व सुरक्षा के लिए उपयोग किया जाता है।' : 'Used for quick app lock & cashier mode security. You can set it later in settings.'}
-                        </span>
-                      </div>
-
-                      {/* OPTIONAL PASSWORD CREATION */}
-                      <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.15rem', marginBottom: '1.5rem' }}>
-                        <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                          <Lock size={16} /> {language === 'hi' ? 'पासवर्ड बनाएं (वैकल्पिक)' : 'Create a Password (Optional)'}
-                        </label>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
-                          <input 
-                            name="password" 
-                            type="password" 
-                            className="input" 
-                            placeholder={language === 'hi' ? 'पासवर्ड बनाएं' : 'Create password'} 
-                            value={onboardingForm.password} 
-                            onChange={handleOnboardingChange} 
-                            style={{ background: '#ffffff' }}
-                          />
-                          <input 
-                            name="confirmPassword" 
-                            type="password" 
-                            className="input" 
-                            placeholder={language === 'hi' ? 'पासवर्ड कन्फर्म' : 'Confirm password'} 
-                            value={onboardingForm.confirmPassword} 
-                            onChange={handleOnboardingChange} 
-                            style={{ background: '#ffffff' }}
-                          />
+                        <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <Clock size={13} /> {onboardingForm.timings || formatTimings(timeOpen, timeClose)}
                         </div>
-                        <span style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
-                          {language === 'hi' ? 'यदि आप भविष्य में सीधे ईमेल/पासवर्ड से लॉगिन करना चाहते हैं।' : "Allows direct email/password login anytime."}
-                        </span>
                       </div>
-
-                      {/* Submit Button */}
-                      <button 
-                        type="submit" 
-                        className="btn" 
-                        style={{
-                          width: '100%',
-                          padding: '1.1rem',
-                          fontSize: '1.08rem',
-                          fontWeight: '900',
-                          background: '#16a34a',
-                          borderRadius: '14px',
-                          boxShadow: '0 6px 20px rgba(22, 163, 74, 0.35)',
-                          cursor: 'pointer'
-                        }}
-                        disabled={loading}
-                      >
-                        {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
-                      </button>
                     </div>
-                  </div>
+                  )}
+
+                  {/* CUSTOMER ADDRESS */}
+                  {onboarding.role === 'Customer' && (
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
+                      </label>
+                      <input 
+                        name="address" 
+                        className="input" 
+                        placeholder="e.g. Flat 301, Sunrise Tower" 
+                        value={onboardingForm.address} 
+                        onChange={handleOnboardingChange} 
+                      />
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button 
+                    type="submit" 
+                    className="btn" 
+                    style={{
+                      width: '100%',
+                      padding: '1.1rem',
+                      fontSize: '1.08rem',
+                      fontWeight: '900',
+                      background: '#16a34a',
+                      borderRadius: '14px',
+                      boxShadow: '0 6px 20px rgba(22, 163, 74, 0.35)',
+                      cursor: 'pointer'
+                    }}
+                    disabled={loading}
+                  >
+                    {loading ? (language === 'hi' ? 'खाता तैयार किया जा रहा है...' : 'Setting up account...') : (language === 'hi' ? 'सेटअप पूरा करें और डैशबोर्ड खोलें 🚀' : 'Complete Setup & Enter Dashboard 🚀')}
+                  </button>
                 </form>
               </div>
             )}

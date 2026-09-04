@@ -63,3 +63,9 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Bundles & generated assets
+*.bundle
+*/android/app/src/main/assets/
+*/android/app/src/main/res/drawable-*/assets_*
+*/android/app/src/main/res/drawable-*/node_modules_*

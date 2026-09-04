@@ -178,7 +178,7 @@ export default function SuperManager() {
       (s.shortId || '').toLowerCase().includes(searchQuery) ||
       (s.city || '').toLowerCase().includes(searchQuery) ||
       (s.ownerName || '').toLowerCase().includes(searchQuery) ||
-      (s.ownerPhone || '').includes(searchQuery)
+      String(s.ownerPhone || '').includes(searchQuery)
     );
   });
 
@@ -188,7 +188,7 @@ export default function SuperManager() {
       (u.name || '').toLowerCase().includes(searchQuery) ||
       (u.shortId || '').toLowerCase().includes(searchQuery) ||
       (u.email || '').toLowerCase().includes(searchQuery) ||
-      (u.phone || '').includes(searchQuery) ||
+      String(u.phone || '').includes(searchQuery) ||
       (u.city || '').toLowerCase().includes(searchQuery)
     );
   });
@@ -330,8 +330,8 @@ export default function SuperManager() {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{shop.ownerPhone}</div>
                       </td>
                       <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem', fontWeight: '700', color: 'var(--success)' }}>
-                        ₹{(shop.totalRevenue || 0).toFixed(2)}
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '400' }}>{shop.totalSalesCount || 0} bills</div>
+                        ₹{(Number(shop.totalRevenue) || 0).toFixed(2)}
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '400' }}>{Number(shop.totalSalesCount) || 0} bills</div>
                       </td>
                       <td style={{ textAlign: 'center', padding: '0.85rem 0.75rem' }}>
                         <span className="badge" style={{
@@ -684,7 +684,7 @@ export default function SuperManager() {
                     const q = searchQuery;
                     return (
                       (c?.contactName || '').toLowerCase().includes(q) ||
-                      (c?.contactPhone || '').includes(q) ||
+                      String(c?.contactPhone || '').includes(q) ||
                       (c?.shopName || '').toLowerCase().includes(q) ||
                       (c?.shopkeeperName || '').toLowerCase().includes(q) ||
                       (c?.city || '').toLowerCase().includes(q)
@@ -713,7 +713,7 @@ export default function SuperManager() {
                         const q = searchQuery;
                         return (
                           (c?.contactName || '').toLowerCase().includes(q) ||
-                          (c?.contactPhone || '').includes(q) ||
+                          String(c?.contactPhone || '').includes(q) ||
                           (c?.shopName || '').toLowerCase().includes(q) ||
                           (c?.shopkeeperName || '').toLowerCase().includes(q) ||
                           (c?.city || '').toLowerCase().includes(q)

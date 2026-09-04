@@ -12,9 +12,10 @@ import {
   Platform,
   Image,
   Linking,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff } from 'lucide-react-native';
+import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff, Sparkles, CheckCircle, X } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import CitySelector from '../components/CitySelector';
@@ -46,32 +47,34 @@ const getGoogleSigninModule = () => {
 };
 
 const GoogleIcon = () => (
-  <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
-    <Text style={{ fontSize: 16, fontWeight: '700' }}>G</Text>
+  <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+    <Text style={{ fontSize: 18, fontWeight: '800', color: '#4285F4' }}>G</Text>
   </View>
 );
 
 export default function AuthScreen() {
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [loginStep, setLoginStep] = useState('IDENTIFIER'); // 'IDENTIFIER' | 'PASSWORD'
-  const [role, setRole] = useState('Shopkeeper');
+  const [role, setRole] = useState('Customer'); // 'Customer' | 'Shopkeeper'
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Form Fields
-  const [name, setName] = useState('');
+  // Form Fields for Existing User Login
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [city, setCity] = useState('Delhi');
-  const [shopName, setShopName] = useState('');
-  const [shopAddress, setShopAddress] = useState('');
-  const [address, setAddress] = useState('');
-  const [pin, setPin] = useState('1234');
+
+  // Onboarding State for New Google Users
+  const [onboardingUser, setOnboardingUser] = useState(null);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [onboardingName, setOnboardingName] = useState('');
+  const [onboardingPhone, setOnboardingPhone] = useState('');
+  const [onboardingCity, setOnboardingCity] = useState('Delhi');
+  const [onboardingAddress, setOnboardingAddress] = useState('');
+  const [onboardingShopName, setOnboardingShopName] = useState('');
+  const [onboardingShopAddress, setOnboardingShopAddress] = useState('');
+  const [onboardingPin, setOnboardingPin] = useState('1234');
 
   const handleLogin = async () => {
     if (loginStep === 'IDENTIFIER') {
@@ -99,64 +102,6 @@ export default function AuthScreen() {
     }
   };
 
-  const handleRegister = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Required Fields', 'Please enter both email and password.');
-      return;
-    }
-    if (!name.trim()) {
-      return Alert.alert('Required', 'Please enter your full name.');
-    }
-    if (!phone.trim()) {
-      return Alert.alert('Required', 'Please enter your phone number.');
-    }
-    if (password !== confirmPassword) {
-      return Alert.alert('Error', 'Passwords do not match.');
-    }
-    if (!pin.trim() || pin.trim().length !== 4 || !/^\d{4}$/.test(pin.trim())) {
-      return Alert.alert('Security PIN Required', 'Please enter a 4-digit numeric PIN (e.g. 1234).');
-    }
-    if (role === 'Shopkeeper' && (!shopName.trim() || !shopAddress.trim())) {
-      return Alert.alert('Required', 'Please enter your shop name and address.');
-    }
-
-    setLoading(true);
-    try {
-      await register({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        password,
-        pin: pin.trim(),
-        role,
-        city,
-        shopName: shopName.trim(),
-        shopAddress: shopAddress.trim(),
-        address: address.trim(),
-      });
-
-      Alert.alert(
-        'Registration Successful',
-        'Your account has been created! Please log in with your credentials.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setIsLogin(true);
-              setLoginStep('IDENTIFIER');
-              setPassword('');
-              setConfirmPassword('');
-            },
-          },
-        ]
-      );
-    } catch (err) {
-      Alert.alert('Error', err.message || 'Registration failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
@@ -178,15 +123,27 @@ export default function AuthScreen() {
         throw new Error('Google Sign-In did not return an ID token.');
       }
 
-      await loginWithGoogle({
+      const res = await loginWithGoogle({
         idToken,
         role: role || 'Customer',
+        onboardComplete: false,
       });
+
+      if (res && res.isNewUser) {
+        // New user detected -> Open Onboarding Profile Modal
+        setOnboardingUser({
+          idToken,
+          googleUser: res.googleUser,
+          role: role || 'Customer',
+        });
+        setOnboardingName(res.googleUser?.name || '');
+        setShowOnboardingModal(true);
+      }
     } catch (error) {
       const gModule = getGoogleSigninModule();
       const codes = gModule?.statusCodes || statusCodes;
       if (error.code === codes.SIGN_IN_CANCELLED) {
-        // User cancelled the sign-in flow, do nothing
+        // User cancelled the sign-in flow
       } else if (error.code === codes.IN_PROGRESS) {
         // Sign-in already in progress
       } else if (error.code === codes.PLAY_SERVICES_NOT_AVAILABLE) {
@@ -199,41 +156,56 @@ export default function AuthScreen() {
     }
   };
 
-  // ======= LOGIN VIEW (matching web screenshot) =======
-  if (isLogin) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
+  const handleCompleteOnboarding = async () => {
+    if (!onboardingPhone.trim() || onboardingPhone.trim().length < 10) {
+      return Alert.alert('Required', 'Please enter a valid 10-digit mobile number.');
+    }
+    if (role === 'Shopkeeper' && (!onboardingShopName.trim() || !onboardingShopAddress.trim())) {
+      return Alert.alert('Required', 'Please enter your shop name and shop address.');
+    }
+
+    setLoading(true);
+    try {
+      await loginWithGoogle({
+        idToken: onboardingUser.idToken,
+        role: role || 'Customer',
+        name: (onboardingName || onboardingUser.googleUser?.name || '').trim(),
+        phone: onboardingPhone.trim(),
+        city: 'Delhi',
+        address: onboardingAddress.trim(),
+        shopName: onboardingShopName.trim(),
+        shopAddress: onboardingShopAddress.trim(),
+        pin: '1234',
+        onboardComplete: true,
+      });
+      setShowOnboardingModal(false);
+    } catch (err) {
+      Alert.alert('Setup Error', err.message || 'Failed to complete profile setup.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        {isLogin ? (
           <ScrollView
             contentContainerStyle={styles.loginScrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* App Icon */}
             <View style={[styles.logoContainer, { marginTop: 20 }]}>
-              <Image
-                source={require('../../assets/icon.png')}
-                style={styles.logoImage}
-              />
+              <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
             </View>
-
-            {/* Welcome Back! */}
             <View style={styles.welcomeHeader}>
-              <Text style={styles.welcomeTitle}>
-                Welcome <Text style={styles.welcomeTitleGreen}>Back!</Text>
-              </Text>
+              <Text style={styles.welcomeTitle}>Welcome <Text style={styles.welcomeTitleGreen}>Back!</Text></Text>
               <Text style={styles.welcomeSubtitle}>Login to continue to GI SHOP</Text>
             </View>
-
-            {/* Continue with Google */}
-            <TouchableOpacity
-              style={styles.googleBtn}
-              onPress={handleGoogleSignIn}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
               <View style={styles.googleIconContainer}>
                 <Text style={styles.googleG}>G</Text>
               </View>
@@ -242,418 +214,166 @@ export default function AuthScreen() {
 
             {loginStep === 'IDENTIFIER' ? (
               <>
-                {/* Divider: or continue with */}
                 <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>or continue with</Text>
-                  <View style={styles.dividerLine} />
+                  <View style={styles.dividerLine} /><Text style={styles.dividerText}>or continue with</Text><View style={styles.dividerLine} />
                 </View>
-
-                {/* Email ID or Short ID */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Email ID or Short ID</Text>
                   <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your email or Short ID"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      value={email}
-                      onChangeText={setEmail}
-                    />
-                    <View style={styles.inputIcon}>
-                      <User size={18} color="#94a3b8" />
-                    </View>
+                    <TextInput style={styles.input} placeholder="Enter your email or Short ID" placeholderTextColor="#94a3b8" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
                   </View>
                 </View>
-
-                {/* Next Button */}
-                <TouchableOpacity
-                  style={styles.submitBtn}
-                  onPress={handleLogin}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
-                  ) : (
-                    <>
-                      <Text style={styles.submitBtnText}>Next</Text>
-                      <ArrowRight size={18} color="#ffffff" />
-                    </>
-                  )}
+                <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
+                  <Text style={styles.submitBtnText}>Next</Text>
+                  <ArrowRight size={18} color="#ffffff" />
                 </TouchableOpacity>
               </>
             ) : (
               <>
-                {/* Account pill */}
                 <View style={styles.accountPill}>
                   <View style={styles.accountPillLeft}>
-                    <User size={16} color="#16a34a" />
-                    <Text style={styles.accountPillText}>{email}</Text>
+                    <User size={16} color="#64748b" /><Text style={styles.accountPillText}>{email}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => { setLoginStep('IDENTIFIER'); }}>
+                  <TouchableOpacity onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                     <Text style={styles.accountPillChange}>Change</Text>
                   </TouchableOpacity>
                 </View>
-
-                {/* Password Input */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Password</Text>
                   <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your password"
-                      placeholderTextColor="#94a3b8"
-                      secureTextEntry={!showPassword}
-                      value={password}
-                      onChangeText={setPassword}
-                      autoFocus
-                    />
-                    <TouchableOpacity
-                      style={styles.inputIcon}
-                      onPress={() => setShowPassword(!showPassword)}
-                      activeOpacity={0.7}
-                    >
-                      {showPassword ? (
-                        <EyeOff size={18} color="#94a3b8" />
-                      ) : (
-                        <Eye size={18} color="#94a3b8" />
-                      )}
+                    <TextInput style={styles.input} placeholder="Enter your password" placeholderTextColor="#94a3b8" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} autoFocus />
+                    <TouchableOpacity style={styles.inputIcon} onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
+                      {showPassword ? <EyeOff size={18} color="#94a3b8" /> : <Eye size={18} color="#94a3b8" />}
                     </TouchableOpacity>
                   </View>
                 </View>
-
-                {/* Login Button */}
-                <TouchableOpacity
-                  style={styles.submitBtn}
-                  onPress={handleLogin}
-                  disabled={loading}
-                  activeOpacity={0.8}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
-                  ) : (
-                    <>
-                      <Text style={styles.submitBtnText}>Login</Text>
-                      <ArrowRight size={18} color="#ffffff" />
-                    </>
-                  )}
+                <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
+                  <Text style={styles.submitBtnText}>Login</Text>
+                  <ArrowRight size={18} color="#ffffff" />
                 </TouchableOpacity>
-
-                {/* Back to email */}
-                <TouchableOpacity
-                  style={styles.backToEmailBtn}
-                  onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }}
-                >
+                <TouchableOpacity style={styles.backToEmailBtn} onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }}>
                   <Text style={styles.backToEmailText}>← Back to email</Text>
                 </TouchableOpacity>
               </>
             )}
-
-            {/* Don't have an account? Sign Up */}
             <View style={styles.toggleRow}>
               <Text style={styles.toggleText}>Don't have an account? </Text>
               <TouchableOpacity onPress={() => { setIsLogin(false); setLoginStep('IDENTIFIER'); }}>
                 <Text style={styles.toggleLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Spacer to push footer down */}
             <View style={{ flex: 1, minHeight: 40 }} />
-
-            {/* Footer: Privacy Policy, Terms, Contact */}
             <View style={styles.footerLinks}>
-              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}>
-                <Text style={styles.footerLinkText}>Privacy Policy</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}><Text style={styles.footerLinkText}>Privacy Policy</Text></TouchableOpacity>
               <Text style={styles.footerDot}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}>
-                <Text style={styles.footerLinkText}>Terms & Conditions</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}><Text style={styles.footerLinkText}>Terms & Conditions</Text></TouchableOpacity>
               <Text style={styles.footerDot}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}>
-                <Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text>
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
             </View>
-            <Text style={styles.footerCopyright}>
-              © 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.
-            </Text>
+            <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
           </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    );
-  }
-
-  // ======= REGISTRATION VIEW =======
-  return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Card Container */}
-          <View style={[styles.card, { marginTop: 16 }]}>
-            {/* Brand Logo & Name */}
-            <View style={styles.brandContainer}>
-              <View style={styles.logoIconBox}>
-                <Store size={30} color="#16a34a" />
-              </View>
-              <Text style={styles.brandTitle}>GI SHOP</Text>
-              <Text style={styles.brandSubtitle}>Smart Billing, Khata, Orders & Grocery Discovery</Text>
+        ) : (
+          <ScrollView contentContainerStyle={styles.loginScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={[styles.logoContainer, { marginTop: 20 }]}>
+              <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
             </View>
-
-            {/* Mode Title */}
-            <Text style={styles.formTitle}>Create an Account</Text>
-
-            {/* Role Switcher */}
-            <View style={styles.roleSwitcher}>
-              <TouchableOpacity
-                style={[styles.roleBtn, role === 'Shopkeeper' && styles.roleBtnActive]}
-                onPress={() => setRole('Shopkeeper')}
-                activeOpacity={0.7}
-              >
-                <Store
-                  size={16}
-                  color={role === 'Shopkeeper' ? '#1d4ed8' : colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.roleBtnText,
-                    role === 'Shopkeeper' && styles.roleBtnTextActive,
-                  ]}
-                >
-                  Shopkeeper
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.roleBtn, role === 'Customer' && styles.roleBtnActive]}
-                onPress={() => setRole('Customer')}
-                activeOpacity={0.7}
-              >
-                <User
-                  size={16}
-                  color={role === 'Customer' ? '#1d4ed8' : colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.roleBtnText,
-                    role === 'Customer' && styles.roleBtnTextActive,
-                  ]}
-                >
-                  Customer
-                </Text>
-              </TouchableOpacity>
+            <View style={styles.welcomeHeader}>
+              <Text style={styles.welcomeTitle}>Create <Text style={styles.welcomeTitleGreen}>Account</Text></Text>
+              <Text style={styles.welcomeSubtitle}>Sign up & verify securely with Google</Text>
             </View>
-
-            {/* Full Name */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Ramesh Kumar"
-                placeholderTextColor="#94a3b8"
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
-
-            {/* Email */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="name@example.com"
-                placeholderTextColor="#94a3b8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
-            </View>
-
-            {/* Phone */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>10-Digit Mobile Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 9812345678"
-                placeholderTextColor="#94a3b8"
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-              />
-            </View>
-
-            {/* Password */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#94a3b8"
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity
-                  style={styles.inputIcon}
-                  onPress={() => setShowPassword(!showPassword)}
-                  activeOpacity={0.7}
-                >
-                  {showPassword ? (
-                    <EyeOff size={18} color="#94a3b8" />
-                  ) : (
-                    <Eye size={18} color="#94a3b8" />
-                  )}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={[styles.label, { textAlign: 'center', marginBottom: 8 }]}>Choose Your Account Type</Text>
+              <View style={styles.roleSwitcher}>
+                <TouchableOpacity style={[styles.roleBtn, role === 'Customer' && styles.roleBtnActive]} onPress={() => setRole('Customer')} activeOpacity={0.7}>
+                  <User size={16} color={role === 'Customer' ? '#16a34a' : colors.textMuted} />
+                  <Text style={[styles.roleBtnText, role === 'Customer' && styles.roleBtnTextActive]}>Customer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.roleBtn, role === 'Shopkeeper' && styles.roleBtnActive]} onPress={() => setRole('Shopkeeper')} activeOpacity={0.7}>
+                  <Store size={16} color={role === 'Shopkeeper' ? '#16a34a' : colors.textMuted} />
+                  <Text style={[styles.roleBtnText, role === 'Shopkeeper' && styles.roleBtnTextActive]}>Shopkeeper</Text>
                 </TouchableOpacity>
               </View>
             </View>
+            <TouchableOpacity style={[styles.googleBtn, { borderColor: '#16a34a', borderWidth: 2, height: 56 }]} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
+              <View style={styles.googleIconContainer}><Text style={styles.googleG}>G</Text></View>
+              <Text style={[styles.googleBtnText, { fontSize: 16, fontWeight: '800' }]}>{loading ? 'Verifying with Google...' : 'Sign Up with Google'}</Text>
+            </TouchableOpacity>
+            <View style={styles.googleInfoBox}>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Instant 1-tap Google identity verification</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>No manual signup forms or passwords needed</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Instant setup for your {role.toLowerCase()} account</Text></View>
+            </View>
+            <View style={styles.toggleRow}>
+              <Text style={styles.toggleText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => { setIsLogin(true); setLoginStep('IDENTIFIER'); }}>
+                <Text style={styles.toggleLink}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ flex: 1, minHeight: 40 }} />
+            <View style={styles.footerLinks}>
+              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}><Text style={styles.footerLinkText}>Privacy Policy</Text></TouchableOpacity>
+              <Text style={styles.footerDot}>•</Text>
+              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}><Text style={styles.footerLinkText}>Terms & Conditions</Text></TouchableOpacity>
+              <Text style={styles.footerDot}>•</Text>
+              <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
+            </View>
+            <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
 
-            {/* Confirm Password */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#94a3b8"
-                  secureTextEntry={!showConfirmPassword}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                />
-                <TouchableOpacity
-                  style={styles.inputIcon}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  activeOpacity={0.7}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={18} color="#94a3b8" />
-                  ) : (
-                    <Eye size={18} color="#94a3b8" />
-                  )}
+      <Modal visible={showOnboardingModal} animationType="slide" transparent={true} onRequestClose={() => setShowOnboardingModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>{role === 'Shopkeeper' ? 'Configure Your Store' : 'Complete Your Profile'}</Text>
+                <Text style={styles.modalSubtitle}>{onboardingUser?.googleUser?.email || 'Verified Google Account'}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowOnboardingModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><X size={22} color="#64748b" /></TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <View style={[styles.roleSwitcher, { marginTop: 12 }]}>
+                <TouchableOpacity style={[styles.roleBtn, role === 'Customer' && styles.roleBtnActive]} onPress={() => setRole('Customer')}>
+                  <User size={15} color={role === 'Customer' ? '#16a34a' : colors.textMuted} /><Text style={[styles.roleBtnText, role === 'Customer' && styles.roleBtnTextActive]}>Customer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.roleBtn, role === 'Shopkeeper' && styles.roleBtnActive]} onPress={() => setRole('Shopkeeper')}>
+                  <Store size={15} color={role === 'Shopkeeper' ? '#16a34a' : colors.textMuted} /><Text style={[styles.roleBtnText, role === 'Shopkeeper' && styles.roleBtnTextActive]}>Shopkeeper</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-
-            {/* Security PIN */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>4-Digit Security PIN</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 1234"
-                placeholderTextColor="#94a3b8"
-                keyboardType="number-pad"
-                maxLength={4}
-                secureTextEntry
-                value={pin}
-                onChangeText={setPin}
-              />
-              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 4 }}>
-                🔒 Used to unlock the app and protect your ledger.
-              </Text>
-            </View>
-
-            {/* City Selector */}
-            <CitySelector
-              selectedCity={city}
-              onSelectCity={setCity}
-              label="Select City / Region"
-            />
-
-            {/* Shopkeeper fields */}
-            {role === 'Shopkeeper' && (
-              <>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="e.g. Central Supermarket"
-                    placeholderTextColor="#94a3b8"
-                    value={shopName}
-                    onChangeText={setShopName}
-                  />
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Address</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="e.g. Shop #4, Main Market"
-                    placeholderTextColor="#94a3b8"
-                    value={shopAddress}
-                    onChangeText={setShopAddress}
-                  />
-                </View>
-              </>
-            )}
-
-            {/* Customer fields */}
-            {role === 'Customer' && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Home Address (Optional)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Flat 402, Green Valley"
-                  placeholderTextColor="#94a3b8"
-                  value={address}
-                  onChangeText={setAddress}
-                />
+                <Text style={styles.label}>Full Name *</Text>
+                <TextInput style={styles.input} placeholder="e.g. Ramesh Kumar" placeholderTextColor="#94a3b8" value={onboardingName} onChangeText={setOnboardingName} />
               </View>
-            )}
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={styles.submitBtn}
-              onPress={handleRegister}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              {loading ? (
-                <ActivityIndicator color="#ffffff" size="small" />
-              ) : (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>10-Digit Mobile Phone *</Text>
+                <TextInput style={styles.input} placeholder="e.g. 9812345678" placeholderTextColor="#94a3b8" keyboardType="phone-pad" maxLength={10} value={onboardingPhone} onChangeText={setOnboardingPhone} />
+              </View>
+              {role === 'Shopkeeper' && (
                 <>
-                  <Text style={styles.submitBtnText}>Create Account</Text>
-                  <ArrowRight size={18} color="#ffffff" />
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Shop Name *</Text>
+                    <TextInput style={styles.input} placeholder="e.g. Krishna Super Market" placeholderTextColor="#94a3b8" value={onboardingShopName} onChangeText={setOnboardingShopName} />
+                  </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Shop Address *</Text>
+                    <TextInput style={styles.input} placeholder="e.g. Shop #12, Main Market" placeholderTextColor="#94a3b8" value={onboardingShopAddress} onChangeText={setOnboardingShopAddress} />
+                  </View>
                 </>
               )}
-            </TouchableOpacity>
-
-            {/* Toggle to Login */}
-            <View style={styles.footerToggle}>
-              <Text style={styles.footerToggleText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => { setIsLogin(true); setLoginStep('IDENTIFIER'); }}>
-                <Text style={styles.footerToggleLink}>Sign In</Text>
+              {role === 'Customer' && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Delivery / Home Address (Optional)</Text>
+                  <TextInput style={styles.input} placeholder="e.g. Flat 301, Sunrise Tower" placeholderTextColor="#94a3b8" value={onboardingAddress} onChangeText={setOnboardingAddress} />
+                </View>
+              )}
+              <TouchableOpacity style={[styles.submitBtn, { marginTop: 16 }]} onPress={handleCompleteOnboarding} disabled={loading} activeOpacity={0.8}>
+                {loading ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={styles.submitBtnText}>Complete Setup & Enter App 🚀</Text>}
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </View>
-
-          {/* Footer: Privacy Policy, Terms, Contact */}
-          <View style={[styles.footerLinks, { marginTop: 24 }]}>
-            <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}>
-              <Text style={styles.footerLinkText}>Privacy Policy</Text>
-            </TouchableOpacity>
-            <Text style={styles.footerDot}>•</Text>
-            <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}>
-              <Text style={styles.footerLinkText}>Terms & Conditions</Text>
-            </TouchableOpacity>
-            <Text style={styles.footerDot}>•</Text>
-            <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}>
-              <Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.footerCopyright, { marginBottom: 20 }]}>
-            © 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.
-          </Text>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -994,5 +714,59 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#16a34a',
+  },
+  googleInfoBox: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 4,
+    marginBottom: 16,
+    gap: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  infoText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#166534',
+    flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#0f172a',
+    letterSpacing: -0.3,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 2,
+    fontWeight: '500',
   },
 });
