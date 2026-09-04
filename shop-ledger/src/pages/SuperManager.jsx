@@ -5,7 +5,7 @@ import {
   terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin,
   changeAdminShopCity, deleteAdminShop, getSupportSettings, updateSupportSettings, getAdminSyncedContacts
 } from '../lib/api';
-import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone, UserCheck, AlertOctagon, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone, UserCheck, AlertOctagon, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
 export default function SuperManager() {
@@ -214,6 +214,11 @@ export default function SuperManager() {
   };
 
   const handleDeleteCity = async (city) => {
+    const shopCount = Number(city?.shopCount || 0);
+    if (shopCount > 0) {
+      alert(`Cannot remove ${city?.name} because ${shopCount} active ${shopCount === 1 ? 'shop is' : 'shops are'} registered here. Please reassign the shops first.`);
+      return;
+    }
     if (!confirm(`Remove city "${city?.name}" from the platform? Customers and shops in this city will be affected.`)) return;
     try {
       await deleteAdminCity(city.id);
@@ -596,14 +601,40 @@ export default function SuperManager() {
                           {city.createdAt ? new Date(city.createdAt).toLocaleDateString() : 'System Default'}
                         </td>
                         <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem' }}>
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
-                            onClick={() => handleDeleteCity(city)}
-                          >
-                            <Trash2 size={14} /> Remove
-                          </button>
+                          {Number(city.shopCount || 0) > 0 ? (
+                            <button
+                              type="button"
+                              className="btn btn-outline"
+                              style={{
+                                color: '#64748b',
+                                borderColor: '#cbd5e1',
+                                background: '#f8fafc',
+                                padding: '0.35rem 0.65rem',
+                                fontSize: '0.8rem',
+                                opacity: 0.8,
+                                cursor: 'not-allowed',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem'
+                              }}
+                              title={`Cannot remove ${city.name} because ${city.shopCount} active shop(s) are registered here`}
+                              onClick={() => {
+                                const count = Number(city.shopCount || 0);
+                                alert(`Cannot remove ${city.name} because ${count} active ${count === 1 ? 'shop is' : 'shops are'} registered here. Please reassign the shops first.`);
+                              }}
+                            >
+                              <Lock size={13} /> In Use ({city.shopCount})
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline"
+                              style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.35rem 0.65rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                              onClick={() => handleDeleteCity(city)}
+                            >
+                              <Trash2 size={14} /> Remove
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

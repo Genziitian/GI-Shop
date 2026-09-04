@@ -1830,9 +1830,25 @@ app.post('/api/admin/cities', authenticate, (req, res) => {
 
 app.delete('/api/admin/cities/:id', authenticate, (req, res) => {
   if (req.user.role !== 'SuperManager') return res.status(403).json({ error: 'Forbidden: Super Manager access required' });
-  db.run(`DELETE FROM Cities WHERE id = ?`, [req.params.id], function(err) {
-    if (err) return res.status(500).json({ error: 'Failed to delete city' });
-    res.json({ success: true, message: 'City removed successfully!' });
+
+  db.get(`SELECT * FROM Cities WHERE id = ?`, [req.params.id], (err, city) => {
+    if (err) return res.status(500).json({ error: 'Database error querying city' });
+    if (!city) return res.status(404).json({ error: 'City not found' });
+
+    db.get(`SELECT COUNT(*) as count FROM Shops WHERE city = ? AND status = 'ACTIVE'`, [city.name], (err, row) => {
+      if (err) return res.status(500).json({ error: 'Database error checking registered shops' });
+      const shopCount = row ? Number(row.count || 0) : 0;
+      if (shopCount > 0) {
+        return res.status(400).json({
+          error: `Cannot remove ${city.name} because ${shopCount} active ${shopCount === 1 ? 'shop is' : 'shops are'} registered here. Please reassign the shops first.`
+        });
+      }
+
+      db.run(`DELETE FROM Cities WHERE id = ?`, [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: 'Failed to delete city' });
+        res.json({ success: true, message: `City "${city.name}" removed successfully!` });
+      });
+    });
   });
 });
 
