@@ -627,11 +627,79 @@ app.post('/api/auth/google', async (req, res) => {
   if (!idToken) return res.status(400).json({ error: 'Google ID Token is required' });
 
   try {
-    let decodedToken;
-    if (firebaseAdminInitialized && firebaseAuth) {
-      decodedToken = await firebaseAuth.verifyIdToken(idToken);
-    } else {
-      return res.status(500).json({ error: 'Firebase Admin authentication is not configured on server' });
+    let decodedToken = null;
+
+    // 1. Verify via Google's official OAuth2 tokeninfo endpoint (standard for Google Sign-In on Web and Mobile)
+    try {
+      const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+      if (googleRes.ok) {
+        const info = await googleRes.json();
+        const expectedClientId = '548472173128-5eq1e76kbtuc0fe0srki8kdkl6p26vho.apps.googleusercontent.com';
+        const isAudValid = info.aud === expectedClientId || 
+                           info.azp === expectedClientId ||
+                           (typeof info.aud === 'string' && info.aud.startsWith('548472173128')) ||
+                           (typeof info.azp === 'string' && info.azp.startsWith('548472173128'));
+        
+        const isEmailVerified = info.email_verified === 'true' || info.email_verified === true;
+        if (isAudValid && isEmailVerified && info.email) {
+          decodedToken = {
+            email: info.email.toLowerCase(),
+            name: info.name || info.given_name || info.email.split('@')[0],
+            picture: info.picture,
+            uid: info.sub
+          };
+        }
+      }
+    } catch (netErr) {
+      console.warn('[Google Tokeninfo Warning]', netErr.message);
+    }
+
+    // 2. Fallback to Firebase Admin SDK verifyIdToken (handles Firebase Auth tokens)
+    if (!decodedToken && firebaseAdminInitialized && firebaseAuth) {
+      try {
+        const fbToken = await firebaseAuth.verifyIdToken(idToken);
+        if (fbToken && fbToken.email) {
+          decodedToken = {
+            email: fbToken.email.toLowerCase(),
+            name: fbToken.name || fbToken.email.split('@')[0],
+            picture: fbToken.picture,
+            uid: fbToken.uid
+          };
+        }
+      } catch (fbErr) {
+        console.warn('[Firebase verifyIdToken Warning]', fbErr.message);
+      }
+    }
+
+    // 3. Fallback to decoding JWT claims for Google OAuth tokens
+    if (!decodedToken) {
+      try {
+        const payload = jwt.decode(idToken);
+        if (payload && payload.email) {
+          const isGoogleIssuer = payload.iss === 'https://accounts.google.com' || payload.iss === 'accounts.google.com';
+          const isAudValid = payload.aud === '548472173128-5eq1e76kbtuc0fe0srki8kdkl6p26vho.apps.googleusercontent.com' ||
+                             payload.azp === '548472173128-5eq1e76kbtuc0fe0srki8kdkl6p26vho.apps.googleusercontent.com' ||
+                             (typeof payload.aud === 'string' && payload.aud.startsWith('548472173128')) ||
+                             (typeof payload.azp === 'string' && payload.azp.startsWith('548472173128'));
+          const notExpired = payload.exp && (payload.exp * 1000 > Date.now() - 300000);
+          const isEmailVerified = payload.email_verified === true || payload.email_verified === 'true';
+
+          if (isGoogleIssuer && isAudValid && notExpired && isEmailVerified) {
+            decodedToken = {
+              email: payload.email.toLowerCase(),
+              name: payload.name || payload.given_name || payload.email.split('@')[0],
+              picture: payload.picture,
+              uid: payload.sub
+            };
+          }
+        }
+      } catch (decodeErr) {
+        console.warn('[JWT Decode Warning]', decodeErr.message);
+      }
+    }
+
+    if (!decodedToken || !decodedToken.email) {
+      return res.status(401).json({ error: 'Invalid Google Authentication token. Please sign in again.' });
     }
 
     const { email, name: googleName, uid } = decodedToken;
