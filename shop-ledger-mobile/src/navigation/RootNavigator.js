@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
-import { colors } from '../theme/colors';
 import AuthScreen from '../screens/AuthScreen';
 import PinLockScreen from '../components/PinLockScreen';
 import ShopkeeperNavigator from './ShopkeeperNavigator';
@@ -16,7 +15,11 @@ export default function RootNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <View style={styles.loadingCard}>
+          <ActivityIndicator size="large" color="#16a34a" />
+          <Text style={styles.loadingTitle}>Opening GI SHOP</Text>
+          <Text style={styles.loadingSubtitle}>Getting your account ready...</Text>
+        </View>
       </View>
     );
   }
@@ -42,8 +45,37 @@ export default function RootNavigator() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#f8fafc',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 24,
+  },
+  loadingCard: {
+    width: '100%',
+    maxWidth: 300,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    paddingVertical: 28,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 5,
+  },
+  loadingTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0f172a',
+    marginTop: 14,
+  },
+  loadingSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 6,
+    fontWeight: '600',
   },
 });

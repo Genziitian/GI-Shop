@@ -150,6 +150,27 @@ async function sendPushNotification(userIds, { title, body, data = {} }) {
   });
 }
 
+// Helper: In-App Database Record + Push Notification
+function recordAndSendNotification(userId, { title, body, type = 'ORDER_UPDATE', orderId = null, orderNumber = null, data = {} }) {
+  if (!userId) return;
+  const nowIso = new Date().toISOString();
+  db.run(
+    `INSERT INTO Notifications (userId, title, body, type, orderId, orderNumber, isRead, createdAt) VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+    [userId, title, body, type, orderId, orderNumber, nowIso],
+    () => {}
+  );
+  sendPushNotification(userId, {
+    title,
+    body,
+    data: {
+      type,
+      orderId: String(orderId || ''),
+      orderNumber: String(orderNumber || ''),
+      ...data
+    }
+  });
+}
+
 // Predefined Platform Baseline Cities
 const CITIES = [
   'Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 
@@ -217,10 +238,11 @@ const authenticate = (req, res, next) => {
 // --- PUBLIC & DISCOVERY APIs ---
 app.get('/api/cities', (req, res) => {
   db.all(`SELECT name FROM Cities WHERE status = 'ACTIVE' ORDER BY name ASC`, [], (err, rows) => {
-    if (err || !rows || rows.length === 0) {
-      return res.json(['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore']);
+    if (err) {
+      console.error('[Cities API Error]', err);
+      return res.status(500).json({ error: 'Failed to fetch cities' });
     }
-    res.json(rows.map(r => r.name));
+    res.json((rows || []).map(r => r.name));
   });
 });
 
@@ -850,6 +872,31 @@ app.post('/api/notifications/register-token', authenticate, (req, res) => {
   );
 });
 
+// --- IN-APP NOTIFICATIONS FEED & STATUS ---
+app.get('/api/notifications', authenticate, (req, res) => {
+  db.all(`SELECT * FROM Notifications WHERE userId = ? ORDER BY id DESC LIMIT 50`, [req.user.id], (err, rows) => {
+    if (err) {
+      console.error('[Notifications GET Error]', err);
+      return res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+    const unreadCount = (rows || []).filter(r => !r.isRead).length;
+    res.json({ notifications: rows || [], unreadCount });
+  });
+});
+
+app.post('/api/notifications/mark-read', authenticate, (req, res) => {
+  const { notificationId } = req.body;
+  if (notificationId) {
+    db.run(`UPDATE Notifications SET isRead = 1 WHERE id = ? AND userId = ?`, [notificationId, req.user.id], () => {
+      res.json({ success: true });
+    });
+  } else {
+    db.run(`UPDATE Notifications SET isRead = 1 WHERE userId = ?`, [req.user.id], () => {
+      res.json({ success: true });
+    });
+  }
+});
+
 app.get('/api/me', authenticate, (req, res) => {
   db.get(`SELECT id, shortId, name, email, phone, role, city, address, status, pin, (pin IS NOT NULL AND pin != '') as hasPinSet, COALESCE(hasPasswordSet, 0) as hasPasswordSet FROM Users WHERE id = ?`, [req.user.id], (err, user) => {
     if (err || !user) return res.status(404).json({ error: 'User not found' });
@@ -1226,7 +1273,9 @@ app.get('/api/shop/orders', authenticate, (req, res) => {
   const shopId = req.user.shopId;
   if (!shopId) return res.status(403).json({ error: 'No shop context' });
   autoCancelExpiredOrders(() => {
-    db.all(`SELECT * FROM Orders WHERE shopId = ? ORDER BY id DESC`, [shopId], (err, rows) => {
+    db.all(`SELECT Orders.*, Shops.shopName, Shops.shopPhone, Shops.shopAddress, Shops.city as shopCity, Shops.timings as shopTimings 
+            FROM Orders LEFT JOIN Shops ON Orders.shopId = Shops.id 
+            WHERE Orders.shopId = ? ORDER BY Orders.id DESC`, [shopId], (err, rows) => {
       const sanitized = (rows || []).map(r => {
         const { otpCode, ...rest } = r;
         return rest;
@@ -1267,10 +1316,13 @@ app.post('/api/shop/orders/:id/accept', authenticate, (req, res) => {
           description: `Shopkeeper accepted the order. Estimated preparation time: ${packingMins} minutes`
         });
         if (order.customerId) {
-          sendPushNotification(order.customerId, {
-            title: '📦 Order is Packing!',
-            body: `The shop is packing your order #${order.orderNumber}. Estimated time: ~${packingMins} mins.`,
-            data: { type: 'ORDER_PACKING', orderId: String(order.id), orderNumber: order.orderNumber }
+          recordAndSendNotification(order.customerId, {
+            title: 'Order Accepted & Packing',
+            body: `The shop accepted your order #${order.orderNumber}. Estimated time: ~${packingMins} mins.`,
+            type: 'ORDER_PACKING',
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            data: { type: 'ORDER_PACKING', orderId: String(order.id), orderNumber: order.orderNumber, packingMinutes: packingMins }
           });
         }
         res.json({ success: true, status: 'PACKING' });
@@ -1292,10 +1344,13 @@ app.post('/api/shop/orders/:id/decline', authenticate, (req, res) => {
           description: `Shopkeeper declined order: ${finalReason}`
         });
         if (order && order.customerId) {
-          sendPushNotification(order.customerId, {
-            title: '❌ Order Declined',
+          recordAndSendNotification(order.customerId, {
+            title: 'Order Declined',
             body: `Order #${order.orderNumber} was declined by the shop (${finalReason}).`,
-            data: { type: 'ORDER_DECLINED', orderId: String(order.id), orderNumber: order.orderNumber }
+            type: 'ORDER_DECLINED',
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            data: { type: 'ORDER_DECLINED', orderId: String(order.id), orderNumber: order.orderNumber, reason: finalReason }
           });
         }
         res.json({ success: true, status: 'DECLINED' });
@@ -1341,6 +1396,16 @@ app.post('/api/shop/orders/:id/update-items', authenticate, (req, res) => {
           title: 'Items & Total Updated',
           description: desc
         });
+        if (order.customerId) {
+          recordAndSendNotification(order.customerId, {
+            title: 'Order Items Updated',
+            body: `The shop updated items in order #${order.orderNumber}. ${desc}`,
+            type: 'ORDER_ITEMS_UPDATED',
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            data: { type: 'ORDER_ITEMS_UPDATED', orderId: String(order.id), orderNumber: order.orderNumber, estimatedTotal: recalculatedTotal }
+          });
+        }
         res.json({ success: true, estimatedTotal: recalculatedTotal, itemsJSON });
       }
     );
@@ -1371,10 +1436,13 @@ app.post('/api/shop/orders/:id/complete', authenticate, (req, res) => {
           description: 'Shopkeeper marked the order as packed and ready for pickup.'
         });
         if (order.customerId) {
-          sendPushNotification(order.customerId, {
-            title: '✅ Order Ready for Pickup!',
-            body: `Your order #${order.orderNumber} is packed and ready for pickup! Show 4-digit OTP: ${otp}`,
-            data: { type: 'ORDER_READY', orderId: String(order.id), orderNumber: order.orderNumber }
+          recordAndSendNotification(order.customerId, {
+            title: 'Order Ready for Pickup',
+            body: `Your order #${order.orderNumber} is packed and ready for pickup! 4-digit OTP: ${otp}`,
+            type: 'ORDER_READY',
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            data: { type: 'ORDER_READY', orderId: String(order.id), orderNumber: order.orderNumber, otpCode: otp }
           });
         }
         // Do NOT return otpCode to shopkeeper
@@ -1412,10 +1480,13 @@ app.post('/api/shop/orders/:id/get-payment', authenticate, (req, res) => {
           description: `Amount requested: ₹${finalAmount.toFixed(2)}${discNum > 0 ? ` (Discount: ₹${discNum.toFixed(2)})` : ''}. Payment mode: ${mode}`
         });
         if (order.customerId) {
-          sendPushNotification(order.customerId, {
-            title: '💳 Payment Request Sent!',
+          recordAndSendNotification(order.customerId, {
+            title: 'Payment Request Received',
             body: `Shopkeeper requested ₹${finalAmount.toFixed(2)} (${mode}) for order #${order.orderNumber}. Click to view 4-digit OTP.`,
-            data: { type: 'PAYMENT_REQUESTED', orderId: String(order.id), orderNumber: order.orderNumber }
+            type: 'PAYMENT_REQUESTED',
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            data: { type: 'PAYMENT_REQUESTED', orderId: String(order.id), orderNumber: order.orderNumber, requestedAmount: finalAmount, paymentMethod: mode }
           });
         }
         // Do NOT return otpCode to shopkeeper
@@ -1462,9 +1533,9 @@ app.post('/api/shop/orders/:id/verify-otp', authenticate, (req, res) => {
     const mode = order.paymentMethod || 'Cash';
     const disc = order.requestedDiscount || 0;
 
-    // 1. Mark Order as COMPLETED & COLLECTED
+    // 1. Mark Order as COMPLETED & COLLECTED, immediately clearing OTP so it is never stuck
     db.run(
-      `UPDATE Orders SET status = 'COMPLETED', collectionStatus = 'COLLECTED', collectedAt = ? WHERE id = ? AND shopId = ?`,
+      `UPDATE Orders SET status = 'COMPLETED', collectionStatus = 'COLLECTED', collectedAt = ?, otpCode = NULL WHERE id = ? AND shopId = ?`,
       [now, order.id, shopId],
       function() {
         appendOrderTimeline(order.id, {
@@ -1478,42 +1549,80 @@ app.post('/api/shop/orders/:id/verify-otp', authenticate, (req, res) => {
             description: 'Order handed over and sale completed'
           });
         });
-        // 2. Automatically record POS sale in Sales table
-        db.run(
-          `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            shopId,
-            order.customerPhone || '',
-            order.customerShortId || '',
-            order.itemsJSON,
-            order.estimatedTotal,
-            disc,
-            finalTotal,
-            mode,
-            `Order #${order.orderNumber}`,
-            req.user.name || 'Shopkeeper',
-            now
-          ],
-          function() {
-            // If payment mode is Add to Book, add to ShopCustomers
-            if (mode === 'Add to Book' && (order.customerPhone || order.customerShortId)) {
-              db.run(
-                `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
-                 ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?`,
-                [shopId, order.customerPhone || '', order.customerShortId || '', '', order.customerName || 'App Customer', order.customerAddress || '', order.customerShortId || '']
-              );
-            }
 
-            if (order.customerId) {
-              sendPushNotification(order.customerId, {
-                title: '🎉 Order Completed & Collected!',
-                body: `Order #${order.orderNumber} has been verified and handed over! Thank you for shopping with us.`,
-                data: { type: 'ORDER_COMPLETED', orderId: String(order.id), orderNumber: order.orderNumber }
-              });
-            }
+        // Lookup linked customer user account to guarantee full phone and shortId
+        const custLookupId = order.customerId || 0;
+        const custLookupPhone = (order.customerPhone || '').trim();
+        const custLookupShortId = (order.customerShortId || '').trim();
 
-            res.json({ success: true, status: 'COMPLETED', collectionStatus: 'COLLECTED', message: 'OTP verified! Order completed and sale recorded.' });
+        db.get(
+          `SELECT id, phone, shortId, name, email, address FROM Users WHERE id = ? OR (shortId != '' AND shortId = ?) OR (phone != '' AND phone = ?)`,
+          [custLookupId, custLookupShortId, custLookupPhone],
+          (uErr, userRow) => {
+            const activePhone = (userRow?.phone || custLookupPhone || '').trim();
+            const activeShortId = (userRow?.shortId || custLookupShortId || '').trim();
+            const activeName = (userRow?.name || order.customerName || 'Customer').trim();
+            const activeEmail = (userRow?.email || '').trim();
+            const activeAddress = (userRow?.address || order.customerAddress || '').trim();
+
+            // 2. Automatically record POS sale in Sales table
+            db.run(
+              `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                shopId,
+                activePhone,
+                activeShortId,
+                order.itemsJSON,
+                order.estimatedTotal,
+                disc,
+                finalTotal,
+                mode,
+                `Order #${order.orderNumber}`,
+                req.user.name || 'Shopkeeper',
+                now
+              ],
+              function(saleErr) {
+                if (saleErr) {
+                  console.error('[Verify OTP] Sale record error:', saleErr);
+                }
+
+                // If payment mode is Add to Book (or credit), guarantee customer exists in ShopCustomers
+                if (mode === 'Add to Book' || mode.includes('Book')) {
+                  const checkPhone = activePhone || activeShortId;
+                  db.get(
+                    `SELECT * FROM ShopCustomers WHERE shopId = ? AND ((customerPhone != '' AND customerPhone = ?) OR (customerShortId != '' AND customerShortId = ?))`,
+                    [shopId, activePhone, activeShortId],
+                    (scErr, existingSc) => {
+                      if (existingSc) {
+                        db.run(
+                          `UPDATE ShopCustomers SET status = 'ACTIVE', customerPhone = COALESCE(NULLIF(?, ''), customerPhone), customerShortId = COALESCE(NULLIF(?, ''), customerShortId), customerEmail = COALESCE(NULLIF(?, ''), customerEmail), name = COALESCE(NULLIF(?, ''), name), address = COALESCE(NULLIF(?, ''), address) WHERE shopId = ? AND ((customerPhone != '' AND customerPhone = ?) OR (customerShortId != '' AND customerShortId = ?))`,
+                          [activePhone, activeShortId, activeEmail, activeName, activeAddress, shopId, activePhone, activeShortId]
+                        );
+                      } else {
+                        db.run(
+                          `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')`,
+                          [shopId, checkPhone, activeShortId, activeEmail, activeName, activeAddress]
+                        );
+                      }
+                    }
+                  );
+                }
+
+                if (order.customerId) {
+                  recordAndSendNotification(order.customerId, {
+                    title: 'Order Completed & Collected',
+                    body: `Order #${order.orderNumber} has been verified and handed over! Thank you for shopping with us.`,
+                    type: 'ORDER_COMPLETED',
+                    orderId: order.id,
+                    orderNumber: order.orderNumber,
+                    data: { type: 'ORDER_COMPLETED', orderId: String(order.id), orderNumber: order.orderNumber }
+                  });
+                }
+
+                res.json({ success: true, status: 'COMPLETED', collectionStatus: 'COLLECTED', otpCode: null, message: 'OTP verified! Order completed and sale recorded.' });
+              }
+            );
           }
         );
       }
@@ -1569,13 +1678,193 @@ app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
 
 app.get('/api/shop/customers', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  db.all(`SELECT ShopCustomers.*, 
-          COALESCE(ShopCustomers.customerShortId, Users.shortId) as shortId,
-          COALESCE(ShopCustomers.customerEmail, Users.email) as email,
-          (SELECT COUNT(*) FROM ShopBlockedCustomers WHERE ShopBlockedCustomers.shopId = ? AND ShopBlockedCustomers.customerPhone = ShopCustomers.customerPhone) as isBlocked
-          FROM ShopCustomers 
-          LEFT JOIN Users ON ShopCustomers.customerPhone = Users.phone OR (ShopCustomers.customerShortId IS NOT NULL AND ShopCustomers.customerShortId = Users.shortId)
-          WHERE ShopCustomers.shopId = ? AND ShopCustomers.status = 'ACTIVE'`, [shopId, shopId], (err, rows) => res.json(rows || []));
+
+  // 1. Fetch active registered ShopCustomers
+  db.all(
+    `SELECT ShopCustomers.*, 
+            COALESCE(ShopCustomers.customerShortId, Users.shortId) as shortId,
+            COALESCE(ShopCustomers.customerEmail, Users.email) as email,
+            COALESCE(ShopCustomers.name, Users.name) as name,
+            COALESCE(NULLIF(ShopCustomers.customerPhone, ''), Users.phone) as phone,
+            (SELECT COUNT(*) FROM ShopBlockedCustomers WHERE ShopBlockedCustomers.shopId = ? AND ShopBlockedCustomers.customerPhone = ShopCustomers.customerPhone) as isBlocked
+     FROM ShopCustomers 
+     LEFT JOIN Users ON (ShopCustomers.customerPhone != '' AND ShopCustomers.customerPhone = Users.phone) 
+                     OR (ShopCustomers.customerShortId IS NOT NULL AND ShopCustomers.customerShortId != '' AND ShopCustomers.customerShortId = Users.shortId)
+     WHERE ShopCustomers.shopId = ? AND ShopCustomers.status = 'ACTIVE'`,
+    [shopId, shopId],
+    (err, directCustomers) => {
+      if (err) {
+        console.error('[GET /api/shop/customers] Error:', err);
+        return res.status(500).json({ error: 'Failed to fetch customers' });
+      }
+
+      // 2. Fetch distinct customers who have Khata credit sales or orders
+      const salesKhataSql = `SELECT DISTINCT customerPhone, customerShortId FROM Sales WHERE shopId = ? AND (paymentMethod = 'Add to Book' OR paymentMethod LIKE '%Book%')`;
+      const ordersKhataSql = `SELECT DISTINCT customerPhone, customerShortId, customerName, customerAddress FROM Orders WHERE shopId = ? AND (paymentMethod = 'Add to Book' OR paymentMethod LIKE '%Book%')`;
+
+      db.all(salesKhataSql, [shopId], (sErr, khataSales) => {
+        db.all(ordersKhataSql, [shopId], (oErr, khataOrders) => {
+          const customerMap = new Map();
+
+          // Add existing ShopCustomers
+          (directCustomers || []).forEach((c) => {
+            const finalPhone = (c.phone || c.customerPhone || '').trim();
+            const finalShortId = (c.shortId || c.customerShortId || '').trim();
+            const key = (finalPhone || finalShortId).toLowerCase();
+            if (key) {
+              customerMap.set(key, {
+                ...c,
+                phone: finalPhone || finalShortId,
+                customerPhone: finalPhone || finalShortId,
+                shortId: finalShortId,
+                customerShortId: finalShortId,
+              });
+            }
+          });
+
+          // Collect any missing candidates
+          const candidates = [];
+          const seenCandKeys = new Set();
+          [...(khataSales || []), ...(khataOrders || [])].forEach((row) => {
+            const p = (row.customerPhone || '').trim();
+            const s = (row.customerShortId || '').trim();
+            const keyP = p ? p.toLowerCase() : null;
+            const keyS = s ? s.toLowerCase() : null;
+            const uniqueKey = keyP || keyS;
+
+            if (uniqueKey && !seenCandKeys.has(uniqueKey)) {
+              if ((keyP && !customerMap.has(keyP)) || (keyS && !customerMap.has(keyS))) {
+                seenCandKeys.add(uniqueKey);
+                candidates.push(row);
+              }
+            }
+          });
+
+          const finalizeCustomersWithDues = (custArray) => {
+            db.all(
+              `SELECT customerPhone, customerShortId, total, paymentMethod, date, note FROM Sales WHERE shopId = ?`,
+              [shopId],
+              (sErr, allSales) => {
+                db.all(
+                  `SELECT customerPhone, amount, date FROM Settlements WHERE shopId = ?`,
+                  [shopId],
+                  (stErr, allSettlements) => {
+                    db.all(
+                      `SELECT id, orderNumber, customerPhone, customerShortId, requestedAmount, estimatedTotal, paymentMethod, status FROM Orders WHERE shopId = ? AND (paymentMethod = 'Add to Book' OR paymentMethod LIKE '%Book%') AND status NOT IN ('CANCELLED_BY_CUSTOMER', 'DECLINED', 'AUTO_CANCELLED_EXPIRED')`,
+                      [shopId],
+                      (oErr, allOrders) => {
+                        const salesList = allSales || [];
+                        const settlementsList = allSettlements || [];
+                        const ordersList = allOrders || [];
+
+                        const enriched = custArray.map((c) => {
+                          const cPhone = (c.phone || c.customerPhone || '').trim();
+                          const cClean = cPhone.replace(/\D/g, '').slice(-10);
+                          const cShortId = (c.shortId || c.customerShortId || '').trim().toLowerCase();
+
+                          const matchesCust = (p, s) => {
+                            const pStr = (p || '').trim();
+                            const pClean = pStr.replace(/\D/g, '').slice(-10);
+                            const sStr = (s || '').trim().toLowerCase();
+
+                            if (cShortId && sStr && cShortId === sStr) return true;
+                            if (cPhone && pStr && cPhone === pStr) return true;
+                            if (cClean && pClean && cClean === pClean) return true;
+                            return false;
+                          };
+
+                          // Sales on Book
+                          const custSales = salesList.filter(
+                            (s) =>
+                              matchesCust(s.customerPhone, s.customerShortId) &&
+                              (s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
+                          );
+                          const salesBook = custSales.reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+
+                          // Orders on Book (if not already recorded in sales via note "Order #...")
+                          let ordersBook = 0;
+                          ordersList
+                            .filter((o) => matchesCust(o.customerPhone, o.customerShortId))
+                            .forEach((o) => {
+                              const ordNum = o.orderNumber || o.id;
+                              const alreadyInSales = salesList.some((s) => s.note && s.note.includes(String(ordNum)));
+                              if (!alreadyInSales) {
+                                const amt = Number(o.requestedAmount > 0 ? o.requestedAmount : (o.estimatedTotal || 0));
+                                ordersBook += amt;
+                              }
+                            });
+
+                          // Settlements
+                          const custSettlements = settlementsList.filter((st) => matchesCust(st.customerPhone, null));
+                          const totalPaid = custSettlements.reduce((acc, st) => acc + (Number(st.amount) || 0), 0);
+
+                          const totalBook = salesBook + ordersBook;
+                          const totalDue = Math.max(0, totalBook - totalPaid);
+
+                          return {
+                            ...c,
+                            totalBook: Number(totalBook.toFixed(2)),
+                            totalPaid: Number(totalPaid.toFixed(2)),
+                            totalDue: Number(totalDue.toFixed(2)),
+                          };
+                        });
+
+                        // Sort by highest due first, then name
+                        enriched.sort(
+                          (a, b) => b.totalDue - a.totalDue || (a.name || '').localeCompare(b.name || '')
+                        );
+                        res.json(enriched);
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          };
+
+          if (candidates.length === 0) {
+            return finalizeCustomersWithDues(Array.from(customerMap.values()));
+          }
+
+          // Enrich missing candidates from Users table
+          db.all(`SELECT id, phone, shortId, email, name, address FROM Users`, [], (uErr, allUsers) => {
+            candidates.forEach((cand) => {
+              const p = (cand.customerPhone || '').trim();
+              const s = (cand.customerShortId || '').trim();
+              const key = (p || s).toLowerCase();
+              if (customerMap.has(key)) return;
+
+              const matchedUser = (allUsers || []).find(
+                (u) => (p && u.phone === p) || (s && u.shortId === s)
+              );
+
+              const finalPhone = matchedUser?.phone || p || s;
+              const finalShortId = matchedUser?.shortId || s || '';
+              const finalName = matchedUser?.name || cand.customerName || 'Khata Customer';
+              const finalEmail = matchedUser?.email || '';
+              const finalAddress = matchedUser?.address || cand.customerAddress || '';
+
+              customerMap.set(key, {
+                shopId,
+                customerPhone: finalPhone,
+                phone: finalPhone,
+                customerShortId: finalShortId,
+                shortId: finalShortId,
+                customerEmail: finalEmail,
+                email: finalEmail,
+                name: finalName,
+                address: finalAddress,
+                status: 'ACTIVE',
+                isBlocked: 0,
+              });
+            });
+
+            finalizeCustomersWithDues(Array.from(customerMap.values()));
+          });
+        });
+      });
+    }
+  );
 });
 
 app.post('/api/shop/customers', authenticate, (req, res) => {
@@ -1678,22 +1967,136 @@ app.post('/api/shop/settlements', authenticate, (req, res) => {
 
 app.get('/api/shop/ledger/:phone', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  const phone = req.params.phone;
-  db.all(`SELECT * FROM Sales WHERE shopId=? AND customerPhone=?`, [shopId, phone], (err, sales) => {
-    db.all(`SELECT * FROM Settlements WHERE shopId=? AND customerPhone=?`, [shopId, phone], (err, settlements) => {
-      const parsedSales = (sales || []).map((s) => ({
-        ...s,
-        total: Number(s.total) || 0,
-        subtotal: Number(s.subtotal) || 0,
-        discount: Number(s.discount) || 0,
-      }));
-      const parsedSettlements = (settlements || []).map((st) => ({
-        ...st,
-        amount: Number(st.amount) || 0,
-      }));
-      res.json({ sales: parsedSales, settlements: parsedSettlements });
-    });
-  });
+  const rawParam = decodeURIComponent(req.params.phone || '').trim();
+  const cleanPhone = rawParam.replace(/\D/g, '').slice(-10);
+
+  // Look up user to find all linked phones and shortIds
+  db.get(
+    `SELECT id, phone, shortId, name, email FROM Users WHERE shortId = ? OR phone = ? OR (LENGTH(?) = 10 AND phone LIKE ?)`,
+    [rawParam, rawParam, cleanPhone, `%${cleanPhone}%`],
+    (err, userRow) => {
+      const userPhone = (userRow?.phone || rawParam).trim();
+      const userShortId = (userRow?.shortId || rawParam).trim();
+      const tenDigit = cleanPhone || (userPhone ? userPhone.replace(/\D/g, '').slice(-10) : '');
+
+      const salesSql = `SELECT * FROM Sales WHERE shopId = ? AND (
+        customerPhone = ?
+        OR customerPhone = ?
+        OR (customerShortId IS NOT NULL AND customerShortId != '' AND (customerShortId = ? OR customerShortId = ?))
+        OR (? != '' AND (customerPhone LIKE ? OR customerPhone LIKE ?))
+      ) ORDER BY date DESC`;
+
+      const settlementsSql = `SELECT * FROM Settlements WHERE shopId = ? AND (
+        customerPhone = ?
+        OR customerPhone = ?
+        OR (? != '' AND (customerPhone LIKE ? OR customerPhone LIKE ?))
+      ) ORDER BY date DESC`;
+
+      const ordersSql = `SELECT * FROM Orders WHERE shopId = ? AND (paymentMethod = 'Add to Book' OR paymentMethod LIKE '%Book%') AND status NOT IN ('CANCELLED_BY_CUSTOMER', 'DECLINED', 'AUTO_CANCELLED_EXPIRED') AND (
+        customerPhone = ?
+        OR customerPhone = ?
+        OR (customerShortId IS NOT NULL AND customerShortId != '' AND (customerShortId = ? OR customerShortId = ?))
+        OR (? != '' AND (customerPhone LIKE ? OR customerPhone LIKE ?))
+      ) ORDER BY createdAt DESC`;
+
+      db.all(
+        salesSql,
+        [
+          shopId,
+          rawParam,
+          userPhone,
+          rawParam,
+          userShortId,
+          tenDigit,
+          `%${tenDigit}%`,
+          `%${rawParam}%`,
+        ],
+        (sErr, sales) => {
+          db.all(
+            settlementsSql,
+            [
+              shopId,
+              rawParam,
+              userPhone,
+              tenDigit,
+              `%${tenDigit}%`,
+              `%${rawParam}%`,
+            ],
+            (stErr, settlements) => {
+              db.all(
+                ordersSql,
+                [
+                  shopId,
+                  rawParam,
+                  userPhone,
+                  rawParam,
+                  userShortId,
+                  tenDigit,
+                  `%${tenDigit}%`,
+                  `%${rawParam}%`,
+                ],
+                (oErr, orders) => {
+                  const parsedSales = (sales || []).map((s) => ({
+                    ...s,
+                    total: Number(s.total) || 0,
+                    subtotal: Number(s.subtotal) || 0,
+                    discount: Number(s.discount) || 0,
+                  }));
+
+                  // If an online order with Add to Book is not yet recorded in Sales table, synthesize it
+                  (orders || []).forEach((o) => {
+                    const ordNum = o.orderNumber || o.id;
+                    const alreadyRecorded = parsedSales.some(
+                      (s) => s.note && s.note.includes(String(ordNum))
+                    );
+                    if (!alreadyRecorded) {
+                      const ordTotal = Number(o.requestedAmount > 0 ? o.requestedAmount : (o.estimatedTotal || 0));
+                      parsedSales.push({
+                        id: `order-${o.id}`,
+                        orderNumber: o.orderNumber,
+                        customerPhone: o.customerPhone,
+                        customerShortId: o.customerShortId,
+                        itemsJSON: o.itemsJSON,
+                        subtotal: ordTotal,
+                        discount: Number(o.requestedDiscount || 0),
+                        total: ordTotal,
+                        paymentMethod: 'Add to Book',
+                        note: `Order #${o.orderNumber || o.id}`,
+                        cashierName: 'Online Order',
+                        date: o.collectedAt || o.completedAt || o.createdAt,
+                      });
+                    }
+                  });
+
+                  // Sort newest first
+                  parsedSales.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                  const parsedSettlements = (settlements || []).map((st) => ({
+                    ...st,
+                    amount: Number(st.amount) || 0,
+                  }));
+
+                  const totalBook = parsedSales
+                    .filter((s) => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
+                    .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+                  const totalPaid = parsedSettlements.reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
+                  const totalDue = Number(Math.max(0, totalBook - totalPaid).toFixed(2));
+
+                  res.json({
+                    sales: parsedSales,
+                    settlements: parsedSettlements,
+                    totalBook: Number(totalBook.toFixed(2)),
+                    totalPaid: Number(totalPaid.toFixed(2)),
+                    totalDue,
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
 });
 
 // --- ADVANCED TRANSACTIONS & ANALYTICS ---
@@ -1996,15 +2399,20 @@ app.get('/api/customer/history', authenticate, (req, res) => {
 // --- CUSTOMER MULTI-STORE KHATA & TRANSACTION LEDGER APIs (READ ONLY) ---
 app.get('/api/customer/khata', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
-  const phone = req.user.phone;
-  const shortId = req.user.shortId || '';
+  const phone = (req.user.phone || '').trim();
+  const shortId = (req.user.shortId || '').trim();
+  const cleanPhone = phone.replace(/\D/g, '').slice(-10);
 
   db.all(`SELECT id, shortId, shopName, city, shopAddress, shopPhone, timings, isOpen, status FROM Shops WHERE status = 'ACTIVE'`, [], (err, shops) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch shops' });
 
-    db.all(`SELECT * FROM Sales WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)`, [phone, shortId], (err, sales) => {
-      db.all(`SELECT * FROM Settlements WHERE customerPhone = ?`, [phone], (err, settlements) => {
-        db.all(`SELECT * FROM Orders WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)`, [phone, shortId], (err, orders) => {
+    const salesSql = `SELECT * FROM Sales WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)`;
+    const settlementsSql = `SELECT * FROM Settlements WHERE customerPhone = ? OR (? != '' AND customerPhone LIKE ?)`;
+    const ordersSql = `SELECT * FROM Orders WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)`;
+
+    db.all(salesSql, [phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, sales) => {
+      db.all(settlementsSql, [phone, cleanPhone, `%${cleanPhone}%`], (err, settlements) => {
+        db.all(ordersSql, [phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, orders) => {
           
           const khataStores = [];
           let overallDue = 0;
@@ -2014,10 +2422,26 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
             const shopSettlements = (settlements || []).filter(st => st.shopId === shop.id);
             const shopOrders = (orders || []).filter(o => o.shopId === shop.id);
 
-            const totalBook = shopSales.filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+            const salesBook = shopSales
+              .filter(s => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
+              .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+
+            let ordersBook = 0;
+            shopOrders
+              .filter(o => (o.paymentMethod === 'Add to Book' || (o.paymentMethod && o.paymentMethod.includes('Book'))) && !['CANCELLED_BY_CUSTOMER', 'DECLINED', 'AUTO_CANCELLED_EXPIRED'].includes(o.status))
+              .forEach(o => {
+                const ordNum = o.orderNumber || o.id;
+                const alreadyInSales = shopSales.some(s => s.note && s.note.includes(String(ordNum)));
+                if (!alreadyInSales) {
+                  const amt = Number(o.requestedAmount > 0 ? o.requestedAmount : (o.estimatedTotal || 0));
+                  ordersBook += amt;
+                }
+              });
+
+            const totalBook = salesBook + ordersBook;
             const totalPaid = shopSettlements.reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
             const totalDue = Math.max(0, totalBook - totalPaid);
-            const totalPurchases = shopSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+            const totalPurchases = shopSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0) + ordersBook;
 
             // Include if customer has transactions or orders or khata with this shop
             if (shopSales.length > 0 || shopSettlements.length > 0 || shopOrders.length > 0 || totalDue > 0) {
@@ -2031,10 +2455,10 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
                 shopPhone: shop.shopPhone,
                 timings: shop.timings,
                 isOpen: !!shop.isOpen,
-                totalDue,
-                totalBook,
-                totalPaid,
-                totalPurchases,
+                totalDue: Number(totalDue.toFixed(2)),
+                totalBook: Number(totalBook.toFixed(2)),
+                totalPaid: Number(totalPaid.toFixed(2)),
+                totalPurchases: Number(totalPurchases.toFixed(2)),
                 salesCount: shopSales.length,
                 settlementsCount: shopSettlements.length,
                 ordersCount: shopOrders.length
@@ -2046,7 +2470,7 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
           khataStores.sort((a, b) => b.totalDue - a.totalDue || a.shopName.localeCompare(b.shopName));
 
           res.json({
-            overallDue,
+            overallDue: Number(overallDue.toFixed(2)),
             stores: khataStores
           });
         });
@@ -2057,18 +2481,39 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
 
 app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
-  const phone = req.user.phone;
-  const shortId = req.user.shortId || '';
+  const phone = (req.user.phone || '').trim();
+  const shortId = (req.user.shortId || '').trim();
+  const cleanPhone = phone.replace(/\D/g, '').slice(-10);
   const shopId = parseInt(req.params.shopId);
 
   db.get(`SELECT id, shortId, shopName, city, shopAddress, shopPhone, timings, isOpen, status FROM Shops WHERE id = ?`, [shopId], (err, shop) => {
     if (err || !shop) return res.status(404).json({ error: 'Shop not found' });
 
-    db.all(`SELECT * FROM Sales WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)) ORDER BY date DESC`, [shopId, phone, shortId], (err, sales) => {
-      db.all(`SELECT * FROM Settlements WHERE shopId = ? AND customerPhone = ? ORDER BY date DESC`, [shopId, phone], (err, settlements) => {
-        db.all(`SELECT * FROM Orders WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?)) ORDER BY createdAt DESC`, [shopId, phone, shortId], (err, orders) => {
+    const salesSql = `SELECT * FROM Sales WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)) ORDER BY date DESC`;
+    const settlementsSql = `SELECT * FROM Settlements WHERE shopId = ? AND (customerPhone = ? OR (? != '' AND customerPhone LIKE ?)) ORDER BY date DESC`;
+    const ordersSql = `SELECT * FROM Orders WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)) ORDER BY createdAt DESC`;
+
+    db.all(salesSql, [shopId, phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, sales) => {
+      db.all(settlementsSql, [shopId, phone, cleanPhone, `%${cleanPhone}%`], (err, settlements) => {
+        db.all(ordersSql, [shopId, phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, orders) => {
           
-          const totalBook = (sales || []).filter(s => s.paymentMethod === 'Add to Book').reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+          const salesBook = (sales || [])
+            .filter(s => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
+            .reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+
+          let ordersBook = 0;
+          (orders || [])
+            .filter(o => (o.paymentMethod === 'Add to Book' || (o.paymentMethod && o.paymentMethod.includes('Book'))) && !['CANCELLED_BY_CUSTOMER', 'DECLINED', 'AUTO_CANCELLED_EXPIRED'].includes(o.status))
+            .forEach(o => {
+              const ordNum = o.orderNumber || o.id;
+              const alreadyInSales = (sales || []).some(s => s.note && s.note.includes(String(ordNum)));
+              if (!alreadyInSales) {
+                const amt = Number(o.requestedAmount > 0 ? o.requestedAmount : (o.estimatedTotal || 0));
+                ordersBook += amt;
+              }
+            });
+
+          const totalBook = salesBook + ordersBook;
           const totalPaid = (settlements || []).reduce((sum, st) => sum + (Number(st.amount) || 0), 0);
           const totalDue = Math.max(0, totalBook - totalPaid);
 
@@ -2083,8 +2528,27 @@ app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
               paymentMethod: s.paymentMethod,
               note: s.note,
               itemsJSON: s.itemsJSON,
-              billedBy: s.billedBy
+              billedBy: s.cashierName || s.billedBy
             });
+          });
+
+          // Synthesize unrecorded Add to Book orders into purchase timeline
+          (orders || []).forEach(o => {
+            const ordNum = o.orderNumber || o.id;
+            const alreadyInSales = (sales || []).some(s => s.note && s.note.includes(String(ordNum)));
+            if (!alreadyInSales && (o.paymentMethod === 'Add to Book' || (o.paymentMethod && o.paymentMethod.includes('Book')))) {
+              const ordTotal = Number(o.requestedAmount > 0 ? o.requestedAmount : (o.estimatedTotal || 0));
+              timeline.push({
+                type: 'PURCHASE',
+                id: `order-${o.id}`,
+                date: o.collectedAt || o.completedAt || o.createdAt,
+                total: ordTotal,
+                paymentMethod: 'Add to Book',
+                note: `Order #${o.orderNumber || o.id}`,
+                itemsJSON: o.itemsJSON,
+                billedBy: 'Online Order'
+              });
+            }
           });
 
           (settlements || []).forEach(st => {
@@ -2116,9 +2580,9 @@ app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
 
           res.json({
             shop,
-            totalDue,
-            totalBook,
-            totalPaid,
+            totalDue: Number(totalDue.toFixed(2)),
+            totalBook: Number(totalBook.toFixed(2)),
+            totalPaid: Number(totalPaid.toFixed(2)),
             sales: sales || [],
             settlements: settlements || [],
             orders: orders || [],

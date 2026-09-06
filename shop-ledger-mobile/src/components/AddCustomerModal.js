@@ -14,6 +14,7 @@ import {
 import { X, UserPlus, Contact, Lock, RotateCcw, UserCheck, Search } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import { searchRegisteredCustomer, syncContacts } from '../api/client';
+import { showErrorAlert, validatePhone } from '../utils/errorHandler';
 
 export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) {
   const [phone, setPhone] = useState('');
@@ -208,19 +209,18 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
   };
 
   const handleSubmit = async () => {
-    if (!phone.trim()) {
-      Alert.alert('Required', 'Please enter customer phone number.');
-      return;
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) {
+      return showErrorAlert(phoneCheck.error, 'Invalid Mobile Number');
     }
     if (!name.trim()) {
-      Alert.alert('Required', 'Please enter customer name.');
-      return;
+      return showErrorAlert('Customer full name is required.', 'Name Required');
     }
 
     setSubmitting(true);
     try {
       await onCustomerAdded({
-        phone: phone.trim(),
+        phone: phoneCheck.phone,
         name: name.trim(),
         address: address.trim(),
         customerShortId: customerShortId || undefined,
@@ -229,7 +229,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
       handleResetModal();
       onClose();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to add customer.');
+      showErrorAlert(e, 'Customer Enrollment Error', 'Failed to add customer.');
     } finally {
       setSubmitting(false);
     }

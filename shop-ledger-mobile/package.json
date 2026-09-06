@@ -1,6 +1,6 @@
 {
   "name": "shop-ledger-mobile",
-  "version": "1.0.8",
+  "version": "1.0.13",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
@@ -21,6 +21,9 @@
     "expo-asset": "~11.0.5",
     "expo-contacts": "~14.0.4",
     "expo-font": "~13.0.4",
+    "expo-print": "~14.0.3",
+    "expo-secure-store": "~14.0.1",
+    "expo-sharing": "~13.0.1",
     "expo-status-bar": "~2.0.1",
     "lucide-react-native": "^0.475.0",
     "react": "18.3.1",

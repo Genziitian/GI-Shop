@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, googleLogin, getCities, parseTimings, formatTimings } from '../lib/api';
+import { parseError, validatePhone } from '../lib/errorHandler';
 import { signInWithGoogle } from '../lib/firebase';
 import { isPasskeySupported, loginWithPasskey } from '../lib/passkey';
 import { 
@@ -362,7 +363,8 @@ export default function Auth() {
       redirectUserToDashboard(res.user.role, navigate);
     } catch (err) {
       console.error('[Passkey Login Error]', err);
-      setError(err.message || 'Passkey authentication was not completed.');
+      const parsed = parseError(err);
+      setError(parsed.message || 'Passkey authentication was not completed.');
     } finally {
       setPasskeyLoading(false);
     }
@@ -397,7 +399,8 @@ export default function Auth() {
       }
     } catch (err) {
       console.error('[Google Sign-In Error]', err);
-      setError(err.message || 'Google Sign-In failed');
+      const parsed = parseError(err);
+      setError(parsed.message || 'Google Sign-In failed');
     } finally {
       setGoogleLoading(false);
     }
@@ -425,7 +428,8 @@ export default function Auth() {
 
       redirectUserToDashboard(res.user.role, navigate);
     } catch (err) {
-      setError(err.message || (language === 'hi' ? 'गलत विवरण। उपयोगकर्ता नहीं मिला।' : 'Invalid credentials. User not found.'));
+      const parsed = parseError(err);
+      setError(parsed.message || (language === 'hi' ? 'गलत विवरण। उपयोगकर्ता नहीं मिला।' : 'Invalid credentials. User not found.'));
     } finally {
       setLoading(false);
     }
@@ -436,8 +440,9 @@ export default function Auth() {
     e.preventDefault();
     setError('');
 
-    if (!onboardingForm.phone || !onboardingForm.phone.trim()) {
-      return setError(language === 'hi' ? 'कृपया अपना 10 अंकों का मोबाइल नंबर दर्ज करें।' : 'Please enter your 10-digit mobile phone number.');
+    const phoneValidation = validatePhone(onboardingForm.phone);
+    if (!phoneValidation.valid) {
+      return setError(language === 'hi' ? 'कृपया अपना 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।' : phoneValidation.error);
     }
 
     if (onboarding.role === 'Shopkeeper') {
@@ -456,7 +461,7 @@ export default function Auth() {
         onboardComplete: true,
         role: onboarding.role,
         name: onboardingForm.name,
-        phone: onboardingForm.phone.trim(),
+        phone: phoneValidation.phone,
         city: onboarding.role === 'Shopkeeper' ? (onboardingForm.city || 'Delhi') : 'Delhi',
         address: onboardingForm.address,
         shopName: onboardingForm.shopName,
@@ -474,7 +479,8 @@ export default function Auth() {
       redirectUserToDashboard(res.user.role, navigate);
     } catch (err) {
       console.error('[Onboarding Error]', err);
-      setError(err.message || (language === 'hi' ? 'प्रोफ़ाइल सेटअप पूरा करने में विफल' : 'Failed to complete profile setup'));
+      const parsed = parseError(err);
+      setError(parsed.message || (language === 'hi' ? 'प्रोफ़ाइल सेटअप पूरा करने में विफल' : 'Failed to complete profile setup'));
     } finally {
       setLoading(false);
     }

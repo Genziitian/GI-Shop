@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -39,8 +40,9 @@ import ChangePasswordModal from '../../components/ChangePasswordModal';
 import { Modal } from 'react-native';
 
 export default function CustomerMoreScreen({ navigation }) {
-  const { user, logout, lock } = useAuth();
+  const { user, logout, lock, refreshUser } = useAuth();
   const { t, language, setLanguage } = useTranslation();
+  const [refreshing, setRefreshing] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -96,7 +98,21 @@ export default function CustomerMoreScreen({ navigation }) {
         showLock={true}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              if (refreshUser) await refreshUser();
+              setRefreshing(false);
+            }}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Customer Identity Card */}
         <TouchableOpacity
           style={styles.profileCard}
@@ -303,7 +319,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
         {/* App Version Info */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>GI SHOP Customer Ledger v1.0.8</Text>
+          <Text style={styles.versionText}>GI SHOP Customer Ledger v1.0.13</Text>
           <Text style={styles.copyrightText}>Smart Billing, Khata & Grocery Discovery</Text>
         </View>
       </ScrollView>

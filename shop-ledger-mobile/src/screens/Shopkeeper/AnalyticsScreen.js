@@ -33,6 +33,7 @@ import { getShopSales, updateSaleNote } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 const DATE_RANGES = ['Today', 'Yesterday', 'This Week', 'This Month', 'All Time'];
 
@@ -137,7 +138,7 @@ export default function AnalyticsScreen() {
       await loadSales();
       setSelectedSaleForNote(null);
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to update note.');
+      showErrorAlert(e, 'Update Note');
     } finally {
       setSavingNote(false);
     }

@@ -39,6 +39,7 @@ import ProductUnitModal from '../../components/ProductUnitModal';
 import ReceiptModal from '../../components/ReceiptModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 const PAYMENT_MODES = [
   { id: 'Cash', label: 'Cash', icon: Banknote },
@@ -211,7 +212,7 @@ export default function POSScreen({ navigation }) {
         shopAddress: user?.shop?.shopAddress || '',
       });
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to complete bill.');
+      showErrorAlert(e, 'Billing Error', 'Failed to complete transaction.');
     } finally {
       setCompletingBill(false);
     }

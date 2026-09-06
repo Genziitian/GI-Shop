@@ -1,5 +1,19 @@
 import React from 'react';
-import { X, CheckCircle2, Clock, PackageCheck, CreditCard, ShieldCheck, Check, AlertCircle, ShoppingBag } from 'lucide-react';
+import {
+  X,
+  CheckCircle2,
+  Clock,
+  PackageCheck,
+  CreditCard,
+  ShieldCheck,
+  Check,
+  AlertCircle,
+  ShoppingBag,
+  Download,
+  Phone,
+  Store,
+  User,
+} from 'lucide-react';
 
 export default function OrderTimelineModal({ visible, order, onClose }) {
   if (!visible || !order) return null;
@@ -22,48 +36,77 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
       title: 'Order Created',
       timestamp: order.createdAt || new Date().toISOString(),
       description: 'Customer placed the order',
-      status: 'CREATED'
+      status: 'CREATED',
     },
     {
       title: 'Order Received by Shop',
       timestamp: order.createdAt || new Date().toISOString(),
       description: 'Order received by shopkeeper',
-      status: 'RECEIVED'
+      status: 'RECEIVED',
     },
     ...(order.acceptedAt ? [{
       title: 'Order Accepted & Preparing',
       timestamp: order.acceptedAt,
       description: `Estimated preparation time: ${order.packingMinutes || 15} mins`,
-      status: 'ACCEPTED'
+      status: 'ACCEPTED',
     }] : []),
     ...(order.status === 'READY' || order.status === 'COMPLETED' ? [{
       title: 'Order Ready for Pickup',
       timestamp: order.acceptedAt || order.createdAt,
       description: 'Order packed and ready for pickup',
-      status: 'READY'
+      status: 'READY',
     }] : []),
     ...(order.paymentRequested ? [{
       title: 'Payment Requested',
       timestamp: order.acceptedAt || order.createdAt,
       description: `Requested ₹${(order.requestedAmount || order.estimatedTotal || 0).toFixed(2)} (${order.paymentMethod || 'Cash'})`,
-      status: 'PAYMENT_REQUESTED'
+      status: 'PAYMENT_REQUESTED',
     }] : []),
     ...(order.status === 'COMPLETED' ? [{
       title: 'Customer Verified (OTP)',
       timestamp: order.collectedAt || new Date().toISOString(),
       description: 'Customer 4-digit OTP successfully verified',
-      status: 'VERIFIED'
+      status: 'VERIFIED',
     }, {
       title: 'Order Delivered & Completed',
       timestamp: order.collectedAt || new Date().toISOString(),
       description: 'Order handed over and sale recorded',
-      status: 'COMPLETED'
-    }] : [])
+      status: 'COMPLETED',
+    }] : []),
+    ...(order.status === 'DECLINED' ? [{
+      title: 'Order Declined',
+      timestamp: order.updatedAt || new Date().toISOString(),
+      description: order.declineReason || 'Shopkeeper declined this order',
+      status: 'DECLINED',
+    }] : []),
+    ...(order.status === 'CANCELLED_BY_CUSTOMER' ? [{
+      title: 'Order Cancelled by Customer',
+      timestamp: order.updatedAt || new Date().toISOString(),
+      description: 'Customer cancelled or took back this order',
+      status: 'CANCELLED_BY_CUSTOMER',
+    }] : []),
   ];
 
   const formattedCreatedDate = order.createdAt
     ? new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     : 'N/A';
+
+  const shopName = order.shopName || order.Shop?.name || 'GI SHOP Store';
+  const shopPhone = order.shopPhone || order.Shop?.phone || order.shopContact || '';
+  const shopAddress = [
+    order.shopAddress || order.Shop?.address,
+    order.shopCity || order.Shop?.city,
+  ].filter(Boolean).join(', ');
+
+  const customerName = order.customerName || order.User?.name || 'Customer';
+  const customerPhone = order.customerPhone || order.User?.phone || '';
+  const customerShortId = order.customerShortId || order.User?.shortId || '';
+  const orderNumber = order.orderNumber || order.id || 'N/A';
+
+  const finalPayableAmt = (Number(order.requestedAmount > 0 ? order.requestedAmount : order.estimatedTotal) || 0).toFixed(2);
+  const subtotalAmt = (Number(order.estimatedTotal) || Number(finalPayableAmt)).toFixed(2);
+  const discountAmt = (Number(order.requestedDiscount) || 0).toFixed(2);
+  const paymentMethod = order.paymentMethod || 'Pay at Counter / Cash';
 
   const getStatusBadge = (st) => {
     switch (st) {
@@ -101,52 +144,391 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
         return <ShieldCheck size={16} color="#16a34a" />;
       case 'COMPLETED':
         return <Check size={16} color="#16a34a" />;
+      case 'DECLINED':
+      case 'CANCELLED_BY_CUSTOMER':
+        return <AlertCircle size={16} color="#dc2626" />;
       default:
         return <Clock size={16} color="#64748b" />;
     }
   };
 
+  const handleDownloadReceipt = () => {
+    const printWin = window.open('', '_blank', 'width=450,height=750');
+    if (!printWin) {
+      alert('Popup blocked! Please allow popups to download or print receipt.');
+      return;
+    }
+
+    const rowsHtml = items.map((it) => {
+      const isUnavail = it.isUnavailable || it.unavailable;
+      const name = it.item?.name || it.name || 'Item';
+      const unit = it.item?.unit || it.unit || '';
+      const rate = (Number(it.rate || it.price || it.item?.price) || 0).toFixed(2);
+      const qty = it.qty || 1;
+      const amt = (Number(it.amount || (rate * qty)) || 0).toFixed(2);
+
+      return `
+        <tr style="${isUnavail ? 'text-decoration: line-through; color: #666;' : ''}">
+          <td style="padding: 4px 2px; text-align: left; vertical-align: top;">
+            <div style="font-weight: 700; font-size: 11px;">${name}</div>
+            ${isUnavail ? '<div style="font-size: 9px; color: #b91c1c; font-weight: 700;">* UNAVAILABLE (DEDUCTED)</div>' : ''}
+          </td>
+          <td style="padding: 4px 2px; text-align: center; font-size: 11px; vertical-align: top;">
+            ${qty} ${unit}
+          </td>
+          <td style="padding: 4px 2px; text-align: right; font-size: 11px; vertical-align: top;">
+            &#8377;${rate}
+          </td>
+          <td style="padding: 4px 2px; text-align: right; font-weight: 700; font-size: 11px; vertical-align: top;">
+            &#8377;${amt}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const totalUnits = items.reduce((sum, it) => sum + (Number(it.qty) || 1), 0);
+
+    const discountRowHtml = Number(discountAmt) > 0 ? `
+      <tr>
+        <td style="padding: 2px 0; text-align: left; color: #15803d; font-weight: 700;">DISCOUNT APPLIED:</td>
+        <td style="padding: 2px 0; text-align: right; color: #15803d; font-weight: 700;">-&#8377;${Number(discountAmt).toFixed(2)}</td>
+      </tr>
+    ` : '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Receipt #${orderNumber}</title>
+        <style>
+          @page {
+            size: 80mm auto;
+            margin: 4mm;
+          }
+          @media print {
+            body {
+              background: #fff;
+              padding: 0;
+            }
+            .receipt-container {
+              box-shadow: none !important;
+              border: none !important;
+              max-width: 100% !important;
+              padding: 4px 0 !important;
+            }
+          }
+          * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          body {
+            font-family: 'Courier New', Courier, Consolas, Monaco, monospace;
+            background-color: #f8fafc;
+            color: #111827;
+            margin: 0;
+            padding: 14px;
+            display: flex;
+            justify-content: center;
+            font-size: 11px;
+            line-height: 1.35;
+          }
+          .receipt-container {
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            padding: 14px 16px;
+          }
+          .center { text-align: center; }
+          .right { text-align: right; }
+          .left { text-align: left; }
+          .bold { font-weight: 800; }
+          .store-name {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+          }
+          .store-detail {
+            font-size: 10px;
+            color: #4b5563;
+            line-height: 1.25;
+          }
+          .receipt-type-pill {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 10px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: #111827;
+            color: #ffffff;
+            border-radius: 2px;
+          }
+          .d-dash {
+            border-top: 1px dashed #9ca3af;
+            margin: 8px 0;
+          }
+          .d-double {
+            border-top: 2px solid #111827;
+            border-bottom: 1px solid #111827;
+            height: 3px;
+            margin: 8px 0;
+          }
+          .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10.5px;
+            margin: 2px 0;
+          }
+          table.items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 6px 0;
+            font-size: 11px;
+          }
+          table.items-table th {
+            border-bottom: 1px dashed #4b5563;
+            padding: 4px 2px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          table.items-table td {
+            border-bottom: 1px dotted #e5e7eb;
+          }
+          .summary-table {
+            width: 100%;
+            margin-top: 4px;
+            font-size: 11px;
+          }
+          .grand-total-row {
+            font-size: 14px;
+            font-weight: 900;
+            background: #f3f4f6;
+            padding: 6px 4px;
+            margin-top: 6px;
+            border-top: 2px solid #111827;
+            border-bottom: 2px solid #111827;
+            display: flex;
+            justify-content: space-between;
+          }
+          .pickup-box {
+            margin-top: 12px;
+            background: #f0fdf4;
+            border: 1px dashed #16a34a;
+            border-radius: 4px;
+            padding: 8px 10px;
+          }
+          .barcode-box {
+            margin: 12px 0 6px 0;
+            text-align: center;
+          }
+          .barcode-bars {
+            height: 28px;
+            background: repeating-linear-gradient(
+              90deg,
+              #111 0px, #111 2px,
+              transparent 2px, transparent 4px,
+              #111 4px, #111 7px,
+              transparent 7px, transparent 8px,
+              #111 8px, #111 11px,
+              transparent 11px, transparent 13px
+            );
+            margin: 0 auto;
+            max-width: 180px;
+          }
+          .barcode-text {
+            font-size: 9.5px;
+            letter-spacing: 2px;
+            margin-top: 2px;
+            color: #334155;
+          }
+          .receipt-footer {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 10px;
+            color: #475569;
+            line-height: 1.4;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          <!-- Store Header -->
+          <div class="center">
+            <div class="store-name">${shopName}</div>
+            ${shopAddress ? `<div class="store-detail">${shopAddress}</div>` : ''}
+            ${shopPhone ? `<div class="store-detail">Ph: ${shopPhone}</div>` : ''}
+            <div class="receipt-type-pill">RETAIL INVOICE / CASH MEMO</div>
+          </div>
+
+          <div class="d-dash"></div>
+
+          <!-- Order Metadata -->
+          <div class="meta-row">
+            <span><strong>ORDER #:</strong> ${orderNumber}</span>
+            <span><strong>DATE:</strong> ${formattedCreatedDate}</span>
+          </div>
+          <div class="meta-row">
+            <span><strong>STATUS:</strong> ${order.status || 'ACTIVE'}</span>
+            <span><strong>PAYMENT:</strong> ${paymentMethod}</span>
+          </div>
+
+          <div class="d-dash"></div>
+
+          <!-- Items Table -->
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th class="left" style="width: 45%;">Item</th>
+                <th class="center" style="width: 15%;">Qty</th>
+                <th class="right" style="width: 20%;">Rate</th>
+                <th class="right" style="width: 20%;">Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="d-dash"></div>
+
+          <!-- Total Calculations -->
+          <table class="summary-table">
+            <tr>
+              <td style="padding: 2px 0; text-align: left; color: #4b5563;">TOTAL ITEMS / UNITS:</td>
+              <td style="padding: 2px 0; text-align: right; font-weight: 700;">${items.length} items (${totalUnits} units)</td>
+            </tr>
+            <tr>
+              <td style="padding: 2px 0; text-align: left; color: #4b5563;">ITEMS SUBTOTAL:</td>
+              <td style="padding: 2px 0; text-align: right; font-weight: 700;">&#8377;${subtotalAmt}</td>
+            </tr>
+            ${discountRowHtml}
+          </table>
+
+          <div class="grand-total-row">
+            <span>NET PAYABLE:</span>
+            <span>&#8377;${finalPayableAmt}</span>
+          </div>
+
+          <!-- Pickup Customer Card at Last -->
+          <div class="pickup-box">
+            <div style="font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #15803d; margin-bottom: 2px;">
+              &#10003; PICKUP CUSTOMER DETAILS
+            </div>
+            <div style="font-size: 11.5px; font-weight: 800; color: #0f172a;">
+              ${customerName} ${customerShortId ? `(${customerShortId})` : ''}
+            </div>
+            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #334155;">Phone: ${customerPhone}</div>` : ''}
+            <div style="margin-top: 4px; font-size: 10.5px; font-weight: 800; color: #166534;">
+              (Customer will pick up the order)
+            </div>
+          </div>
+
+          <!-- Barcode simulation -->
+          <div class="barcode-box">
+            <div class="barcode-bars"></div>
+            <div class="barcode-text">*${orderNumber}*</div>
+          </div>
+
+          <!-- Footer Message -->
+          <div class="receipt-footer">
+            <div class="bold">&#9733; THANK YOU FOR SHOPPING WITH US &#9733;</div>
+            <div>PLEASE VISIT AGAIN!</div>
+            <div style="font-size: 9px; color: #64748b; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
+          </div>
+        </div>
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWin.document.write(html);
+    printWin.document.close();
+  };
+
   return (
     <div className="modal-overlay" style={{ zIndex: 1200 }}>
-      <div className="panel modal-dialog" style={{ width: '620px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', background: '#fff', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+      <div className="panel modal-dialog" style={{ width: '880px', maxWidth: '96vw', height: '92vh', maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', borderRadius: '16px', padding: '0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        
+        {/* Modal Scrollable Container */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         
         {/* Header */}
         <div className="flex-between" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem', marginBottom: '1.25rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
               <h3 className="title" style={{ margin: 0, fontSize: '1.2rem' }}>
-                Order #{order.orderNumber || order.id}
+                Order #{orderNumber}
               </h3>
               {getStatusBadge(order.status)}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Placed on {formattedCreatedDate} {order.shopName ? `• ${order.shopName}` : ''}
+              Placed on {formattedCreatedDate}
             </div>
           </div>
-          <X size={22} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleDownloadReceipt}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.45rem 0.85rem' }}
+            >
+              <Download size={15} /> Receipt (PDF)
+            </button>
+            <X size={22} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={onClose} />
+          </div>
         </div>
 
-        {/* Customer & Shop Details Card */}
+        {/* Shop Details Card with Contact Number */}
         <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-            <div>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '700' }}>CUSTOMER</span>
-              <div style={{ fontWeight: '700', color: '#0f172a' }}>{order.customerName || 'Customer'} ({order.customerShortId || 'N/A'})</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>📞 {order.customerPhone || 'N/A'}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '220px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '800' }}>
+                <Store size={14} color="var(--primary)" /> SHOP / STORE DETAILS
+              </div>
+              <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '1.05rem', marginTop: '2px' }}>
+                {shopName}
+              </div>
+              {shopAddress && (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '2px' }}>
+                  {shopAddress}
+                </div>
+              )}
             </div>
-            <div>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '700' }}>SHOP / STORE</span>
-              <div style={{ fontWeight: '700', color: '#0f172a' }}>{order.shopName || 'GI SHOP Store'}</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{order.shopAddress || ''}</div>
-            </div>
+
+            {shopPhone && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '0.4rem 0.75rem' }}>
+                <Phone size={14} color="#1d4ed8" />
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#1e40af', fontWeight: '700' }}>Shop Contact</div>
+                  <a href={`tel:${shopPhone}`} style={{ fontSize: '0.84rem', fontWeight: '800', color: '#1d4ed8', textDecoration: 'none' }}>
+                    {shopPhone}
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* SECTION 1: ORDERED ITEMS BREAKDOWN */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 0.65rem 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: '800' }}>
-            🛒 Ordered Items &amp; Billing
-          </h4>
+          <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#0f172a', fontWeight: '800' }}>
+              Ordered Items &amp; Billing
+            </h4>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+              {items.length} {items.length === 1 ? 'item' : 'items'}
+            </span>
+          </div>
           
           <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
@@ -192,20 +574,20 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
             <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderTop: '1px solid var(--border)', fontSize: '0.86rem' }}>
               <div className="flex-between" style={{ marginBottom: '4px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Estimated Subtotal:</span>
-                <span style={{ fontWeight: '700' }}>₹{(Number(order.estimatedTotal) || 0).toFixed(2)}</span>
+                <span style={{ fontWeight: '700' }}>₹{subtotalAmt}</span>
               </div>
 
-              {order.requestedDiscount > 0 && (
+              {Number(discountAmt) > 0 && (
                 <div className="flex-between" style={{ color: '#16a34a', marginBottom: '4px' }}>
                   <span>Discount Applied:</span>
-                  <span style={{ fontWeight: '700' }}>-₹{(Number(order.requestedDiscount) || 0).toFixed(2)}</span>
+                  <span style={{ fontWeight: '700' }}>-₹{discountAmt}</span>
                 </div>
               )}
 
               <div className="flex-between" style={{ paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1', fontSize: '1rem', fontWeight: '800', color: '#0f172a' }}>
                 <span>Final Payable Amount:</span>
                 <span style={{ color: 'var(--primary)' }}>
-                  ₹{(Number(order.requestedAmount > 0 ? order.requestedAmount : order.estimatedTotal) || 0).toFixed(2)}
+                  ₹{finalPayableAmt}
                 </span>
               </div>
 
@@ -222,7 +604,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
         {/* SECTION 2: COMPLETE ORDER JOURNEY TIMELINE */}
         <div>
           <h4 style={{ margin: '0 0 0.85rem 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: '800' }}>
-            📜 Complete Order Journey &amp; Timestamps
+            Complete Order Journey
           </h4>
 
           <div style={{ paddingLeft: '0.5rem' }}>
@@ -234,7 +616,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
-                    hour12: true
+                    hour12: true,
                   })
                 : '';
 
@@ -270,13 +652,44 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           </div>
         </div>
 
-        {/* Footer Close */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
-          <button type="button" className="btn btn-outline" style={{ padding: '0.5rem 1.25rem', fontWeight: '700' }} onClick={onClose}>
+        {/* Customer Pickup Details Card at the Very End */}
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '0.85rem 1rem', marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#15803d', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+            <User size={15} /> PICKUP CUSTOMER DETAILS
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem' }}>
+                {customerName} {customerShortId ? `(${customerShortId})` : ''}
+              </div>
+              {customerPhone && (
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  📞 {customerPhone}
+                </div>
+              )}
+            </div>
+            <div style={{ background: '#dcfce7', color: '#166534', fontWeight: '800', fontSize: '0.82rem', padding: '0.4rem 0.85rem', borderRadius: '6px' }}>
+              (Customer will pick up the order)
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={handleDownloadReceipt}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}
+          >
+            <Download size={16} /> Download Receipt (PDF)
+          </button>
+          <button type="button" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontWeight: '700' }} onClick={onClose}>
             Close Order Details
           </button>
         </div>
 
+        </div>
       </div>
     </div>
   );

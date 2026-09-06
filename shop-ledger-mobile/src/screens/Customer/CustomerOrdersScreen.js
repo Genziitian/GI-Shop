@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -18,6 +19,8 @@ import {
   Store,
   MapPin,
   TrendingUp,
+  BellRing,
+  X,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
@@ -32,6 +35,7 @@ import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function CustomerOrdersScreen({ navigation }) {
   const { user } = useAuth();
@@ -45,11 +49,23 @@ export default function CustomerOrdersScreen({ navigation }) {
   // Digital Receipt & Timeline Order Modals
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [selectedDetailOrder, setSelectedDetailOrder] = useState(null);
+  const [activeAlert, setActiveAlert] = useState(null);
+  const prevOrdersMapRef = React.useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-dismiss activity banner after 8 seconds
+  useEffect(() => {
+    if (activeAlert) {
+      const timer = setTimeout(() => {
+        setActiveAlert(null);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeAlert]);
 
   const getAutoCancelCountdown = (createdAt) => {
     if (!createdAt) return null;
@@ -63,8 +79,11 @@ export default function CustomerOrdersScreen({ navigation }) {
     return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
   };
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
+      if (!silent && !orders.length) {
+        setLoading(true);
+      }
       const [ordersData, historyData] = await Promise.all([
         getCustomerOrders().catch((e) => {
           console.warn('Orders fetch error:', e);
@@ -72,26 +91,98 @@ export default function CustomerOrdersScreen({ navigation }) {
         }),
         getCustomerHistory().catch(() => ({ sales: [] })),
       ]);
-      setOrders(Array.isArray(ordersData) ? ordersData : []);
+
+      const validOrders = Array.isArray(ordersData) ? ordersData : [];
+      setOrders(validOrders);
       setSales(Array.isArray(historyData?.sales) ? historyData.sales : []);
+
+      // Notify customer if shopkeeper performed any activity on their orders
+      if (prevOrdersMapRef.current !== null) {
+        for (const curr of validOrders) {
+          const prev = prevOrdersMapRef.current[curr.id];
+          if (prev) {
+            const num = curr.orderNumber || curr.id;
+            if (prev.status === 'PENDING' && (curr.status === 'PACKING' || curr.status === 'ACCEPTED')) {
+              setActiveAlert({
+                type: 'ACCEPTED',
+                title: 'Order Accepted!',
+                message: `Shopkeeper accepted Order #${num} and is preparing your items.`,
+                order: curr,
+              });
+              break;
+            } else if (prev.status !== 'READY' && curr.status === 'READY') {
+              setActiveAlert({
+                type: 'READY',
+                title: 'Order Ready for Pickup!',
+                message: `Order #${num} is packed and ready for pickup at ${curr.shopName || 'the shop'}.`,
+                order: curr,
+              });
+              break;
+            } else if (!prev.paymentRequested && curr.paymentRequested) {
+              const amt = (curr.requestedAmount || curr.estimatedTotal || 0).toFixed(2);
+              setActiveAlert({
+                type: 'PAYMENT',
+                title: 'Payment Requested',
+                message: `Shopkeeper requested ₹${amt} (${curr.paymentMethod || 'Cash'}) for Order #${num}.`,
+                order: curr,
+              });
+              break;
+            } else if (prev.status !== 'COMPLETED' && curr.status === 'COMPLETED') {
+              setActiveAlert({
+                type: 'COMPLETED',
+                title: 'Order Completed!',
+                message: `Order #${num} has been successfully collected and completed.`,
+                order: curr,
+              });
+              break;
+            } else if (prev.status !== 'DECLINED' && curr.status === 'DECLINED') {
+              setActiveAlert({
+                type: 'DECLINED',
+                title: 'Order Declined',
+                message: `Order #${num} was declined by the shopkeeper.`,
+                order: curr,
+              });
+              break;
+            }
+          }
+        }
+      }
+
+      // Keep open order details in sync with live data
+      setSelectedDetailOrder((prevSelected) => {
+        if (!prevSelected) return null;
+        const updated = validOrders.find((o) => o.id === prevSelected.id);
+        return updated || prevSelected;
+      });
+
+      // Update ref cache
+      const map = {};
+      validOrders.forEach((o) => {
+        map[o.id] = { ...o };
+      });
+      prevOrdersMapRef.current = map;
     } catch (e) {
       console.error('Failed to load orders data:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [orders.length]);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
+      const interval = setInterval(() => {
+        loadData(true);
+      }, 5000);
+      return () => clearInterval(interval);
     }, [loadData])
   );
 
   const handleCancelOrder = async (orderId) => {
     Alert.alert(
-      'Cancel Order / Take Back',
-      'Are you sure you want to cancel / take back this order? Once cancelled, this action is final and locked.',
+      'Cancel Order',
+      'Are you sure you want to cancel this order? Once cancelled, this action is final and locked.',
       [
         { text: 'No, Keep Order', style: 'cancel' },
         {
@@ -103,7 +194,7 @@ export default function CustomerOrdersScreen({ navigation }) {
               Alert.alert('Success', 'Order cancelled successfully.');
               loadData();
             } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to cancel order.');
+              showErrorAlert(e, 'Cancel Order');
             }
           },
         },
@@ -128,7 +219,7 @@ export default function CustomerOrdersScreen({ navigation }) {
               Alert.alert('Success', 'Collection status recorded.');
               loadData();
             } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to update collection status.');
+              showErrorAlert(e, 'Collection Status');
             }
           },
         },
@@ -176,6 +267,37 @@ export default function CustomerOrdersScreen({ navigation }) {
         subtitle="All Orders & Receipts"
       />
 
+      {activeAlert && (
+        <TouchableOpacity
+          style={styles.activityAlertBanner}
+          activeOpacity={0.9}
+          onPress={() => {
+            if (activeAlert.order) {
+              setSelectedDetailOrder(activeAlert.order);
+            }
+            setActiveAlert(null);
+          }}
+        >
+          <View style={styles.alertIconCircle}>
+            <BellRing size={18} color="#ffffff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.alertTitle}>{activeAlert.title}</Text>
+            <Text style={styles.alertMsg}>{activeAlert.message}</Text>
+            <Text style={styles.alertTapText}>Tap to view order details &rarr;</Text>
+          </View>
+          <TouchableOpacity
+            style={{ padding: 4 }}
+            onPress={(e) => {
+              e.stopPropagation();
+              setActiveAlert(null);
+            }}
+          >
+            <X size={16} color="#ffffff" />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
+
       {loading ? (
         <View style={styles.centerBox}>
           <ActivityIndicator color={colors.primary} size="large" />
@@ -184,11 +306,17 @@ export default function CustomerOrdersScreen({ navigation }) {
       ) : (
         <ScrollView
           contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-          refreshing={refreshing}
-          onRefresh={() => {
-            setRefreshing(true);
-            loadData();
-          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                loadData();
+              }}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
         >
           {/* Lifetime Purchases Banner */}
           <View style={styles.lifetimeBanner}>
@@ -346,7 +474,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                     </View>
 
                     {/* Customer 4-Digit OTP Box when Ready */}
-                    {(order.status === 'READY' || order.status === 'COMPLETED') && (
+                    {order.status === 'READY' && (
                       <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
                         <Text style={{ fontSize: 13, fontWeight: '700', color: '#166534', marginBottom: 2 }}>
                           🎉 Your Order is Ready for Pickup!
@@ -370,6 +498,21 @@ export default function CustomerOrdersScreen({ navigation }) {
                       </View>
                     )}
 
+                    {/* Completed Order Confirmation Banner */}
+                    {order.status === 'COMPLETED' && (
+                      <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <CheckCircle size={18} color="#15803d" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: '#15803d' }}>
+                            ✓ Order Picked Up &amp; Completed
+                          </Text>
+                          <Text style={{ fontSize: 11, color: '#166534', marginTop: 1 }}>
+                            OTP verified. Items collected from shop.
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+
                     {/* Timeline & Details Action */}
                     <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                       <TouchableOpacity
@@ -385,7 +528,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                         activeOpacity={0.7}
                       >
                         <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '700' }}>
-                          📜 View Timeline &amp; Details
+                          Order Details
                         </Text>
                       </TouchableOpacity>
                       {(order.status === 'PENDING' || order.status === 'PACKING') && (
@@ -393,7 +536,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                           style={styles.cancelBtn}
                           onPress={() => handleCancelOrder(order.id)}
                         >
-                          <Text style={styles.cancelBtnText}>Cancel / Take Back Order</Text>
+                          <Text style={styles.cancelBtnText}>Cancel Order</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -468,6 +611,13 @@ export default function CustomerOrdersScreen({ navigation }) {
                         </View>
                         <Text style={styles.receiptTotal}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
                       </View>
+                      <TouchableOpacity
+                        style={[styles.viewReceiptBtn, { marginTop: 8 }]}
+                        onPress={() => setSelectedDetailOrder(order)}
+                      >
+                        <FileText size={13} color={colors.primary} />
+                        <Text style={styles.viewReceiptBtnText}>View Order Details &amp; Receipt</Text>
+                      </TouchableOpacity>
                     </View>
                   );
                 })}
@@ -780,5 +930,46 @@ const styles = StyleSheet.create({
   emptyCardText: {
     fontSize: 12,
     color: colors.textMuted,
+  },
+  activityAlertBanner: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 4,
+    backgroundColor: '#0284c7',
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#0284c7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  alertIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  alertTitle: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  alertMsg: {
+    color: '#f0f9ff',
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  alertTapText: {
+    color: '#bae6fd',
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 4,
   },
 });

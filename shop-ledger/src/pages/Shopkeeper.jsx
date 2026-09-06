@@ -8,6 +8,7 @@ import {
   getMyDetailedShop, updateMyDetailedShop, getCities, changePin, changePassword,
   parseTimings, formatTimings, verifyPin, getCustomers, updateUserProfile
 } from '../lib/api';
+import { notifyError } from '../lib/errorHandler';
 import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { MASTER_GROCERY_CATALOG, GROCERY_CATEGORIES } from '../lib/masterGroceryCatalog';
 import { 
@@ -58,6 +59,11 @@ export default function Shopkeeper() {
   const [declineReason, setDeclineReason] = useState('');
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderModalMode, setOrderModalMode] = useState('ACCEPT'); // 'ACCEPT' | 'DECLINE'
+
+  // Orders Filter & Search State
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderDateFilter, setOrderDateFilter] = useState('All'); // 'All' | 'Today' | 'Yesterday' | 'Older (>24h)'
+  const [orderStatusFilter, setOrderStatusFilter] = useState('All'); // 'All' | 'Pending' | 'Packing' | 'Ready' | 'Completed' | 'Cancelled'
 
   // Transactions & Analytics State
   const [sales, setSales] = useState([]);
@@ -135,16 +141,16 @@ export default function Shopkeeper() {
       setOwnerError('');
       setShowShopDetailsModal(true);
     } catch (e) {
-      alert('Error fetching shop details');
+      notifyError(e, 'Shop Details');
     }
   };
 
   const handleSaveShopDetails = async (e) => {
     e.preventDefault();
-    if (!isOwner) return alert('Only the shop owner can edit shop details.');
+    if (!isOwner) return notifyError('Only the shop owner can edit shop details.', 'Access Restricted');
     const cleanPhone = (shopForm.shopPhone || '').replace(/\D/g, '').slice(-10);
     if (cleanPhone.length !== 10) {
-      return alert('Please enter a valid 10-digit contact phone number.');
+      return notifyError('Please enter a valid 10-digit contact phone number.', 'Invalid Phone Number');
     }
     setShopSaving(true);
     setShopSaveNotice('');
@@ -157,7 +163,7 @@ export default function Shopkeeper() {
       setTimeout(() => setShopSaveNotice(''), 3000);
       loadInitialData();
     } catch (e) {
-      alert(e.message || 'Error updating shop details');
+      notifyError(e, 'Update Shop Details');
     } finally {
       setShopSaving(false);
     }
@@ -905,7 +911,7 @@ export default function Shopkeeper() {
       await updateShopOrderItems(order.id, items);
       loadOrdersData();
     } catch (e) {
-      alert(e.message || 'Failed to update item availability.');
+      notifyError(e, 'Item Availability');
     }
   };
 
@@ -924,7 +930,7 @@ export default function Shopkeeper() {
       setShowGetPaymentModal(false);
       loadOrdersData();
     } catch (e) {
-      alert(e.message || 'Failed to send payment request.');
+      notifyError(e, 'Payment Request');
     } finally {
       setPaymentSubmitting(false);
     }
@@ -942,6 +948,12 @@ export default function Shopkeeper() {
 
     try {
       await verifyShopOrderOTP(orderId, enteredOtp);
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'COMPLETED', otpCode: null } : o));
+      setOtpInputs(prev => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
       loadOrdersData();
     } catch (e) {
       setOtpErrorNotice(prev => ({ ...prev, [orderId]: e.message || 'Invalid OTP code.' }));
@@ -969,7 +981,7 @@ export default function Shopkeeper() {
       setTimeout(() => setAddedItemNotice(''), 2500);
       loadItemsData();
     } catch (e) {
-      alert('Error adding item');
+      notifyError(e, 'Add Inventory Item');
     }
   };
 
@@ -1182,201 +1194,374 @@ export default function Shopkeeper() {
         )}
 
         {/* TAB 2: INCOMING ORDERS */}
-        {activeTab === 'orders' && (
-          <div className="panel">
-            <h3 className="title" style={{ marginBottom: '1rem' }}>Incoming Customer Orders</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {orders.map(order => {
-                const items = JSON.parse(order.itemsJSON || '[]');
-                return (
-                  <div key={order.id} style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
-                    <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <div>
-                        <strong style={{ fontSize: '1.05rem' }}>Order #{order.orderNumber}</strong>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          From: <strong>{order.customerName}</strong> ({order.customerShortId || '—'}) • {order.customerPhone} • {new Date(order.createdAt).toLocaleTimeString()}
-                        </div>
-                      </div>
+        {activeTab === 'orders' && (() => {
+          const nowMs = Date.now();
+          const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          style={{ padding: '0.3rem 0.65rem', fontSize: '0.78rem', fontWeight: '700', background: '#fff' }}
-                          onClick={() => setSelectedTimelineOrder(order)}
-                        >
-                          📜 Timeline &amp; Details
-                        </button>
-                        <span className="badge" style={{
-                          background: order.status === 'PENDING' ? '#eff6ff' 
-                            : (order.status === 'PACKING' ? '#fef3c7' 
-                            : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
-                            : (order.status === 'COLLECTED' ? '#dcfce7' 
-                            : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
-                          color: order.status === 'PENDING' ? 'var(--primary)' 
-                            : (order.status === 'PACKING' ? '#b45309' 
-                            : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
-                            : (order.status === 'COLLECTED' ? '#15803d' 
-                            : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
-                          borderColor: 'transparent',
-                          padding: '0.35rem 0.65rem',
-                          fontWeight: '700'
-                        }}>
-                          {order.status === 'PENDING' && 'PENDING ACCEPTANCE (45m Window)'}
-                          {order.status === 'PACKING' && `PACKING (~${order.packingMinutes}m)`}
-                          {(order.status === 'COMPLETED' || order.status === 'READY') && 'READY (WAITING FOR CUSTOMER)'}
-                          {order.status === 'COLLECTED' && 'CUSTOMER COLLECTED'}
-                          {order.status === 'NOT_COLLECTED' && 'CUSTOMER MARKED NOT COLLECTED'}
-                          {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED BY CUSTOMER'}
-                          {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
-                          {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
+          const isOrderDateMatch = (dateStr) => {
+            if (!dateStr || orderDateFilter === 'All') return true;
+            const itemDate = new Date(dateStr);
+            const now = new Date();
+            if (orderDateFilter === 'Today') return itemDate.toDateString() === now.toDateString();
+            if (orderDateFilter === 'Yesterday') {
+              const yest = new Date(now);
+              yest.setDate(now.getDate() - 1);
+              return itemDate.toDateString() === yest.toDateString();
+            }
+            if (orderDateFilter === 'Older (>24h)') {
+              return nowMs - itemDate.getTime() >= twentyFourHoursMs;
+            }
+            return true;
+          };
+
+          const isOrderStatusMatch = (status) => {
+            if (orderStatusFilter === 'All') return true;
+            if (orderStatusFilter === 'Pending') return status === 'PENDING';
+            if (orderStatusFilter === 'Packing') return status === 'ACCEPTED' || status === 'PACKING';
+            if (orderStatusFilter === 'Ready') return status === 'READY';
+            if (orderStatusFilter === 'Completed') return status === 'COMPLETED' || status === 'COLLECTED';
+            if (orderStatusFilter === 'Cancelled') {
+              return ['CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED', 'NOT_COLLECTED'].includes(status);
+            }
+            return true;
+          };
+
+          const isOrderTextMatch = (ord) => {
+            if (!orderSearch.trim()) return true;
+            const q = orderSearch.toLowerCase().trim();
+            const ordNum = String(ord.orderNumber || ord.id || '').toLowerCase();
+            const cName = String(ord.customerName || '').toLowerCase();
+            const cPhone = String(ord.customerPhone || '').toLowerCase();
+            const cShortId = String(ord.customerShortId || '').toLowerCase();
+            return ordNum.includes(q) || cName.includes(q) || cPhone.includes(q) || cShortId.includes(q);
+          };
+
+          const filteredOrders = orders.filter(
+            (o) => isOrderDateMatch(o.createdAt || o.date) && isOrderStatusMatch(o.status) && isOrderTextMatch(o)
+          );
+
+          const activeOrders = filteredOrders.filter(
+            (o) => nowMs - new Date(o.createdAt || o.date).getTime() < twentyFourHoursMs && !['COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(o.status)
+          );
+
+          const pastOrders = filteredOrders.filter(
+            (o) => nowMs - new Date(o.createdAt || o.date).getTime() >= twentyFourHoursMs || ['COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(o.status)
+          );
+
+          const renderSingleOrder = (order, isPast = false) => {
+            const items = JSON.parse(order.itemsJSON || '[]');
+            const isOlderThan24h = (nowMs - new Date(order.createdAt).getTime()) >= twentyFourHoursMs;
+
+            return (
+              <div key={order.id} style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '1.15rem' }}>
+                <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong style={{ fontSize: '1.05rem' }}>Order #{order.orderNumber}</strong>
+                      {isOlderThan24h && (
+                        <span className="badge" style={{ background: '#f1f5f9', color: '#64748b', fontSize: '0.72rem', fontWeight: '700' }}>
+                          Past 24h
                         </span>
-                      </div>
+                      )}
                     </div>
-
-                    {order.status === 'PENDING' && (
-                      <div style={{ background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
-                        <strong>Action Required:</strong> Please accept &amp; set packing time within 45 minutes or this order will be automatically cancelled.
-                      </div>
-                    )}
-
-                    {order.status === 'AUTO_CANCELLED_EXPIRED' && (
-                      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#b91c1c' }}>
-                        This order was automatically cancelled because 45 minutes elapsed without acceptance.
-                      </div>
-                    )}
-
-                    <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
-                        <span>ORDER ITEMS</span>
-                        <span>{(['PENDING', 'PACKING'].includes(order.status)) ? 'Click to toggle item availability' : ''}</span>
-                      </div>
-                      {items.map((entry, idx) => {
-                        const itemName = entry.item?.name || entry.name || 'Item';
-                        const qty = entry.qty || 1;
-                        const rate = entry.rate || entry.price || (entry.item?.price) || 0;
-                        const amount = entry.amount || (rate * qty);
-                        const isUnavail = !!entry.isUnavailable;
-
-                        return (
-                          <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f8fafc', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#94a3b8' : 'inherit' }}>
-                            <div>
-                              <strong style={{ color: isUnavail ? '#94a3b8' : 'var(--text)' }}>{itemName}</strong> x {qty} @ ₹{Number(rate).toFixed(2)}
-                              {isUnavail && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', marginLeft: '0.5rem', fontSize: '0.7rem' }}>UNAVAILABLE</span>}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span>₹{Number(amount).toFixed(2)}</span>
-                              {(['PENDING', 'PACKING'].includes(order.status)) && (
-                                <button 
-                                  type="button" 
-                                  className={`btn ${isUnavail ? 'btn-outline' : 'btn-danger'}`}
-                                  style={{ padding: '0.15rem 0.45rem', fontSize: '0.72rem' }}
-                                  onClick={() => handleToggleItemUnavailable(order, idx)}
-                                >
-                                  {isUnavail ? 'Mark Available' : 'Mark Unavailable'}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
-                        <span>Total Payable:</span>
-                        <span style={{ color: 'var(--success)', fontSize: '1.1rem' }}>
-                          ₹{(Number(order.estimatedTotal || 0)).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                      {order.status === 'PENDING' && (
-                        <>
-                          <button type="button" className="btn btn-success" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleOpenOrderModal(order, 'ACCEPT')}>
-                            Accept &amp; Set Packing Time
-                          </button>
-                          <button type="button" className="btn btn-danger" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleOpenOrderModal(order, 'DECLINE')}>
-                            Decline
-                          </button>
-                        </>
-                      )}
-
-                      {order.status === 'PACKING' && (
-                        <>
-                          <button type="button" className="btn btn-success" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={async () => { await completeShopOrder(order.id); loadOrdersData(); }}>
-                            Mark Ready for Pickup
-                          </button>
-                        </>
-                      )}
-
-                      {(order.status === 'READY' || order.status === 'COMPLETED') && (
-                        <div style={{ width: '100%', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginTop: '0.5rem' }}>
-                          
-                          {/* Before Payment Is Requested */}
-                          {!order.paymentRequested ? (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              <div>
-                                <strong style={{ color: '#166534', fontSize: '0.9rem' }}>✓ Order Ready for Pickup</strong>
-                                <div style={{ fontSize: '0.8rem', color: '#854d0e', marginTop: '2px' }}>
-                                  ⚠️ No payment request sent yet. Click "Get Payment" to request payment.
-                                </div>
-                              </div>
-                              <button type="button" className="btn btn-primary" style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', fontWeight: '700' }} onClick={() => handleOpenGetPaymentModal(order)}>
-                                💳 Get Payment
-                              </button>
-                            </div>
-                          ) : (
-                            /* After Payment Is Requested */
-                            <div>
-                              <div style={{ marginBottom: '0.5rem' }}>
-                                <strong style={{ color: '#166534', fontSize: '0.9rem' }}>✓ Payment Requested</strong>
-                                <div style={{ fontSize: '0.82rem', color: '#15803d', marginTop: '2px' }}>
-                                  Amount: <strong>₹{(Number(order.requestedAmount) || 0).toFixed(2)}</strong> • Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong>
-                                </div>
-                              </div>
-
-                              {/* 4-Digit OTP Verification Box (Only shown after payment is requested) */}
-                              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.65rem', marginTop: '0.5rem' }}>
-                                <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text)', marginBottom: '0.4rem' }}>
-                                  Enter Customer OTP
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                  <input 
-                                    type="text"
-                                    maxLength={4}
-                                    className="input"
-                                    style={{ margin: 0, width: '120px', fontSize: '1.1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '4px', padding: '0.35rem' }}
-                                    placeholder="[ _ _ _ _ ]"
-                                    value={otpInputs[order.id] || ''}
-                                    onChange={(e) => setOtpInputs({ ...otpInputs, [order.id]: e.target.value.replace(/\D/g, '') })}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="btn btn-success"
-                                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', fontWeight: '700' }}
-                                    disabled={otpSubmitting[order.id]}
-                                    onClick={() => handleVerifyOtpHandover(order.id)}
-                                  >
-                                    {otpSubmitting[order.id] ? 'Verifying...' : 'Verify OTP & Complete'}
-                                  </button>
-                                </div>
-                                {otpErrorNotice[order.id] && (
-                                  <div style={{ fontSize: '0.78rem', color: '#b91c1c', marginTop: '0.3rem', fontWeight: '600' }}>
-                                    ⚠️ {otpErrorNotice[order.id]}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      From: <strong>{order.customerName}</strong> ({order.customerShortId || '—'}) • {order.customerPhone} • {new Date(order.createdAt).toLocaleString()}
                     </div>
                   </div>
-                );
-              })}
-              {orders.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No incoming orders at the moment.</p>}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: '700', background: '#fff' }}
+                      onClick={() => setSelectedTimelineOrder(order)}
+                    >
+                      Order Details
+                    </button>
+                    <span className="badge" style={{
+                      background: order.status === 'PENDING' ? '#eff6ff' 
+                        : (order.status === 'PACKING' ? '#fef3c7' 
+                        : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
+                        : (order.status === 'COLLECTED' ? '#dcfce7' 
+                        : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
+                      color: order.status === 'PENDING' ? 'var(--primary)' 
+                        : (order.status === 'PACKING' ? '#b45309' 
+                        : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
+                        : (order.status === 'COLLECTED' ? '#15803d' 
+                        : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
+                      borderColor: 'transparent',
+                      padding: '0.35rem 0.65rem',
+                      fontWeight: '700'
+                    }}>
+                      {order.status === 'PENDING' && 'PENDING'}
+                      {order.status === 'PACKING' && `PACKING (~${order.packingMinutes}m)`}
+                      {(order.status === 'COMPLETED' || order.status === 'READY') && 'READY (WAITING FOR CUSTOMER)'}
+                      {order.status === 'COLLECTED' && 'CUSTOMER COLLECTED'}
+                      {order.status === 'NOT_COLLECTED' && 'CUSTOMER MARKED NOT COLLECTED'}
+                      {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED BY CUSTOMER'}
+                      {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
+                      {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
+                    </span>
+                  </div>
+                </div>
+
+                {order.status === 'AUTO_CANCELLED_EXPIRED' && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.4rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#b91c1c' }}>
+                    This order was automatically cancelled because 45 minutes elapsed without acceptance.
+                  </div>
+                )}
+
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>ORDER ITEMS</span>
+                    <span>{(['PENDING', 'PACKING'].includes(order.status)) ? 'Click to toggle item availability' : ''}</span>
+                  </div>
+                  {items.map((entry, idx) => {
+                    const itemName = entry.item?.name || entry.name || 'Item';
+                    const qty = entry.qty || 1;
+                    const rate = entry.rate || entry.price || (entry.item?.price) || 0;
+                    const amount = entry.amount || (rate * qty);
+                    const isUnavail = !!entry.isUnavailable;
+
+                    return (
+                      <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f8fafc', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#94a3b8' : 'inherit' }}>
+                        <div>
+                          <strong style={{ color: isUnavail ? '#94a3b8' : 'var(--text)' }}>{itemName}</strong> x {qty} @ ₹{Number(rate).toFixed(2)}
+                          {isUnavail && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', marginLeft: '0.5rem', fontSize: '0.7rem' }}>UNAVAILABLE</span>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>₹{Number(amount).toFixed(2)}</span>
+                          {(['PENDING', 'PACKING'].includes(order.status)) && (
+                            <button 
+                              type="button" 
+                              className={`btn ${isUnavail ? 'btn-outline' : 'btn-danger'}`}
+                              style={{ padding: '0.15rem 0.45rem', fontSize: '0.72rem' }}
+                              onClick={() => handleToggleItemUnavailable(order, idx)}
+                            >
+                              {isUnavail ? 'Mark Available' : 'Mark Unavailable'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
+                    <span>Total Payable:</span>
+                    <span style={{ color: 'var(--success)', fontSize: '1.1rem' }}>
+                      ₹{(Number(order.estimatedTotal || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {order.status === 'PENDING' && (
+                    <>
+                      <button type="button" className="btn btn-success" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleOpenOrderModal(order, 'ACCEPT')}>
+                        Accept &amp; Set Packing Time
+                      </button>
+                      <button type="button" className="btn btn-danger" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleOpenOrderModal(order, 'DECLINE')}>
+                        Decline
+                      </button>
+                    </>
+                  )}
+
+                  {order.status === 'PACKING' && (
+                    <>
+                      <button type="button" className="btn btn-success" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={async () => { await completeShopOrder(order.id); loadOrdersData(); }}>
+                        Mark Ready for Pickup
+                      </button>
+                    </>
+                  )}
+
+                  {order.status === 'READY' && (
+                    <div style={{ width: '100%', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginTop: '0.5rem' }}>
+                      {!order.paymentRequested ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div>
+                            <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Order Ready for Pickup</strong>
+                            <div style={{ fontSize: '0.8rem', color: '#854d0e', marginTop: '2px' }}>
+                              No payment request sent yet. Click "Get Payment" to request payment.
+                            </div>
+                          </div>
+                          <button type="button" className="btn btn-primary" style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem', fontWeight: '700' }} onClick={() => handleOpenGetPaymentModal(order)}>
+                            Get Payment
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ marginBottom: '0.5rem' }}>
+                            <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Payment Requested</strong>
+                            <div style={{ fontSize: '0.82rem', color: '#15803d', marginTop: '2px' }}>
+                              Amount: <strong>₹{(Number(order.requestedAmount) || 0).toFixed(2)}</strong> • Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong>
+                            </div>
+                          </div>
+
+                          <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.65rem', marginTop: '0.5rem' }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text)', marginBottom: '0.4rem' }}>
+                              Enter Customer OTP
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <input 
+                                type="text"
+                                maxLength={4}
+                                className="input"
+                                style={{ margin: 0, width: '120px', fontSize: '1.1rem', fontWeight: '800', textAlign: 'center', letterSpacing: '4px', padding: '0.35rem' }}
+                                placeholder="[ _ _ _ _ ]"
+                                value={otpInputs[order.id] || ''}
+                                onChange={(e) => setOtpInputs({ ...otpInputs, [order.id]: e.target.value.replace(/\D/g, '') })}
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-success"
+                                style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', fontWeight: '700' }}
+                                disabled={otpSubmitting[order.id]}
+                                onClick={() => handleVerifyOtpHandover(order.id)}
+                              >
+                                {otpSubmitting[order.id] ? 'Verifying...' : 'Verify OTP & Complete'}
+                              </button>
+                            </div>
+                            {otpErrorNotice[order.id] && (
+                              <div style={{ fontSize: '0.78rem', color: '#b91c1c', marginTop: '0.3rem', fontWeight: '600' }}>
+                                {otpErrorNotice[order.id]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {order.status === 'COMPLETED' && (
+                    <div style={{ width: '100%', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.65rem 0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '0.85rem' }}>
+                      <CheckCircle size={16} color="#166534" /> Order Completed &amp; Handed Over
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          };
+
+          return (
+            <div className="panel">
+              <div className="flex-between" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h3 className="title" style={{ margin: 0 }}>Incoming Customer Orders</h3>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    {activeOrders.length} active live orders • {pastOrders.length} past orders
+                  </div>
+                </div>
+
+                {/* Search Bar */}
+                <div style={{ position: 'relative', minWidth: '240px' }}>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Search order #, customer, phone..."
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    style={{ margin: 0, padding: '0.4rem 2rem 0.4rem 0.75rem', fontSize: '0.84rem' }}
+                  />
+                  {orderSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setOrderSearch('')}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Filters Row */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.65rem', flexWrap: 'wrap' }}>
+                {['All', 'Today', 'Yesterday', 'Older (>24h)'].map((df) => (
+                  <button
+                    key={df}
+                    type="button"
+                    className={`btn ${orderDateFilter === df ? 'btn-primary' : 'btn-outline'}`}
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.78rem', fontWeight: '700' }}
+                    onClick={() => setOrderDateFilter(df)}
+                  >
+                    {df === 'All' ? 'All Dates' : df}
+                  </button>
+                ))}
+              </div>
+
+              {/* Status Filters Row */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                {['All', 'Pending', 'Packing', 'Ready', 'Completed', 'Cancelled'].map((sf) => (
+                  <button
+                    key={sf}
+                    type="button"
+                    className={`btn ${orderStatusFilter === sf ? 'btn-primary' : 'btn-outline'}`}
+                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.78rem', fontWeight: '700' }}
+                    onClick={() => setOrderStatusFilter(sf)}
+                  >
+                    {sf === 'All' ? 'All Status' : sf}
+                  </button>
+                ))}
+              </div>
+
+              {/* SECTION 1: ACTIVE ORDERS (<24H) */}
+              {orderDateFilter !== 'Older (>24h)' && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#0f172a' }}>
+                      Active Orders (&lt;24h)
+                    </h4>
+                    <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: '800' }}>
+                      {activeOrders.length} Active
+                    </span>
+                  </div>
+
+                  {activeOrders.length === 0 ? (
+                    <div style={{ background: '#f8fafc', border: '1px dashed var(--border)', borderRadius: '8px', padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      No active orders under 24 hours.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {activeOrders.map(o => renderSingleOrder(o, false))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SECTION 2: PAST ORDERS (>24H & FINALIZED) */}
+              <div>
+                <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#0f172a' }}>
+                      Past Orders (&gt;24h &amp; Finalized)
+                    </h4>
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      Orders older than 24 hours or collected/cancelled
+                    </div>
+                  </div>
+                  <span className="badge" style={{ background: '#f1f5f9', color: '#64748b', fontWeight: '800' }}>
+                    {pastOrders.length} History
+                  </span>
+                </div>
+
+                {pastOrders.length === 0 ? (
+                  <div style={{ background: '#f8fafc', border: '1px dashed var(--border)', borderRadius: '8px', padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    No past orders matching filters.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {pastOrders.map(o => renderSingleOrder(o, true))}
+                  </div>
+                )}
+              </div>
+
+              {activeOrders.length === 0 && pastOrders.length === 0 && (
+                <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>
+                  No orders match your selected search or filter criteria.
+                </p>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* TAB 3: KHATA LEDGER */}
         {activeTab === 'khata' && <CustomerLedger currentShop={currentShop} />}

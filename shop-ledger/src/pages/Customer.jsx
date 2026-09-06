@@ -6,6 +6,7 @@ import {
   updateUserProfile, changePin, changePassword, verifyPin, getCustomerKhata, getCustomerShopKhata,
   cancelCustomerOrder, updateOrderCollection
 } from '../lib/api';
+import { notifyError } from '../lib/errorHandler';
 import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { 
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
@@ -250,7 +251,7 @@ export default function Customer() {
       setOrderErrorMsg('');
       setOrderSuccessMsg('');
     } catch (e) {
-      alert(e.message || 'Failed to open shop catalog');
+      notifyError(e, 'Shop Catalog');
     }
   };
 
@@ -265,7 +266,7 @@ export default function Customer() {
         setSelectedOrderForDetails({ ...selectedOrderForDetails, status: 'CANCELLED_BY_CUSTOMER' });
       }
     } catch (e) {
-      alert(e.message || 'Failed to cancel order.');
+      notifyError(e, 'Cancel Order');
     }
   };
 
@@ -283,7 +284,7 @@ export default function Customer() {
         setSelectedOrderForDetails({ ...selectedOrderForDetails, status: collectionStatus, collectionStatus });
       }
     } catch (e) {
-      alert(e.message || 'Failed to update collection status.');
+      notifyError(e, 'Collection Status');
     }
   };
 
@@ -799,7 +800,7 @@ export default function Customer() {
       setOrderErrorMsg('');
       setOrderSuccessMsg('');
     } catch (e) {
-      alert(e.message || 'Failed to load shop');
+      notifyError(e, 'Shop Catalog');
     }
   };
 
@@ -969,7 +970,7 @@ export default function Customer() {
       await respondToInvite(inviteId, action);
       loadUserData();
     } catch (e) {
-      alert(e.message || 'Failed to respond to invite');
+      notifyError(e, 'Store Invitation');
     }
   };
 
@@ -2253,7 +2254,7 @@ export default function Customer() {
                           </div>
 
                           {/* Customer Confirmation & 4-Digit OTP Box when Ready */}
-                          {(order.status === 'READY' || order.status === 'COMPLETED') && (
+                          {order.status === 'READY' && (
                             <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0' }}>
                               <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.9rem', marginBottom: '0.35rem' }}>
                                 🎉 Your Order is Packed &amp; Ready for Pickup!
@@ -2275,24 +2276,30 @@ export default function Customer() {
                             </div>
                           )}
 
+                          {order.status === 'COMPLETED' && (
+                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.65rem 0.85rem', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '0.85rem' }}>
+                              <CheckCircle size={16} color="#166534" /> Order Picked Up &amp; Completed
+                            </div>
+                          )}
+
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                               <button
                                 type="button"
                                 className="btn btn-outline"
-                                style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: '700' }}
+                                style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem', fontWeight: '700', background: '#fff' }}
                                 onClick={() => setSelectedTimelineOrder(order)}
                               >
-                                📜 Timeline &amp; Details
+                                Order Details
                               </button>
                               {(order.status === 'PENDING' || order.status === 'PACKING') && (
                                 <button 
                                   type="button" 
                                   className="btn btn-outline" 
-                                  style={{ color: '#ef4444', borderColor: '#fca5a5', padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
+                                  style={{ color: '#ef4444', borderColor: '#fca5a5', padding: '0.4rem 0.85rem', fontSize: '0.82rem', fontWeight: '600', background: '#fff' }}
                                   onClick={(e) => { e.stopPropagation(); handleCancelCustomerOrder(order.id); }}
                                 >
-                                  🚫 Cancel Order / Take Back
+                                  Cancel Order
                                 </button>
                               )}
                               {['COLLECTED', 'NOT_COLLECTED', 'CANCELLED_BY_CUSTOMER'].includes(order.status) && (
@@ -2301,15 +2308,6 @@ export default function Customer() {
                                 </span>
                               )}
                             </div>
-
-                            <button 
-                              type="button" 
-                              className="btn btn-outline" 
-                              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-                              onClick={(e) => { e.stopPropagation(); setSelectedOrderForDetails(order); }}
-                            >
-                              <FileText size={14} /> View Details &amp; Slip →
-                            </button>
                           </div>
                         </div>
                       );
@@ -2611,7 +2609,8 @@ export default function Customer() {
                 }}>
                   {selectedOrderForDetails.status === 'PACKING' && `PACKING (ETA: ~${selectedOrderForDetails.packingMinutes} mins)`}
                   {selectedOrderForDetails.status === 'PENDING' && 'PENDING CONFIRMATION'}
-                  {(selectedOrderForDetails.status === 'COMPLETED' || selectedOrderForDetails.status === 'READY') && 'PACKED & READY FOR PICKUP'}
+                  {selectedOrderForDetails.status === 'READY' && 'PACKED & READY FOR PICKUP'}
+                  {selectedOrderForDetails.status === 'COMPLETED' && 'COMPLETED & HANDED OVER'}
                   {selectedOrderForDetails.status === 'COLLECTED' && 'COLLECTED BY YOU (LOCKED)'}
                   {selectedOrderForDetails.status === 'NOT_COLLECTED' && 'MARKED NOT COLLECTED (LOCKED)'}
                   {selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED / TAKEN BACK (LOCKED)'}
@@ -2620,7 +2619,7 @@ export default function Customer() {
               </div>
 
               {/* Ready Confirmation Banner inside Details Modal */}
-              {(selectedOrderForDetails.status === 'READY' || selectedOrderForDetails.status === 'COMPLETED') && (
+              {selectedOrderForDetails.status === 'READY' && (
                 <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem' }}>
                   <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <CheckCircle size={15} /> Shopkeeper marked this order ready! Did you collect it?
@@ -2643,6 +2642,12 @@ export default function Customer() {
                       ✗ Not Collected
                     </button>
                   </div>
+                </div>
+              )}
+
+              {selectedOrderForDetails.status === 'COMPLETED' && (
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '0.85rem' }}>
+                  <CheckCircle size={16} /> Order Picked Up &amp; Completed
                 </div>
               )}
 

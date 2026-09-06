@@ -15,6 +15,7 @@ import {
 import { X, Package, Check, Sparkles, Plus } from 'lucide-react-native';
 import { colors, shadowLarge, shadowStyle } from '../theme/colors';
 import { MASTER_GROCERY_CATALOG } from '../data/masterGroceryCatalog';
+import { showErrorAlert, validatePrice } from '../utils/errorHandler';
 
 const UNITS = ['Piece', 'Kilo', 'Litre'];
 
@@ -68,12 +69,12 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert('Required', 'Please enter item name.');
+      showErrorAlert('Please enter a product or item name.', 'Item Name Required');
       return;
     }
-    const numPrice = parseFloat(price);
-    if (isNaN(numPrice) || numPrice <= 0) {
-      Alert.alert('Required', 'Please enter a valid selling price.');
+    const priceCheck = validatePrice(price, 'Selling price');
+    if (!priceCheck.valid) {
+      showErrorAlert(priceCheck.error, 'Invalid Price');
       return;
     }
 
@@ -82,12 +83,12 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
       await onSave({
         id: product?.id,
         name: name.trim(),
-        price: numPrice,
+        price: priceCheck.value,
         unit,
       });
       onClose();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to save item.');
+      showErrorAlert(e, 'Inventory Error', 'Failed to save product details.');
     } finally {
       setSubmitting(false);
     }

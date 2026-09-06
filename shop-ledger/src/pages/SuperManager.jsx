@@ -5,6 +5,7 @@ import {
   terminateShop, reactivateShop, terminateUser, reactivateUser, resetAdminPin,
   changeAdminShopCity, deleteAdminShop, getSupportSettings, updateSupportSettings, getAdminSyncedContacts
 } from '../lib/api';
+import { notifyError } from '../lib/errorHandler';
 import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone, UserCheck, AlertOctagon, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
@@ -84,7 +85,7 @@ export default function SuperManager() {
       setSupportNotice(res?.message || 'Support contact settings updated successfully!');
       setTimeout(() => setSupportNotice(''), 4000);
     } catch (err) {
-      alert(err?.message || 'Failed to update support settings.');
+      notifyError(err, 'Support Settings');
     } finally {
       setSupportSaving(false);
     }
@@ -109,14 +110,14 @@ export default function SuperManager() {
     const customPin = prompt(`Enter new 4-digit PIN for ${name} (${shortId}):`, '1234');
     if (customPin === null) return;
     if (!/^\d{4}$/.test(customPin.trim())) {
-      return alert('PIN must be exactly 4 numeric digits.');
+      return notifyError('PIN must be exactly 4 numeric digits.', 'PIN Validation');
     }
     try {
       const targetUserId = userObj?.ownerId || userObj?.id;
       const res = await resetAdminPin(targetUserId, customPin.trim());
       alert(res?.message || `PIN reset successfully to ${customPin.trim()}!`);
     } catch (e) {
-      alert(e?.message || 'Failed to reset PIN.');
+      notifyError(e, 'Reset PIN');
     }
   };
 
@@ -130,7 +131,7 @@ export default function SuperManager() {
       alert(res?.message || `Shop city successfully changed to ${chosenCity.trim()}!`);
       loadData();
     } catch (e) {
-      alert(e?.message || 'Failed to update shop city.');
+      notifyError(e, 'Change Shop City');
     }
   };
 
@@ -143,7 +144,7 @@ export default function SuperManager() {
       else await reactivateShop(shop.id);
       loadData();
     } catch (e) {
-      alert(e?.message || 'Failed to update shop status.');
+      notifyError(e, 'Shop Status');
     }
   };
 
@@ -177,7 +178,7 @@ export default function SuperManager() {
       handleCloseDeleteModal();
       loadData();
     } catch (err) {
-      alert(err?.message || 'Failed to delete shop');
+      notifyError(err, 'Delete Shop');
     } finally {
       setIsDeletingShop(false);
     }
@@ -192,7 +193,7 @@ export default function SuperManager() {
       else await reactivateUser(user.id);
       loadData();
     } catch (e) {
-      alert(e?.message || 'Failed to update user status.');
+      notifyError(e, 'User Status');
     }
   };
 
@@ -209,7 +210,7 @@ export default function SuperManager() {
       const updatedCities = await getAdminCities();
       setCities(Array.isArray(updatedCities) ? updatedCities : []);
     } catch (err) {
-      alert(err?.message || 'Failed to add city.');
+      notifyError(err, 'Add City');
     }
   };
 
@@ -225,7 +226,7 @@ export default function SuperManager() {
       const updatedCities = await getAdminCities();
       setCities(Array.isArray(updatedCities) ? updatedCities : []);
     } catch (err) {
-      alert(err?.message || 'Failed to delete city.');
+      notifyError(err, 'Delete City');
     }
   };
 

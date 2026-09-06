@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCustomers, saveCustomer, saveSale, searchRegisteredCustomer } from '../lib/api';
+import { notifyError } from '../lib/errorHandler';
 import { 
   Search, Plus, Trash2, X, Receipt, UserCheck, AlertCircle, ShieldAlert, MessageSquare,
   ShoppingCart, ArrowRight, Minus, UserPlus, CreditCard, Banknote, BookOpen, Check
@@ -266,18 +267,18 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
       setAppQuery('');
       setAppSearchResults([]);
     } catch (e) {
-      alert('Failed to link customer to Khata.');
+      notifyError(e, 'Khata Link Error');
     }
   };
 
   const handleCheckout = async () => {
     if (paymentMethod === 'Add to Book') {
       if (!selectedCustomer) {
-        alert('Khata Credit Billing Error: "Add to Book" requires selecting a registered app customer with a Short ID / Email.');
+        notifyError('Khata Credit Billing Error: "Add to Book" requires selecting a registered app customer with a Short ID / Email.', 'Khata Customer Required');
         return;
       }
       if (!selectedCustomer.shortId) {
-        alert('Khata Restriction: "Add to Book" (Khata credit) is strictly restricted to app-registered customers with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.\n\nPlease click "Link Email / Short ID" to search and assign the customer\'s app account.');
+        notifyError('Khata Restriction: "Add to Book" (Khata credit) is strictly restricted to app-registered customers with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.\n\nPlease click "Link Email / Short ID" to search and assign the customer\'s app account.', 'Registered App Account Required');
         return;
       }
     }
@@ -303,7 +304,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
       if (onSaleComplete) onSaleComplete();
       if (onClearPrefill) onClearPrefill();
     } catch (e) {
-      alert(e.message || 'Error saving sale');
+      notifyError(e, 'Billing Error');
     }
   };
 

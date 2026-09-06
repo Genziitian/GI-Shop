@@ -24,6 +24,7 @@ import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import { getItems, saveItem, editItem, deleteItem } from '../../api/client';
 import Header from '../../components/Header';
 import EditProductModal from '../../components/EditProductModal';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function InventoryScreen() {
   const [items, setItems] = useState([]);
@@ -80,7 +81,7 @@ export default function InventoryScreen() {
               await deleteItem(item.id);
               loadInventory();
             } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to delete item.');
+              showErrorAlert(e, 'Delete Item');
             }
           },
         },

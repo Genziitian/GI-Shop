@@ -4,6 +4,8 @@ const getToken = () => localStorage.getItem('token');
 
 let isRedirectingToLogin = false;
 
+import { parseError } from './errorHandler';
+
 export const request = async (endpoint, options = {}) => {
   const token = getToken();
   const headers = {
@@ -12,33 +14,65 @@ export const request = async (endpoint, options = {}) => {
     ...options.headers
   };
   
-  const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-  const contentType = res.headers.get('content-type') || '';
-  
-  if (!contentType.includes('application/json')) {
-    if (!res.ok) {
-      throw new Error(`Server returned status ${res.status} (${res.statusText})`);
-    }
-    throw new Error('Backend API server returned HTML instead of JSON. Ensure the Node.js backend server is running.');
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-  const data = await res.json();
-  if (!res.ok) {
-    if (res.status === 401 && token && !endpoint.startsWith('/login') && !endpoint.startsWith('/auth/google')) {
-      if (!isRedirectingToLogin) {
-        isRedirectingToLogin = true;
-        console.warn('[API] Token expired or invalid. Clearing session and redirecting to login.');
-        localStorage.removeItem('token');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('shopData');
-        localStorage.removeItem('gi_last_path');
-        window.location.href = '/';
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers, signal: controller.signal });
+    clearTimeout(timeoutId);
+    const contentType = res.headers.get('content-type') || '';
+    
+    if (!contentType.includes('application/json')) {
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status} (${res.statusText})`);
       }
+      throw new Error('Backend API server returned HTML instead of JSON. Ensure the Node.js backend server is running.');
     }
-    throw new Error(data.error || 'API Error');
+
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 401 && token && !endpoint.startsWith('/login') && !endpoint.startsWith('/auth/google')) {
+        if (!isRedirectingToLogin) {
+          isRedirectingToLogin = true;
+          console.warn('[API] Token expired or invalid. Clearing session and redirecting to login.');
+          localStorage.removeItem('token');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userData');
+          localStorage.removeItem('shopData');
+          localStorage.removeItem('gi_last_path');
+          window.location.href = '/';
+        }
+      }
+      const rawError = data.error || data.message || `Request failed (${res.status})`;
+      const parsed = parseError({ status: res.status, message: rawError });
+      const err = new Error(parsed.message);
+      err.title = parsed.title;
+      err.status = res.status;
+      err.type = parsed.type;
+      throw err;
+    }
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      const timeoutErr = new Error('Connection timeout: Server took too long to respond. Please check your internet connection.');
+      timeoutErr.title = 'Connection Timeout';
+      timeoutErr.type = 'network';
+      throw timeoutErr;
+    }
+    if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
+      const netErr = new Error('Unable to connect to GI SHOP server. Please check your internet connection and verify the server is running.');
+      netErr.title = 'Network Error';
+      netErr.type = 'network';
+      throw netErr;
+    }
+    const parsed = parseError(error);
+    const enriched = new Error(parsed.message);
+    enriched.title = parsed.title;
+    enriched.status = error.status;
+    enriched.type = parsed.type;
+    throw enriched;
   }
-  return data;
 };
 
 // Auth & Profile

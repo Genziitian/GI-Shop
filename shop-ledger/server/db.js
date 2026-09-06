@@ -50,6 +50,8 @@ if (DB_TYPE === 'mysql') {
     s = s.replace(/INSERT\s+OR\s+IGNORE\s+INTO/gi, 'INSERT IGNORE INTO');
     // Replace SQLite INSERT OR REPLACE with MySQL REPLACE INTO
     s = s.replace(/INSERT\s+OR\s+REPLACE\s+INTO/gi, 'REPLACE INTO');
+    // Replace SQLite ON CONFLICT(...) DO UPDATE SET with MySQL ON DUPLICATE KEY UPDATE
+    s = s.replace(/ON\s+CONFLICT\s*\([^)]*\)\s*DO\s+UPDATE\s+SET/gi, 'ON DUPLICATE KEY UPDATE');
     return s;
   }
 
@@ -284,6 +286,19 @@ if (DB_TYPE === 'mysql') {
         syncedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_synced_shop (shopId),
         INDEX idx_synced_phone (contactPhone)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+      `CREATE TABLE IF NOT EXISTS Notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        body TEXT NOT NULL,
+        type VARCHAR(50) DEFAULT 'ORDER_UPDATE',
+        orderId INT NULL,
+        orderNumber VARCHAR(50) NULL,
+        isRead TINYINT(1) DEFAULT 0,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_notifications_user (userId, isRead)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
     ];
 
@@ -305,10 +320,20 @@ if (DB_TYPE === 'mysql') {
     pool.query(`ALTER TABLE Orders ADD COLUMN paymentMethod VARCHAR(50) NULL`, () => {});
     pool.query(`ALTER TABLE Orders ADD COLUMN timelineJSON LONGTEXT NULL`, () => {});
 
-    // Seed baseline cities
-    const defaultCities = ['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'];
-    defaultCities.forEach(cName => {
-      pool.query(`INSERT IGNORE INTO Cities (name, status) VALUES (?, 'ACTIVE')`, [cName], () => {});
+    // Seed baseline cities ONLY ONCE on initial bootstrap
+    pool.query(`SELECT settingValue FROM PlatformSettings WHERE settingKey = 'baseline_cities_seeded'`, (err, rows) => {
+      if (!err && (!rows || rows.length === 0)) {
+        pool.query(`SELECT COUNT(*) as count FROM Cities`, (cErr, cRows) => {
+          const existingCount = cRows && cRows[0] ? Number(cRows[0].count || 0) : 0;
+          if (existingCount === 0) {
+            const defaultCities = ['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'];
+            defaultCities.forEach(cName => {
+              pool.query(`INSERT IGNORE INTO Cities (name, status) VALUES (?, 'ACTIVE')`, [cName], () => {});
+            });
+          }
+          pool.query(`INSERT INTO PlatformSettings (settingKey, settingValue) VALUES ('baseline_cities_seeded', '1') ON DUPLICATE KEY UPDATE settingValue = '1'`, () => {});
+        });
+      }
     });
 
     // Optional Super Administrator Bootstrap
@@ -367,9 +392,25 @@ if (DB_TYPE === 'mysql') {
       createdAt TEXT
     )`);
 
-    const defaultCities = ['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'];
-    defaultCities.forEach(cName => {
-      sqliteDb.run(`INSERT OR IGNORE INTO Cities (name, status, createdAt) VALUES (?, 'ACTIVE', ?)`, [cName, new Date().toISOString()]);
+    sqliteDb.run(`CREATE TABLE IF NOT EXISTS PlatformSettings (
+      settingKey TEXT PRIMARY KEY,
+      settingValue TEXT
+    )`);
+
+    // Seed baseline cities ONLY ONCE on initial bootstrap
+    sqliteDb.get(`SELECT settingValue FROM PlatformSettings WHERE settingKey = 'baseline_cities_seeded'`, (err, row) => {
+      if (!err && !row) {
+        sqliteDb.get(`SELECT COUNT(*) as count FROM Cities`, (cErr, cRow) => {
+          const existingCount = cRow ? Number(cRow.count || 0) : 0;
+          if (existingCount === 0) {
+            const defaultCities = ['Delhi', 'Mumbai', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Jaipur', 'Ahmedabad', 'Pune', 'Lucknow', 'Chandigarh', 'Indore'];
+            defaultCities.forEach(cName => {
+              sqliteDb.run(`INSERT OR IGNORE INTO Cities (name, status, createdAt) VALUES (?, 'ACTIVE', ?)`, [cName, new Date().toISOString()]);
+            });
+          }
+          sqliteDb.run(`INSERT OR REPLACE INTO PlatformSettings (settingKey, settingValue) VALUES ('baseline_cities_seeded', '1')`);
+        });
+      }
     });
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS Users (
@@ -539,6 +580,18 @@ if (DB_TYPE === 'mysql') {
       contactEmail TEXT,
       source TEXT DEFAULT 'DEVICE_IMPORT',
       syncedAt TEXT
+    )`);
+
+    sqliteDb.run(`CREATE TABLE IF NOT EXISTS Notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      type TEXT DEFAULT 'ORDER_UPDATE',
+      orderId INTEGER NULL,
+      orderNumber TEXT NULL,
+      isRead INTEGER DEFAULT 0,
+      createdAt TEXT
     )`);
 
     // Performance Indexes

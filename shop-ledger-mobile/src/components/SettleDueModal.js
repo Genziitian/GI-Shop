@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { X, Check, DollarSign } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
+import { showErrorAlert, validatePrice } from '../utils/errorHandler';
 
 export default function SettleDueModal({ visible, customer, onClose, onSettleSuccess }) {
   const [amount, setAmount] = useState('');
@@ -29,9 +30,19 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
   if (!customer) return null;
 
   const handleSettle = async () => {
-    const num = parseFloat(amount);
-    if (!num || num <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid repayment amount.');
+    const check = validatePrice(amount, 'Repayment amount');
+    if (!check.valid) {
+      showErrorAlert(check.error, 'Invalid Amount');
+      return;
+    }
+
+    const num = check.value;
+    const due = Number(customer.totalDue) || 0;
+    if (due > 0 && num > due) {
+      showErrorAlert(
+        `Repayment amount (₹${num.toFixed(2)}) cannot exceed the customer's total outstanding due of ₹${due.toFixed(2)}.`,
+        'Amount Exceeds Due'
+      );
       return;
     }
 
@@ -44,7 +55,7 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
       });
       onClose();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to record settlement.');
+      showErrorAlert(e, 'Settlement Error', 'Failed to record repayment.');
     } finally {
       setSubmitting(false);
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCustomers, getCustomerLedger, saveSettlement, terminateCustomer, blockCustomer, unblockCustomer, getMyDetailedShop, searchRegisteredCustomer, saveCustomer } from '../lib/api';
+import { notifyError } from '../lib/errorHandler';
 import { ArrowLeft, Search, Plus, Ban, CheckCircle, ShieldAlert, X, MessageCircle, UserCheck, Receipt, Printer } from 'lucide-react';
 import { CustomerListSkeleton } from './SkeletonLoader';
 
@@ -45,17 +46,49 @@ export default function CustomerLedger({ currentShop }) {
     setLoadingData(true);
     try {
       const data = await getCustomers();
-      const custsWithDue = await Promise.all(data.map(async c => {
-        const led = await getCustomerLedger(c.customerPhone);
-        let due = 0;
-        led.sales.filter(s => s.paymentMethod === 'Add to Book').forEach(s => due += (s.total || 0));
-        led.settlements.forEach(s => due -= (s.amount || 0));
-        return { 
-          ...c, 
-          totalDue: due, 
-          phone: c.customerPhone,
-          shortId: c.shortId || ''
-        };
+      const custList = Array.isArray(data) ? data : [];
+      const custsWithDue = await Promise.all(custList.map(async c => {
+        const phone = (c.phone || c.customerPhone || '').trim();
+        const shortId = (c.shortId || c.customerShortId || '').trim();
+        const idOrPhone = phone || shortId;
+
+        if (c.totalDue !== undefined) {
+          return {
+            ...c,
+            totalDue: Number(c.totalDue) || 0,
+            phone: phone || shortId,
+            customerPhone: phone || shortId,
+            shortId: shortId || ''
+          };
+        }
+
+        try {
+          const led = await getCustomerLedger(idOrPhone);
+          let due = 0;
+          if (led.totalDue !== undefined) {
+            due = Number(led.totalDue) || 0;
+          } else {
+            (led.sales || [])
+              .filter(s => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
+              .forEach(s => due += (Number(s.total) || 0));
+            (led.settlements || []).forEach(s => due -= (Number(s.amount) || 0));
+          }
+          return { 
+            ...c, 
+            totalDue: Math.max(0, due), 
+            phone: phone || shortId,
+            customerPhone: phone || shortId,
+            shortId: shortId || ''
+          };
+        } catch (e) {
+          return {
+            ...c,
+            totalDue: 0,
+            phone: phone || shortId,
+            customerPhone: phone || shortId,
+            shortId: shortId || ''
+          };
+        }
       }));
       setCustomers(custsWithDue);
     } catch (e) {
@@ -71,11 +104,12 @@ export default function CustomerLedger({ currentShop }) {
 
   const handleRemindPayment = (e, customer) => {
     if (e) e.stopPropagation();
-    if (!customer || !customer.phone) {
-      alert('Customer phone number is not available.');
+    const phone = customer?.phone || customer?.customerPhone;
+    if (!customer || !phone) {
+      notifyError('Customer phone number is not available.', 'Missing Phone');
       return;
     }
-    const cleanPhone = customer.phone.replace(/\D/g, '');
+    const cleanPhone = phone.replace(/\D/g, '');
     const dueAmt = parseFloat(customer.totalDue ?? currentDue ?? 0).toFixed(2);
     const shopTitle = shopInfo?.shopName || currentShop?.shopName || 'our shop';
     const message = encodeURIComponent(
@@ -89,19 +123,39 @@ export default function CustomerLedger({ currentShop }) {
     setCurrentDue(customer.totalDue);
     
     try {
-      const led = await getCustomerLedger(customer.phone);
-      const sales = led.sales.map(s => ({ ...s, type: 'SALE', items: JSON.parse(s.itemsJSON || '[]') }));
-      const settlements = led.settlements.map(s => ({ ...s, type: 'SETTLEMENT' }));
+      const idOrPhone = customer.phone || customer.customerPhone || customer.shortId || customer.customerShortId;
+      const led = await getCustomerLedger(idOrPhone);
+      const sales = (led.sales || []).map(s => {
+        let items = [];
+        try {
+          items = typeof s.itemsJSON === 'string' ? JSON.parse(s.itemsJSON || '[]') : (s.itemsJSON || []);
+        } catch (err) {
+          items = [];
+        }
+        return { ...s, type: 'SALE', items };
+      });
+      const settlements = (led.settlements || []).map(s => ({ ...s, type: 'SETTLEMENT' }));
       
       const combined = [...sales, ...settlements].sort((a, b) => new Date(a.date) - new Date(b.date));
       let running = 0;
       const finalLedger = combined.map(entry => {
-        if (entry.type === 'SALE' && entry.paymentMethod === 'Add to Book') running += entry.total;
-        else if (entry.type === 'SETTLEMENT') running -= entry.amount;
-        return { ...entry, runningDue: running };
+        if (entry.type === 'SALE' && (entry.paymentMethod === 'Add to Book' || (entry.paymentMethod && entry.paymentMethod.includes('Book')))) {
+          running += (Number(entry.total) || 0);
+        } else if (entry.type === 'SETTLEMENT') {
+          running -= (Number(entry.amount) || 0);
+        }
+        return { ...entry, runningDue: Math.max(0, running) };
       });
+
+      if (led.totalDue !== undefined) {
+        setCurrentDue(led.totalDue);
+        setSelectedCustomer(prev => prev ? { ...prev, totalDue: led.totalDue } : prev);
+      }
       setLedger(finalLedger);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      notifyError(e, 'Ledger Load Error');
+    }
   };
 
   const handleOpenSettle = (e, customer) => {
@@ -113,18 +167,22 @@ export default function CustomerLedger({ currentShop }) {
 
   const handleSettleSubmit = async () => {
     const amt = parseFloat(settleAmount);
-    if (!amt || amt <= 0) return alert('Enter valid repayment amount');
+    if (!amt || amt <= 0) return notifyError('Please enter a valid repayment amount greater than ₹0.', 'Invalid Amount');
     
-    await saveSettlement({
-      customerPhone: settleCustomer.phone,
-      amount: amt,
-      method: settleMethod
-    });
-    
-    setShowSettleModal(false);
-    await loadData();
-    if (selectedCustomer && selectedCustomer.phone === settleCustomer.phone) {
-      await handleOpenLedger(settleCustomer);
+    try {
+      await saveSettlement({
+        customerPhone: settleCustomer.phone,
+        amount: amt,
+        method: settleMethod
+      });
+      
+      setShowSettleModal(false);
+      await loadData();
+      if (selectedCustomer && selectedCustomer.phone === settleCustomer.phone) {
+        await handleOpenLedger(settleCustomer);
+      }
+    } catch (e) {
+      notifyError(e, 'Settlement Error');
     }
   };
 
@@ -453,7 +511,7 @@ export default function CustomerLedger({ currentShop }) {
       await loadData();
       alert(`Successfully assigned ${user.name} (${user.shortId}) to Khata!`);
     } catch (e) {
-      alert('Error linking customer to Khata.');
+      notifyError(e, 'Khata Link Error');
     }
   };
 

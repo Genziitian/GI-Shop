@@ -43,6 +43,7 @@ import Header from '../../components/Header';
 import SettleDueModal from '../../components/SettleDueModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 const FILTERS = ['All', 'Highest', 'Lowest', 'No Due'];
 
@@ -67,20 +68,37 @@ export default function KhataScreen() {
   const loadCustomers = useCallback(async () => {
     try {
       const data = await getCustomers();
-      // Calculate totalDue for each customer
+      const custList = Array.isArray(data) ? data : [];
+      // Calculate totalDue for each customer, utilizing backend pre-computed values
       const custsWithDue = await Promise.all(
-        data.map(async (c) => {
-          const phone = c.phone || c.customerPhone;
+        custList.map(async (c) => {
+          const phone = (c.phone || c.customerPhone || '').trim();
+          const shortId = (c.shortId || c.customerShortId || '').trim();
+          const idOrPhone = phone || shortId;
+
+          if (c.totalDue !== undefined) {
+            return {
+              ...c,
+              totalDue: Number(c.totalDue) || 0,
+              phone: phone || shortId,
+              shortId: shortId || '',
+            };
+          }
+
           try {
-            const led = await getCustomerLedger(phone);
+            const led = await getCustomerLedger(idOrPhone);
             let due = 0;
-            (led.sales || [])
-              .filter((s) => s.paymentMethod === 'Add to Book')
-              .forEach((s) => (due += (Number(s.total) || 0)));
-            (led.settlements || []).forEach((s) => (due -= (Number(s.amount) || 0)));
-            return { ...c, totalDue: Math.max(0, due), phone };
+            if (led.totalDue !== undefined) {
+              due = Number(led.totalDue) || 0;
+            } else {
+              (led.sales || [])
+                .filter((s) => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
+                .forEach((s) => (due += (Number(s.total) || 0)));
+              (led.settlements || []).forEach((s) => (due -= (Number(s.amount) || 0)));
+            }
+            return { ...c, totalDue: Math.max(0, due), phone: phone || shortId, shortId: shortId || '' };
           } catch (e) {
-            return { ...c, totalDue: 0, phone };
+            return { ...c, totalDue: 0, phone: phone || shortId, shortId: shortId || '' };
           }
         })
       );
@@ -106,12 +124,21 @@ export default function KhataScreen() {
     setSelectedCustomer(customer);
     setLedgerLoading(true);
     try {
-      const led = await getCustomerLedger(customer.phone);
-      const sales = (led.sales || []).map((s) => ({
-        ...s,
-        entryType: 'SALE',
-        parsedItems: JSON.parse(s.itemsJSON || '[]'),
-      }));
+      const idOrPhone = customer.phone || customer.customerPhone || customer.shortId || customer.customerShortId;
+      const led = await getCustomerLedger(idOrPhone);
+      const sales = (led.sales || []).map((s) => {
+        let parsedItems = [];
+        try {
+          parsedItems = typeof s.itemsJSON === 'string' ? JSON.parse(s.itemsJSON || '[]') : (s.itemsJSON || []);
+        } catch (err) {
+          parsedItems = [];
+        }
+        return {
+          ...s,
+          entryType: 'SALE',
+          parsedItems,
+        };
+      });
       const settlements = (led.settlements || []).map((s) => ({
         ...s,
         entryType: 'SETTLEMENT',
@@ -123,7 +150,7 @@ export default function KhataScreen() {
 
       let running = 0;
       const finalLedger = combined.map((entry) => {
-        if (entry.entryType === 'SALE' && entry.paymentMethod === 'Add to Book') {
+        if (entry.entryType === 'SALE' && (entry.paymentMethod === 'Add to Book' || (entry.paymentMethod && entry.paymentMethod.includes('Book')))) {
           running += (Number(entry.total) || 0);
         } else if (entry.entryType === 'SETTLEMENT') {
           running -= (Number(entry.amount) || 0);
@@ -131,10 +158,15 @@ export default function KhataScreen() {
         return { ...entry, runningDue: Math.max(0, running) };
       });
 
+      // Update selected customer due if returned from ledger
+      if (led.totalDue !== undefined) {
+        setSelectedCustomer((prev) => prev ? { ...prev, totalDue: led.totalDue } : prev);
+      }
+
       // Reverse so newest appears on top in timeline
       setLedgerEntries(finalLedger.reverse());
     } catch (e) {
-      Alert.alert('Error', 'Failed to load customer transactions.');
+      showErrorAlert(e, 'Customer Ledger');
     } finally {
       setLedgerLoading(false);
     }
@@ -155,7 +187,7 @@ export default function KhataScreen() {
               setSelectedCustomer(null);
               loadCustomers();
             } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to terminate customer.');
+              showErrorAlert(e, 'Terminate Customer');
             }
           },
         },
@@ -175,7 +207,9 @@ export default function KhataScreen() {
     const message = encodeURIComponent(
       `Hello ${cust.name || 'Customer'},\n\nThis is a gentle payment reminder from *${shopTitle}*.\n\nYou have an outstanding khata due of *₹${dueAmt}*.\nPlease submit/clear your payment at your earliest convenience.\n\nThank you!`
     );
-    Linking.openURL(`https://wa.me/91${cleanPhone}?text=${message}`);
+    Linking.openURL(`https://wa.me/91${cleanPhone}?text=${message}`).catch(() => {
+      showErrorAlert('Could not launch WhatsApp. Please ensure WhatsApp is installed on your device.', 'WhatsApp Not Available');
+    });
   };
 
   // Filter & Search Logic

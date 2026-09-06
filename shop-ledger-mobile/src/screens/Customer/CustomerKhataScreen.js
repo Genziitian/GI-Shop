@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -118,11 +119,17 @@ export default function CustomerKhataScreen({ navigation }) {
           data={khataOverview.stores}
           keyExtractor={(item) => `khata-store-${item.shopId}`}
           contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
-          refreshing={refreshing}
-          onRefresh={() => {
-            setRefreshing(true);
-            loadKhata();
-          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => {
+                setRefreshing(true);
+                loadKhata();
+              }}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
           ListHeaderComponent={
             <View style={{ marginBottom: 16 }}>
               {/* Total Due Banner */}

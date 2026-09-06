@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
+  ScrollView,
   StyleSheet,
   Alert,
   ActivityIndicator,
@@ -21,6 +21,9 @@ import {
   X,
   ChevronRight,
   ArrowRight,
+  Search,
+  History,
+  Calendar,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import {
@@ -34,6 +37,7 @@ import {
 } from '../../api/client';
 import Header from '../../components/Header';
 import OrderDetailModal from '../../components/OrderDetailModal';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function OrdersScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
@@ -59,6 +63,11 @@ export default function OrdersScreen({ navigation }) {
   const [otpInputs, setOtpInputs] = useState({});
   const [otpSubmitting, setOtpSubmitting] = useState({});
 
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('All'); // 'All' | 'Today' | 'Yesterday' | 'Older (>24h)'
+  const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Pending' | 'Packing' | 'Ready' | 'Completed' | 'Cancelled'
+
   const handleToggleItemUnavailable = async (ord, itemIndex) => {
     try {
       const items = typeof ord.itemsJSON === 'string'
@@ -68,7 +77,7 @@ export default function OrdersScreen({ navigation }) {
       await updateShopOrderItems(ord.id, items);
       loadOrders();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to update item availability');
+      showErrorAlert(e, 'Item Availability');
     }
   };
 
@@ -87,7 +96,7 @@ export default function OrdersScreen({ navigation }) {
       setPaymentModalVisible(false);
       loadOrders();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to send payment request.');
+      showErrorAlert(e, 'Payment Request');
     } finally {
       setPaymentSubmitting(false);
     }
@@ -103,10 +112,17 @@ export default function OrdersScreen({ navigation }) {
     setOtpSubmitting(prev => ({ ...prev, [orderId]: true }));
     try {
       await verifyShopOrderOTP(orderId, enteredOtp);
-      Alert.alert('Success 🎉', 'OTP Verified! Order completed and sale recorded.');
+      // Immediately clear OTP input and optimistically mark as COMPLETED
+      setOtpInputs(prev => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'COMPLETED', collectionStatus: 'COLLECTED', otpCode: null } : o));
+      Alert.alert('Success', 'OTP Verified! Order completed and sale recorded.');
       loadOrders();
     } catch (e) {
-      Alert.alert('Verification Failed ❌', e.message || 'Invalid 4-digit OTP code.');
+      showErrorAlert(e, 'OTP Verification');
     } finally {
       setOtpSubmitting(prev => ({ ...prev, [orderId]: false }));
     }
@@ -129,21 +145,34 @@ export default function OrdersScreen({ navigation }) {
     return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
   };
 
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async (silent = false) => {
     try {
+      if (!silent && !orders.length) {
+        setLoading(true);
+      }
       const data = await getShopOrders();
-      setOrders(Array.isArray(data) ? data : []);
+      const validOrders = Array.isArray(data) ? data : [];
+      setOrders(validOrders);
+      setSelectedDetailOrder((prevSelected) => {
+        if (!prevSelected) return null;
+        const updated = validOrders.find((o) => o.id === prevSelected.id);
+        return updated || prevSelected;
+      });
     } catch (e) {
       console.error('Failed to load orders:', e);
-      setOrders([]);
+      if (!silent) setOrders([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [orders.length]);
 
   useEffect(() => {
     loadOrders();
+    const interval = setInterval(() => {
+      loadOrders(true);
+    }, 6000);
+    return () => clearInterval(interval);
   }, [loadOrders]);
 
   const onRefresh = () => {
@@ -170,7 +199,7 @@ export default function OrdersScreen({ navigation }) {
       setSelectedOrderForAction(null);
       await loadOrders();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to update order.');
+      showErrorAlert(e, 'Order Update');
     } finally {
       setSubmitting(false);
     }
@@ -182,11 +211,369 @@ export default function OrdersScreen({ navigation }) {
       Alert.alert('Success', 'Order marked as completed!');
       await loadOrders();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to complete order.');
+      showErrorAlert(e, 'Complete Order');
     }
   };
 
+  const isDateMatch = (dateStr) => {
+    if (!dateStr || dateFilter === 'All') return true;
+    const itemDate = new Date(dateStr);
+    const now = new Date();
+    if (dateFilter === 'Today') {
+      return itemDate.toDateString() === now.toDateString();
+    }
+    if (dateFilter === 'Yesterday') {
+      const yest = new Date(now);
+      yest.setDate(now.getDate() - 1);
+      return itemDate.toDateString() === yest.toDateString();
+    }
+    if (dateFilter === 'Older (>24h)') {
+      return Date.now() - itemDate.getTime() >= 24 * 60 * 60 * 1000;
+    }
+    return true;
+  };
+
+  const isStatusMatch = (status) => {
+    if (statusFilter === 'All') return true;
+    if (statusFilter === 'Pending') return status === 'PENDING';
+    if (statusFilter === 'Packing') return status === 'ACCEPTED' || status === 'PACKING';
+    if (statusFilter === 'Ready') return status === 'READY';
+    if (statusFilter === 'Completed') return status === 'COMPLETED' || status === 'COLLECTED';
+    if (statusFilter === 'Cancelled') {
+      return ['CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED', 'NOT_COLLECTED'].includes(status);
+    }
+    return true;
+  };
+
+  const isTextMatch = (ord) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const ordNum = String(ord.orderNumber || ord.id || '').toLowerCase();
+    const cName = String(ord.customerName || '').toLowerCase();
+    const cPhone = String(ord.customerPhone || '').toLowerCase();
+    const cShortId = String(ord.customerShortId || '').toLowerCase();
+    return ordNum.includes(q) || cName.includes(q) || cPhone.includes(q) || cShortId.includes(q);
+  };
+
   const safeOrders = Array.isArray(orders) ? orders : [];
+  const nowMs = Date.now();
+  const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+
+  const filteredOrders = safeOrders.filter((o) => {
+    return isDateMatch(o.createdAt || o.date) && isStatusMatch(o.status) && isTextMatch(o);
+  });
+
+  const recentOrders = filteredOrders.filter(
+    (o) => nowMs - new Date(o.createdAt || o.date).getTime() < twentyFourHoursMs && !['COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(o.status)
+  );
+
+  const pastOrders = filteredOrders.filter(
+    (o) => nowMs - new Date(o.createdAt || o.date).getTime() >= twentyFourHoursMs || ['COLLECTED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED', 'DECLINED'].includes(o.status)
+  );
+
+  const renderOrderCard = (ord, isPast = false) => {
+    const orderItems = typeof ord.itemsJSON === 'string'
+      ? JSON.parse(ord.itemsJSON || '[]')
+      : (ord.items || []);
+    const dateStr = new Date(ord.createdAt || ord.date).toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    const orderAgeMs = nowMs - new Date(ord.createdAt || ord.date).getTime();
+    const isOlderThan24h = orderAgeMs >= twentyFourHoursMs;
+
+    return (
+      <View key={ord.id} style={styles.orderCard}>
+        <View style={styles.orderCardHeader}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={styles.orderNumText}>Order #{ord.orderNumber || ord.id}</Text>
+              {isOlderThan24h && (
+                <View style={styles.historyBadge}>
+                  <Clock size={10} color="#64748b" />
+                  <Text style={styles.historyBadgeText}>Past 24h</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.orderCustName}>
+              {ord.customerName} ({ord.customerPhone})
+            </Text>
+            <Text style={styles.orderDateText}>{dateStr}</Text>
+          </View>
+
+          <View
+            style={[
+              styles.orderStatusPill,
+              ord.status === 'PENDING'
+                ? styles.statusPillPending
+                : (ord.status === 'ACCEPTED' || ord.status === 'PACKING')
+                ? styles.statusPillAccepted
+                : (ord.status === 'READY' || ord.status === 'COMPLETED')
+                ? { backgroundColor: '#e0f2fe' }
+                : ord.status === 'COLLECTED'
+                ? styles.statusPillCompleted
+                : styles.statusPillDeclined,
+            ]}
+          >
+            <Text
+              style={[
+                styles.orderStatusPillText,
+                (ord.status === 'READY' || ord.status === 'COMPLETED') && { color: '#0369a1' },
+                ord.status === 'COLLECTED' && { color: '#15803d' },
+                (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'AUTO_CANCELLED_EXPIRED' || ord.status === 'DECLINED') && { color: '#b91c1c' },
+              ]}
+            >
+              {ord.status === 'PENDING'
+                ? 'Pending'
+                : ord.status === 'PACKING'
+                ? `Packing (${ord.packingMinutes}m)`
+                : (ord.status === 'READY' || ord.status === 'COMPLETED')
+                ? 'Ready (Waiting Customer)'
+                : ord.status === 'COLLECTED'
+                ? 'Customer Collected'
+                : ord.status === 'NOT_COLLECTED'
+                ? 'Marked Not Collected'
+                : ord.status === 'CANCELLED_BY_CUSTOMER'
+                ? 'Cancelled by Customer'
+                : ord.status === 'AUTO_CANCELLED_EXPIRED'
+                ? 'Auto-cancelled (Expired)'
+                : ord.status}
+            </Text>
+          </View>
+        </View>
+
+        {ord.status === 'PENDING' ? (
+          <TouchableOpacity
+            style={styles.topDeclineBtn}
+            onPress={() => handleOpenOrderModal(ord, 'DECLINE')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.topDeclineBtnText}>Decline</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.topDetailsBtn}
+            onPress={() => setSelectedDetailOrder(ord)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.topDetailsBtnText}>Order Details</Text>
+          </TouchableOpacity>
+        )}
+
+        {ord.status === 'AUTO_CANCELLED_EXPIRED' && (
+          <View style={styles.expiredWarningBox}>
+            <XCircle size={13} color="#b91c1c" />
+            <Text style={styles.expiredWarningText}>
+              Order automatically cancelled because 45 minutes elapsed without acceptance.
+            </Text>
+          </View>
+        )}
+
+        {/* Order Items */}
+        <View style={styles.orderItemsList}>
+          {orderItems.map((it, idx) => {
+            const isUnavail = !!it.isUnavailable;
+            return (
+              <View key={idx} style={[styles.orderItemLine, { alignItems: 'center' }]}>
+                <View style={{ flex: 1, paddingRight: 6 }}>
+                  <Text style={[styles.orderItemName, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                    • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
+                  </Text>
+                  {isUnavail && (
+                    <Text style={{ fontSize: 10, color: '#b91c1c', fontWeight: '700' }}>UNAVAILABLE</Text>
+                  )}
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={[styles.orderItemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                    ₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}
+                  </Text>
+                  {(ord.status === 'PENDING' || ord.status === 'PACKING') && (
+                    <TouchableOpacity
+                      style={{
+                        paddingHorizontal: 6,
+                        paddingVertical: 3,
+                        borderRadius: 4,
+                        backgroundColor: isUnavail ? '#f1f5f9' : '#fee2e2',
+                        borderWidth: 1,
+                        borderColor: isUnavail ? '#cbd5e1' : '#fca5a5',
+                      }}
+                      onPress={() => handleToggleItemUnavailable(ord, idx)}
+                    >
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: isUnavail ? '#475569' : '#b91c1c' }}>
+                        {isUnavail ? 'Mark Avail' : 'Mark Unavail'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.orderTotalRow}>
+          <Text style={styles.orderTotalLabel}>Total Payable:</Text>
+          <Text style={styles.orderTotalValue}>₹{(Number(ord.estimatedTotal ?? ord.total) || 0).toFixed(2)}</Text>
+        </View>
+
+        {/* Action Buttons */}
+        {ord.status === 'PENDING' && (
+          <View style={styles.orderActionsRow}>
+            <TouchableOpacity
+              style={styles.detailsBtn}
+              onPress={() => setSelectedDetailOrder(ord)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.detailsBtnText}>Order Details</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.acceptBtn}
+              onPress={() => handleOpenOrderModal(ord, 'ACCEPT')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.acceptBtnText}>Accept &amp; Pack</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {(ord.status === 'ACCEPTED' || ord.status === 'PACKING') && (
+          <TouchableOpacity
+            style={styles.completeBtn}
+            onPress={() => handleCompleteOrder(ord.id)}
+            activeOpacity={0.8}
+          >
+            <CheckCircle2 size={16} color="#ffffff" />
+            <Text style={styles.completeBtnText}>Mark Ready for Pickup</Text>
+          </TouchableOpacity>
+        )}
+
+        {ord.status === 'READY' && (
+          <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
+            {/* Before Payment Is Requested */}
+            {!ord.paymentRequested ? (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ flex: 1, paddingRight: 6 }}>
+                  <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
+                    Order Ready for Pickup
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#854d0e', marginTop: 2 }}>
+                    No payment request sent yet.
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={{ backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 }}
+                  onPress={() => handleOpenPaymentModal(ord)}
+                >
+                  <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>
+                    Get Payment
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              /* After Payment Is Requested */
+              <View>
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
+                    Payment Requested
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
+                    Amount: <Text style={{ fontWeight: '700' }}>₹{(Number(ord.requestedAmount) || 0).toFixed(2)}</Text> • Mode: <Text style={{ fontWeight: '700' }}>{ord.paymentMethod || 'Cash'}</Text>
+                  </Text>
+                </View>
+
+                {/* 4-Digit OTP Verification Input (Only shown while waiting for handover) */}
+                <View style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderWidth: 1, borderRadius: 6, padding: 8, marginTop: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
+                    Enter Customer OTP
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        borderRadius: 6,
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        width: 100,
+                        fontSize: 16,
+                        fontWeight: '800',
+                        textAlign: 'center',
+                        letterSpacing: 2,
+                        color: colors.text,
+                      }}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      placeholder="[ _ _ _ _ ]"
+                      value={otpInputs[ord.id] || ''}
+                      onChangeText={(val) => setOtpInputs({ ...otpInputs, [ord.id]: val.replace(/\D/g, '') })}
+                    />
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: colors.success,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 6,
+                        flex: 1,
+                        alignItems: 'center',
+                      }}
+                      disabled={otpSubmitting[ord.id]}
+                      onPress={() => handleVerifyOtpHandover(ord.id)}
+                    >
+                      {otpSubmitting[ord.id] ? (
+                        <ActivityIndicator color="#fff" size="small" />
+                      ) : (
+                        <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>Verify OTP &amp; Complete</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {ord.status === 'COMPLETED' && (
+          <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, padding: 10, borderRadius: 8, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <CheckCircle2 size={18} color="#15803d" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, color: '#15803d', fontWeight: '800' }}>
+                ✓ Order Completed &amp; Handed Over
+              </Text>
+              <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
+                Customer verified via OTP. Sale recorded in ledger.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {ord.status === 'COLLECTED' && (
+          <View style={{ backgroundColor: '#f0fdf4', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+            <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '700' }}>
+              Order finalized and collected by customer. (Locked)
+            </Text>
+          </View>
+        )}
+
+        {ord.status === 'NOT_COLLECTED' && (
+          <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+            <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '700' }}>
+              Customer marked as not collected. (Locked)
+            </Text>
+          </View>
+        )}
+
+        {ord.status === 'CANCELLED_BY_CUSTOMER' && (
+          <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+            <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '700' }}>
+              Customer cancelled / took back this order. (Locked)
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -217,320 +604,135 @@ export default function OrdersScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Orders List */}
+        {/* Search Bar */}
+        <View style={styles.searchBarContainer}>
+          <Search size={16} color={colors.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search order #, customer, phone..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <X size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {/* Date Filter Pills */}
+        <View style={{ marginBottom: 6 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+            {['All', 'Today', 'Yesterday', 'Older (>24h)'].map((df) => {
+              const isActive = dateFilter === df;
+              return (
+                <TouchableOpacity
+                  key={df}
+                  style={[styles.filterChip, isActive && styles.filterChipActive]}
+                  onPress={() => setDateFilter(df)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                    {df === 'All' ? 'All Dates' : df}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Status Filter Pills */}
+        <View style={{ marginBottom: 10 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+            {['All', 'Pending', 'Packing', 'Ready', 'Completed', 'Cancelled'].map((sf) => {
+              const isActive = statusFilter === sf;
+              return (
+                <TouchableOpacity
+                  key={sf}
+                  style={[styles.filterChip, isActive && styles.filterChipActive]}
+                  onPress={() => setStatusFilter(sf)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+                    {sf === 'All' ? 'All Status' : sf}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Orders ScrollView */}
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : (
-          <FlatList
-            data={safeOrders}
-            keyExtractor={(item) => item.id?.toString()}
+          <ScrollView
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item: ord }) => {
-              const orderItems = typeof ord.itemsJSON === 'string'
-                ? JSON.parse(ord.itemsJSON || '[]')
-                : (ord.items || []);
-              const dateStr = new Date(ord.createdAt || ord.date).toLocaleString('en-IN', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-              });
-
-              return (
-                <View style={styles.orderCard}>
-                  <View style={styles.orderCardHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.orderNumText}>Order #{ord.orderNumber || ord.id}</Text>
-                      <Text style={styles.orderCustName}>
-                        {ord.customerName} ({ord.customerPhone})
-                      </Text>
-                      <Text style={styles.orderDateText}>{dateStr}</Text>
-                    </View>
-
-                    <View
-                      style={[
-                        styles.orderStatusPill,
-                        ord.status === 'PENDING'
-                          ? styles.statusPillPending
-                          : (ord.status === 'ACCEPTED' || ord.status === 'PACKING')
-                          ? styles.statusPillAccepted
-                          : (ord.status === 'READY' || ord.status === 'COMPLETED')
-                          ? { backgroundColor: '#e0f2fe' }
-                          : ord.status === 'COLLECTED'
-                          ? styles.statusPillCompleted
-                          : styles.statusPillDeclined,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.orderStatusPillText,
-                          (ord.status === 'READY' || ord.status === 'COMPLETED') && { color: '#0369a1' },
-                          ord.status === 'COLLECTED' && { color: '#15803d' },
-                          (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'AUTO_CANCELLED_EXPIRED' || ord.status === 'DECLINED') && { color: '#b91c1c' },
-                        ]}
-                      >
-                        {ord.status === 'PENDING'
-                          ? `⏳ Pending (${getAutoCancelCountdown(ord.createdAt)})`
-                          : ord.status === 'PACKING'
-                          ? `⏳ Packing (${ord.packingMinutes}m)`
-                          : (ord.status === 'READY' || ord.status === 'COMPLETED')
-                          ? '📦 Ready (Waiting Customer)'
-                          : ord.status === 'COLLECTED'
-                          ? '✓ Customer Collected'
-                          : ord.status === 'NOT_COLLECTED'
-                          ? '✗ Marked Not Collected'
-                          : ord.status === 'CANCELLED_BY_CUSTOMER'
-                          ? '🚫 Cancelled by Customer'
-                          : ord.status === 'AUTO_CANCELLED_EXPIRED'
-                          ? '⛔ Auto-cancelled (45m Expired)'
-                          : ord.status}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#eff6ff',
-                      borderColor: '#bfdbfe',
-                      borderWidth: 1,
-                      paddingHorizontal: 10,
-                      paddingVertical: 6,
-                      borderRadius: 8,
-                      marginVertical: 6,
-                      alignSelf: 'flex-start',
-                    }}
-                    onPress={() => setSelectedDetailOrder(ord)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '700' }}>
-                      📜 View Timeline &amp; Order Details
+          >
+            {/* Section 1: Active Orders (<24h) */}
+            {dateFilter !== 'Older (>24h)' && (
+              <View style={{ marginBottom: 14 }}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Active Orders (&lt;24h)</Text>
+                  <View style={[styles.countBadge, { backgroundColor: '#e0f2fe' }]}>
+                    <Text style={[styles.countBadgeText, { color: '#0369a1' }]}>
+                      {recentOrders.length} Active
                     </Text>
-                  </TouchableOpacity>
-
-                  {/* Auto-cancel warning banner for Shopkeeper */}
-                  {ord.status === 'PENDING' && (
-                    <View style={styles.autoCancelWarningBox}>
-                      <Clock size={13} color="#b45309" />
-                      <Text style={styles.autoCancelWarningText}>
-                        ⚠️ <Text style={{ fontWeight: '700' }}>Accept within {getAutoCancelCountdown(ord.createdAt)}</Text> or order will be automatically cancelled.
-                      </Text>
-                    </View>
-                  )}
-
-                  {ord.status === 'AUTO_CANCELLED_EXPIRED' && (
-                    <View style={styles.expiredWarningBox}>
-                      <XCircle size={13} color="#b91c1c" />
-                      <Text style={styles.expiredWarningText}>
-                        Order automatically cancelled because 45 minutes elapsed without acceptance.
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* Order Items */}
-                  <View style={styles.orderItemsList}>
-                    {orderItems.map((it, idx) => {
-                      const isUnavail = !!it.isUnavailable;
-                      return (
-                        <View key={idx} style={[styles.orderItemLine, { alignItems: 'center' }]}>
-                          <View style={{ flex: 1, paddingRight: 6 }}>
-                            <Text style={[styles.orderItemName, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
-                              • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
-                            </Text>
-                            {isUnavail && (
-                              <Text style={{ fontSize: 10, color: '#b91c1c', fontWeight: '700' }}>UNAVAILABLE</Text>
-                            )}
-                          </View>
-
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={[styles.orderItemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
-                              ₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}
-                            </Text>
-                            {(ord.status === 'PENDING' || ord.status === 'PACKING') && (
-                              <TouchableOpacity
-                                style={{
-                                  paddingHorizontal: 6,
-                                  paddingVertical: 3,
-                                  borderRadius: 4,
-                                  backgroundColor: isUnavail ? '#f1f5f9' : '#fee2e2',
-                                  borderWidth: 1,
-                                  borderColor: isUnavail ? '#cbd5e1' : '#fca5a5',
-                                }}
-                                onPress={() => handleToggleItemUnavailable(ord, idx)}
-                              >
-                                <Text style={{ fontSize: 10, fontWeight: '700', color: isUnavail ? '#475569' : '#b91c1c' }}>
-                                  {isUnavail ? 'Mark Avail' : 'Mark Unavail'}
-                                </Text>
-                              </TouchableOpacity>
-                            )}
-                          </View>
-                        </View>
-                      );
-                    })}
                   </View>
-
-                  <View style={styles.orderTotalRow}>
-                    <Text style={styles.orderTotalLabel}>Total Payable:</Text>
-                    <Text style={styles.orderTotalValue}>₹{(Number(ord.estimatedTotal ?? ord.total) || 0).toFixed(2)}</Text>
-                  </View>
-
-                  {/* Action Buttons */}
-                  {ord.status === 'PENDING' && (
-                    <View style={styles.orderActionsRow}>
-                      <TouchableOpacity
-                        style={styles.declineBtn}
-                        onPress={() => handleOpenOrderModal(ord, 'DECLINE')}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.declineBtnText}>Decline</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.acceptBtn}
-                        onPress={() => handleOpenOrderModal(ord, 'ACCEPT')}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={styles.acceptBtnText}>Accept &amp; Pack</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {(ord.status === 'ACCEPTED' || ord.status === 'PACKING') && (
-                    <TouchableOpacity
-                      style={styles.completeBtn}
-                      onPress={() => handleCompleteOrder(ord.id)}
-                      activeOpacity={0.8}
-                    >
-                      <CheckCircle2 size={16} color="#ffffff" />
-                      <Text style={styles.completeBtnText}>Mark Ready for Pickup</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {(ord.status === 'READY' || ord.status === 'COMPLETED') && (
-                    <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
-                      {/* Before Payment Is Requested */}
-                      {!ord.paymentRequested ? (
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <View style={{ flex: 1, paddingRight: 6 }}>
-                            <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
-                              ✓ Order Ready for Pickup
-                            </Text>
-                            <Text style={{ fontSize: 11, color: '#854d0e', marginTop: 2 }}>
-                              ⚠️ No payment request sent yet.
-                            </Text>
-                          </View>
-
-                          <TouchableOpacity
-                            style={{ backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 }}
-                            onPress={() => handleOpenPaymentModal(ord)}
-                          >
-                            <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>
-                              💳 Get Payment
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      ) : (
-                        /* After Payment Is Requested */
-                        <View>
-                          <View style={{ marginBottom: 8 }}>
-                            <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
-                              ✓ Payment Requested
-                            </Text>
-                            <Text style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
-                              Amount: <Text style={{ fontWeight: '700' }}>₹{(Number(ord.requestedAmount) || 0).toFixed(2)}</Text> • Mode: <Text style={{ fontWeight: '700' }}>{ord.paymentMethod || 'Cash'}</Text>
-                            </Text>
-                          </View>
-
-                          {/* 4-Digit OTP Verification Input (Only shown after payment requested) */}
-                          <View style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderWidth: 1, borderRadius: 6, padding: 8, marginTop: 4 }}>
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
-                              Enter Customer OTP
-                            </Text>
-                            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                              <TextInput
-                                style={{
-                                  borderWidth: 1,
-                                  borderColor: colors.border,
-                                  borderRadius: 6,
-                                  paddingHorizontal: 8,
-                                  paddingVertical: 4,
-                                  width: 100,
-                                  fontSize: 16,
-                                  fontWeight: '800',
-                                  textAlign: 'center',
-                                  letterSpacing: 2,
-                                  color: colors.text,
-                                }}
-                                keyboardType="number-pad"
-                                maxLength={4}
-                                placeholder="[ _ _ _ _ ]"
-                                value={otpInputs[ord.id] || ''}
-                                onChangeText={(val) => setOtpInputs({ ...otpInputs, [ord.id]: val.replace(/\D/g, '') })}
-                              />
-                              <TouchableOpacity
-                                style={{
-                                  backgroundColor: colors.success,
-                                  paddingHorizontal: 12,
-                                  paddingVertical: 8,
-                                  borderRadius: 6,
-                                  flex: 1,
-                                  alignItems: 'center',
-                                }}
-                                disabled={otpSubmitting[ord.id]}
-                                onPress={() => handleVerifyOtpHandover(ord.id)}
-                              >
-                                {otpSubmitting[ord.id] ? (
-                                  <ActivityIndicator color="#fff" size="small" />
-                                ) : (
-                                  <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>Verify OTP &amp; Complete</Text>
-                                )}
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  )}
-
-                  {ord.status === 'COLLECTED' && (
-                    <View style={{ backgroundColor: '#f0fdf4', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '700' }}>
-                        ✓ Order finalized and collected by customer. (Locked)
-                      </Text>
-                    </View>
-                  )}
-
-                  {ord.status === 'NOT_COLLECTED' && (
-                    <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '700' }}>
-                        ✗ Customer marked as not collected. (Locked)
-                      </Text>
-                    </View>
-                  )}
-
-                  {ord.status === 'CANCELLED_BY_CUSTOMER' && (
-                    <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '700' }}>
-                        🚫 Customer cancelled / took back this order. (Locked)
-                      </Text>
-                    </View>
-                  )}
                 </View>
-              );
-            }}
-            ListEmptyComponent={
+                {recentOrders.length === 0 ? (
+                  <View style={styles.sectionEmptyBox}>
+                    <Text style={styles.sectionEmptyText}>No active orders under 24 hours.</Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {recentOrders.map((ord) => renderOrderCard(ord, false))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Section 2: Past Orders (>24h & Finalized) */}
+            <View style={{ marginBottom: 20 }}>
+              <View style={styles.sectionHeader}>
+                <View>
+                  <Text style={styles.sectionTitle}>Past Orders (&gt;24h &amp; Finalized)</Text>
+                  <Text style={styles.sectionSub}>Orders older than 24h or collected/cancelled</Text>
+                </View>
+                <View style={styles.countBadge}>
+                  <Text style={styles.countBadgeText}>
+                    {pastOrders.length} History
+                  </Text>
+                </View>
+              </View>
+              {pastOrders.length === 0 ? (
+                <View style={styles.sectionEmptyBox}>
+                  <Text style={styles.sectionEmptyText}>No past orders matching filters.</Text>
+                </View>
+              ) : (
+                <View style={{ gap: 8 }}>
+                  {pastOrders.map((ord) => renderOrderCard(ord, true))}
+                </View>
+              )}
+            </View>
+
+            {recentOrders.length === 0 && pastOrders.length === 0 && (
               <View style={styles.emptyContainer}>
                 <ShoppingBag size={40} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>No Orders Yet</Text>
+                <Text style={styles.emptyTitle}>No Orders Found</Text>
                 <Text style={styles.emptySub}>
-                  When customers in your city place grocery orders, they will appear here.
+                  No orders match your selected search or filter criteria.
                 </Text>
               </View>
-            }
-          />
+            )}
+          </ScrollView>
         )}
       </View>
 
@@ -629,7 +831,7 @@ export default function OrdersScreen({ navigation }) {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                💳 Request Payment #{paymentOrder?.orderNumber}
+                Request Payment #{paymentOrder?.orderNumber}
               </Text>
               <TouchableOpacity onPress={() => setPaymentModalVisible(false)}>
                 <X size={20} color={colors.textMuted} />
@@ -710,6 +912,16 @@ export default function OrdersScreen({ navigation }) {
         visible={!!selectedDetailOrder}
         order={selectedDetailOrder}
         onClose={() => setSelectedDetailOrder(null)}
+        onAccept={selectedDetailOrder?.status === 'PENDING' ? () => {
+          const ord = selectedDetailOrder;
+          setSelectedDetailOrder(null);
+          handleOpenOrderModal(ord, 'ACCEPT');
+        } : undefined}
+        onDecline={selectedDetailOrder?.status === 'PENDING' ? () => {
+          const ord = selectedDetailOrder;
+          setSelectedDetailOrder(null);
+          handleOpenOrderModal(ord, 'DECLINE');
+        } : undefined}
       />
     </SafeAreaView>
   );
@@ -753,7 +965,100 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 24,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginBottom: 8,
     gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    padding: 0,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 9999,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  filterChipTextActive: {
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  sectionSub: {
+    fontSize: 10.5,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+  countBadge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+  },
+  countBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.textMuted,
+  },
+  sectionEmptyBox: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+  },
+  sectionEmptyText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  historyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 2,
+    alignSelf: 'flex-start',
+  },
+  historyBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#64748b',
   },
   orderCard: {
     backgroundColor: colors.surface,
@@ -877,9 +1182,54 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
+  topDeclineBtn: {
+    backgroundColor: '#fff',
+    borderColor: colors.danger,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 6,
+    marginVertical: 6,
+    alignSelf: 'flex-start',
+  },
+  topDeclineBtnText: {
+    color: colors.danger,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  topDetailsBtn: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    marginVertical: 6,
+    alignSelf: 'flex-start',
+  },
+  topDetailsBtnText: {
+    color: '#1d4ed8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   orderActionsRow: {
     flexDirection: 'row',
     gap: 8,
+  },
+  detailsBtn: {
+    flex: 1,
+    height: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailsBtnText: {
+    color: '#1d4ed8',
+    fontSize: 12,
+    fontWeight: '700',
   },
   declineBtn: {
     flex: 1,

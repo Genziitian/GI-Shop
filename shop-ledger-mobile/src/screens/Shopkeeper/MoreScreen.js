@@ -57,6 +57,7 @@ import EditProductModal from '../../components/EditProductModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 import ChangePasswordModal from '../../components/ChangePasswordModal';
 import CitySelector from '../../components/CitySelector';
+import { showErrorAlert, parseError } from '../../utils/errorHandler';
 
 export default function MoreScreen({ navigation }) {
   const { user, logout, changePin } = useAuth();
@@ -133,6 +134,7 @@ export default function MoreScreen({ navigation }) {
   const [pinSaving, setPinSaving] = useState(false);
   const [pinNotice, setPinNotice] = useState('');
   const [pinError, setPinError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadAllMoreData = useCallback(async () => {
     try {
@@ -186,7 +188,7 @@ export default function MoreScreen({ navigation }) {
           : 'Your store is now CLOSED for new incoming orders.'
       );
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to toggle status.');
+      showErrorAlert(e, 'Store Status');
     }
   };
 
@@ -215,7 +217,7 @@ export default function MoreScreen({ navigation }) {
               await deleteItem(item.id);
               await loadAllMoreData();
             } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to delete item.');
+              showErrorAlert(e, 'Delete Item');
             }
           },
         },
@@ -254,7 +256,7 @@ export default function MoreScreen({ navigation }) {
       setStaffIdentifier('');
       await loadAllMoreData();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to invite staff.');
+      showErrorAlert(e, 'Staff Invite');
     } finally {
       setInvitingStaff(false);
     }
@@ -274,7 +276,7 @@ export default function MoreScreen({ navigation }) {
               await deleteStaff(staffId);
               await loadAllMoreData();
             } catch (e) {
-              Alert.alert('Error', e.message || 'Failed to remove staff.');
+              showErrorAlert(e, 'Remove Staff');
             }
           },
         },
@@ -294,7 +296,7 @@ export default function MoreScreen({ navigation }) {
       setProfileNotice(res.message || 'Shop details updated successfully!');
       await loadAllMoreData();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to save shop details.');
+      showErrorAlert(e, 'Shop Details');
     } finally {
       setShopSaving(false);
     }
@@ -325,7 +327,8 @@ export default function MoreScreen({ navigation }) {
       setNewPinInput('');
       setConfirmNewPinInput('');
     } catch (e) {
-      setPinError(e.message || 'Failed to update PIN.');
+      const parsed = parseError(e);
+      setPinError(parsed.message || 'Failed to update PIN.');
     } finally {
       setPinSaving(false);
     }
@@ -385,6 +388,18 @@ export default function MoreScreen({ navigation }) {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              await loadAllMoreData();
+              setRefreshing(false);
+            }}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
       >
         {/* ================= HUB VIEW ================= */}
         {activeSubView === 'hub' && (

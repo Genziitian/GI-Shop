@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 // Production Backend Host
 const DEFAULT_HOST = 'https://gi-shop-api.onrender.com';
 
-const TOKEN_KEY = '@shop_ledger_jwt_token';
+const SECURE_TOKEN_KEY = 'shop_ledger_jwt_token';
+const LEGACY_ASYNC_TOKEN_KEY = '@shop_ledger_jwt_token';
 const USER_KEY = '@shop_ledger_user_data';
 const BASE_URL_KEY = '@shop_ledger_base_url';
 
@@ -39,11 +41,41 @@ export const resetBaseUrl = async () => {
 
 // Token & Session Storage
 export const storeToken = async (token) => {
-  await AsyncStorage.setItem(TOKEN_KEY, token);
+  try {
+    await SecureStore.setItemAsync(SECURE_TOKEN_KEY, token);
+  } catch (e) {
+    console.warn('[SecureStore Error] Falling back to AsyncStorage:', e);
+    await AsyncStorage.setItem(SECURE_TOKEN_KEY, token);
+  }
+  await AsyncStorage.removeItem(LEGACY_ASYNC_TOKEN_KEY).catch(() => {});
 };
 
 export const getToken = async () => {
-  return await AsyncStorage.getItem(TOKEN_KEY);
+  try {
+    const secureToken = await SecureStore.getItemAsync(SECURE_TOKEN_KEY);
+    if (secureToken) return secureToken;
+  } catch (e) {
+    console.warn('[SecureStore Error] Falling back to AsyncStorage:', e);
+  }
+
+  try {
+    const asyncToken =
+      (await AsyncStorage.getItem(SECURE_TOKEN_KEY)) ||
+      (await AsyncStorage.getItem(LEGACY_ASYNC_TOKEN_KEY));
+    if (asyncToken) {
+      try {
+        await SecureStore.setItemAsync(SECURE_TOKEN_KEY, asyncToken);
+        await AsyncStorage.removeItem(LEGACY_ASYNC_TOKEN_KEY);
+      } catch (e) {
+        // ignore
+      }
+      return asyncToken;
+    }
+  } catch (e) {
+    console.warn('[AsyncStorage Error] Could not retrieve token:', e);
+  }
+
+  return null;
 };
 
 export const storeUser = async (user) => {
@@ -56,12 +88,19 @@ export const getUser = async () => {
 };
 
 export const clearSession = async () => {
-  await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+  try {
+    await SecureStore.deleteItemAsync(SECURE_TOKEN_KEY);
+  } catch (e) {
+    // ignore
+  }
+  await AsyncStorage.multiRemove([SECURE_TOKEN_KEY, LEGACY_ASYNC_TOKEN_KEY, USER_KEY]).catch(() => {});
 };
 
 export const getSupportSettings = async () => {
   return await fetchWithAuth('/support-settings');
 };
+
+import { parseError } from '../utils/errorHandler';
 
 // Generic Authenticated Fetch Wrapper
 export const fetchWithAuth = async (endpoint, options = {}) => {
@@ -74,27 +113,51 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
 
   const url = `${currentBaseUrl}${endpoint}`;
 
+  // 15-second request timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
   try {
     const response = await fetch(url, {
       ...options,
       headers,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const errorMsg = data.error || data.message || `Request failed with status ${response.status}`;
-      const error = new Error(errorMsg);
+      const serverMsg = data.error || data.message || `Request failed with status ${response.status}`;
+      const parsed = parseError({ status: response.status, message: serverMsg });
+      const error = new Error(parsed.message);
+      error.title = parsed.title;
       error.status = response.status;
+      error.type = parsed.type;
       throw error;
     }
 
     return data;
   } catch (error) {
-    if (error.message.includes('Network request failed')) {
-      throw new Error(`Unable to connect to backend server at ${currentBaseUrl}. Please ensure server is running.`);
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      const timeoutErr = new Error('Connection timeout: Server took too long to respond. Please check your network.');
+      timeoutErr.title = 'Connection Timeout';
+      timeoutErr.type = 'network';
+      throw timeoutErr;
     }
-    throw error;
+    if (error.message && error.message.includes('Network request failed')) {
+      const netErr = new Error(`Cannot connect to server at ${currentBaseUrl}. Please check your internet connection or server settings.`);
+      netErr.title = 'Connection Error';
+      netErr.type = 'network';
+      throw netErr;
+    }
+    const parsed = parseError(error);
+    const enrichedError = new Error(parsed.message);
+    enrichedError.title = parsed.title;
+    enrichedError.status = error.status;
+    enrichedError.type = parsed.type;
+    throw enrichedError;
   }
 };
 

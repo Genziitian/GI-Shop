@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -51,6 +52,7 @@ import Header from '../../components/Header';
 import ProductUnitModal from '../../components/ProductUnitModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function CustomerExploreScreen({ navigation, route }) {
   const { user, lock } = useAuth();
@@ -60,6 +62,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
   const [showCityModal, setShowCityModal] = useState(false);
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [invites, setInvites] = useState([]);
 
@@ -113,7 +116,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       const details = await getShopDetails(shop.id || shop.shopId);
       setActiveShop(details);
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to load shop catalog');
+      showErrorAlert(e, 'Shop Catalog');
     } finally {
       setCatalogLoading(false);
     }
@@ -125,7 +128,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       const details = await getShopDetails(shopId);
       setActiveShop(details);
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to load shop catalog');
+      showErrorAlert(e, 'Shop Catalog');
     } finally {
       setCatalogLoading(false);
     }
@@ -240,7 +243,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
         ]
       );
     } catch (e) {
-      Alert.alert('Order Failed', e.message || 'Failed to submit order.');
+      showErrorAlert(e, 'Order Submission');
     } finally {
       setOrderSubmitting(false);
     }
@@ -252,7 +255,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       Alert.alert('Success', `Invitation ${action === 'ACCEPT' ? 'accepted' : 'declined'}.`);
       loadData();
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to update invite.');
+      showErrorAlert(e, 'Store Invitation');
     }
   };
 
@@ -328,6 +331,18 @@ export default function CustomerExploreScreen({ navigation, route }) {
           data={filteredShops}
           keyExtractor={(item) => `shop-${item.id}`}
           contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => {
+                setRefreshing(true);
+                await loadData();
+                setRefreshing(false);
+              }}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <Store size={40} color={colors.textMuted} />

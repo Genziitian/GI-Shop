@@ -4,11 +4,19 @@ apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
+def findNodeCmd() {
+    for (nodePath in ["/opt/homebrew/bin/node", "/usr/local/bin/node", System.getenv("NODE_BINARY")]) {
+        if (nodePath && new File(nodePath).exists()) return nodePath
+    }
+    return "node"
+}
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
+    nodeExecutableAndArgs = [findNodeCmd()]
     entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", projectRoot, "android", "absolute"].execute(null, rootDir).text.trim())
     reactNativeDir = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
     hermesCommand = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/sdks/hermesc/%OS-BIN%/hermesc"
@@ -91,8 +99,8 @@ android {
         applicationId 'com.gishop.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
-        versionName "1.0.8"
+        versionCode 16
+        versionName "1.0.14"
     }
     signingConfigs {
         debug {

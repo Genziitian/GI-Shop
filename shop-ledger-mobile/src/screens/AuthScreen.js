@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,15 @@ import {
   Image,
   Linking,
   Modal,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff, Sparkles, CheckCircle, X } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import CitySelector from '../components/CitySelector';
+import { showErrorAlert, validatePhone } from '../utils/errorHandler';
 
 let GoogleSignin = null;
 let statusCodes = {
@@ -57,8 +60,9 @@ export default function AuthScreen() {
 
   const [isLogin, setIsLogin] = useState(true);
   const [loginStep, setLoginStep] = useState('IDENTIFIER'); // 'IDENTIFIER' | 'PASSWORD'
-  const [role, setRole] = useState('Customer'); // 'Customer' | 'Shopkeeper'
+  const [role, setRole] = useState(null); // 'Customer' | 'Shopkeeper'
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   // Form Fields for Existing User Login
@@ -67,6 +71,7 @@ export default function AuthScreen() {
 
   // Onboarding State for New Google Users
   const [onboardingUser, setOnboardingUser] = useState(null);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [onboardingName, setOnboardingName] = useState('');
   const [onboardingPhone, setOnboardingPhone] = useState('');
@@ -76,10 +81,48 @@ export default function AuthScreen() {
   const [onboardingShopAddress, setOnboardingShopAddress] = useState('');
   const [onboardingPin, setOnboardingPin] = useState('1234');
 
+  const screenAnim = useRef(new Animated.Value(0)).current;
+  const roleModalAnim = useRef(new Animated.Value(0)).current;
+  const formModalAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    screenAnim.setValue(0);
+    Animated.timing(screenAnim, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [isLogin, screenAnim]);
+
+  useEffect(() => {
+    if (showRoleModal) {
+      roleModalAnim.setValue(0);
+      Animated.spring(roleModalAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [roleModalAnim, showRoleModal]);
+
+  useEffect(() => {
+    if (showOnboardingModal) {
+      formModalAnim.setValue(0);
+      Animated.spring(formModalAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [formModalAnim, showOnboardingModal]);
+
   const handleLogin = async () => {
     if (loginStep === 'IDENTIFIER') {
       if (!email.trim()) {
-        Alert.alert('Required', 'Please enter your Email ID or Short ID.');
+        showErrorAlert('Please enter your Email ID or Short ID.', 'Email / Short ID Required');
         return;
       }
       setLoginStep('PASSWORD');
@@ -88,41 +131,47 @@ export default function AuthScreen() {
 
     // PASSWORD step
     if (!password.trim()) {
-      Alert.alert('Required', 'Please enter your password.');
+      showErrorAlert('Please enter your account password to log in.', 'Password Required');
       return;
     }
 
     setLoading(true);
+    setLoadingMessage('Checking your account...');
     try {
       await login(email.trim().toLowerCase(), password);
     } catch (err) {
-      Alert.alert('Error', err.message || 'Login failed.');
+      showErrorAlert(err, 'Login Error');
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      setLoadingMessage('Opening Google...');
       const gModule = getGoogleSigninModule();
       if (!gModule || !gModule.GoogleSignin) {
-        Alert.alert(
-          'Google Sign-In',
-          'Native Google Sign-In is enabled in the standalone APK / Google Play release. In Expo Go, please sign in using your Email & Password.'
+        showErrorAlert(
+          'Native Google Sign-In is enabled in the standalone APK / Google Play release. In development/Expo Go, please sign in using your Email & Password.',
+          'Google Sign-In Unavailable'
         );
         return;
       }
 
       const { GoogleSignin: gSignin, statusCodes: codes } = gModule;
       await gSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      await gSignin.signOut().catch(() => {});
+      setLoadingMessage('Choose your Google account...');
       const signInResult = await gSignin.signIn();
       const idToken = signInResult.data?.idToken || signInResult.idToken;
 
       if (!idToken) {
-        throw new Error('Google Sign-In did not return an ID token.');
+        throw new Error('Google Sign-In did not return a valid authentication ID token.');
       }
 
+      setLoadingMessage('Verifying with GI SHOP...');
       const res = await loginWithGoogle({
         idToken,
         role: role || 'Customer',
@@ -130,48 +179,70 @@ export default function AuthScreen() {
       });
 
       if (res && res.isNewUser) {
-        // New user detected -> Open Onboarding Profile Modal
         setOnboardingUser({
           idToken,
           googleUser: res.googleUser,
-          role: role || 'Customer',
+          role: null,
         });
+        setRole(null);
         setOnboardingName(res.googleUser?.name || '');
-        setShowOnboardingModal(true);
+        setShowRoleModal(true);
       }
     } catch (error) {
       const gModule = getGoogleSigninModule();
       const codes = gModule?.statusCodes || statusCodes;
       if (error.code === codes.SIGN_IN_CANCELLED) {
-        // User cancelled the sign-in flow
+        // User cancelled the sign-in flow - no action needed
       } else if (error.code === codes.IN_PROGRESS) {
-        // Sign-in already in progress
+        showErrorAlert('Google Sign-In is already in progress. Please wait.', 'Notice');
       } else if (error.code === codes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('Google Play Services', 'Google Play Services is not available or outdated on this device.');
+        showErrorAlert('Google Play Services is not available or outdated on this device. Please update Google Play Services in the Play Store.', 'Google Play Services');
       } else {
-        Alert.alert('Google Sign-In Error', error.message || 'Failed to sign in with Google.');
+        showErrorAlert(error, 'Google Sign-In Failed');
       }
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
+  const handleChooseRole = (selectedRole) => {
+    setRole(selectedRole);
+    setOnboardingUser((prev) => prev ? { ...prev, role: selectedRole } : prev);
+    setShowRoleModal(false);
+    setShowOnboardingModal(true);
+  };
+
   const handleCompleteOnboarding = async () => {
-    if (!onboardingPhone.trim() || onboardingPhone.trim().length < 10) {
-      return Alert.alert('Required', 'Please enter a valid 10-digit mobile number.');
+    const selectedRole = role || onboardingUser?.role;
+    const phone = onboardingPhone.trim();
+    if (!selectedRole) {
+      setShowOnboardingModal(false);
+      setShowRoleModal(true);
+      return;
     }
-    if (role === 'Shopkeeper' && (!onboardingShopName.trim() || !onboardingShopAddress.trim())) {
-      return Alert.alert('Required', 'Please enter your shop name and shop address.');
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) {
+      return showErrorAlert(phoneCheck.error, 'Invalid Mobile Number');
+    }
+    if (selectedRole === 'Shopkeeper') {
+      if (!onboardingShopName.trim()) {
+        return showErrorAlert('Please enter your shop or business name.', 'Shop Name Required');
+      }
+      if (!onboardingShopAddress.trim()) {
+        return showErrorAlert('Please enter your shop physical address or location.', 'Shop Address Required');
+      }
     }
 
     setLoading(true);
+    setLoadingMessage('Setting up your account...');
     try {
       await loginWithGoogle({
         idToken: onboardingUser.idToken,
-        role: role || 'Customer',
+        role: selectedRole,
         name: (onboardingName || onboardingUser.googleUser?.name || '').trim(),
-        phone: onboardingPhone.trim(),
-        city: role === 'Shopkeeper' ? (onboardingCity || 'Delhi') : 'Delhi',
+        phone: phoneCheck.phone,
+        city: selectedRole === 'Shopkeeper' ? (onboardingCity || 'Delhi') : 'Delhi',
         address: onboardingAddress.trim(),
         shopName: onboardingShopName.trim(),
         shopAddress: onboardingShopAddress.trim(),
@@ -180,10 +251,53 @@ export default function AuthScreen() {
       });
       setShowOnboardingModal(false);
     } catch (err) {
-      Alert.alert('Setup Error', err.message || 'Failed to complete profile setup.');
+      showErrorAlert(err, 'Account Setup Error');
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
+  };
+
+  const screenAnimatedStyle = {
+    opacity: screenAnim,
+    transform: [
+      {
+        translateY: screenAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [18, 0],
+        }),
+      },
+    ],
+  };
+
+  const roleModalAnimatedStyle = {
+    opacity: roleModalAnim,
+    transform: [
+      {
+        translateY: roleModalAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [40, 0],
+        }),
+      },
+      {
+        scale: roleModalAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.97, 1],
+        }),
+      },
+    ],
+  };
+
+  const formModalAnimatedStyle = {
+    opacity: formModalAnim,
+    transform: [
+      {
+        translateY: formModalAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [48, 0],
+        }),
+      },
+    ],
   };
 
   return (
@@ -193,10 +307,11 @@ export default function AuthScreen() {
         style={{ flex: 1 }}
       >
         {isLogin ? (
-          <ScrollView
+          <Animated.ScrollView
             contentContainerStyle={styles.loginScrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            style={screenAnimatedStyle}
           >
             <View style={[styles.logoContainer, { marginTop: 20 }]}>
               <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
@@ -271,9 +386,9 @@ export default function AuthScreen() {
               <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
             </View>
             <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
-          </ScrollView>
+          </Animated.ScrollView>
         ) : (
-          <ScrollView contentContainerStyle={styles.loginScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <Animated.ScrollView contentContainerStyle={styles.loginScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={screenAnimatedStyle}>
             <View style={[styles.logoContainer, { marginTop: 20 }]}>
               <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
             </View>
@@ -281,27 +396,14 @@ export default function AuthScreen() {
               <Text style={styles.welcomeTitle}>Create <Text style={styles.welcomeTitleGreen}>Account</Text></Text>
               <Text style={styles.welcomeSubtitle}>Sign up & verify securely with Google</Text>
             </View>
-            <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.label, { textAlign: 'center', marginBottom: 8 }]}>Choose Your Account Type</Text>
-              <View style={styles.roleSwitcher}>
-                <TouchableOpacity style={[styles.roleBtn, role === 'Customer' && styles.roleBtnActive]} onPress={() => setRole('Customer')} activeOpacity={0.7}>
-                  <User size={16} color={role === 'Customer' ? '#16a34a' : colors.textMuted} />
-                  <Text style={[styles.roleBtnText, role === 'Customer' && styles.roleBtnTextActive]}>Customer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.roleBtn, role === 'Shopkeeper' && styles.roleBtnActive]} onPress={() => setRole('Shopkeeper')} activeOpacity={0.7}>
-                  <Store size={16} color={role === 'Shopkeeper' ? '#16a34a' : colors.textMuted} />
-                  <Text style={[styles.roleBtnText, role === 'Shopkeeper' && styles.roleBtnTextActive]}>Shopkeeper</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
             <TouchableOpacity style={[styles.googleBtn, { borderColor: '#16a34a', borderWidth: 2, height: 56 }]} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
               <View style={styles.googleIconContainer}><Text style={styles.googleG}>G</Text></View>
               <Text style={[styles.googleBtnText, { fontSize: 16, fontWeight: '800' }]}>{loading ? 'Verifying with Google...' : 'Sign Up with Google'}</Text>
             </TouchableOpacity>
             <View style={styles.googleInfoBox}>
               <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Instant 1-tap Google identity verification</Text></View>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>No manual signup forms or passwords needed</Text></View>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Instant setup for your {role.toLowerCase()} account</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>New users choose Customer or Shopkeeper after Google</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Only the needed setup details are asked next</Text></View>
             </View>
             <View style={styles.toggleRow}>
               <Text style={styles.toggleText}>Already have an account? </Text>
@@ -318,13 +420,42 @@ export default function AuthScreen() {
               <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
             </View>
             <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
-          </ScrollView>
+          </Animated.ScrollView>
         )}
       </KeyboardAvoidingView>
 
-      <Modal visible={showOnboardingModal} animationType="slide" transparent={true} onRequestClose={() => setShowOnboardingModal(false)}>
+      <Modal visible={showRoleModal} animationType="fade" transparent={true} onRequestClose={() => setShowRoleModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <Animated.View style={[styles.roleModalContent, roleModalAnimatedStyle]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.roleQuestionTitle}>Are you a customer or shopkeeper?</Text>
+            <Text style={styles.roleQuestionSubtitle}>{onboardingUser?.googleUser?.email || 'Your Google account is verified'}</Text>
+            <View style={styles.roleChoiceGrid}>
+              <TouchableOpacity style={styles.roleChoiceCard} onPress={() => handleChooseRole('Customer')} activeOpacity={0.82}>
+                <View style={styles.roleChoiceIcon}>
+                  <User size={24} color="#16a34a" />
+                </View>
+                <Text style={styles.roleChoiceTitle}>Customer</Text>
+                <Text style={styles.roleChoiceText}>I buy from local shops</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.roleChoiceCard} onPress={() => handleChooseRole('Shopkeeper')} activeOpacity={0.82}>
+                <View style={styles.roleChoiceIcon}>
+                  <Store size={24} color="#16a34a" />
+                </View>
+                <Text style={styles.roleChoiceTitle}>Shopkeeper</Text>
+                <Text style={styles.roleChoiceText}>I manage my shop</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.modalTextButton} onPress={() => setShowRoleModal(false)}>
+              <Text style={styles.modalTextButtonText}>Maybe later</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <Modal visible={showOnboardingModal} animationType="fade" transparent={true} onRequestClose={() => setShowOnboardingModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Animated.View style={[styles.modalContent, formModalAnimatedStyle]}>
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>{role === 'Shopkeeper' ? 'Configure Your Store' : 'Complete Your Profile'}</Text>
@@ -333,14 +464,11 @@ export default function AuthScreen() {
               <TouchableOpacity onPress={() => setShowOnboardingModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><X size={22} color="#64748b" /></TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              <View style={[styles.roleSwitcher, { marginTop: 12 }]}>
-                <TouchableOpacity style={[styles.roleBtn, role === 'Customer' && styles.roleBtnActive]} onPress={() => setRole('Customer')}>
-                  <User size={15} color={role === 'Customer' ? '#16a34a' : colors.textMuted} /><Text style={[styles.roleBtnText, role === 'Customer' && styles.roleBtnTextActive]}>Customer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.roleBtn, role === 'Shopkeeper' && styles.roleBtnActive]} onPress={() => setRole('Shopkeeper')}>
-                  <Store size={15} color={role === 'Shopkeeper' ? '#16a34a' : colors.textMuted} /><Text style={[styles.roleBtnText, role === 'Shopkeeper' && styles.roleBtnTextActive]}>Shopkeeper</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.selectedRolePill} onPress={() => { setShowOnboardingModal(false); setShowRoleModal(true); }} activeOpacity={0.75}>
+                {role === 'Shopkeeper' ? <Store size={15} color="#16a34a" /> : <User size={15} color="#16a34a" />}
+                <Text style={styles.selectedRoleText}>{role || 'Choose role'}</Text>
+                <Text style={styles.selectedRoleChange}>Change</Text>
+              </TouchableOpacity>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Full Name *</Text>
                 <TextInput style={styles.input} placeholder="e.g. Ramesh Kumar" placeholderTextColor="#94a3b8" value={onboardingName} onChangeText={setOnboardingName} />
@@ -378,9 +506,19 @@ export default function AuthScreen() {
                 </View>
               )}
               <TouchableOpacity style={[styles.submitBtn, { marginTop: 16 }]} onPress={handleCompleteOnboarding} disabled={loading} activeOpacity={0.8}>
-                {loading ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={styles.submitBtnText}>Complete Setup & Enter App 🚀</Text>}
+                {loading ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={styles.submitBtnText}>Complete Setup & Enter App</Text>}
               </TouchableOpacity>
             </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <Modal visible={loading} transparent={true} animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color="#16a34a" />
+            <Text style={styles.loadingTitle}>{loadingMessage || 'Please wait...'}</Text>
+            <Text style={styles.loadingSubtitle}>This usually takes a few seconds.</Text>
           </View>
         </View>
       </Modal>
@@ -751,6 +889,82 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'flex-end',
   },
+  modalHandle: {
+    alignSelf: 'center',
+    width: 42,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#cbd5e1',
+    marginBottom: 18,
+  },
+  roleModalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 32,
+  },
+  roleQuestionTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0f172a',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  roleQuestionSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '600',
+  },
+  roleChoiceGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  roleChoiceCard: {
+    flex: 1,
+    minHeight: 136,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    backgroundColor: '#f0fdf4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+  },
+  roleChoiceIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#dcfce7',
+  },
+  roleChoiceTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  roleChoiceText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  modalTextButton: {
+    alignItems: 'center',
+    paddingTop: 18,
+  },
+  modalTextButtonText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#64748b',
+  },
   modalContent: {
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 24,
@@ -778,5 +992,62 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 2,
     fontWeight: '500',
+  },
+  selectedRolePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginTop: 14,
+    marginBottom: 16,
+    gap: 8,
+  },
+  selectedRoleText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#166534',
+  },
+  selectedRoleChange: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#16a34a',
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  loadingCard: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    paddingVertical: 26,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...shadowLarge,
+  },
+  loadingTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0f172a',
+    marginTop: 14,
+    textAlign: 'center',
+  },
+  loadingSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 6,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });

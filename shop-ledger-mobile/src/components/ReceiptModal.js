@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,16 @@ import {
   TouchableWithoutFeedback,
   Linking,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Receipt, CheckCircle, X, Printer, MessageSquare } from 'lucide-react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { colors, shadowLarge } from '../theme/colors';
 
 export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
+  const [sharingPdf, setSharingPdf] = useState(false);
+
   if (!receipt) return null;
 
   const items = Array.isArray(receipt.items)
@@ -29,32 +34,268 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
       })
     : new Date().toLocaleString();
 
-  const handleShareWhatsApp = () => {
-    const rawPhone = (receipt.customerPhone || receipt.phone || '').toString().trim();
-    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
-    const targetPhone = cleanPhone ? `91${cleanPhone}` : '';
-    const shopName = receipt.shopName || 'GI SHOP';
-    const totalAmt = (Number(receipt.total ?? receipt.estimatedTotal) || 0).toFixed(2);
-    const billId = receipt.orderNumber || receipt.id || 'N/A';
+  const handleSharePDF = async () => {
+    if (sharingPdf) return;
+    setSharingPdf(true);
 
-    const itemLines = items.map(it => {
-      const name = it.item?.name || it.name || 'Item';
-      const qty = it.qty || 1;
-      const rate = it.rate || it.price || it.item?.price || 0;
-      const amt = (Number(it.amount || (qty * rate)) || 0).toFixed(2);
-      return `• ${name} x${qty} - ₹${amt}`;
-    }).join('\n');
+    try {
+      const rawPhone = (receipt.customerPhone || receipt.phone || '').toString().trim();
+      const shopName = receipt.shopName || 'GI SHOP';
+      const shopAddress = receipt.shopAddress || '';
+      const totalAmt = (Number(receipt.total ?? receipt.estimatedTotal) || 0).toFixed(2);
+      const subtotalAmt = (Number(receipt.subtotal || receipt.total || receipt.estimatedTotal) || 0).toFixed(2);
+      const discountAmt = (Number(receipt.discount) || 0).toFixed(2);
+      const billId = receipt.orderNumber || receipt.id || 'N/A';
+      const paymentMethod = receipt.paymentMethod || 'Paid';
 
-    const message = `Thank you for shopping with ${shopName}.\nHere is your invoice for today’s purchase.\n\n📄 *Bill #${billId}*\nDate: ${formattedDate}\n\n*ITEMS:*\n${itemLines}\n\n*Total Amount:* ₹${totalAmt} (${receipt.paymentMethod || 'Paid'})\n\nPlease find your bill attached above.\nWe hope to see you again.`;
+      const rowsHtml = items.map((entry, idx) => {
+        const itemName = entry.item?.name || entry.name || 'Item';
+        const unit = entry.item?.unit || entry.unit || '';
+        const rate = (Number(entry.rate || entry.price || entry.item?.price) || 0).toFixed(2);
+        const qty = entry.qty || 1;
+        const amount = (Number(entry.amount || (qty * rate)) || 0).toFixed(2);
+        return `
+          <tr>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #64748b; font-size: 12px;">${idx + 1}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9;">
+              <div style="font-weight: 700; color: #0f172a; font-size: 13px;">${itemName}</div>
+              <div style="font-size: 11px; color: #64748b;">&#8377;${rate} / ${unit}</div>
+            </td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: 600; color: #334155; font-size: 13px;">${qty} ${unit}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700; color: #0f172a; font-size: 13px;">&#8377;${amount}</td>
+          </tr>
+        `;
+      }).join('');
 
-    const encodedMsg = encodeURIComponent(message);
-    const whatsappUrl = targetPhone 
-      ? `https://wa.me/${targetPhone}?text=${encodedMsg}` 
-      : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+      const discountHtml = Number(discountAmt) > 0 ? `
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #16a34a;">
+          <span>Discount</span>
+          <span style="font-weight: 700;">-&#8377;${discountAmt}</span>
+        </div>
+      ` : '';
 
-    Linking.openURL(whatsappUrl).catch(() => {
-      Alert.alert('Error', 'Unable to open WhatsApp on this device.');
-    });
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Invoice #${billId}</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              background-color: #ffffff;
+              margin: 0;
+              padding: 16px;
+            }
+            .invoice-box {
+              max-width: 680px;
+              margin: 0 auto;
+              border: 1px solid #e2e8f0;
+              border-radius: 16px;
+              padding: 24px 28px;
+              box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            }
+            .header-center {
+              text-align: center;
+              padding-bottom: 18px;
+              border-bottom: 2px dashed #e2e8f0;
+            }
+            .store-name {
+              font-size: 24px;
+              font-weight: 900;
+              color: #0f172a;
+              margin: 0 0 4px 0;
+              letter-spacing: -0.5px;
+            }
+            .store-address {
+              font-size: 12px;
+              color: #64748b;
+              margin: 0 0 10px 0;
+            }
+            .status-pill {
+              display: inline-block;
+              background: #dcfce7;
+              color: #15803d;
+              font-size: 11px;
+              font-weight: 800;
+              padding: 4px 14px;
+              border-radius: 9999px;
+              letter-spacing: 0.5px;
+            }
+            .meta-grid {
+              display: flex;
+              flex-wrap: wrap;
+              background: #f8fafc;
+              border-radius: 12px;
+              padding: 12px 16px;
+              margin: 18px 0;
+              border: 1px solid #edf2f7;
+            }
+            .meta-item {
+              flex: 1 1 50%;
+              padding: 4px 0;
+              font-size: 12px;
+            }
+            .meta-label {
+              color: #64748b;
+              font-weight: 500;
+            }
+            .meta-val {
+              color: #0f172a;
+              font-weight: 700;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 14px 0;
+            }
+            th {
+              text-align: left;
+              font-size: 11px;
+              font-weight: 800;
+              color: #64748b;
+              padding: 10px 8px;
+              border-bottom: 2px solid #e2e8f0;
+              letter-spacing: 0.5px;
+            }
+            .summary-box {
+              margin-top: 14px;
+              border-top: 2px dashed #e2e8f0;
+              padding-top: 14px;
+              max-width: 280px;
+              margin-left: auto;
+            }
+            .summary-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 4px 0;
+              font-size: 13px;
+              color: #475569;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 10px 0 0 0;
+              margin-top: 8px;
+              border-top: 2px solid #0f172a;
+              font-size: 18px;
+              font-weight: 900;
+              color: #16a34a;
+            }
+            .footer-note {
+              text-align: center;
+              margin-top: 32px;
+              padding-top: 16px;
+              border-top: 1px solid #f1f5f9;
+              font-size: 11px;
+              color: #94a3b8;
+              font-weight: 500;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-box">
+            <div class="header-center">
+              <div class="store-name">${shopName}</div>
+              ${shopAddress ? `<div class="store-address">${shopAddress}</div>` : ''}
+              <div class="status-pill">&#10003; BILL COMPLETED</div>
+            </div>
+
+            <div class="meta-grid">
+              <div class="meta-item">
+                <span class="meta-label">Bill / Invoice No: </span>
+                <span class="meta-val">#${billId}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Date & Time: </span>
+                <span class="meta-val">${formattedDate}</span>
+              </div>
+              ${rawPhone ? `
+                <div class="meta-item">
+                  <span class="meta-label">Customer Mobile: </span>
+                  <span class="meta-val">${rawPhone}</span>
+                </div>
+              ` : ''}
+              <div class="meta-item">
+                <span class="meta-label">Payment Mode: </span>
+                <span class="meta-val">${paymentMethod}</span>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 32px; text-align: center;">#</th>
+                  <th>Item Details</th>
+                  <th style="text-align: center;">Qty</th>
+                  <th style="text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <div class="summary-box">
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <span style="font-weight: 700; color: #0f172a;">&#8377;${subtotalAmt}</span>
+              </div>
+              ${discountHtml}
+              <div class="total-row">
+                <span>Total Amount</span>
+                <span>&#8377;${totalAmt}</span>
+              </div>
+            </div>
+
+            <div class="footer-note">
+              Thank you for your business! &#8226; Powered by GI SHOP
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+      });
+
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(uri, {
+          UTI: '.pdf',
+          mimeType: 'application/pdf',
+          dialogTitle: `Share Bill #${billId} PDF`,
+        });
+      } else {
+        const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+        const targetPhone = cleanPhone ? `91${cleanPhone}` : '';
+        const itemLines = items.map(it => {
+          const name = it.item?.name || it.name || 'Item';
+          const qty = it.qty || 1;
+          const rate = it.rate || it.price || it.item?.price || 0;
+          const amt = (Number(it.amount || (qty * rate)) || 0).toFixed(2);
+          return `• ${name} x${qty} - ₹${amt}`;
+        }).join('\n');
+        const message = `Thank you for shopping with ${shopName}.\nHere is your bill summary:\n\n📄 *Bill #${billId}*\nDate: ${formattedDate}\n\n*ITEMS:*\n${itemLines}\n\n*Total Amount:* ₹${totalAmt} (${paymentMethod})\n\nGenerated via GI SHOP`;
+        const encodedMsg = encodeURIComponent(message);
+        const whatsappUrl = targetPhone 
+          ? `https://wa.me/${targetPhone}?text=${encodedMsg}` 
+          : `https://api.whatsapp.com/send?text=${encodedMsg}`;
+        Linking.openURL(whatsappUrl).catch(() => {
+          Alert.alert('Error', 'Unable to open sharing or WhatsApp on this device.');
+        });
+      }
+    } catch (error) {
+      console.error('[ReceiptModal] PDF generation/sharing error:', error);
+      Alert.alert('Sharing Error', error.message || 'Failed to generate receipt PDF.');
+    } finally {
+      setSharingPdf(false);
+    }
   };
 
   return (
@@ -192,33 +433,32 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 8,
-                      paddingVertical: 12,
+                      paddingVertical: 14,
                       borderRadius: 12,
                       width: '100%',
                     }}
-                    onPress={handleShareWhatsApp}
+                    onPress={handleSharePDF}
                     activeOpacity={0.85}
+                    disabled={sharingPdf}
                   >
-                    <MessageSquare size={18} color="#ffffff" />
+                    {sharingPdf ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <MessageSquare size={18} color="#ffffff" />
+                    )}
                     <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '700' }}>
-                      Share Bill on WhatsApp {receipt.customerPhone ? `(${receipt.customerPhone})` : ''}
+                      {sharingPdf
+                        ? 'Preparing Bill PDF...'
+                        : `Share Bill on WhatsApp ${receipt.customerPhone ? `(${receipt.customerPhone})` : ''}`}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.newBillBtn}
+                    style={styles.closeBtn}
                     onPress={() => {
                       if (onNewBill) onNewBill();
                       onClose();
                     }}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.newBillBtnText}>Done / New Bill</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.closeBtn}
-                    onPress={onClose}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.closeBtnText}>Close</Text>

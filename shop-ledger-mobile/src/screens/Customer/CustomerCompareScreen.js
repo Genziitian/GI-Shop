@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
   Modal,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Tag, Search, X, Store, Check, Plus, AlertTriangle, MapPin, ChevronDown, Lock, Settings, User } from 'lucide-react-native';
@@ -28,6 +29,7 @@ export default function CustomerCompareScreen({ navigation }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const quickKeywords = ['Milk', 'Atta', 'Rice', 'Sugar', 'Oil', 'Tea', 'Dal', 'Kurkure'];
 
@@ -141,6 +143,18 @@ export default function CustomerCompareScreen({ navigation }) {
           data={results}
           keyExtractor={(item, idx) => `compare-grp-${item.productName}-${idx}`}
           contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => {
+                setRefreshing(true);
+                await handleSearch(query, selectedCity);
+                setRefreshing(false);
+              }}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <Tag size={40} color={colors.textMuted} />
