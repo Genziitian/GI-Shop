@@ -1281,13 +1281,13 @@ export default function Shopkeeper() {
                     <span className="badge" style={{
                       background: order.status === 'PENDING' ? '#eff6ff' 
                         : (order.status === 'PACKING' ? '#fef3c7' 
-                        : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
-                        : (order.status === 'COLLECTED' ? '#dcfce7' 
+                        : (order.status === 'READY' ? '#e0f2fe' 
+                        : ((order.status === 'COMPLETED' || order.status === 'COLLECTED') ? '#dcfce7' 
                         : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
                       color: order.status === 'PENDING' ? 'var(--primary)' 
                         : (order.status === 'PACKING' ? '#b45309' 
-                        : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
-                        : (order.status === 'COLLECTED' ? '#15803d' 
+                        : (order.status === 'READY' ? '#0369a1' 
+                        : ((order.status === 'COMPLETED' || order.status === 'COLLECTED') ? '#15803d' 
                         : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
                       borderColor: 'transparent',
                       padding: '0.35rem 0.65rem',
@@ -1295,7 +1295,8 @@ export default function Shopkeeper() {
                     }}>
                       {order.status === 'PENDING' && 'PENDING'}
                       {order.status === 'PACKING' && `PACKING (~${order.packingMinutes}m)`}
-                      {(order.status === 'COMPLETED' || order.status === 'READY') && 'READY (WAITING FOR CUSTOMER)'}
+                      {order.status === 'READY' && 'READY (WAITING FOR CUSTOMER)'}
+                      {order.status === 'COMPLETED' && 'ORDER COMPLETED'}
                       {order.status === 'COLLECTED' && 'CUSTOMER COLLECTED'}
                       {order.status === 'NOT_COLLECTED' && 'CUSTOMER MARKED NOT COLLECTED'}
                       {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED BY CUSTOMER'}

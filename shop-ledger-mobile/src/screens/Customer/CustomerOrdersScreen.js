@@ -400,6 +400,8 @@ export default function CustomerOrdersScreen({ navigation }) {
                             : order.status === 'PACKING'
                             ? { backgroundColor: '#ffedd5' }
                             : order.status === 'READY'
+                            ? { backgroundColor: '#e0f2fe' }
+                            : (order.status === 'COMPLETED' || order.status === 'COLLECTED')
                             ? { backgroundColor: '#dcfce7' }
                             : order.status === 'AUTO_CANCELLED_EXPIRED'
                             ? { backgroundColor: '#fee2e2' }
@@ -414,6 +416,8 @@ export default function CustomerOrdersScreen({ navigation }) {
                               : order.status === 'PACKING'
                               ? { color: '#c2410c' }
                               : order.status === 'READY'
+                              ? { color: '#0369a1' }
+                              : (order.status === 'COMPLETED' || order.status === 'COLLECTED')
                               ? { color: '#15803d' }
                               : order.status === 'AUTO_CANCELLED_EXPIRED'
                               ? { color: '#b91c1c' }
@@ -423,6 +427,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                           {order.status === 'PENDING' && `⏳ PENDING (${getAutoCancelCountdown(order.createdAt)})`}
                           {order.status === 'PACKING' && `⏳ PACKING (~${order.packingMinutes || 15}m)`}
                           {order.status === 'READY' && '✓ READY FOR PICKUP'}
+                          {order.status === 'COMPLETED' && '✓ ORDER COMPLETED'}
                           {order.status === 'COLLECTED' && '✓ COLLECTED'}
                           {order.status === 'NOT_COLLECTED' && '✗ NOT COLLECTED'}
                           {order.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED'}

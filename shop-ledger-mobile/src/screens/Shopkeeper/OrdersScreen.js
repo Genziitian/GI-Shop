@@ -329,9 +329,9 @@ export default function OrdersScreen({ navigation }) {
                 ? styles.statusPillPending
                 : (ord.status === 'ACCEPTED' || ord.status === 'PACKING')
                 ? styles.statusPillAccepted
-                : (ord.status === 'READY' || ord.status === 'COMPLETED')
+                : ord.status === 'READY'
                 ? { backgroundColor: '#e0f2fe' }
-                : ord.status === 'COLLECTED'
+                : (ord.status === 'COMPLETED' || ord.status === 'COLLECTED')
                 ? styles.statusPillCompleted
                 : styles.statusPillDeclined,
             ]}
@@ -339,8 +339,8 @@ export default function OrdersScreen({ navigation }) {
             <Text
               style={[
                 styles.orderStatusPillText,
-                (ord.status === 'READY' || ord.status === 'COMPLETED') && { color: '#0369a1' },
-                ord.status === 'COLLECTED' && { color: '#15803d' },
+                ord.status === 'READY' && { color: '#0369a1' },
+                (ord.status === 'COMPLETED' || ord.status === 'COLLECTED') && { color: '#15803d' },
                 (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'AUTO_CANCELLED_EXPIRED' || ord.status === 'DECLINED') && { color: '#b91c1c' },
               ]}
             >
@@ -348,8 +348,10 @@ export default function OrdersScreen({ navigation }) {
                 ? 'Pending'
                 : ord.status === 'PACKING'
                 ? `Packing (${ord.packingMinutes}m)`
-                : (ord.status === 'READY' || ord.status === 'COMPLETED')
+                : ord.status === 'READY'
                 ? 'Ready (Waiting Customer)'
+                : ord.status === 'COMPLETED'
+                ? 'Order Completed'
                 : ord.status === 'COLLECTED'
                 ? 'Customer Collected'
                 : ord.status === 'NOT_COLLECTED'
