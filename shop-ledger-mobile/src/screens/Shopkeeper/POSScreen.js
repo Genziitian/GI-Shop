@@ -30,6 +30,7 @@ import {
   Plus,
   Minus,
   ChevronUp,
+  RefreshCw,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import { getItems, getCustomers, saveSale, saveCustomer } from '../../api/client';
@@ -40,6 +41,12 @@ import ReceiptModal from '../../components/ReceiptModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import { showErrorAlert } from '../../utils/errorHandler';
+import {
+  loadCachedItems,
+  saveCachedItems,
+  loadCachedCustomers,
+  saveCachedCustomers,
+} from '../../utils/cache';
 
 const PAYMENT_MODES = [
   { id: 'Cash', label: 'Cash', icon: Banknote },
@@ -49,11 +56,14 @@ const PAYMENT_MODES = [
 
 export default function POSScreen({ navigation }) {
   const { user } = useAuth();
+  const shopId = user?.shopId || user?.shop?.id || user?.staffRole?.shopId || 'default';
 
   const [items, setItems] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
 
   // Search & Cart State
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,29 +83,79 @@ export default function POSScreen({ navigation }) {
   const [receiptData, setReceiptData] = useState(null);
   const [completingBill, setCompletingBill] = useState(false);
 
-  const loadData = useCallback(async () => {
+  // Background sync / fresh pull
+  const loadData = useCallback(async (isUserRefresh = false) => {
+    if (isUserRefresh) {
+      setRefreshing(true);
+    } else {
+      setSyncing(true);
+    }
+
     try {
       const [itemsData, customersData] = await Promise.all([
         getItems(),
         getCustomers(),
       ]);
-      setItems(itemsData || []);
-      setCustomers(customersData || []);
+      const safeItems = Array.isArray(itemsData) ? itemsData : [];
+      const safeCustomers = Array.isArray(customersData) ? customersData : [];
+
+      setItems(safeItems);
+      setCustomers(safeCustomers);
+      setFetchError(null);
+
+      // Persist to local cache for instant offline access
+      await Promise.all([
+        saveCachedItems(shopId, safeItems),
+        saveCachedCustomers(shopId, safeCustomers),
+      ]);
     } catch (e) {
-      console.error('POS load error:', e);
+      console.warn('POS load/sync error:', e);
+      setFetchError('Unable to refresh latest items. Working with saved catalog.');
     } finally {
       setLoading(false);
+      setSyncing(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [shopId]);
 
+  // On mount: instantly display local cache, then revalidate in background
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+
+    const initCacheAndRevalidate = async () => {
+      try {
+        const [cachedItems, cachedCustomers] = await Promise.all([
+          loadCachedItems(shopId),
+          loadCachedCustomers(shopId),
+        ]);
+
+        if (active) {
+          if (cachedItems && cachedItems.length > 0) {
+            setItems(cachedItems);
+            setLoading(false);
+          }
+          if (cachedCustomers && cachedCustomers.length > 0) {
+            setCustomers(cachedCustomers);
+          }
+        }
+      } catch (cacheErr) {
+        console.warn('[POS] Cache read error:', cacheErr);
+      }
+
+      if (active) {
+        loadData(false);
+      }
+    };
+
+    initCacheAndRevalidate();
+
+    return () => {
+      active = false;
+    };
+  }, [shopId, loadData]);
 
   const onRefresh = () => {
-    setRefreshing(true);
-    loadData();
+    loadData(true);
   };
 
   const filteredItems = items.filter((i) =>
@@ -354,8 +414,24 @@ export default function POSScreen({ navigation }) {
               )}
             </View>
 
+            {/* Syncing Indicator Badge */}
+            {syncing && items.length > 0 && (
+              <View style={styles.syncBadge}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.syncText}>Refreshing store catalog...</Text>
+              </View>
+            )}
+
+            {/* Offline / Sync Notice Banner */}
+            {fetchError && items.length > 0 && (
+              <TouchableOpacity onPress={() => loadData(true)} style={styles.offlineBanner} activeOpacity={0.8}>
+                <Text style={styles.offlineText}>{fetchError}</Text>
+                <Text style={styles.offlineRetry}>↻ Retry</Text>
+              </TouchableOpacity>
+            )}
+
             {/* Product Grid */}
-            {loading ? (
+            {loading && items.length === 0 ? (
               <SkeletonLoader type="productGrid" count={6} />
             ) : (
               <View style={styles.productGrid}>
@@ -378,8 +454,27 @@ export default function POSScreen({ navigation }) {
               ))}
               {filteredItems.length === 0 && (
                 <View style={styles.emptyProducts}>
-                  <Package size={32} color={colors.textMuted} />
-                  <Text style={styles.emptyProductsText}>No matching products</Text>
+                  <Package size={36} color={colors.textMuted} />
+                  <Text style={styles.emptyProductsText}>
+                    {searchQuery.length > 0
+                      ? `No matching products for "${searchQuery}"`
+                      : (fetchError ? 'Unable to load products from server' : 'No products in store yet')}
+                  </Text>
+                  <Text style={styles.emptyProductsSub}>
+                    {searchQuery.length > 0
+                      ? 'Try searching with another keyword'
+                      : (fetchError ? 'Please check your connection and tap to retry' : 'Add products from Inventory or More tab')}
+                  </Text>
+                  {searchQuery.length > 0 ? (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
+                      <Text style={styles.clearSearchText}>Clear Search</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity onPress={() => loadData(true)} style={styles.refreshCatalogBtn}>
+                      <RefreshCw size={14} color="#ffffff" style={{ marginRight: 4 }} />
+                      <Text style={styles.refreshCatalogText}>Refresh Products</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
             </View>
@@ -817,15 +912,92 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
   },
+  syncBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#ecfdf5',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  syncText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fffbeb',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fef3c7',
+    marginBottom: 10,
+  },
+  offlineText: {
+    fontSize: 12,
+    color: '#92400e',
+    fontWeight: '500',
+  },
+  offlineRetry: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+  },
   emptyProducts: {
     width: '100%',
-    paddingVertical: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   emptyProductsText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  emptyProductsSub: {
     fontSize: 12,
     color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 12,
+    maxWidth: 240,
+  },
+  clearSearchBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  clearSearchText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  refreshCatalogBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    ...shadowStyle,
+  },
+  refreshCatalogText: {
+    fontSize: 13,
+    color: '#ffffff',
+    fontWeight: '700',
   },
 
   /* Floating Bottom Cart Banner */

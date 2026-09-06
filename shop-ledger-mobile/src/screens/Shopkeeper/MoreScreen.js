@@ -58,9 +58,11 @@ import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 import ChangePasswordModal from '../../components/ChangePasswordModal';
 import CitySelector from '../../components/CitySelector';
 import { showErrorAlert, parseError } from '../../utils/errorHandler';
+import { loadCachedItems, saveCachedItems } from '../../utils/cache';
 
 export default function MoreScreen({ navigation }) {
   const { user, logout, changePin } = useAuth();
+  const shopId = user?.shopId || user?.shop?.id || user?.staffRole?.shopId || 'default';
   const { t, language, setLanguage } = useTranslation();
 
   // Active Sub-View: 'hub' | 'items' | 'staff' | 'profile' | 'pin'
@@ -143,7 +145,11 @@ export default function MoreScreen({ navigation }) {
         isOwner ? getStaff().catch(() => []) : Promise.resolve([]),
         getMyDetailedShop().catch(() => null),
       ]);
-      setItems(Array.isArray(itemsData) ? itemsData : (itemsData?.items || []));
+      const safeItems = Array.isArray(itemsData) ? itemsData : (itemsData?.items || []);
+      setItems(safeItems);
+      if (safeItems.length > 0) {
+        saveCachedItems(shopId, safeItems);
+      }
       setStaffList(Array.isArray(staffData) ? staffData : (staffData?.staff || staffData?.cashiers || []));
       if (detailedShopData) {
         setDetailedShop(detailedShopData);
@@ -159,11 +165,21 @@ export default function MoreScreen({ navigation }) {
     } catch (e) {
       console.error('MoreScreen load error:', e);
     }
-  }, [isOwner, user]);
+  }, [isOwner, user, shopId]);
 
+  // Read cached items instantly on mount
   useEffect(() => {
+    let active = true;
+    loadCachedItems(shopId).then((cached) => {
+      if (active && cached && cached.length > 0) {
+        setItems(cached);
+      }
+    });
     loadAllMoreData();
-  }, [loadAllMoreData]);
+    return () => {
+      active = false;
+    };
+  }, [loadAllMoreData, shopId]);
 
   useEffect(() => {
     if (user?.shop) {

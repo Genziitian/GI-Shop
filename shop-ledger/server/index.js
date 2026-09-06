@@ -209,22 +209,23 @@ const authenticate = (req, res, next) => {
       req.user.phone = u.phone;
 
       if (u.role === 'Shopkeeper') {
-        db.get(`SELECT id, shortId, shopName FROM Shops WHERE ownerId = ? AND status = 'ACTIVE'`, [u.id], (err, shop) => {
-          req.user.shopId = shop ? shop.id : null;
+        db.get(`SELECT id, shortId, shopName FROM Shops WHERE ownerId = ? AND (status IS NULL OR LOWER(status) != 'terminated')`, [u.id], (err, shop) => {
+          req.user.shopId = shop ? shop.id : (decoded.shopId || null);
           req.user.staffRole = 'Owner';
+          req.user.shop = shop || null;
           next();
         });
       } else {
         // Customer or Cashier: check if accepted staff of an active shop
-        db.get(`SELECT ShopStaff.shopId, ShopStaff.role FROM ShopStaff 
+        db.get(`SELECT ShopStaff.shopId, ShopStaff.role, Shops.shortId as shopShortId, Shops.shopName FROM ShopStaff 
                 JOIN Shops ON ShopStaff.shopId = Shops.id 
-                WHERE ShopStaff.userId = ? AND ShopStaff.status = 'ACCEPTED' AND Shops.status = 'ACTIVE'`, [u.id], (err, staff) => {
+                WHERE ShopStaff.userId = ? AND (LOWER(ShopStaff.status) = 'accepted') AND (Shops.status IS NULL OR LOWER(Shops.status) != 'terminated')`, [u.id], (err, staff) => {
           if (staff) {
             req.user.shopId = staff.shopId;
             req.user.staffRole = staff.role; // 'Cashier'
           } else {
-            req.user.shopId = null;
-            req.user.staffRole = null;
+            req.user.shopId = decoded.shopId || null;
+            req.user.staffRole = decoded.staffRole || null;
           }
           next();
         });
@@ -1049,28 +1050,97 @@ app.put('/api/shop/status', authenticate, (req, res) => {
 
 // --- SHOPKEEPER & CASHIER INVENTORY APIs ---
 app.get('/api/shop/items', authenticate, (req, res) => {
-  const shopId = req.user.shopId;
-  if (!shopId) return res.status(403).json({ error: 'No shop context' });
-  db.all(`SELECT * FROM Items WHERE shopId = ?`, [shopId], (err, rows) => res.json(rows || []));
+  const resolveShopId = (cb) => {
+    if (req.user.shopId) return cb(null, req.user.shopId);
+    db.get(`SELECT id FROM Shops WHERE ownerId = ? AND (status IS NULL OR LOWER(status) != 'terminated')`, [req.user.id], (err, row) => {
+      if (row) return cb(null, row.id);
+      db.get(`SELECT shopId FROM ShopStaff WHERE userId = ? AND LOWER(status) = 'accepted'`, [req.user.id], (sErr, sRow) => {
+        if (sRow) return cb(null, sRow.shopId);
+        cb(new Error('No shop context'));
+      });
+    });
+  };
+
+  resolveShopId((err, shopId) => {
+    if (err || !shopId) return res.status(403).json({ error: 'No shop context' });
+    db.all(`SELECT * FROM Items WHERE shopId = ? ORDER BY id DESC`, [shopId], (qErr, rows) => {
+      res.json(rows || []);
+    });
+  });
 });
 
 app.post('/api/shop/items', authenticate, (req, res) => {
-  if (req.user.role !== 'Shopkeeper') return res.status(403).json({ error: 'Forbidden: Only shop owner can add products' });
-  const { name, price, unit } = req.body;
-  db.run(`INSERT INTO Items (shopId, name, price, unit) VALUES (?, ?, ?, ?)`,
-    [req.user.shopId, name, price, unit], function() { res.json({ id: this.lastID, name, price, unit, shopId: req.user.shopId }); });
+  const resolveShopId = (cb) => {
+    if (req.user.shopId) return cb(null, req.user.shopId);
+    db.get(`SELECT id FROM Shops WHERE ownerId = ? AND (status IS NULL OR LOWER(status) != 'terminated')`, [req.user.id], (err, row) => {
+      if (row) return cb(null, row.id);
+      db.get(`SELECT shopId FROM ShopStaff WHERE userId = ? AND LOWER(status) = 'accepted'`, [req.user.id], (sErr, sRow) => {
+        if (sRow) return cb(null, sRow.shopId);
+        cb(new Error('No shop context'));
+      });
+    });
+  };
+
+  resolveShopId((err, shopId) => {
+    if (err || !shopId) return res.status(403).json({ error: 'No shop context' });
+    const { name, price, unit } = req.body;
+    if (!name || price === undefined) return res.status(400).json({ error: 'Name and price are required' });
+    db.run(
+      `INSERT INTO Items (shopId, name, price, unit) VALUES (?, ?, ?, ?)`,
+      [shopId, name.trim(), Number(price) || 0, unit || 'Piece'],
+      function(insErr) {
+        if (insErr) return res.status(500).json({ error: 'Failed to add item' });
+        res.json({ id: this.lastID, name: name.trim(), price: Number(price) || 0, unit: unit || 'Piece', shopId });
+      }
+    );
+  });
 });
 
 app.put('/api/shop/items/:id', authenticate, (req, res) => {
-  if (req.user.role !== 'Shopkeeper') return res.status(403).json({ error: 'Forbidden: Only shop owner can edit products' });
-  const { name, price, unit } = req.body;
-  db.run(`UPDATE Items SET name=?, price=?, unit=? WHERE id=? AND shopId=?`,
-    [name, price, unit, req.params.id, req.user.shopId], () => res.json({ success: true }));
+  const resolveShopId = (cb) => {
+    if (req.user.shopId) return cb(null, req.user.shopId);
+    db.get(`SELECT id FROM Shops WHERE ownerId = ? AND (status IS NULL OR LOWER(status) != 'terminated')`, [req.user.id], (err, row) => {
+      if (row) return cb(null, row.id);
+      db.get(`SELECT shopId FROM ShopStaff WHERE userId = ? AND LOWER(status) = 'accepted'`, [req.user.id], (sErr, sRow) => {
+        if (sRow) return cb(null, sRow.shopId);
+        cb(new Error('No shop context'));
+      });
+    });
+  };
+
+  resolveShopId((err, shopId) => {
+    if (err || !shopId) return res.status(403).json({ error: 'No shop context' });
+    const { name, price, unit } = req.body;
+    db.run(
+      `UPDATE Items SET name=?, price=?, unit=? WHERE id=? AND shopId=?`,
+      [name.trim(), Number(price) || 0, unit || 'Piece', req.params.id, shopId],
+      (updErr) => {
+        if (updErr) return res.status(500).json({ error: 'Failed to update item' });
+        res.json({ success: true, id: req.params.id, name: name.trim(), price: Number(price) || 0, unit: unit || 'Piece', shopId });
+      }
+    );
+  });
 });
 
 app.delete('/api/shop/items/:id', authenticate, (req, res) => {
-  if (req.user.role !== 'Shopkeeper') return res.status(403).json({ error: 'Forbidden: Only shop owner can delete products' });
-  db.run(`DELETE FROM Items WHERE id=? AND shopId=?`, [req.params.id, req.user.shopId], () => res.json({ success: true }));
+  const resolveShopId = (cb) => {
+    if (req.user.shopId) return cb(null, req.user.shopId);
+    db.get(`SELECT id FROM Shops WHERE ownerId = ? AND (status IS NULL OR LOWER(status) != 'terminated')`, [req.user.id], (err, row) => {
+      if (row) return cb(null, row.id);
+      db.get(`SELECT shopId FROM ShopStaff WHERE userId = ? AND LOWER(status) = 'accepted'`, [req.user.id], (sErr, sRow) => {
+        if (sRow) return cb(null, sRow.shopId);
+        cb(new Error('No shop context'));
+      });
+    });
+  };
+
+  resolveShopId((err, shopId) => {
+    if (err || !shopId) return res.status(403).json({ error: 'No shop context' });
+    db.run(`DELETE FROM Items WHERE id=? AND shopId=?`, [req.params.id, shopId], (delErr) => {
+      if (delErr) return res.status(500).json({ error: 'Failed to delete item' });
+      res.json({ success: true, id: req.params.id });
+    });
+  });
 });
 
 // --- CUSTOMER ORDERS / "MAKE A LIST" APIs ---

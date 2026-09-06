@@ -19,16 +19,28 @@ import {
   Trash2,
   Tag,
   Layers,
+  RefreshCw,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import { getItems, saveItem, editItem, deleteItem } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import EditProductModal from '../../components/EditProductModal';
 import { showErrorAlert } from '../../utils/errorHandler';
+import {
+  loadCachedItems,
+  saveCachedItems,
+  addOrUpdateCachedItem,
+  removeCachedItem,
+} from '../../utils/cache';
 
 export default function InventoryScreen() {
+  const { user } = useAuth();
+  const shopId = user?.shopId || user?.shop?.id || user?.staffRole?.shopId || 'default';
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -36,25 +48,55 @@ export default function InventoryScreen() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const loadInventory = useCallback(async () => {
+  const loadInventory = useCallback(async (isUserRefresh = false) => {
+    if (isUserRefresh) {
+      setRefreshing(true);
+    } else {
+      setSyncing(true);
+    }
+
     try {
       const data = await getItems();
-      setItems(data || []);
+      const safeItems = Array.isArray(data) ? data : [];
+      setItems(safeItems);
+      await saveCachedItems(shopId, safeItems);
     } catch (e) {
-      console.error('Failed to load items:', e);
+      console.warn('Failed to load inventory from server:', e);
     } finally {
       setLoading(false);
+      setSyncing(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [shopId]);
 
   useEffect(() => {
-    loadInventory();
-  }, [loadInventory]);
+    let active = true;
+
+    const initCache = async () => {
+      try {
+        const cached = await loadCachedItems(shopId);
+        if (active && cached && cached.length > 0) {
+          setItems(cached);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.warn('Inventory cache error:', err);
+      }
+
+      if (active) {
+        loadInventory(false);
+      }
+    };
+
+    initCache();
+
+    return () => {
+      active = false;
+    };
+  }, [shopId, loadInventory]);
 
   const onRefresh = () => {
-    setRefreshing(true);
-    loadInventory();
+    loadInventory(true);
   };
 
   const handleOpenAdd = () => {
@@ -77,11 +119,14 @@ export default function InventoryScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            // Optimistically remove from state & cache immediately
+            setItems((prev) => prev.filter((i) => i.id !== item.id));
+            await removeCachedItem(shopId, item.id);
             try {
               await deleteItem(item.id);
-              loadInventory();
             } catch (e) {
               showErrorAlert(e, 'Delete Item');
+              loadInventory();
             }
           },
         },
@@ -90,20 +135,33 @@ export default function InventoryScreen() {
   };
 
   const handleSaveProduct = async (productData) => {
-    if (productData.id) {
-      await editItem(productData.id, {
-        name: productData.name,
-        price: productData.price,
-        unit: productData.unit,
-      });
-    } else {
-      await saveItem({
-        name: productData.name,
-        price: productData.price,
-        unit: productData.unit,
-      });
+    try {
+      if (productData.id) {
+        // Optimistic update
+        setItems((prev) =>
+          prev.map((i) => (i.id === productData.id ? { ...i, ...productData } : i))
+        );
+        await addOrUpdateCachedItem(shopId, productData);
+        await editItem(productData.id, {
+          name: productData.name,
+          price: productData.price,
+          unit: productData.unit,
+        });
+      } else {
+        const res = await saveItem({
+          name: productData.name,
+          price: productData.price,
+          unit: productData.unit,
+        });
+        const newItem = res && res.id ? res : { ...productData, id: Date.now() };
+        setItems((prev) => [newItem, ...prev]);
+        await addOrUpdateCachedItem(shopId, newItem);
+      }
+      loadInventory();
+    } catch (err) {
+      showErrorAlert(err, 'Save Product');
+      loadInventory();
     }
-    loadInventory();
   };
 
   const filteredItems = items.filter((i) =>
