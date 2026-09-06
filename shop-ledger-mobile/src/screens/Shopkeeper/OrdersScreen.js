@@ -24,6 +24,9 @@ import {
   Search,
   History,
   Calendar,
+  ChevronDown,
+  Filter,
+  Check,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import {
@@ -38,6 +41,22 @@ import {
 import Header from '../../components/Header';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import { showErrorAlert } from '../../utils/errorHandler';
+
+const DATE_OPTIONS = [
+  { id: 'All', label: 'All Dates' },
+  { id: 'Today', label: 'Today' },
+  { id: 'Yesterday', label: 'Yesterday' },
+  { id: 'Older (>24h)', label: 'Older (>24h)' },
+];
+
+const STATUS_OPTIONS = [
+  { id: 'All', label: 'All Status' },
+  { id: 'Pending', label: 'Pending' },
+  { id: 'Packing', label: 'Packing' },
+  { id: 'Ready', label: 'Ready' },
+  { id: 'Completed', label: 'Completed' },
+  { id: 'Cancelled', label: 'Cancelled' },
+];
 
 export default function OrdersScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
@@ -67,6 +86,8 @@ export default function OrdersScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('All'); // 'All' | 'Today' | 'Yesterday' | 'Older (>24h)'
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Pending' | 'Packing' | 'Ready' | 'Completed' | 'Cancelled'
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
   const handleToggleItemUnavailable = async (ord, itemIndex) => {
     try {
@@ -621,47 +642,146 @@ export default function OrdersScreen({ navigation }) {
           ) : null}
         </View>
 
-        {/* Date Filter Pills */}
-        <View style={{ marginBottom: 6 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-            {['All', 'Today', 'Yesterday', 'Older (>24h)'].map((df) => {
-              const isActive = dateFilter === df;
-              return (
-                <TouchableOpacity
-                  key={df}
-                  style={[styles.filterChip, isActive && styles.filterChipActive]}
-                  onPress={() => setDateFilter(df)}
-                  activeOpacity={0.7}
+        {/* Date & Status Filters in Same Row */}
+        <View style={{ position: 'relative', zIndex: 50, marginBottom: 10 }}>
+          <View style={styles.dropdownsRow}>
+            {/* Date Filter Dropdown */}
+            <TouchableOpacity
+              style={[
+                styles.dropdownTrigger,
+                (showDateDropdown || dateFilter !== 'All') && styles.dropdownTriggerActive,
+              ]}
+              onPress={() => {
+                setShowDateDropdown((prev) => !prev);
+                setShowStatusDropdown(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 4 }}>
+                <Calendar size={14} color={dateFilter !== 'All' ? colors.primary : colors.textSecondary} />
+                <Text
+                  style={[
+                    styles.dropdownTriggerText,
+                    dateFilter !== 'All' && styles.dropdownTriggerTextActive,
+                  ]}
+                  numberOfLines={1}
                 >
-                  <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-                    {df === 'All' ? 'All Dates' : df}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+                  {dateFilter === 'All' ? 'All Dates' : dateFilter}
+                </Text>
+              </View>
+              <ChevronDown
+                size={14}
+                color={dateFilter !== 'All' ? colors.primary : colors.textMuted}
+                style={{ transform: [{ rotate: showDateDropdown ? '180deg' : '0deg' }] }}
+              />
+            </TouchableOpacity>
+
+            {/* Status Filter Dropdown */}
+            <TouchableOpacity
+              style={[
+                styles.dropdownTrigger,
+                (showStatusDropdown || statusFilter !== 'All') && styles.dropdownTriggerActive,
+              ]}
+              onPress={() => {
+                setShowStatusDropdown((prev) => !prev);
+                setShowDateDropdown(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 4 }}>
+                <Filter size={14} color={statusFilter !== 'All' ? colors.primary : colors.textSecondary} />
+                <Text
+                  style={[
+                    styles.dropdownTriggerText,
+                    statusFilter !== 'All' && styles.dropdownTriggerTextActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {statusFilter === 'All' ? 'All Status' : statusFilter}
+                </Text>
+              </View>
+              <ChevronDown
+                size={14}
+                color={statusFilter !== 'All' ? colors.primary : colors.textMuted}
+                style={{ transform: [{ rotate: showStatusDropdown ? '180deg' : '0deg' }] }}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Date Dropdown Menu */}
+          {showDateDropdown && (
+            <View style={[styles.dropdownMenu, { left: 0, width: '48%' }]}>
+              {DATE_OPTIONS.map((opt) => {
+                const isSelected = dateFilter === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    style={[styles.dropdownMenuItem, isSelected && styles.dropdownMenuItemActive]}
+                    onPress={() => {
+                      setDateFilter(opt.id);
+                      setShowDateDropdown(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownMenuItemText,
+                        isSelected && styles.dropdownMenuItemTextActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {opt.label}
+                    </Text>
+                    {isSelected && <Check size={14} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Status Dropdown Menu */}
+          {showStatusDropdown && (
+            <View style={[styles.dropdownMenu, { right: 0, width: '48%' }]}>
+              {STATUS_OPTIONS.map((opt) => {
+                const isSelected = statusFilter === opt.id;
+                return (
+                  <TouchableOpacity
+                    key={opt.id}
+                    style={[styles.dropdownMenuItem, isSelected && styles.dropdownMenuItemActive]}
+                    onPress={() => {
+                      setStatusFilter(opt.id);
+                      setShowStatusDropdown(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownMenuItemText,
+                        isSelected && styles.dropdownMenuItemTextActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {opt.label}
+                    </Text>
+                    {isSelected && <Check size={14} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
 
-        {/* Status Filter Pills */}
-        <View style={{ marginBottom: 10 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-            {['All', 'Pending', 'Packing', 'Ready', 'Completed', 'Cancelled'].map((sf) => {
-              const isActive = statusFilter === sf;
-              return (
-                <TouchableOpacity
-                  key={sf}
-                  style={[styles.filterChip, isActive && styles.filterChipActive]}
-                  onPress={() => setStatusFilter(sf)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-                    {sf === 'All' ? 'All Status' : sf}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+        {/* Dismiss Backdrop when dropdown is open */}
+        {(showDateDropdown || showStatusDropdown) && (
+          <TouchableOpacity
+            style={styles.dropdownBackdrop}
+            activeOpacity={1}
+            onPress={() => {
+              setShowDateDropdown(false);
+              setShowStatusDropdown(false);
+            }}
+          />
+        )}
 
         {/* Orders ScrollView */}
         {loading ? (
@@ -984,26 +1104,76 @@ const styles = StyleSheet.create({
     color: colors.text,
     padding: 0,
   },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 9999,
+  dropdownsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  dropdownTrigger: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.surface,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    minHeight: 38,
+    ...shadowStyle,
   },
-  filterChipActive: {
-    backgroundColor: colors.primary,
+  dropdownTriggerActive: {
     borderColor: colors.primary,
+    backgroundColor: '#eff6ff',
   },
-  filterChipText: {
+  dropdownTriggerText: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
   },
-  filterChipTextActive: {
-    color: '#ffffff',
-    fontWeight: '800',
+  dropdownTriggerTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 44,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 4,
+    zIndex: 100,
+    elevation: 10,
+    ...shadowLarge,
+  },
+  dropdownMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  dropdownMenuItemActive: {
+    backgroundColor: '#eff6ff',
+  },
+  dropdownMenuItemText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  dropdownMenuItemTextActive: {
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  dropdownBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 40,
   },
   sectionHeader: {
     flexDirection: 'row',

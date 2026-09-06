@@ -1473,34 +1473,51 @@ export default function Shopkeeper() {
                 </div>
               </div>
 
-              {/* Date Filters Row */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.65rem', flexWrap: 'wrap' }}>
-                {['All', 'Today', 'Yesterday', 'Older (>24h)'].map((df) => (
-                  <button
-                    key={df}
-                    type="button"
-                    className={`btn ${orderDateFilter === df ? 'btn-primary' : 'btn-outline'}`}
-                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.78rem', fontWeight: '700' }}
-                    onClick={() => setOrderDateFilter(df)}
-                  >
-                    {df === 'All' ? 'All Dates' : df}
-                  </button>
-                ))}
-              </div>
+              {/* Date & Status Filter Dropdowns in Same Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={{ position: 'relative' }}>
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Date Filter
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      value={orderDateFilter}
+                      onChange={(e) => setOrderDateFilter(e.target.value)}
+                      className="input-field"
+                      style={{ paddingLeft: '2rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', width: '100%', borderRadius: '10px' }}
+                    >
+                      <option value="All">All Dates</option>
+                      <option value="Today">Today</option>
+                      <option value="Yesterday">Yesterday</option>
+                      <option value="Older (>24h)">Older (&gt;24h)</option>
+                    </select>
+                    <span style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '0.9rem' }}>📅</span>
+                    <span style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '0.7rem', color: 'var(--text-muted)' }}>▼</span>
+                  </div>
+                </div>
 
-              {/* Status Filters Row */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-                {['All', 'Pending', 'Packing', 'Ready', 'Completed', 'Cancelled'].map((sf) => (
-                  <button
-                    key={sf}
-                    type="button"
-                    className={`btn ${orderStatusFilter === sf ? 'btn-primary' : 'btn-outline'}`}
-                    style={{ padding: '0.3rem 0.75rem', fontSize: '0.78rem', fontWeight: '700' }}
-                    onClick={() => setOrderStatusFilter(sf)}
-                  >
-                    {sf === 'All' ? 'All Status' : sf}
-                  </button>
-                ))}
+                <div style={{ position: 'relative' }}>
+                  <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Status Filter
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      value={orderStatusFilter}
+                      onChange={(e) => setOrderStatusFilter(e.target.value)}
+                      className="input-field"
+                      style={{ paddingLeft: '2rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', width: '100%', borderRadius: '10px' }}
+                    >
+                      <option value="All">All Status</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Packing">Packing</option>
+                      <option value="Ready">Ready</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <span style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '0.9rem' }}>🏷️</span>
+                    <span style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '0.7rem', color: 'var(--text-muted)' }}>▼</span>
+                  </div>
+                </div>
               </div>
 
               {/* SECTION 1: ACTIVE ORDERS (<24H) */}
