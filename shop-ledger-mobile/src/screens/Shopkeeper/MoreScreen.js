@@ -11,6 +11,7 @@ import {
   RefreshControl,
   FlatList,
   Linking,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -50,6 +51,8 @@ import {
   updateMyDetailedShop,
   toggleShopStatus,
 } from '../../api/client';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
@@ -67,6 +70,48 @@ export default function MoreScreen({ navigation }) {
 
   // Active Sub-View: 'hub' | 'items' | 'staff' | 'profile' | 'pin'
   const [activeSubView, setActiveSubView] = useState('hub');
+
+  const handleBackToHub = useCallback(() => {
+    setActiveSubView('hub');
+    AsyncStorage.removeItem('@shop_ledger_active_more_subview').catch(() => {});
+  }, []);
+
+  const navigateToSubView = useCallback((subView) => {
+    setActiveSubView(subView);
+    if (subView === 'hub') {
+      AsyncStorage.removeItem('@shop_ledger_active_more_subview').catch(() => {});
+    } else {
+      AsyncStorage.setItem('@shop_ledger_active_more_subview', subView).catch(() => {});
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (activeSubView !== 'hub') {
+          handleBackToHub();
+          return true; // prevent default back behavior
+        }
+        return false; // let React Navigation pop tab history
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [activeSubView, handleBackToHub])
+  );
+
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem('@shop_ledger_active_more_subview').then((saved) => {
+      if (active && saved && ['items', 'staff', 'profile', 'pin'].includes(saved)) {
+        setActiveSubView(saved);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
@@ -424,7 +469,7 @@ export default function MoreScreen({ navigation }) {
             <View style={styles.shopStatusCard}>
               <TouchableOpacity
                 style={styles.shopStatusTop}
-                onPress={() => setActiveSubView('profile')}
+                onPress={() => navigateToSubView('profile')}
                 activeOpacity={0.7}
               >
                 <View style={styles.storeIconBox}>
@@ -436,11 +481,11 @@ export default function MoreScreen({ navigation }) {
                       {user?.shop?.shopName || detailedShop?.shopName || 'GI SHOP Store'}
                     </Text>
                     <View style={styles.editPill}>
-                      <Text style={styles.editPillText}>Edit</Text>
+                      <Text style={styles.editPillText}>{t('Edit')}</Text>
                     </View>
                   </View>
                   <Text style={styles.shopMetaText}>
-                    ID: <Text style={{ color: colors.primary, fontWeight: '800' }}>{user?.shop?.shortId || detailedShop?.shortId || user?.shortId}</Text> • {isOwner ? 'Shop Owner' : 'Cashier'}
+                    ID: <Text style={{ color: colors.primary, fontWeight: '800' }}>{user?.shop?.shortId || detailedShop?.shortId || user?.shortId}</Text> • {isOwner ? t('Shop Owner') : t('Cashier')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -450,7 +495,7 @@ export default function MoreScreen({ navigation }) {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={[styles.statusDot, isOpen ? styles.statusDotOpen : styles.statusDotClosed]} />
                   <Text style={styles.statusLabelText}>
-                    Store Status: <Text style={{ fontWeight: '800', color: isOpen ? colors.success : colors.danger }}>{isOpen ? 'OPEN' : 'CLOSED'}</Text>
+                    {t('Store Status')}: <Text style={{ fontWeight: '800', color: isOpen ? colors.success : colors.danger }}>{isOpen ? t('OPEN') : t('CLOSED')}</Text>
                   </Text>
                 </View>
 
@@ -460,7 +505,7 @@ export default function MoreScreen({ navigation }) {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.statusToggleBtnText, isOpen ? styles.statusToggleBtnTextOpen : styles.statusToggleBtnTextClosed]}>
-                    {isOpen ? 'Close Shop' : 'Open Shop'}
+                    {isOpen ? t('Close Shop') : t('Open Shop')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -474,7 +519,7 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text }}>
-                    {t('more.langCardTitle', 'Choose Language / भाषा चुनें')}
+                    {t('more.langCardTitle', 'Choose Language')}
                   </Text>
                   <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>
                     {t('more.langCardSubtitle', 'Select your preferred language')}
@@ -548,7 +593,7 @@ export default function MoreScreen({ navigation }) {
               {/* 1. Items Management (Moved to More) */}
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => setActiveSubView('items')}
+                onPress={() => navigateToSubView('items')}
                 activeOpacity={0.7}
               >
                 <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
@@ -556,9 +601,9 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={styles.menuItemTitle}>Items & Price Catalog</Text>
+                    <Text style={styles.menuItemTitle}>{t('Items & Price Catalog')}</Text>
                     <View style={styles.itemsCountBadge}>
-                      <Text style={styles.itemsCountText}>{safeItems.length} Items</Text>
+                      <Text style={styles.itemsCountText}>{safeItems.length} {t('Items')}</Text>
                     </View>
                   </View>
                 </View>
@@ -568,14 +613,14 @@ export default function MoreScreen({ navigation }) {
               {/* 2. Staff Management */}
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => setActiveSubView('staff')}
+                onPress={() => navigateToSubView('staff')}
                 activeOpacity={0.7}
               >
                 <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
                   <Users size={22} color="#16a34a" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemTitle}>Staff Management</Text>
+                  <Text style={styles.menuItemTitle}>{t('Staff Management')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -590,7 +635,7 @@ export default function MoreScreen({ navigation }) {
                   <Settings size={22} color="#0284c7" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemTitle}>Profile & Settings</Text>
+                  <Text style={styles.menuItemTitle}>{t('Profile & Settings')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -605,7 +650,7 @@ export default function MoreScreen({ navigation }) {
                   <KeyRound size={22} color="#a855f7" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemTitle}>Account Password</Text>
+                  <Text style={styles.menuItemTitle}>{t('Account Password')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -620,8 +665,8 @@ export default function MoreScreen({ navigation }) {
                   <Phone size={22} color="#15803d" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuItemTitle, { color: '#15803d', fontWeight: '700' }]}>Contact Customer Care</Text>
-                  <Text style={{ fontSize: 11, color: colors.textMuted }}>Call 7323809242 for instant help</Text>
+                  <Text style={[styles.menuItemTitle, { color: '#15803d', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted }}>{t('Call 7323809242 for instant help')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -636,7 +681,7 @@ export default function MoreScreen({ navigation }) {
                   <Shield size={22} color="#16a34a" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemTitle}>Privacy Policy</Text>
+                  <Text style={styles.menuItemTitle}>{t('Privacy Policy')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -651,7 +696,7 @@ export default function MoreScreen({ navigation }) {
                   <FileText size={22} color="#0284c7" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemTitle}>Terms & Conditions</Text>
+                  <Text style={styles.menuItemTitle}>{t('Terms & Conditions')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -666,7 +711,7 @@ export default function MoreScreen({ navigation }) {
                   <Trash2 size={22} color="#dc2626" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuItemTitle, { color: '#dc2626' }]}>Account Deletion Request</Text>
+                  <Text style={[styles.menuItemTitle, { color: '#dc2626' }]}>{t('Account Deletion Request')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>
@@ -682,7 +727,7 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.menuItemTitle, { color: colors.danger }]}>
-                    Log Out
+                    {t('Log Out')}
                   </Text>
                 </View>
                 <ChevronRight size={20} color={colors.danger} />
@@ -696,28 +741,28 @@ export default function MoreScreen({ navigation }) {
           <View style={{ gap: 12 }}>
             <TouchableOpacity
               style={styles.backBtnRow}
-              onPress={() => setActiveSubView('hub')}
+              onPress={handleBackToHub}
             >
-              <Text style={styles.backBtnText}>← Back to More</Text>
+              <Text style={styles.backBtnText}>{t('← Back to More')}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.subViewHeading}>Change 4-Digit Security PIN</Text>
+            <Text style={styles.subViewHeading}>{t('Change 4-Digit Security PIN')}</Text>
 
             {pinNotice ? (
               <View style={styles.noticeBox}>
-                <Text style={styles.noticeText}>{pinNotice}</Text>
+                <Text style={styles.noticeText}>{t(pinNotice)}</Text>
               </View>
             ) : null}
 
             {pinError ? (
               <View style={styles.errorBox}>
-                <Text style={styles.errorBoxText}>{pinError}</Text>
+                <Text style={styles.errorBoxText}>{t(pinError)}</Text>
               </View>
             ) : null}
 
             <View style={styles.sectionCard}>
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Current 4-Digit PIN</Text>
+                <Text style={styles.formLabel}>{t('Current 4-Digit PIN')}</Text>
                 <TextInput
                   style={styles.formInput}
                   placeholder="••••"
@@ -730,7 +775,7 @@ export default function MoreScreen({ navigation }) {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>New 4-Digit PIN</Text>
+                <Text style={styles.formLabel}>{t('New 4-Digit PIN')}</Text>
                 <TextInput
                   style={styles.formInput}
                   placeholder="••••"
@@ -743,7 +788,7 @@ export default function MoreScreen({ navigation }) {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Confirm New PIN</Text>
+                <Text style={styles.formLabel}>{t('Confirm New PIN')}</Text>
                 <TextInput
                   style={styles.formInput}
                   placeholder="••••"
@@ -761,7 +806,7 @@ export default function MoreScreen({ navigation }) {
                 disabled={pinSaving}
               >
                 <Text style={styles.saveProfileBtnText}>
-                  {pinSaving ? 'Updating...' : 'Update Security PIN'}
+                  {pinSaving ? t('Saving...') : t('Update Security PIN')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -773,17 +818,17 @@ export default function MoreScreen({ navigation }) {
           <View style={{ gap: 12 }}>
             <TouchableOpacity
               style={styles.backBtnRow}
-              onPress={() => setActiveSubView('hub')}
+              onPress={handleBackToHub}
             >
-              <Text style={styles.backBtnText}>← Back to More</Text>
+              <Text style={styles.backBtnText}>{t('← Back to More')}</Text>
             </TouchableOpacity>
 
             {/* Items Summary & Add Header */}
             <View style={styles.sectionCard}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View>
-                  <Text style={styles.summaryLabel}>Active Catalog</Text>
-                  <Text style={styles.summaryValue}>{safeItems.length} Items</Text>
+                  <Text style={styles.summaryLabel}>{t('Active Catalog')}</Text>
+                  <Text style={styles.summaryValue}>{safeItems.length} {t('Items')}</Text>
                 </View>
 
                 <TouchableOpacity
@@ -792,7 +837,7 @@ export default function MoreScreen({ navigation }) {
                   activeOpacity={0.8}
                 >
                   <Plus size={18} color="#ffffff" />
-                  <Text style={styles.addItemHeroBtnText}>Add Item</Text>
+                  <Text style={styles.addItemHeroBtnText}>{t('Add Item')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -802,7 +847,7 @@ export default function MoreScreen({ navigation }) {
               <Search size={18} color={colors.textMuted} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search items by name..."
+                placeholder={t('Search items by name...')}
                 value={itemsSearch}
                 onChangeText={setItemsSearch}
               />
@@ -845,9 +890,9 @@ export default function MoreScreen({ navigation }) {
             {filteredItems.length === 0 && (
               <View style={styles.emptyContainer}>
                 <Package size={40} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>No Items Found</Text>
+                <Text style={styles.emptyTitle}>{t('No Items Found')}</Text>
                 <Text style={styles.emptySub}>
-                  Tap "Add Item" above to add items to your catalog.
+                  {t('Tap "Add Item" above to add items to your catalog.')}
                 </Text>
               </View>
             )}
@@ -859,25 +904,25 @@ export default function MoreScreen({ navigation }) {
           <View style={{ gap: 12 }}>
             <TouchableOpacity
               style={styles.backBtnRow}
-              onPress={() => setActiveSubView('hub')}
+              onPress={handleBackToHub}
             >
               <Text style={styles.backBtnText}>← Back to More</Text>
             </TouchableOpacity>
 
-            <Text style={styles.subViewHeading}>Staff & Cashier Management</Text>
+            <Text style={styles.subViewHeading}>{t('Staff & Cashier Management')}</Text>
 
             {/* Invite Form (Owner only) */}
             {isOwner ? (
               <View style={styles.sectionCard}>
-                <Text style={styles.formTitle}>Invite Cashier</Text>
+                <Text style={styles.formTitle}>{t('Invite Cashier')}</Text>
                 <Text style={styles.formSub}>
-                  Enter customer's Short ID or Phone number to add them as a cashier.
+                  {t("Enter customer's Short ID or Phone number to add them as a cashier.")}
                 </Text>
 
                 <View style={styles.inviteInputRow}>
                   <TextInput
                     style={styles.inviteInput}
-                    placeholder="Customer Short ID or Phone"
+                    placeholder={t('Customer Short ID or Phone')}
                     value={staffIdentifier}
                     onChangeText={setStaffIdentifier}
                   />
@@ -887,14 +932,14 @@ export default function MoreScreen({ navigation }) {
                     disabled={invitingStaff}
                   >
                     <Text style={styles.inviteBtnText}>
-                      {invitingStaff ? '...' : 'Invite'}
+                      {invitingStaff ? '...' : t('Invite')}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
                 {staffNotice ? (
                   <View style={styles.noticeBox}>
-                    <Text style={styles.noticeText}>{staffNotice}</Text>
+                    <Text style={styles.noticeText}>{t(staffNotice)}</Text>
                   </View>
                 ) : null}
               </View>
@@ -902,13 +947,13 @@ export default function MoreScreen({ navigation }) {
               <View style={styles.viewOnlyCard}>
                 <Lock size={18} color="#2563eb" />
                 <Text style={styles.viewOnlyText}>
-                  You are logged in as Cashier. Only the shop owner can invite or remove staff.
+                  {t('You are logged in as Cashier. Only the shop owner can invite or remove staff.')}
                 </Text>
               </View>
             )}
 
             {/* Staff List */}
-            <Text style={styles.sectionHeading}>Current Staff ({safeStaff.length})</Text>
+            <Text style={styles.sectionHeading}>{t('Current Staff')} ({safeStaff.length})</Text>
             {safeStaff.map((st) => (
               <View key={st.id} style={styles.staffCard}>
                 <View style={{ flex: 1 }}>
@@ -932,7 +977,7 @@ export default function MoreScreen({ navigation }) {
                           : styles.staffBadgeTextPending,
                       ]}
                     >
-                      {st.status === 'ACCEPTED' ? 'Active Cashier' : 'Invite Pending'}
+                      {st.status === 'ACCEPTED' ? t('Active Cashier') : t('Invite Pending')}
                     </Text>
                   </View>
                 </View>
@@ -951,9 +996,9 @@ export default function MoreScreen({ navigation }) {
             {safeStaff.length === 0 && (
               <View style={styles.emptyContainer}>
                 <Users size={40} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>No Staff Members</Text>
+                <Text style={styles.emptyTitle}>{t('No Staff Members')}</Text>
                 <Text style={styles.emptySub}>
-                  Invite cashiers using the form above to help manage your POS billing.
+                  {t('Invite cashiers using the form above to help manage your POS billing.')}
                 </Text>
               </View>
             )}
@@ -965,31 +1010,31 @@ export default function MoreScreen({ navigation }) {
           <View style={{ gap: 12 }}>
             <TouchableOpacity
               style={styles.backBtnRow}
-              onPress={() => setActiveSubView('hub')}
+              onPress={handleBackToHub}
             >
               <Text style={styles.backBtnText}>← Back to More</Text>
             </TouchableOpacity>
 
-            <Text style={styles.subViewHeading}>Edit Shop Details & Information</Text>
+            <Text style={styles.subViewHeading}>{t('Edit Shop Details & Information')}</Text>
 
             {!isOwner && (
               <View style={styles.viewOnlyCard}>
                 <Lock size={18} color="#2563eb" />
                 <Text style={styles.viewOnlyText}>
-                  View-Only Mode: You are logged in as Cashier. Only the shop owner can modify store details.
+                  {t('View-Only Mode: You are logged in as Cashier. Only the shop owner can modify store details.')}
                 </Text>
               </View>
             )}
 
             {profileNotice ? (
               <View style={styles.noticeBox}>
-                <Text style={styles.noticeText}>{profileNotice}</Text>
+                <Text style={styles.noticeText}>{t(profileNotice)}</Text>
               </View>
             ) : null}
 
             <View style={styles.sectionCard}>
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Shop Name</Text>
+                <Text style={styles.formLabel}>{t('Shop Name')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={shopForm.shopName}
@@ -999,7 +1044,7 @@ export default function MoreScreen({ navigation }) {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Contact Phone</Text>
+                <Text style={styles.formLabel}>{t('Contact Phone')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={shopForm.shopPhone}
@@ -1011,10 +1056,10 @@ export default function MoreScreen({ navigation }) {
 
               <View style={styles.formGroup}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Text style={styles.formLabel}>Shop City / Region</Text>
+                  <Text style={styles.formLabel}>{t('Shop City / Region')}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Lock size={12} color="#94a3b8" />
-                    <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600' }}>Locked (SuperAdmin only)</Text>
+                    <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600' }}>{t('Locked (SuperAdmin only)')}</Text>
                   </View>
                 </View>
                 <View style={[styles.formInput, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', justifyContent: 'center' }]}>
@@ -1023,12 +1068,12 @@ export default function MoreScreen({ navigation }) {
                   </Text>
                 </View>
                 <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
-                  Store city is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.
+                  {t('Store city is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.')}
                 </Text>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Shop Address</Text>
+                <Text style={styles.formLabel}>{t('Shop Address')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={shopForm.shopAddress}
@@ -1038,7 +1083,7 @@ export default function MoreScreen({ navigation }) {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Operating Timings</Text>
+                <Text style={styles.formLabel}>{t('Operating Timings')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={shopForm.timings}
@@ -1055,7 +1100,7 @@ export default function MoreScreen({ navigation }) {
                   disabled={shopSaving}
                 >
                   <Text style={styles.saveProfileBtnText}>
-                    {shopSaving ? 'Saving...' : 'Save Shop Changes'}
+                    {shopSaving ? t('Saving...') : t('Save Shop Changes')}
                   </Text>
                 </TouchableOpacity>
               )}

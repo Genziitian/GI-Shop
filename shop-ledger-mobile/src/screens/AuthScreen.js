@@ -513,7 +513,7 @@ export default function AuthScreen() {
         </View>
       </Modal>
 
-      <Modal visible={loading} transparent={true} animationType="fade">
+      <Modal visible={loading} transparent={true} animationType="fade" onRequestClose={() => {}}>
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
             <ActivityIndicator size="large" color="#16a34a" />

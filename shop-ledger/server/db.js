@@ -528,8 +528,11 @@ if (DB_TYPE === 'mysql') {
       customerPhone TEXT,
       amount REAL,
       method TEXT,
+      note TEXT,
       date TEXT
     )`);
+
+    sqliteDb.run(`ALTER TABLE Settlements ADD COLUMN note TEXT`, () => {});
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS ShopCustomers (
       shopId INTEGER,

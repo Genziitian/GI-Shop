@@ -1754,8 +1754,12 @@ app.get('/api/shop/customers', authenticate, (req, res) => {
     `SELECT ShopCustomers.*, 
             COALESCE(ShopCustomers.customerShortId, Users.shortId) as shortId,
             COALESCE(ShopCustomers.customerEmail, Users.email) as email,
-            COALESCE(ShopCustomers.name, Users.name) as name,
-            COALESCE(NULLIF(ShopCustomers.customerPhone, ''), Users.phone) as phone,
+            CASE 
+              WHEN Users.name IS NOT NULL AND Users.name != '' AND (ShopCustomers.name IS NULL OR ShopCustomers.name = '' OR ShopCustomers.name LIKE 'Customer%') 
+              THEN Users.name 
+              ELSE COALESCE(ShopCustomers.name, Users.name) 
+            END as name,
+            COALESCE(NULLIF(ShopCustomers.customerPhone, ''), Users.phone, ShopCustomers.customerShortId) as phone,
             (SELECT COUNT(*) FROM ShopBlockedCustomers WHERE ShopBlockedCustomers.shopId = ? AND ShopBlockedCustomers.customerPhone = ShopCustomers.customerPhone) as isBlocked
      FROM ShopCustomers 
      LEFT JOIN Users ON (ShopCustomers.customerPhone != '' AND ShopCustomers.customerPhone = Users.phone) 
@@ -1910,7 +1914,7 @@ app.get('/api/shop/customers', authenticate, (req, res) => {
 
               const finalPhone = matchedUser?.phone || p || s;
               const finalShortId = matchedUser?.shortId || s || '';
-              const finalName = matchedUser?.name || cand.customerName || 'Khata Customer';
+              const finalName = matchedUser?.name || cand.customerName || 'Customer';
               const finalEmail = matchedUser?.email || '';
               const finalAddress = matchedUser?.address || cand.customerAddress || '';
 
@@ -2000,8 +2004,8 @@ app.post('/api/shop/sales', authenticate, (req, res) => {
           if (err) return res.status(500).json({ error: 'Failed to record sale' });
           
           db.run(`INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
-                  ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?`, 
-            [shopId, activePhone, activeShortId, activeEmail, user.name || 'App Customer', activeShortId, activeEmail]);
+                  ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=COALESCE(NULLIF(excluded.name, ''), name)`, 
+            [shopId, activePhone, activeShortId, activeEmail, user.name || 'Customer', activeShortId, activeEmail]);
 
           res.json({ id: this.lastID, date, total, paymentMethod, note: sanitizedNote, customerShortId: activeShortId });
         });
@@ -2029,10 +2033,27 @@ app.put('/api/shop/sales/:id/note', authenticate, (req, res) => {
 
 app.post('/api/shop/settlements', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  const { customerPhone, amount, method } = req.body;
+  const { customerPhone, amount, method, note } = req.body;
   const date = new Date().toISOString();
-  db.run(`INSERT INTO Settlements (shopId, customerPhone, amount, method, date) VALUES (?, ?, ?, ?, ?)`,
-    [shopId, customerPhone, amount, method, date], function() { res.json({ id: this.lastID, date }); });
+  const sanitizedNote = (note || '').slice(0, 50);
+
+  db.run(
+    `INSERT INTO Settlements (shopId, customerPhone, amount, method, note, date) VALUES (?, ?, ?, ?, ?, ?)`,
+    [shopId, customerPhone, amount, method, sanitizedNote, date],
+    function(err) {
+      if (err) {
+        // Fallback in case 'note' column is not yet present on remote DB
+        return db.run(
+          `INSERT INTO Settlements (shopId, customerPhone, amount, method, date) VALUES (?, ?, ?, ?, ?)`,
+          [shopId, customerPhone, amount, method, date],
+          function() {
+            res.json({ id: this.lastID, date, note: sanitizedNote });
+          }
+        );
+      }
+      res.json({ id: this.lastID, date, note: sanitizedNote });
+    }
+  );
 });
 
 app.get('/api/shop/ledger/:phone', authenticate, (req, res) => {

@@ -31,6 +31,7 @@ import {
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import { getShopSales, updateSaleNote } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
 import { showErrorAlert } from '../../utils/errorHandler';
@@ -38,6 +39,7 @@ import { showErrorAlert } from '../../utils/errorHandler';
 const DATE_RANGES = ['Today', 'Yesterday', 'This Week', 'This Month', 'All Time'];
 
 export default function AnalyticsScreen() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -162,7 +164,7 @@ export default function AnalyticsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Header subtitle="Sales Analytics & Transactions" />
+      <Header subtitle={t('Sales Analytics & Transactions')} />
 
       <View style={styles.content}>
         {/* Date Filter Bar */}
@@ -187,7 +189,7 @@ export default function AnalyticsScreen() {
                       active && styles.dateFilterChipTextActive,
                     ]}
                   >
-                    {range}
+                    {t(range)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -200,7 +202,7 @@ export default function AnalyticsScreen() {
           {/* Total Sales */}
           <View style={[styles.metricCard, { borderLeftColor: colors.primary }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.metricLabel}>Total Sales</Text>
+              <Text style={styles.metricLabel}>{t('Total Sales')}</Text>
               <TrendingUp size={16} color={colors.primary} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(totalSales) || 0).toFixed(2)}</Text>
@@ -209,7 +211,7 @@ export default function AnalyticsScreen() {
           {/* Cash Sales */}
           <View style={[styles.metricCard, { borderLeftColor: colors.success }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.metricLabel}>Cash Sales</Text>
+              <Text style={styles.metricLabel}>{t('Cash Sales')}</Text>
               <Banknote size={16} color={colors.success} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(cashSales) || 0).toFixed(2)}</Text>
@@ -218,7 +220,7 @@ export default function AnalyticsScreen() {
           {/* Online / UPI Sales */}
           <View style={[styles.metricCard, { borderLeftColor: colors.warning }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.metricLabel}>Online / UPI</Text>
+              <Text style={styles.metricLabel}>{t('Online / UPI')}</Text>
               <CreditCard size={16} color={colors.warning} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(onlineSales) || 0).toFixed(2)}</Text>
@@ -227,7 +229,7 @@ export default function AnalyticsScreen() {
           {/* Khata Sales */}
           <View style={[styles.metricCard, { borderLeftColor: colors.danger }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.metricLabel}>Khata (Credit)</Text>
+              <Text style={styles.metricLabel}>{t('Khata (Credit)')}</Text>
               <BookOpen size={16} color={colors.danger} />
             </View>
             <Text style={styles.metricValue}>₹{(Number(khataSales) || 0).toFixed(2)}</Text>
@@ -237,9 +239,9 @@ export default function AnalyticsScreen() {
         {/* Transactions List Header */}
         <View style={styles.transactionsHeader}>
           <Text style={styles.transactionsTitle}>
-            Transactions ({filteredSales.length})
+            {t('Transactions')} ({filteredSales.length})
           </Text>
-          <Text style={styles.transactionsRange}>{dateRange}</Text>
+          <Text style={styles.transactionsRange}>{t(dateRange)}</Text>
         </View>
 
         {/* Transactions List */}
@@ -270,7 +272,7 @@ export default function AnalyticsScreen() {
                 >
                   <View style={styles.saleCardHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.saleBillId}>Bill #{item.id}</Text>
+                      <Text style={styles.saleBillId}>{t('Bill')} #{item.id}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                         <Clock size={12} color={colors.textMuted} />
                         <Text style={styles.saleDateText}>{formattedDate}</Text>
@@ -305,7 +307,7 @@ export default function AnalyticsScreen() {
                               : styles.paymentTagTextKhata,
                           ]}
                         >
-                          {item.paymentMethod}
+                          {t(item.paymentMethod)}
                         </Text>
                       </View>
                     </View>
@@ -316,7 +318,7 @@ export default function AnalyticsScreen() {
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <FileText size={13} color={colors.textMuted} />
                       <Text style={styles.noteText} numberOfLines={1}>
-                        {item.note ? item.note : 'No note added'}
+                        {item.note ? item.note : t('No note added')}
                       </Text>
                     </View>
 
@@ -327,7 +329,7 @@ export default function AnalyticsScreen() {
                     >
                       <Edit2 size={12} color={colors.primary} />
                       <Text style={styles.editNoteBtnText}>
-                        {item.note ? 'Edit' : '+ Note'}
+                        {item.note ? t('Edit') : `+ ${t('Sales Note')}`}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -337,9 +339,9 @@ export default function AnalyticsScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Receipt size={40} color={colors.textMuted} />
-                <Text style={styles.emptyTitle}>No Transactions Found</Text>
+                <Text style={styles.emptyTitle}>{t('No Transactions Found')}</Text>
                 <Text style={styles.emptySub}>
-                  No sales recorded for the selected period "{dateRange}".
+                  {t('No sales recorded for the selected period')} "{t(dateRange)}".
                 </Text>
               </View>
             }
@@ -360,7 +362,7 @@ export default function AnalyticsScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <FileText size={18} color={colors.primary} />
                 <Text style={styles.noteModalTitle}>
-                  Memo Note for Bill #{selectedSaleForNote?.id}
+                  {t('Memo Note')} - {t('Bill')} #{selectedSaleForNote?.id}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setSelectedSaleForNote(null)}>
@@ -369,7 +371,7 @@ export default function AnalyticsScreen() {
             </View>
 
             <Text style={styles.noteModalSub}>
-              Add a brief memo note (max 20 characters, e.g. "GPay to Ramesh"):
+              {t('Add Note')} (max 20 characters):
             </Text>
 
             <TextInput
@@ -380,14 +382,14 @@ export default function AnalyticsScreen() {
               maxLength={20}
               autoFocus
             />
-            <Text style={styles.charCount}>{noteInput.length} / 20 characters</Text>
+            <Text style={styles.charCount}>{noteInput.length} / 20</Text>
 
             <View style={styles.noteModalActions}>
               <TouchableOpacity
                 style={styles.noteCancelBtn}
                 onPress={() => setSelectedSaleForNote(null)}
               >
-                <Text style={styles.noteCancelBtnText}>Cancel</Text>
+                <Text style={styles.noteCancelBtnText}>{t('Cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -396,7 +398,7 @@ export default function AnalyticsScreen() {
                 disabled={savingNote}
               >
                 <Text style={styles.noteSaveBtnText}>
-                  {savingNote ? 'Saving...' : 'Save Note'}
+                  {savingNote ? t('Saving...') : t('Save Note')}
                 </Text>
               </TouchableOpacity>
             </View>

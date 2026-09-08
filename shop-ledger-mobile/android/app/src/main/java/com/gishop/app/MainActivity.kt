@@ -12,6 +12,15 @@ import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
+    // Prevent duplicate activity recreation when launched from launcher icon after external/installer launch
+    if (!isTaskRoot) {
+      val intent = intent
+      if (intent.hasCategory(android.content.Intent.CATEGORY_LAUNCHER) && android.content.Intent.ACTION_MAIN == intent.action) {
+        finish()
+        return
+      }
+    }
+
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
     // This is required for expo-splash-screen.

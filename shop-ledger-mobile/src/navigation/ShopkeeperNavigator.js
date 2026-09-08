@@ -18,6 +18,7 @@ export default function ShopkeeperNavigator() {
 
   return (
     <Tab.Navigator
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,

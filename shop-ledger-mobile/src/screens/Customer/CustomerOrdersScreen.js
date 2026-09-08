@@ -31,6 +31,7 @@ import {
   updateOrderCollection,
 } from '../../api/client';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
 import OrderDetailModal from '../../components/OrderDetailModal';
@@ -38,6 +39,7 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function CustomerOrdersScreen({ navigation }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [sales, setSales] = useState([]);
@@ -301,7 +303,7 @@ export default function CustomerOrdersScreen({ navigation }) {
       {loading ? (
         <View style={styles.centerBox}>
           <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={{ marginTop: 10, color: colors.textMuted }}>Loading your orders & receipts...</Text>
+          <Text style={{ marginTop: 10, color: colors.textMuted }}>{t('Loading your orders & receipts...')}</Text>
         </View>
       ) : (
         <ScrollView
@@ -321,10 +323,10 @@ export default function CustomerOrdersScreen({ navigation }) {
           {/* Lifetime Purchases Banner */}
           <View style={styles.lifetimeBanner}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.lifetimeLabel}>Total Lifetime Purchases</Text>
+              <Text style={styles.lifetimeLabel}>{t('Total Lifetime Purchases')}</Text>
               <Text style={styles.lifetimeValue}>₹{(Number(totalSpent) || 0).toFixed(2)}</Text>
               <Text style={styles.lifetimeSub}>
-                {recentOrders.length} Active • {pastOrders.length + sales.length} Total in All Orders
+                {recentOrders.length} {t('Active')} • {pastOrders.length + sales.length} {t('Total')}
               </Text>
             </View>
             <View style={styles.lifetimeIconBox}>
@@ -344,7 +346,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                 onPress={() => setDateFilter(f)}
               >
                 <Text style={[styles.filterChipText, dateFilter === f && styles.filterChipTextActive]}>
-                  {f === 'Month' ? 'This Month' : f}
+                  {f === 'Month' ? t('This Month') : t(f)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -357,15 +359,15 @@ export default function CustomerOrdersScreen({ navigation }) {
               {/* SECTION 1: ACTIVE GROCERY REQUESTS (<24H) */}
           <View style={{ marginBottom: 20 }}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Active Grocery Requests</Text>
+              <Text style={styles.sectionTitle}>{t('Active Grocery Requests')}</Text>
               <View style={styles.countBadge}>
-                <Text style={styles.countBadgeText}>{filteredRecentOrders.length} Active</Text>
+                <Text style={styles.countBadgeText}>{filteredRecentOrders.length} {t('Active')}</Text>
               </View>
             </View>
 
             {filteredRecentOrders.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Text style={styles.emptyCardText}>No active orders placed in the last 24 hours.</Text>
+                <Text style={styles.emptyCardText}>{t('No active orders placed in the last 24 hours.')}</Text>
               </View>
             ) : (
               filteredRecentOrders.map((order) => {
@@ -424,15 +426,15 @@ export default function CustomerOrdersScreen({ navigation }) {
                               : { color: '#475569' },
                           ]}
                         >
-                          {order.status === 'PENDING' && `⏳ PENDING (${getAutoCancelCountdown(order.createdAt)})`}
-                          {order.status === 'PACKING' && `⏳ PACKING (~${order.packingMinutes || 15}m)`}
-                          {order.status === 'READY' && '✓ READY FOR PICKUP'}
-                          {order.status === 'COMPLETED' && '✓ ORDER COMPLETED'}
-                          {order.status === 'COLLECTED' && '✓ COLLECTED'}
-                          {order.status === 'NOT_COLLECTED' && '✗ NOT COLLECTED'}
-                          {order.status === 'CANCELLED_BY_CUSTOMER' && '🚫 CANCELLED'}
-                          {order.status === 'AUTO_CANCELLED_EXPIRED' && '⛔ EXPIRED (45m)'}
-                          {order.status === 'DECLINED' && '❌ DECLINED'}
+                          {order.status === 'PENDING' && `⏳ ${t('PENDING')} (${getAutoCancelCountdown(order.createdAt)})`}
+                          {order.status === 'PACKING' && `⏳ ${t('PACKING')} (~${order.packingMinutes || 15}m)`}
+                          {order.status === 'READY' && `✓ ${t('Ready')}`}
+                          {order.status === 'COMPLETED' && `✓ ${t('Order Completed')}`}
+                          {order.status === 'COLLECTED' && `✓ ${t('Customer Collected')}`}
+                          {order.status === 'NOT_COLLECTED' && `✗ ${t('Marked Not Collected')}`}
+                          {order.status === 'CANCELLED_BY_CUSTOMER' && `🚫 ${t('Cancelled by Customer')}`}
+                          {order.status === 'AUTO_CANCELLED_EXPIRED' && `⛔ ${t('Auto-cancelled (Expired)')}`}
+                          {order.status === 'DECLINED' && `❌ ${t('Decline')}`}
                         </Text>
                       </View>
                     </View>
@@ -442,7 +444,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                       <View style={styles.autoCancelBox}>
                         <Clock size={13} color="#b45309" />
                         <Text style={styles.autoCancelText}>
-                          Acceptance Window: <Text style={{ fontWeight: '700' }}>Auto-cancels in {getAutoCancelCountdown(order.createdAt)}</Text> if not accepted by shopkeeper
+                          {t('Acceptance Window:')} <Text style={{ fontWeight: '700' }}>Auto-cancels in {getAutoCancelCountdown(order.createdAt)}</Text>
                         </Text>
                       </View>
                     )}
@@ -452,7 +454,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                       <View style={styles.expiredBox}>
                         <AlertTriangle size={13} color="#b91c1c" />
                         <Text style={styles.expiredText}>
-                          Order auto-cancelled: Shopkeeper did not accept within 45 minutes.
+                          {t('Auto-cancelled (Expired)')}
                         </Text>
                       </View>
                     )}
@@ -473,7 +475,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                         );
                       })}
                       <View style={styles.totalLine}>
-                        <Text style={styles.totalLabel}>Total Payable:</Text>
+                        <Text style={styles.totalLabel}>{t('Total Payable:')}</Text>
                         <Text style={styles.totalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
                       </View>
                     </View>
@@ -482,22 +484,22 @@ export default function CustomerOrdersScreen({ navigation }) {
                     {order.status === 'READY' && (
                       <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
                         <Text style={{ fontSize: 13, fontWeight: '700', color: '#166534', marginBottom: 2 }}>
-                          🎉 Your Order is Ready for Pickup!
+                          {t('🎉 Your Order is Ready for Pickup!')}
                         </Text>
                         <Text style={{ fontSize: 11, color: '#15803d', marginBottom: 6 }}>
-                          Payment Mode: <Text style={{ fontWeight: '700' }}>{order.paymentMethod || 'Cash'}</Text> • Amount: <Text style={{ fontWeight: '700' }}>₹{(Number(order.requestedAmount || computedTotal) || 0).toFixed(2)}</Text>
+                          {t('Payment Mode:')} <Text style={{ fontWeight: '700' }}>{t(order.paymentMethod || 'Cash')}</Text> • {t('Amount:')} <Text style={{ fontWeight: '700' }}>₹{(Number(order.requestedAmount || computedTotal) || 0).toFixed(2)}</Text>
                         </Text>
 
                         {/* 4-Digit OTP Display */}
                         <View style={{ backgroundColor: '#ffffff', borderColor: '#22c55e', borderWidth: 2, borderRadius: 8, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <View>
-                            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase' }}>Handover 4-Digit OTP</Text>
+                            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase' }}>{t('Handover 4-Digit OTP')}</Text>
                             <Text style={{ fontSize: 22, fontWeight: '900', color: '#15803d', letterSpacing: 4 }}>
                               {order.otpCode || '----'}
                             </Text>
                           </View>
                           <Text style={{ fontSize: 10, color: colors.textMuted, maxWidth: 130, textAlign: 'right' }}>
-                            Share this 4-digit code with shopkeeper at pickup counter
+                            {t('Share this 4-digit code with shopkeeper at pickup counter')}
                           </Text>
                         </View>
                       </View>
@@ -509,10 +511,10 @@ export default function CustomerOrdersScreen({ navigation }) {
                         <CheckCircle size={18} color="#15803d" />
                         <View style={{ flex: 1 }}>
                           <Text style={{ fontSize: 13, fontWeight: '800', color: '#15803d' }}>
-                            ✓ Order Picked Up &amp; Completed
+                            {t('✓ Order Picked Up & Completed')}
                           </Text>
                           <Text style={{ fontSize: 11, color: '#166534', marginTop: 1 }}>
-                            OTP verified. Items collected from shop.
+                            {t('OTP verified. Items collected from shop.')}
                           </Text>
                         </View>
                       </View>
@@ -533,7 +535,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                         activeOpacity={0.7}
                       >
                         <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '700' }}>
-                          Order Details
+                          {t('Order Details')}
                         </Text>
                       </TouchableOpacity>
                       {(order.status === 'PENDING' || order.status === 'PACKING') && (
@@ -541,7 +543,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                           style={styles.cancelBtn}
                           onPress={() => handleCancelOrder(order.id)}
                         >
-                          <Text style={styles.cancelBtnText}>Cancel Order</Text>
+                          <Text style={styles.cancelBtnText}>{t('Cancel Order')}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -554,17 +556,17 @@ export default function CustomerOrdersScreen({ navigation }) {
           {/* SECTION 2: PAST ORDERS & IN-STORE RECEIPTS */}
           <View>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Past Orders & Receipts</Text>
+              <Text style={styles.sectionTitle}>{t('Past Orders & Receipts')}</Text>
               <View style={styles.countBadge}>
                 <Text style={styles.countBadgeText}>
-                  {filteredPastOrders.length + filteredSales.length} Total
+                  {filteredPastOrders.length + filteredSales.length} {t('Total')}
                 </Text>
               </View>
             </View>
 
             {filteredPastOrders.length === 0 && filteredSales.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Text style={styles.emptyCardText}>No past orders or purchase receipts found.</Text>
+                <Text style={styles.emptyCardText}>{t('No past orders or purchase receipts found.')}</Text>
               </View>
             ) : (
               <>
@@ -575,12 +577,12 @@ export default function CustomerOrdersScreen({ navigation }) {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.receiptShopName}>{sale.shopName}</Text>
                         <Text style={styles.receiptDate}>
-                          Bill #{sale.id} • {new Date(sale.date).toLocaleDateString('en-IN')}
+                          {t('Bill')} #{sale.id} • {new Date(sale.date).toLocaleDateString('en-IN')}
                         </Text>
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
                         <Text style={styles.receiptTotal}>₹{(Number(sale?.total) || 0).toFixed(2)}</Text>
-                        <Text style={styles.receiptMethod}>{sale.paymentMethod}</Text>
+                        <Text style={styles.receiptMethod}>{t(sale.paymentMethod)}</Text>
                       </View>
                     </View>
 
@@ -589,7 +591,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                       onPress={() => setSelectedReceipt(sale)}
                     >
                       <FileText size={13} color={colors.primary} />
-                      <Text style={styles.viewReceiptBtnText}>View Digital Receipt</Text>
+                      <Text style={styles.viewReceiptBtnText}>{t('View Digital Receipt')}</Text>
                     </TouchableOpacity>
                   </View>
                 ))}

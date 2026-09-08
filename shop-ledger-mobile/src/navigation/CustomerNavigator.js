@@ -19,6 +19,7 @@ export default function CustomerNavigator() {
   return (
     <Tab.Navigator
       initialRouteName="CustomerKhata"
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,

@@ -11,19 +11,23 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { X, Check, DollarSign } from 'lucide-react-native';
+import { X, Check, DollarSign, FileText } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import { showErrorAlert, validatePrice } from '../utils/errorHandler';
 
 export default function SettleDueModal({ visible, customer, onClose, onSettleSuccess }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('Cash');
+  const [note, setNote] = useState('');
+  const [showNoteInput, setShowNoteInput] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (customer && customer.totalDue) {
+    if (customer && customer.totalDue !== undefined) {
       setAmount(customer.totalDue.toString());
       setMethod('Cash');
+      setNote('');
+      setShowNoteInput(false);
     }
   }, [customer, visible]);
 
@@ -52,6 +56,7 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
         customerPhone: customer.phone || customer.customerPhone,
         amount: num,
         method,
+        note: note.trim(),
       });
       onClose();
     } catch (e) {
@@ -177,6 +182,34 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
                   ))}
                 </View>
               </View>
+
+              {/* Note / Remarks Toggle & Input */}
+              {!showNoteInput ? (
+                <TouchableOpacity
+                  style={styles.addNoteBtn}
+                  onPress={() => setShowNoteInput(true)}
+                  activeOpacity={0.7}
+                >
+                  <FileText size={15} color={colors.primary} />
+                  <Text style={styles.addNoteBtnText}>+ Add Note / Remarks</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.inputGroup}>
+                  <View style={styles.noteLabelRow}>
+                    <Text style={styles.inputLabel}>Note / Remarks (Optional)</Text>
+                    <Text style={styles.charCountText}>{note.length}/50</Text>
+                  </View>
+                  <TextInput
+                    style={[styles.input, styles.noteInput]}
+                    placeholder="e.g. GPay ref, Cash from brother, Partial"
+                    placeholderTextColor={colors.textMuted}
+                    value={note}
+                    onChangeText={(t) => setNote(t.slice(0, 50))}
+                    maxLength={50}
+                    autoFocus
+                  />
+                </View>
+              )}
 
               {/* Actions */}
               <View style={styles.actions}>
@@ -374,5 +407,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#ffffff',
+  },
+  addNoteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+    backgroundColor: '#eff6ff',
+    alignSelf: 'flex-start',
+    marginBottom: 14,
+  },
+  addNoteBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  noteLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  charCountText: {
+    fontSize: 11,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  noteInput: {
+    height: 44,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

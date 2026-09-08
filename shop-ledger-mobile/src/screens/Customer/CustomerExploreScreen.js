@@ -48,6 +48,7 @@ import {
   getCustomerInvites,
   respondToInvite,
 } from '../../api/client';
+import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
 import ProductUnitModal from '../../components/ProductUnitModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
@@ -55,6 +56,7 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function CustomerExploreScreen({ navigation, route }) {
+  const { t } = useTranslation();
   const { user, lock } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [cities, setCities] = useState(['Delhi', 'Mumbai', 'Bangalore', 'Kolkata', 'Pune', 'Jaipur']);
@@ -276,7 +278,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       {/* Uniform Top Header with App Name, Icon & Lock Button */}
       <Header
         title="GI SHOP"
-        subtitle="Smart Grocery Discovery"
+        subtitle={t('Smart Grocery Discovery')}
         rightComponent={
           totalCartCount > 0 ? (
             <TouchableOpacity
@@ -299,7 +301,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
           activeOpacity={0.7}
         >
           <MapPin size={14} color={colors.primary} />
-          <Text style={styles.compactCityLabel}>City:</Text>
+          <Text style={styles.compactCityLabel}>{t('City:')}</Text>
           <Text style={styles.compactCityText}>{selectedCity}</Text>
           <ChevronDown size={13} color={colors.text} />
         </TouchableOpacity>
@@ -346,8 +348,8 @@ export default function CustomerExploreScreen({ navigation, route }) {
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <Store size={40} color={colors.textMuted} />
-              <Text style={styles.emptyTitle}>No shops found in {selectedCity}</Text>
-              <Text style={styles.emptySub}>Try selecting a different city from above.</Text>
+              <Text style={styles.emptyTitle}>{t('No shops found')}</Text>
+              <Text style={styles.emptySub}>{t('Try selecting a different city from above.')}</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -365,7 +367,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
                 <View style={[styles.openStatusBadge, { backgroundColor: item.isOpen ? '#dcfce7' : '#fee2e2' }]}>
                   <Text style={[styles.openStatusText, { color: item.isOpen ? '#15803d' : '#b91c1c' }]}>
-                    {item.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
+                    {item.isOpen ? `🟢 ${t('OPEN')}` : `🔴 ${t('CLOSED')}`}
                   </Text>
                 </View>
               </View>
@@ -390,7 +392,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                   activeOpacity={0.8}
                 >
                   <Store size={14} color="#fff" />
-                  <Text style={styles.primaryActionBtnText}>View Catalog & Order →</Text>
+                  <Text style={styles.primaryActionBtnText}>{t('View Catalog & Order →')}</Text>
                 </TouchableOpacity>
 
                 {item.shopPhone ? (
@@ -422,7 +424,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       )}
 
       {/* CATALOG LOADING SPINNER */}
-      <Modal visible={catalogLoading} transparent animationType="fade">
+      <Modal visible={catalogLoading} transparent animationType="fade" onRequestClose={() => setCatalogLoading(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: '#ffffff', padding: 24, borderRadius: 16, alignItems: 'center', gap: 12 }}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -681,7 +683,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
       </Modal>
 
       {/* SINGLE-SHOP CART CONFLICT MODAL */}
-      <Modal visible={!!cartConflict} transparent animationType="fade">
+      <Modal visible={!!cartConflict} transparent animationType="fade" onRequestClose={() => setCartConflict(null)}>
         <View style={styles.modalOverlay}>
           <View style={styles.conflictCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>

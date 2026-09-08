@@ -3,15 +3,17 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Lock } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 
 export default function Header({ title, subtitle, rightElement, showLock = false, rightComponent }) {
   const { user, isShopkeeper } = useAuth();
+  const { t } = useTranslation();
 
   const shortId = isShopkeeper 
     ? (user?.shop?.shortId || user?.shortId || (user?.shop?.id ? `shp${user.shop.id}` : ''))
     : (user?.shortId || (user?.id ? `cust${user.id}` : ''));
 
-  const idLabel = isShopkeeper ? 'Shop ID' : 'ID';
+  const idLabel = isShopkeeper ? t('Shop ID') : t('ID');
 
   return (
     <View style={styles.header}>
@@ -22,10 +24,10 @@ export default function Header({ title, subtitle, rightElement, showLock = false
         />
         <View style={styles.textContainer}>
           <Text style={styles.title} numberOfLines={1}>
-            {title || 'GI SHOP'}
+            {t(title || 'GI SHOP')}
           </Text>
           <Text style={styles.subtitle} numberOfLines={1}>
-            {subtitle || user?.shop?.shopName || 'Smart Billing & Khata'}
+            {subtitle ? t(subtitle) : (user?.shop?.shopName || t('Smart Billing & Khata'))}
           </Text>
         </View>
       </View>

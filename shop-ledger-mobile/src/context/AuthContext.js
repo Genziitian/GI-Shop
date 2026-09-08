@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getToken,
   getUser,
@@ -88,6 +89,11 @@ export const AuthProvider = ({ children }) => {
 
   const logoutUser = async () => {
     await clearSession();
+    await AsyncStorage.multiRemove([
+      '@shop_ledger_navigation_state',
+      '@shop_ledger_active_khata_customer',
+      '@shop_ledger_active_more_subview',
+    ]).catch(() => {});
     setToken(null);
     setUser(null);
     setIsLocked(false);

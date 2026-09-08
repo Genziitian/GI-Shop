@@ -29,6 +29,7 @@ import {
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../context/LanguageContext';
 import { getCustomerKhata, getCustomerShopKhata } from '../../api/client';
 import Header from '../../components/Header';
 import ReceiptModal from '../../components/ReceiptModal';
@@ -36,6 +37,7 @@ import CustomerProfileModal from '../../components/CustomerProfileModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
 
 export default function CustomerKhataScreen({ navigation }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [khataOverview, setKhataOverview] = useState({ overallDue: 0, stores: [] });
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,7 @@ export default function CustomerKhataScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <Header
         title="GI SHOP"
-        subtitle="My Khata & Store Credits"
+        subtitle={t('My Khata & Store Credits')}
       />
 
       {loading ? (
@@ -135,7 +137,7 @@ export default function CustomerKhataScreen({ navigation }) {
               {/* Total Due Banner */}
               <View style={styles.totalDueCard}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.totalDueLabel}>Total Store Credit Due</Text>
+                  <Text style={styles.totalDueLabel}>{t('Total Store Credit Due')}</Text>
                   <Text
                     style={[
                       styles.totalDueValue,
@@ -145,8 +147,8 @@ export default function CustomerKhataScreen({ navigation }) {
                     ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
                   </Text>
                   <Text style={styles.totalDueSub}>
-                    {khataOverview.stores.length} Enrolled Stores •{' '}
-                    {khataOverview.stores.filter((s) => s.totalDue > 0).length} with Due
+                    {khataOverview.stores.length} {t('Enrolled Stores')} •{' '}
+                    {khataOverview.stores.filter((s) => s.totalDue > 0).length} {t('with Due')}
                   </Text>
                 </View>
                 <View style={styles.totalDueIconBox}>
@@ -155,9 +157,9 @@ export default function CustomerKhataScreen({ navigation }) {
               </View>
 
               <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionHeading}>Enrolled Stores</Text>
+                <Text style={styles.sectionHeading}>{t('Enrolled Stores')}</Text>
                 <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{khataOverview.stores.length} Stores</Text>
+                  <Text style={styles.countBadgeText}>{khataOverview.stores.length} {t('Stores')}</Text>
                 </View>
               </View>
             </View>
@@ -165,7 +167,7 @@ export default function CustomerKhataScreen({ navigation }) {
           ListEmptyComponent={
             <View style={styles.emptyCard}>
               <BookOpen size={48} color={colors.textMuted} />
-              <Text style={styles.emptyTitle}>No Khata Records Found</Text>
+              <Text style={styles.emptyTitle}>{t('No Khata Records Found')}</Text>
               <Text style={styles.emptySub}>
                 When local shopkeepers bill your purchases with "Add to Book" or when you place orders, your store credit ledger will appear here.
               </Text>
@@ -174,7 +176,7 @@ export default function CustomerKhataScreen({ navigation }) {
                 onPress={() => navigation.navigate('CustomerExplore')}
               >
                 <Store size={16} color="#fff" />
-                <Text style={styles.exploreBtnText}>Explore Local Shops</Text>
+                <Text style={styles.exploreBtnText}>{t('Explore Local Shops')}</Text>
               </TouchableOpacity>
             </View>
           }
@@ -214,7 +216,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       { color: st.totalDue > 0 ? '#ef4444' : '#15803d' },
                     ]}
                   >
-                    {st.totalDue > 0 ? 'Due to Pay' : 'No Due ✓'}
+                    {st.totalDue > 0 ? t('Due to Pay') : t('No Due ✓')}
                   </Text>
                 </View>
               </View>
@@ -228,7 +230,7 @@ export default function CustomerKhataScreen({ navigation }) {
                     activeOpacity={0.8}
                   >
                     <Plus size={13} color="#fff" />
-                    <Text style={styles.newOrderBtnText}>New Order +</Text>
+                    <Text style={styles.newOrderBtnText}>{t('New Order +')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -237,7 +239,7 @@ export default function CustomerKhataScreen({ navigation }) {
                     activeOpacity={0.8}
                   >
                     <BookOpen size={13} color={colors.primary} />
-                    <Text style={styles.viewHistoryBtnText}>View History →</Text>
+                    <Text style={styles.viewHistoryBtnText}>{t('View History →')}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -277,7 +279,7 @@ export default function CustomerKhataScreen({ navigation }) {
               {/* Header */}
               <View style={styles.statementHeader}>
                 <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedStore(null)}>
-                  <Text style={styles.backBtnText}>← Back to All Stores</Text>
+                  <Text style={styles.backBtnText}>{t('← Back to All Stores')}</Text>
                 </TouchableOpacity>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 6 }}>
@@ -301,7 +303,7 @@ export default function CustomerKhataScreen({ navigation }) {
                     >
                       ₹{(Number(storeStatement?.totalDue ?? selectedStore?.totalDue) || 0).toFixed(2)}
                     </Text>
-                    <Text style={{ fontSize: 10, color: colors.textMuted }}>Current Due</Text>
+                    <Text style={{ fontSize: 10, color: colors.textMuted }}>{t('Current Due')}</Text>
                   </View>
                 </View>
 
@@ -312,7 +314,7 @@ export default function CustomerKhataScreen({ navigation }) {
                     onPress={() => handleStartNewOrder(selectedStore)}
                   >
                     <Plus size={14} color="#fff" />
-                    <Text style={styles.statementNewOrderText}>+ New Order +</Text>
+                    <Text style={styles.statementNewOrderText}>{t('+ New Order +')}</Text>
                   </TouchableOpacity>
 
                   {selectedStore.shopPhone ? (
@@ -321,7 +323,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       onPress={() => Linking.openURL(`tel:${selectedStore.shopPhone}`)}
                     >
                       <Phone size={13} color={colors.primary} />
-                      <Text style={styles.statementActionText}>Call</Text>
+                      <Text style={styles.statementActionText}>{t('Call')}</Text>
                     </TouchableOpacity>
                   ) : null}
 
@@ -337,7 +339,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       }
                     >
                       <MessageCircle size={13} color="#16a34a" />
-                      <Text style={[styles.statementActionText, { color: '#16a34a' }]}>WhatsApp</Text>
+                      <Text style={[styles.statementActionText, { color: '#16a34a' }]}>{t('WhatsApp')}</Text>
                     </TouchableOpacity>
                   ) : null}
                 </View>
@@ -354,7 +356,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       onPress={() => setDateFilter(f)}
                     >
                       <Text style={[styles.filterChipText, dateFilter === f && styles.filterChipTextActive]}>
-                        {f === 'Month' ? 'This Month' : f}
+                        {f === 'Month' ? t('This Month') : t(f)}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -365,7 +367,7 @@ export default function CustomerKhataScreen({ navigation }) {
               {statementLoading ? (
                 <View style={styles.centerBox}>
                   <ActivityIndicator color={colors.primary} />
-                  <Text style={{ marginTop: 8, color: colors.textMuted }}>Loading statement entries...</Text>
+                  <Text style={{ marginTop: 8, color: colors.textMuted }}>{t('Loading...')}</Text>
                 </View>
               ) : (
                 <FlatList
@@ -375,8 +377,8 @@ export default function CustomerKhataScreen({ navigation }) {
                   ListEmptyComponent={
                     <View style={styles.emptyCard}>
                       <FileText size={36} color={colors.textMuted} />
-                      <Text style={styles.emptyTitle}>No transactions found</Text>
-                      <Text style={styles.emptySub}>No sales or settlements match selected date filter.</Text>
+                      <Text style={styles.emptyTitle}>{t('No transactions found')}</Text>
+                      <Text style={styles.emptySub}>{t('No transactions match selected date filter.')}</Text>
                     </View>
                   }
                   renderItem={({ item: entry }) => {
@@ -430,9 +432,9 @@ export default function CustomerKhataScreen({ navigation }) {
                           <View style={{ flex: 1 }}>
                             <Text style={styles.timelineTitle}>
                               {isSale
-                                ? `Bill #${entry.id} (${entry.paymentMethod})`
+                                ? `${t('Bill')} #${entry.id} (${t(entry.paymentMethod)})`
                                 : isSettlement
-                                ? `Repayment Received (${entry.method})`
+                                ? `${t('Payment Received')} (${entry.method})`
                                 : `Order #${entry.orderNumber}`}
                             </Text>
                             <Text style={styles.timelineDate}>
@@ -461,7 +463,7 @@ export default function CustomerKhataScreen({ navigation }) {
                                 : `₹${(Number(entry?.total ?? entry?.estimatedTotal) || 0).toFixed(2)}`}
                             </Text>
                             {!isSettlement && (
-                              <Text style={styles.receiptLink}>View Details →</Text>
+                              <Text style={styles.receiptLink}>{t('View Details →')}</Text>
                             )}
                           </View>
                         </View>

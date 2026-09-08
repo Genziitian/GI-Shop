@@ -94,7 +94,7 @@ export default function CustomerMoreScreen({ navigation }) {
       {/* Top Header */}
       <Header
         title="GI SHOP"
-        subtitle="Account & Settings"
+        subtitle={t('Account & Settings')}
         showLock={true}
       />
 
@@ -131,7 +131,7 @@ export default function CustomerMoreScreen({ navigation }) {
             <View style={styles.nameRow}>
               <Text style={styles.profileName}>{user?.name || 'Customer'}</Text>
               <View style={styles.editBadge}>
-                <Text style={styles.editBadgeText}>Edit Profile</Text>
+                <Text style={styles.editBadgeText}>{t('Edit Profile')}</Text>
               </View>
             </View>
             <Text style={styles.profileSub}>
@@ -149,9 +149,9 @@ export default function CustomerMoreScreen({ navigation }) {
               <Globe size={18} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>{t('more.langCardTitle', 'Choose Language / भाषा चुनें')}</Text>
+              <Text style={styles.sectionTitle}>{t('more.langCardTitle')}</Text>
               <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>
-                {t('more.langCardSubtitle', 'Select your preferred language')}
+                {t('more.langCardSubtitle')}
               </Text>
             </View>
           </View>
@@ -219,7 +219,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
         {/* SECTION 1: ACCOUNT & SECURITY SETTINGS */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{t('more.securityLock', 'Account & Security')}</Text>
+          <Text style={styles.sectionTitle}>{t('Account & Security')}</Text>
 
           <TouchableOpacity
             style={styles.menuRow}
@@ -230,7 +230,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <Key size={18} color="#16a34a" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>Account Password</Text>
+              <Text style={styles.menuText}>{t('Account Password')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -244,8 +244,8 @@ export default function CustomerMoreScreen({ navigation }) {
               <Phone size={18} color="#15803d" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={[styles.menuText, { color: '#15803d', fontWeight: '700' }]}>Contact Customer Care</Text>
-              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>Call 7323809242 for instant help</Text>
+              <Text style={[styles.menuText, { color: '#15803d', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>{t('Call 7323809242 for instant help')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -253,7 +253,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
         {/* SECTION 2: LEGAL, PRIVACY & ACCOUNT */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Legal & Account Control</Text>
+          <Text style={styles.sectionTitle}>{t('Legal & Account Control')}</Text>
 
           <TouchableOpacity
             style={styles.menuRow}
@@ -264,7 +264,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <Shield size={18} color="#16a34a" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>Privacy Policy</Text>
+              <Text style={styles.menuText}>{t('Privacy Policy')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -278,7 +278,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <FileText size={18} color="#0284c7" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={styles.menuText}>Terms & Conditions</Text>
+              <Text style={styles.menuText}>{t('Terms & Conditions')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -292,7 +292,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <Trash2 size={18} color="#dc2626" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={[styles.menuText, { color: '#dc2626' }]}>Account Deletion Request</Text>
+              <Text style={[styles.menuText, { color: '#dc2626' }]}>{t('Account Deletion Request')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -300,7 +300,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
         {/* SECTION 3: SYSTEM ACTIONS */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Session & Security</Text>
+          <Text style={styles.sectionTitle}>{t('Session & Security')}</Text>
 
           <TouchableOpacity
             style={[styles.menuRow, { borderBottomWidth: 0 }]}
@@ -311,7 +311,7 @@ export default function CustomerMoreScreen({ navigation }) {
               <LogOut size={18} color="#b91c1c" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={[styles.menuText, { color: '#b91c1c' }]}>Switch Account / Log Out</Text>
+              <Text style={[styles.menuText, { color: '#b91c1c' }]}>{t('Switch Account / Log Out')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -319,7 +319,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
         {/* App Version Info */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>GI SHOP Customer Ledger v1.0.13</Text>
+          <Text style={styles.versionText}>GI SHOP Customer Ledger v1.0.19</Text>
           <Text style={styles.copyrightText}>Smart Billing, Khata & Grocery Discovery</Text>
         </View>
       </ScrollView>

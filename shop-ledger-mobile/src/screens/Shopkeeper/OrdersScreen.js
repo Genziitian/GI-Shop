@@ -25,6 +25,7 @@ import {
   History,
   Calendar,
   ChevronDown,
+  ChevronUp,
   Filter,
   Check,
 } from 'lucide-react-native';
@@ -41,6 +42,7 @@ import {
 import Header from '../../components/Header';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import { showErrorAlert } from '../../utils/errorHandler';
+import { useTranslation } from '../../context/LanguageContext';
 
 const DATE_OPTIONS = [
   { id: 'All', label: 'All Dates' },
@@ -59,6 +61,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function OrdersScreen({ navigation }) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -88,6 +91,7 @@ export default function OrdersScreen({ navigation }) {
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Pending' | 'Packing' | 'Ready' | 'Completed' | 'Cancelled'
   const [showDateDropdown, setShowDateDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [isPastOrdersExpanded, setIsPastOrdersExpanded] = useState(false);
 
   const handleToggleItemUnavailable = async (ord, itemIndex) => {
     try {
@@ -293,9 +297,15 @@ export default function OrdersScreen({ navigation }) {
   );
 
   const renderOrderCard = (ord, isPast = false) => {
-    const orderItems = typeof ord.itemsJSON === 'string'
-      ? JSON.parse(ord.itemsJSON || '[]')
-      : (ord.items || []);
+    const orderItems = Array.isArray(ord.itemsJSON)
+      ? ord.itemsJSON
+      : (() => { try { return JSON.parse(ord.itemsJSON || '[]'); } catch (e) { return Array.isArray(ord.items) ? ord.items : []; } })();
+
+    const computedTotal = Number(
+      ord.totalAmount ?? ord.total ?? ord.estimatedTotal ??
+      orderItems.reduce((s, it) => s + (Number(it.amount || ((it.rate || it.price) * it.qty)) || 0), 0)
+    ) || 0;
+
     const dateStr = new Date(ord.createdAt || ord.date).toLocaleString('en-IN', {
       dateStyle: 'medium',
       timeStyle: 'short',
@@ -308,11 +318,11 @@ export default function OrdersScreen({ navigation }) {
         <View style={styles.orderCardHeader}>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <Text style={styles.orderNumText}>Order #{ord.orderNumber || ord.id}</Text>
+              <Text style={styles.orderNumText}>{t('Order')} #{ord.orderNumber || ord.id}</Text>
               {isOlderThan24h && (
                 <View style={styles.historyBadge}>
                   <Clock size={10} color="#64748b" />
-                  <Text style={styles.historyBadgeText}>Past 24h</Text>
+                  <Text style={styles.historyBadgeText}>{t('Past 24h')}</Text>
                 </View>
               )}
             </View>
@@ -345,21 +355,21 @@ export default function OrdersScreen({ navigation }) {
               ]}
             >
               {ord.status === 'PENDING'
-                ? 'Pending'
+                ? t('Pending')
                 : ord.status === 'PACKING'
-                ? `Packing (${ord.packingMinutes}m)`
+                ? `${t('Packing')} (${ord.packingMinutes}m)`
                 : ord.status === 'READY'
-                ? 'Ready (Waiting Customer)'
+                ? t('Ready (Waiting Customer)')
                 : ord.status === 'COMPLETED'
-                ? 'Order Completed'
+                ? t('Order Completed')
                 : ord.status === 'COLLECTED'
-                ? 'Customer Collected'
+                ? t('Customer Collected')
                 : ord.status === 'NOT_COLLECTED'
-                ? 'Marked Not Collected'
+                ? t('Marked Not Collected')
                 : ord.status === 'CANCELLED_BY_CUSTOMER'
-                ? 'Cancelled by Customer'
+                ? t('Cancelled by Customer')
                 : ord.status === 'AUTO_CANCELLED_EXPIRED'
-                ? 'Auto-cancelled (Expired)'
+                ? t('Auto-cancelled (Expired)')
                 : ord.status}
             </Text>
           </View>
@@ -371,7 +381,7 @@ export default function OrdersScreen({ navigation }) {
             onPress={() => handleOpenOrderModal(ord, 'DECLINE')}
             activeOpacity={0.7}
           >
-            <Text style={styles.topDeclineBtnText}>Decline</Text>
+            <Text style={styles.topDeclineBtnText}>{t('Decline')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -379,7 +389,7 @@ export default function OrdersScreen({ navigation }) {
             onPress={() => setSelectedDetailOrder(ord)}
             activeOpacity={0.7}
           >
-            <Text style={styles.topDetailsBtnText}>Order Details</Text>
+            <Text style={styles.topDetailsBtnText}>{t('Order Details')}</Text>
           </TouchableOpacity>
         )}
 
@@ -387,7 +397,7 @@ export default function OrdersScreen({ navigation }) {
           <View style={styles.expiredWarningBox}>
             <XCircle size={13} color="#b91c1c" />
             <Text style={styles.expiredWarningText}>
-              Order automatically cancelled because 45 minutes elapsed without acceptance.
+              {t('Order automatically cancelled because 45 minutes elapsed without acceptance.')}
             </Text>
           </View>
         )}
@@ -403,7 +413,7 @@ export default function OrdersScreen({ navigation }) {
                     • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
                   </Text>
                   {isUnavail && (
-                    <Text style={{ fontSize: 10, color: '#b91c1c', fontWeight: '700' }}>UNAVAILABLE</Text>
+                    <Text style={{ fontSize: 10, color: '#b91c1c', fontWeight: '700' }}>{t('UNAVAILABLE')}</Text>
                   )}
                 </View>
 
@@ -421,10 +431,10 @@ export default function OrdersScreen({ navigation }) {
                         borderWidth: 1,
                         borderColor: isUnavail ? '#cbd5e1' : '#fca5a5',
                       }}
-                      onPress={() => handleToggleItemUnavailable(ord, idx)}
+                      onPress={() => handleToggleItemAvailability(ord, idx)}
                     >
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: isUnavail ? '#475569' : '#b91c1c' }}>
-                        {isUnavail ? 'Mark Avail' : 'Mark Unavail'}
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: isUnavail ? colors.textMuted : '#b91c1c' }}>
+                        {isUnavail ? t('Restore') : t('Mark Out')}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -435,39 +445,39 @@ export default function OrdersScreen({ navigation }) {
         </View>
 
         <View style={styles.orderTotalRow}>
-          <Text style={styles.orderTotalLabel}>Total Payable:</Text>
-          <Text style={styles.orderTotalValue}>₹{(Number(ord.estimatedTotal ?? ord.total) || 0).toFixed(2)}</Text>
+          <Text style={styles.orderTotalLabel}>{t('Total Payable:')}</Text>
+          <Text style={styles.orderTotalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
         </View>
 
         {/* Action Buttons */}
         {ord.status === 'PENDING' && (
           <View style={styles.orderActionsRow}>
             <TouchableOpacity
-              style={styles.detailsBtn}
-              onPress={() => setSelectedDetailOrder(ord)}
-              activeOpacity={0.7}
+              style={[styles.actionBtn, styles.btnDanger]}
+              onPress={() => handleOpenOrderModal(ord, 'DECLINE')}
             >
-              <Text style={styles.detailsBtnText}>Order Details</Text>
+              <XCircle size={16} color="#ffffff" />
+              <Text style={styles.actionBtnText}>{t('Decline')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.acceptBtn}
+              style={[styles.actionBtn, styles.btnSuccess]}
               onPress={() => handleOpenOrderModal(ord, 'ACCEPT')}
-              activeOpacity={0.8}
             >
-              <Text style={styles.acceptBtnText}>Accept &amp; Pack</Text>
+              <CheckCircle2 size={16} color="#ffffff" />
+              <Text style={styles.actionBtnText}>{t('Accept Order')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {(ord.status === 'ACCEPTED' || ord.status === 'PACKING') && (
+        {ord.status === 'PACKING' && (
           <TouchableOpacity
             style={styles.completeBtn}
-            onPress={() => handleCompleteOrder(ord.id)}
+            onPress={() => handleMarkReady(ord.id)}
             activeOpacity={0.8}
           >
             <CheckCircle2 size={16} color="#ffffff" />
-            <Text style={styles.completeBtnText}>Mark Ready for Pickup</Text>
+            <Text style={styles.completeBtnText}>{t('Mark Ready for Pickup')}</Text>
           </TouchableOpacity>
         )}
 
@@ -478,10 +488,10 @@ export default function OrdersScreen({ navigation }) {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flex: 1, paddingRight: 6 }}>
                   <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
-                    Order Ready for Pickup
+                    {t('Order Ready for Pickup')}
                   </Text>
                   <Text style={{ fontSize: 11, color: '#854d0e', marginTop: 2 }}>
-                    No payment request sent yet.
+                    {t('No payment request sent yet.')}
                   </Text>
                 </View>
 
@@ -490,7 +500,7 @@ export default function OrdersScreen({ navigation }) {
                   onPress={() => handleOpenPaymentModal(ord)}
                 >
                   <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>
-                    Get Payment
+                    {t('Get Payment')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -499,17 +509,17 @@ export default function OrdersScreen({ navigation }) {
               <View>
                 <View style={{ marginBottom: 8 }}>
                   <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
-                    Payment Requested
+                    {t('Payment Requested')}
                   </Text>
                   <Text style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
-                    Amount: <Text style={{ fontWeight: '700' }}>₹{(Number(ord.requestedAmount) || 0).toFixed(2)}</Text> • Mode: <Text style={{ fontWeight: '700' }}>{ord.paymentMethod || 'Cash'}</Text>
+                    {t('Amount')}: <Text style={{ fontWeight: '700' }}>₹{(Number(ord.requestedAmount) || 0).toFixed(2)}</Text> • {t('Mode')}: <Text style={{ fontWeight: '700' }}>{t(ord.paymentMethod || 'Cash')}</Text>
                   </Text>
                 </View>
 
                 {/* 4-Digit OTP Verification Input (Only shown while waiting for handover) */}
                 <View style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderWidth: 1, borderRadius: 6, padding: 8, marginTop: 4 }}>
                   <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
-                    Enter Customer OTP
+                    {t('Enter Customer OTP')}
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                     <TextInput
@@ -547,7 +557,7 @@ export default function OrdersScreen({ navigation }) {
                       {otpSubmitting[ord.id] ? (
                         <ActivityIndicator color="#fff" size="small" />
                       ) : (
-                        <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>Verify OTP &amp; Complete</Text>
+                        <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>{t('Verify OTP & Complete')}</Text>
                       )}
                     </TouchableOpacity>
                   </View>
@@ -562,10 +572,10 @@ export default function OrdersScreen({ navigation }) {
             <CheckCircle2 size={18} color="#15803d" />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13, color: '#15803d', fontWeight: '800' }}>
-                ✓ Order Completed &amp; Handed Over
+                {t('✓ Order Completed & Handed Over')}
               </Text>
               <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
-                Customer verified via OTP. Sale recorded in ledger.
+                {t('Customer verified via OTP. Sale recorded in ledger.')}
               </Text>
             </View>
           </View>
@@ -574,7 +584,7 @@ export default function OrdersScreen({ navigation }) {
         {ord.status === 'COLLECTED' && (
           <View style={{ backgroundColor: '#f0fdf4', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
             <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '700' }}>
-              Order finalized and collected by customer. (Locked)
+              {t('Order finalized and collected by customer. (Locked)')}
             </Text>
           </View>
         )}
@@ -600,27 +610,27 @@ export default function OrdersScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Header subtitle="Incoming Orders & Live Packing" />
+      <Header subtitle={t('Incoming Orders & Live Packing')} />
 
       <View style={styles.content}>
         {/* Order Summary Stats */}
         <View style={styles.summaryRow}>
           <View style={[styles.statBox, { borderLeftColor: colors.warning }]}>
-            <Text style={styles.statLabel}>Pending</Text>
+            <Text style={styles.statLabel}>{t('Pending')}</Text>
             <Text style={styles.statValue}>
               {safeOrders.filter((o) => o.status === 'PENDING').length}
             </Text>
           </View>
 
           <View style={[styles.statBox, { borderLeftColor: colors.primary }]}>
-            <Text style={styles.statLabel}>Packing</Text>
+            <Text style={styles.statLabel}>{t('Packing')}</Text>
             <Text style={styles.statValue}>
               {safeOrders.filter((o) => o.status === 'ACCEPTED' || o.status === 'PACKING').length}
             </Text>
           </View>
 
           <View style={[styles.statBox, { borderLeftColor: colors.success }]}>
-            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statLabel}>{t('Completed')}</Text>
             <Text style={styles.statValue}>
               {safeOrders.filter((o) => o.status === 'READY' || o.status === 'COMPLETED').length}
             </Text>
@@ -632,7 +642,7 @@ export default function OrdersScreen({ navigation }) {
           <Search size={16} color={colors.textMuted} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search order #, customer, phone..."
+            placeholder={t('Search order #, customer, phone...')}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -668,7 +678,7 @@ export default function OrdersScreen({ navigation }) {
                   ]}
                   numberOfLines={1}
                 >
-                  {dateFilter === 'All' ? 'All Dates' : dateFilter}
+                  {t(dateFilter === 'All' ? 'All Dates' : dateFilter)}
                 </Text>
               </View>
               <ChevronDown
@@ -699,7 +709,7 @@ export default function OrdersScreen({ navigation }) {
                   ]}
                   numberOfLines={1}
                 >
-                  {statusFilter === 'All' ? 'All Status' : statusFilter}
+                  {t(statusFilter === 'All' ? 'All Status' : statusFilter)}
                 </Text>
               </View>
               <ChevronDown
@@ -732,7 +742,7 @@ export default function OrdersScreen({ navigation }) {
                       ]}
                       numberOfLines={1}
                     >
-                      {opt.label}
+                      {t(opt.label)}
                     </Text>
                     {isSelected && <Check size={14} color={colors.primary} />}
                   </TouchableOpacity>
@@ -763,7 +773,7 @@ export default function OrdersScreen({ navigation }) {
                       ]}
                       numberOfLines={1}
                     >
-                      {opt.label}
+                      {t(opt.label)}
                     </Text>
                     {isSelected && <Check size={14} color={colors.primary} />}
                   </TouchableOpacity>
@@ -802,16 +812,16 @@ export default function OrdersScreen({ navigation }) {
             {dateFilter !== 'Older (>24h)' && (
               <View style={{ marginBottom: 14 }}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Active Orders (&lt;24h)</Text>
+                  <Text style={styles.sectionTitle}>{t('Active Orders (<24h)')}</Text>
                   <View style={[styles.countBadge, { backgroundColor: '#e0f2fe' }]}>
                     <Text style={[styles.countBadgeText, { color: '#0369a1' }]}>
-                      {recentOrders.length} Active
+                      {recentOrders.length} {t('Active')}
                     </Text>
                   </View>
                 </View>
                 {recentOrders.length === 0 ? (
                   <View style={styles.sectionEmptyBox}>
-                    <Text style={styles.sectionEmptyText}>No active orders under 24 hours.</Text>
+                    <Text style={styles.sectionEmptyText}>{t('No active orders under 24 hours.')}</Text>
                   </View>
                 ) : (
                   <View style={{ gap: 8 }}>
@@ -821,26 +831,51 @@ export default function OrdersScreen({ navigation }) {
               </View>
             )}
 
-            {/* Section 2: Past Orders (>24h & Finalized) */}
+            {/* Section 2: Past Orders (>24h & Finalized) - Collapsible Group */}
             <View style={{ marginBottom: 20 }}>
-              <View style={styles.sectionHeader}>
-                <View>
-                  <Text style={styles.sectionTitle}>Past Orders (&gt;24h &amp; Finalized)</Text>
-                  <Text style={styles.sectionSub}>Orders older than 24h or collected/cancelled</Text>
-                </View>
-                <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>
-                    {pastOrders.length} History
+              <TouchableOpacity
+                style={[
+                  styles.sectionHeaderClickable,
+                  isPastOrdersExpanded && styles.sectionHeaderExpanded,
+                ]}
+                onPress={() => setIsPastOrdersExpanded(!isPastOrdersExpanded)}
+                activeOpacity={0.7}
+              >
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.sectionTitle}>{t('Past Orders (>24h & Finalized)')}</Text>
+                    <View style={styles.countBadge}>
+                      <Text style={styles.countBadgeText}>
+                        {pastOrders.length} {t('History')}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.sectionSub}>
+                    {isPastOrdersExpanded
+                      ? t('Tap to collapse past orders')
+                      : t('Tap to view grouped past orders')}
                   </Text>
                 </View>
-              </View>
-              {pastOrders.length === 0 ? (
-                <View style={styles.sectionEmptyBox}>
-                  <Text style={styles.sectionEmptyText}>No past orders matching filters.</Text>
+                <View style={styles.chevronToggleBox}>
+                  {isPastOrdersExpanded ? (
+                    <ChevronUp size={20} color={colors.primary} />
+                  ) : (
+                    <ChevronDown size={20} color={colors.primary} />
+                  )}
                 </View>
-              ) : (
-                <View style={{ gap: 8 }}>
-                  {pastOrders.map((ord) => renderOrderCard(ord, true))}
+              </TouchableOpacity>
+
+              {isPastOrdersExpanded && (
+                <View style={{ marginTop: 10 }}>
+                  {pastOrders.length === 0 ? (
+                    <View style={styles.sectionEmptyBox}>
+                      <Text style={styles.sectionEmptyText}>{t('No past orders matching filters.')}</Text>
+                    </View>
+                  ) : (
+                    <View style={{ gap: 8 }}>
+                      {pastOrders.map((ord) => renderOrderCard(ord, true))}
+                    </View>
+                  )}
                 </View>
               )}
             </View>
@@ -1182,6 +1217,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  sectionHeaderClickable: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadowStyle,
+  },
+  sectionHeaderExpanded: {
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    borderColor: colors.primary,
+  },
+  chevronToggleBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   sectionTitle: {
     fontSize: 13,
