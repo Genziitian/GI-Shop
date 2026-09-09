@@ -319,6 +319,10 @@ if (DB_TYPE === 'mysql') {
     pool.query(`ALTER TABLE Orders ADD COLUMN requestedDiscount DECIMAL(10,2) DEFAULT 0.00`, () => {});
     pool.query(`ALTER TABLE Orders ADD COLUMN paymentMethod VARCHAR(50) NULL`, () => {});
     pool.query(`ALTER TABLE Orders ADD COLUMN timelineJSON LONGTEXT NULL`, () => {});
+    pool.query(`ALTER TABLE ShopCustomers ADD COLUMN customerShortId VARCHAR(50) NULL`, () => {});
+    pool.query(`ALTER TABLE ShopCustomers ADD COLUMN customerEmail VARCHAR(255) NULL`, () => {});
+    pool.query(`ALTER TABLE ShopCustomers ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE'`, () => {});
+    pool.query(`ALTER TABLE Settlements ADD COLUMN customerShortId VARCHAR(50) NULL`, () => {});
 
     // Seed baseline cities ONLY ONCE on initial bootstrap
     pool.query(`SELECT settingValue FROM PlatformSettings WHERE settingKey = 'baseline_cities_seeded'`, (err, rows) => {
@@ -533,6 +537,7 @@ if (DB_TYPE === 'mysql') {
     )`);
 
     sqliteDb.run(`ALTER TABLE Settlements ADD COLUMN note TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE Settlements ADD COLUMN customerShortId TEXT`, () => {});
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS ShopCustomers (
       shopId INTEGER,
@@ -547,6 +552,7 @@ if (DB_TYPE === 'mysql') {
 
     sqliteDb.run(`ALTER TABLE ShopCustomers ADD COLUMN customerShortId TEXT`, () => {});
     sqliteDb.run(`ALTER TABLE ShopCustomers ADD COLUMN customerEmail TEXT`, () => {});
+    sqliteDb.run(`ALTER TABLE ShopCustomers ADD COLUMN status TEXT DEFAULT 'ACTIVE'`, () => {});
 
     sqliteDb.run(`CREATE TABLE IF NOT EXISTS UserFCMTokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

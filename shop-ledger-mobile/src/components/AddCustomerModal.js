@@ -40,7 +40,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
       const results = await searchRegisteredCustomer(appSearchQuery.trim());
       setAppSearchResults(results || []);
       if (!results || results.length === 0) {
-        setAppSearchNotice('No registered customer account found with that Email or Short ID on GI SHOP.');
+        setAppSearchNotice('No registered customer account found with that Short ID or Phone on GI SHOP.');
       }
     } catch (e) {
       setAppSearchNotice(e.message || 'Search failed. Check network or server.');
@@ -49,15 +49,39 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
     }
   };
 
-  const handleSelectAppCustomer = (user) => {
-    setPhone(user.phone || '');
-    setName(user.name || '');
-    setCustomerShortId(user.shortId || '');
-    setCustomerEmail(user.email || '');
-    setIsImported(true);
-    setImportedContactName(`${user.name} (${user.shortId})`);
+  const handleSelectAppCustomer = async (user) => {
+    const rawPhone = (user.phone || '').trim();
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    const finalPhone = cleanPhone.length === 10 ? cleanPhone : (rawPhone || user.shortId || '');
+    const finalName = (user.name || 'Customer').trim();
+    const finalShortId = (user.shortId || user.shopShortId || '').trim();
+
+    const customerData = {
+      phone: finalPhone,
+      name: finalName,
+      address: (user.address || '').trim(),
+      customerShortId: finalShortId || undefined,
+      customerEmail: user.email || undefined,
+    };
+
     setAppSearchResults([]);
     setAppSearchQuery('');
+
+    if (onCustomerAdded) {
+      setSubmitting(true);
+      try {
+        await onCustomerAdded(customerData);
+        handleResetModal();
+        onClose();
+      } catch (e) {
+        showErrorAlert(e, 'Select Customer', 'Failed to add customer.');
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      handleResetModal();
+      onClose();
+    }
   };
 
   const handleImportContact = async () => {
@@ -256,11 +280,11 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
 
               {/* Registered App User Search Bar */}
               <View style={styles.appSearchBox}>
-                <Text style={styles.appSearchTitle}>Link GI SHOP Account (Short ID / Phone / Email)</Text>
+                <Text style={styles.appSearchTitle}>Link GI SHOP Account (Short ID / Phone)</Text>
                 <View style={styles.appSearchRow}>
                   <TextInput
                     style={styles.appSearchInput}
-                    placeholder="Short ID, Email, or Phone..."
+                    placeholder="Short ID or Phone..."
                     value={appSearchQuery}
                     onChangeText={setAppSearchQuery}
                     onSubmitEditing={handleSearchAppCustomer}
@@ -296,7 +320,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                             <Text style={styles.userShortIdText}>ID: {user.shortId || user.shopShortId}</Text>
                           </View>
                           <Text style={styles.userSubText}>
-                            {user.phone} {user.email ? `• ${user.email}` : ''}
+                            {user.phone || 'Registered Customer'}
                           </Text>
                         </View>
 
@@ -347,9 +371,12 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={styles.inputLabel}>Phone Number *</Text>
                   {isImported && (
-                    <Text style={{ fontSize: 11, color: '#16a34a', fontWeight: '700' }}>
-                      🔒 Locked (Imported)
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Lock size={12} color="#16a34a" />
+                      <Text style={{ fontSize: 11, color: '#16a34a', fontWeight: '700' }}>
+                        Locked (Imported)
+                      </Text>
+                    </View>
                   )}
                 </View>
                 <TextInput

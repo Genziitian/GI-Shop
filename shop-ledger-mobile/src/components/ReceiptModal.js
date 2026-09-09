@@ -316,9 +316,11 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                   {receipt.shopAddress && (
                     <Text style={styles.storeAddress}>{receipt.shopAddress}</Text>
                   )}
-                  <View style={styles.statusBadge}>
-                    <CheckCircle size={14} color={colors.success} />
-                    <Text style={styles.statusText}>BILL COMPLETED</Text>
+                  <View style={[styles.statusBadge, receipt.isOffline && styles.statusBadgeOffline]}>
+                    <CheckCircle size={14} color={receipt.isOffline ? '#d97706' : colors.success} />
+                    <Text style={[styles.statusText, receipt.isOffline && styles.statusTextOffline]}>
+                      {receipt.isOffline ? 'OFFLINE BILL • SAVED LOCALLY' : 'BILL COMPLETED'}
+                    </Text>
                   </View>
                 </View>
 
@@ -529,6 +531,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: colors.success,
+  },
+  statusBadgeOffline: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+    borderWidth: 1,
+  },
+  statusTextOffline: {
+    color: '#b45309',
   },
   metaBox: {
     backgroundColor: colors.background,

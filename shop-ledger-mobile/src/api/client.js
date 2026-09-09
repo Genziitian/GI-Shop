@@ -244,6 +244,13 @@ export const saveCustomer = async (customerData) => {
   });
 };
 
+export const linkCustomerAccount = async (payload) => {
+  return await fetchWithAuth('/api/shop/customers/link-account', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
 export const syncContacts = async (contactsData) => {
   return await fetchWithAuth('/api/contacts/sync', {
     method: 'POST',

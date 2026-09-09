@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -28,108 +29,170 @@ import {
   CheckCircle2,
   User,
   Share2,
+  XCircle,
+  X,
+  ChevronRight,
+  Sparkles,
+  Tag,
 } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { colors, shadowMedium, shadowLarge } from '../theme/colors';
+import {
+  updateShopOrderItems,
+  acceptShopOrder,
+  declineShopOrder,
+  completeShopOrder,
+  requestShopOrderPayment,
+  verifyShopOrderOTP,
+} from '../api/client';
+import { useLanguage } from '../context/LanguageContext';
 
-export default function OrderDetailModal({ visible, order, onClose, onAccept, onDecline }) {
+export default function OrderDetailModal({
+  visible,
+  order,
+  onClose,
+  onAccept,
+  onDecline,
+  isShopkeeper = false,
+  onRefresh,
+  onOrderUpdated,
+}) {
+  const { t } = useLanguage();
   const [downloading, setDownloading] = useState(false);
+  const [localOrder, setLocalOrder] = useState(order);
+  const [updatingItems, setUpdatingItems] = useState(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+
+  // Shopkeeper management state
+  const [packingMinutes, setPackingMinutes] = useState(15);
+  const [customDiscount, setCustomDiscount] = useState('');
+  const [paymentMode, setPaymentMode] = useState('Cash');
+  const [otpValue, setOtpValue] = useState('');
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState('Item out of stock');
+  const [customDeclineReason, setCustomDeclineReason] = useState('');
+
+  useEffect(() => {
+    if (order) {
+      setLocalOrder(order);
+      setCustomDiscount(order.requestedDiscount ? String(order.requestedDiscount) : '');
+      setPackingMinutes(order.packingMinutes || 15);
+      setPaymentMode(order.paymentMethod || 'Cash');
+    }
+  }, [order]);
 
   if (!visible || !order) return null;
 
-  const items = Array.isArray(order.items)
-    ? order.items
-    : typeof order.itemsJSON === 'string'
-    ? JSON.parse(order.itemsJSON || '[]')
+  const currentOrder = localOrder || order;
+
+  const items = Array.isArray(currentOrder.items)
+    ? currentOrder.items
+    : typeof currentOrder.itemsJSON === 'string'
+    ? JSON.parse(currentOrder.itemsJSON || '[]')
     : [];
 
-  const timeline = Array.isArray(order.timeline)
-    ? order.timeline
-    : typeof order.timelineJSON === 'string'
-    ? JSON.parse(order.timelineJSON || '[]')
+  const timeline = Array.isArray(currentOrder.timeline)
+    ? currentOrder.timeline
+    : typeof currentOrder.timelineJSON === 'string'
+    ? JSON.parse(currentOrder.timelineJSON || '[]')
     : [];
 
   // Fallback timeline if timelineJSON is not populated yet
   const displayTimeline = timeline.length > 0 ? timeline : [
     {
       title: 'Order Created',
-      timestamp: order.createdAt || new Date().toISOString(),
+      timestamp: currentOrder.createdAt || new Date().toISOString(),
       description: 'Customer placed the order',
       status: 'CREATED',
     },
     {
       title: 'Order Received by Shop',
-      timestamp: order.createdAt || new Date().toISOString(),
+      timestamp: currentOrder.createdAt || new Date().toISOString(),
       description: 'Order received by shopkeeper',
       status: 'RECEIVED',
     },
-    ...(order.acceptedAt ? [{
+    ...(currentOrder.acceptedAt ? [{
       title: 'Order Accepted & Preparing',
-      timestamp: order.acceptedAt,
-      description: `Estimated preparation time: ${order.packingMinutes || 15} mins`,
+      timestamp: currentOrder.acceptedAt,
+      description: `Estimated preparation time: ${currentOrder.packingMinutes || 15} mins`,
       status: 'ACCEPTED',
     }] : []),
-    ...(order.status === 'READY' || order.status === 'COMPLETED' ? [{
+    ...(currentOrder.status === 'READY' || currentOrder.status === 'COMPLETED' ? [{
       title: 'Order Ready for Pickup',
-      timestamp: order.acceptedAt || order.createdAt,
+      timestamp: currentOrder.acceptedAt || currentOrder.createdAt,
       description: 'Order packed and ready for pickup',
       status: 'READY',
     }] : []),
-    ...(order.paymentRequested ? [{
+    ...(currentOrder.paymentRequested ? [{
       title: 'Payment Requested',
-      timestamp: order.acceptedAt || order.createdAt,
-      description: `Requested ₹${(order.requestedAmount || order.estimatedTotal || 0).toFixed(2)} (${order.paymentMethod || 'Cash'})`,
+      timestamp: currentOrder.acceptedAt || currentOrder.createdAt,
+      description: `Requested ₹${(currentOrder.requestedAmount || currentOrder.estimatedTotal || 0).toFixed(2)} (${currentOrder.paymentMethod || 'Cash'})`,
       status: 'PAYMENT_REQUESTED',
     }] : []),
-    ...(order.status === 'COMPLETED' ? [{
+    ...(currentOrder.status === 'COMPLETED' ? [{
       title: 'Customer Verified (OTP)',
-      timestamp: order.collectedAt || new Date().toISOString(),
+      timestamp: currentOrder.collectedAt || new Date().toISOString(),
       description: 'Customer 4-digit OTP successfully verified',
       status: 'VERIFIED',
     }, {
       title: 'Order Delivered & Completed',
-      timestamp: order.collectedAt || new Date().toISOString(),
+      timestamp: currentOrder.collectedAt || new Date().toISOString(),
       description: 'Order handed over and sale recorded',
       status: 'COMPLETED',
     }] : []),
-    ...(order.status === 'DECLINED' ? [{
+    ...(currentOrder.status === 'DECLINED' ? [{
       title: 'Order Declined',
-      timestamp: order.updatedAt || new Date().toISOString(),
-      description: order.declineReason || 'Shopkeeper declined this order',
+      timestamp: currentOrder.updatedAt || new Date().toISOString(),
+      description: currentOrder.declineReason || 'Shopkeeper declined this order',
       status: 'DECLINED',
     }] : []),
-    ...(order.status === 'CANCELLED_BY_CUSTOMER' ? [{
+    ...(currentOrder.status === 'CANCELLED_BY_CUSTOMER' ? [{
       title: 'Order Cancelled by Customer',
-      timestamp: order.updatedAt || new Date().toISOString(),
+      timestamp: currentOrder.updatedAt || new Date().toISOString(),
       description: 'Customer cancelled or took back this order',
       status: 'CANCELLED_BY_CUSTOMER',
     }] : []),
   ];
 
-  const formattedCreatedDate = order.createdAt
-    ? new Date(order.createdAt).toLocaleString('en-IN', {
+  const formattedCreatedDate = currentOrder.createdAt
+    ? new Date(currentOrder.createdAt).toLocaleString('en-IN', {
         dateStyle: 'medium',
         timeStyle: 'short',
       })
     : 'N/A';
 
-  const shopName = order.shopName || order.Shop?.name || 'GI SHOP Store';
-  const shopPhone = order.shopPhone || order.Shop?.phone || order.shopContact || '';
+  const shopName = currentOrder.shopName || currentOrder.Shop?.name || 'GI SHOP Store';
+  const shopPhone = currentOrder.shopPhone || currentOrder.Shop?.phone || currentOrder.shopContact || '';
   const shopAddress = [
-    order.shopAddress || order.Shop?.address,
-    order.shopCity || order.Shop?.city,
+    currentOrder.shopAddress || currentOrder.Shop?.address,
+    currentOrder.shopCity || currentOrder.Shop?.city,
   ].filter(Boolean).join(', ');
 
-  const customerName = order.customerName || order.User?.name || 'Customer';
-  const customerPhone = order.customerPhone || order.User?.phone || '';
-  const customerShortId = order.customerShortId || order.User?.shortId || '';
-  const orderNumber = order.orderNumber || order.id || 'N/A';
+  const customerName = currentOrder.customerName || currentOrder.User?.name || 'Customer';
+  const customerPhone = currentOrder.customerPhone || currentOrder.User?.phone || '';
+  const customerShortId = currentOrder.customerShortId || currentOrder.User?.shortId || '';
+  const orderNumber = currentOrder.orderNumber || currentOrder.id || 'N/A';
 
-  const finalPayableAmt = Number(order.requestedAmount > 0 ? order.requestedAmount : order.estimatedTotal) || 0;
-  const subtotalAmt = Number(order.estimatedTotal) || finalPayableAmt;
-  const discountAmt = Number(order.requestedDiscount) || 0;
-  const paymentMethod = order.paymentMethod || 'Pay at Counter';
+  // Live dynamic subtotal based on non-unavailable items
+  const calculatedSubtotal = items.reduce((sum, it) => {
+    if (it.isUnavailable || it.unavailable) return sum;
+    const rate = Number(it.rate || it.price || it.item?.price) || 0;
+    const qty = Number(it.qty) || 1;
+    return sum + (Number(it.amount || (rate * qty)) || 0);
+  }, 0);
+
+  const activeDiscount = currentOrder.paymentRequested
+    ? Number(currentOrder.requestedDiscount || 0)
+    : (customDiscount !== '' ? Math.max(0, Number(customDiscount) || 0) : Number(currentOrder.requestedDiscount || 0));
+
+  const finalPayableAmt = currentOrder.paymentRequested
+    ? Number(currentOrder.requestedAmount > 0 ? currentOrder.requestedAmount : (calculatedSubtotal - activeDiscount))
+    : Math.max(0, calculatedSubtotal - activeDiscount);
+
+  const subtotalAmt = calculatedSubtotal;
+  const discountAmt = activeDiscount;
+  const paymentMethod = currentOrder.paymentMethod || 'Pay at Counter';
 
   const getStepIcon = (st) => {
     switch (st) {
@@ -158,7 +221,7 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
   };
 
   const getStatusBadge = () => {
-    switch (order.status) {
+    switch (currentOrder.status) {
       case 'COMPLETED':
         return { label: 'Completed', bg: '#dcfce7', text: '#15803d' };
       case 'READY':
@@ -171,7 +234,11 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
       case 'CANCELLED_BY_CUSTOMER':
         return { label: 'Cancelled', bg: '#fee2e2', text: '#b91c1c' };
       default:
-        return { label: 'Pending Confirmation', bg: '#fef3c7', text: '#b45309' };
+        return {
+          label: isShopkeeper ? t('New Order (Pending)') : t('Pending Confirmation'),
+          bg: '#fef3c7',
+          text: '#b45309',
+        };
     }
   };
 
@@ -515,6 +582,152 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
     }
   };
 
+  // Handler: Toggle item availability for shopkeeper
+  const handleToggleItemAvailability = async (index) => {
+    if (!currentOrder || updatingItems) return;
+    setUpdatingItems(true);
+    try {
+      const updatedItems = items.map((it, idx) => {
+        if (idx === index) {
+          return { ...it, isUnavailable: !it.isUnavailable };
+        }
+        return it;
+      });
+
+      let newSubtotal = 0;
+      updatedItems.forEach((it) => {
+        if (!it.isUnavailable && !it.unavailable) {
+          const rate = Number(it.rate || it.price || it.item?.price) || 0;
+          const qty = Number(it.qty) || 1;
+          newSubtotal += Number(it.amount || (rate * qty)) || 0;
+        }
+      });
+
+      setLocalOrder((prev) => ({
+        ...prev,
+        itemsJSON: JSON.stringify(updatedItems),
+        items: updatedItems,
+        estimatedTotal: newSubtotal,
+      }));
+
+      await updateShopOrderItems(currentOrder.id, updatedItems);
+      if (onOrderUpdated) onOrderUpdated();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to update item availability.');
+      setLocalOrder(order);
+    } finally {
+      setUpdatingItems(false);
+    }
+  };
+
+  // Handler: Accept order with packing time
+  const handleAcceptOrderAction = async () => {
+    if (onAccept) {
+      onAccept();
+      return;
+    }
+    if (isProcessingAction) return;
+    setIsProcessingAction(true);
+    try {
+      await acceptShopOrder(currentOrder.id, packingMinutes);
+      Alert.alert('Order Accepted', `Order #${orderNumber} accepted with ~${packingMinutes}m packing time.`);
+      setLocalOrder((prev) => ({ ...prev, status: 'PACKING', packingMinutes }));
+      if (onOrderUpdated) onOrderUpdated();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to accept order.');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  // Handler: Decline order with reason
+  const handleDeclineOrderAction = async () => {
+    if (onDecline && !showDeclineModal) {
+      onDecline();
+      return;
+    }
+    const finalReason = (declineReason === 'Other' ? customDeclineReason : declineReason) || 'Item out of stock';
+    if (isProcessingAction) return;
+    setIsProcessingAction(true);
+    try {
+      await declineShopOrder(currentOrder.id, finalReason.trim());
+      Alert.alert('Order Declined', `Order #${orderNumber} has been declined.`);
+      setShowDeclineModal(false);
+      setLocalOrder((prev) => ({ ...prev, status: 'DECLINED', declineReason: finalReason.trim() }));
+      if (onOrderUpdated) onOrderUpdated();
+      if (onRefresh) onRefresh();
+      onClose();
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to decline order.');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  // Handler: Mark ready for pickup
+  const handleMarkReadyAction = async () => {
+    if (isProcessingAction) return;
+    setIsProcessingAction(true);
+    try {
+      await completeShopOrder(currentOrder.id);
+      Alert.alert('Success', `Order #${orderNumber} marked ready for pickup!`);
+      setLocalOrder((prev) => ({ ...prev, status: 'READY' }));
+      if (onOrderUpdated) onOrderUpdated();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to mark order ready.');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  // Handler: Send payment request with discount and payment mode
+  const handleSendPaymentRequestAction = async () => {
+    if (isProcessingAction) return;
+    setIsProcessingAction(true);
+    try {
+      const discVal = customDiscount !== '' ? Number(customDiscount) || 0 : 0;
+      await requestShopOrderPayment(currentOrder.id, discVal, paymentMode);
+      Alert.alert('Payment Requested', `Requested ₹${(calculatedSubtotal - discVal).toFixed(2)} (${paymentMode}).`);
+      setLocalOrder((prev) => ({
+        ...prev,
+        paymentRequested: 1,
+        requestedDiscount: discVal,
+        requestedAmount: Math.max(0, calculatedSubtotal - discVal),
+        paymentMethod: paymentMode,
+      }));
+      if (onOrderUpdated) onOrderUpdated();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      Alert.alert('Error', err?.message || 'Failed to send payment request.');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  // Handler: Verify customer OTP
+  const handleVerifyOtpAction = async () => {
+    const cleanOtp = (otpValue || '').trim();
+    if (cleanOtp.length !== 4) {
+      Alert.alert('Invalid OTP', 'Please enter a valid 4-digit OTP provided by the customer.');
+      return;
+    }
+    setIsProcessingAction(true);
+    try {
+      await verifyShopOrderOTP(currentOrder.id, cleanOtp);
+      Alert.alert('Order Completed', `OTP verified! Order #${orderNumber} handed over and recorded.`);
+      setLocalOrder((prev) => ({ ...prev, status: 'COMPLETED', collectionStatus: 'COLLECTED' }));
+      if (onOrderUpdated) onOrderUpdated();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      Alert.alert('Verification Failed', err?.message || 'Incorrect OTP code.');
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView style={styles.fullPageContainer}>
@@ -559,45 +772,92 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
         {/* Scrollable Order Details Body */}
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Shop Details Card with Contact Number */}
-          <View style={styles.shopCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-              <View style={styles.shopIconCircle}>
-                <Store size={20} color={colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.cardHeaderSmall}>SHOP DETAILS</Text>
-                <Text style={styles.shopName}>{shopName}</Text>
-                {shopAddress ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3 }}>
-                    <MapPin size={12} color={colors.textMuted} />
-                    <Text style={styles.shopAddress} numberOfLines={2}>{shopAddress}</Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-
-            {shopPhone ? (
-              <View style={styles.shopPhoneRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.phoneLabel}>Shop Contact Phone</Text>
-                  <Text style={styles.phoneNumber}>{shopPhone}</Text>
+          {/* Customer Details Card (for Shopkeeper) OR Shop Details Card (for Customer) */}
+          {isShopkeeper ? (
+            <View style={styles.shopCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <View style={[styles.shopIconCircle, { backgroundColor: '#eff6ff' }]}>
+                  <User size={20} color={colors.primary} />
                 </View>
-                <TouchableOpacity
-                  style={styles.callShopBtn}
-                  onPress={() => Linking.openURL(`tel:${shopPhone}`)}
-                  activeOpacity={0.8}
-                >
-                  <Phone size={14} color="#ffffff" />
-                  <Text style={styles.callShopBtnText}>Call Shop</Text>
-                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardHeaderSmall}>{t('CUSTOMER DETAILS')}</Text>
+                  <Text style={styles.shopName}>{customerName}</Text>
+                  {customerShortId ? (
+                    <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 2 }}>
+                      {t('Short ID:')} #{customerShortId}
+                    </Text>
+                  ) : null}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                    <ShoppingBag size={11} color="#15803d" />
+                    <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '600' }}>
+                      {t('Self-Pickup Order')}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            ) : null}
-          </View>
+
+              {customerPhone ? (
+                <View style={styles.shopPhoneRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.phoneLabel}>{t('Customer Contact Phone')}</Text>
+                    <Text style={styles.phoneNumber}>{customerPhone}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.callShopBtn, { backgroundColor: colors.primary }]}
+                    onPress={() => Linking.openURL(`tel:${customerPhone}`)}
+                    activeOpacity={0.8}
+                  >
+                    <Phone size={14} color="#ffffff" />
+                    <Text style={styles.callShopBtnText}>{t('Call Customer')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            <View style={styles.shopCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                <View style={styles.shopIconCircle}>
+                  <Store size={20} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardHeaderSmall}>{t('SHOP DETAILS')}</Text>
+                  <Text style={styles.shopName}>{shopName}</Text>
+                  {shopAddress ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3 }}>
+                      <MapPin size={12} color={colors.textMuted} />
+                      <Text style={styles.shopAddress} numberOfLines={2}>{shopAddress}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+
+              {shopPhone ? (
+                <View style={styles.shopPhoneRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.phoneLabel}>{t('Shop Contact Phone')}</Text>
+                    <Text style={styles.phoneNumber}>{shopPhone}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.callShopBtn}
+                    onPress={() => Linking.openURL(`tel:${shopPhone}`)}
+                    activeOpacity={0.8}
+                  >
+                    <Phone size={14} color="#ffffff" />
+                    <Text style={styles.callShopBtnText}>{t('Call Shop')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
+          )}
 
           {/* Ordered Items Breakdown */}
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Ordered Items & Billing</Text>
+            <View>
+              <Text style={styles.sectionTitle}>Ordered Items & Billing</Text>
+              {isShopkeeper && (currentOrder.status === 'PENDING' || currentOrder.status === 'PACKING') && (
+                <Text style={styles.sectionHint}>Tap "Mark Out" if any item is not available in stock</Text>
+              )}
+            </View>
             <Text style={styles.itemsCountText}>{items.length} {items.length === 1 ? 'item' : 'items'}</Text>
           </View>
 
@@ -620,7 +880,7 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
                       <Text style={styles.itemMeta}>₹{rate} / {unit}</Text>
                       {isUnavail && (
                         <View style={styles.unavailBadge}>
-                          <Text style={styles.unavailBadgeText}>Unavailable</Text>
+                          <Text style={styles.unavailBadgeText}>UNAVAILABLE</Text>
                         </View>
                       )}
                     </View>
@@ -631,6 +891,26 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
                   <Text style={[styles.itemAmt, isUnavail && styles.strikeText]}>
                     ₹{(Number(amt) || 0).toFixed(2)}
                   </Text>
+
+                  {/* Shopkeeper Mark Out / Restore Toggle */}
+                  {isShopkeeper && (currentOrder.status === 'PENDING' || currentOrder.status === 'PACKING') && (
+                    <TouchableOpacity
+                      style={[
+                        styles.itemAvailabilityToggleBtn,
+                        isUnavail ? styles.restoreItemBtn : styles.markOutItemBtn,
+                      ]}
+                      onPress={() => handleToggleItemAvailability(idx)}
+                      disabled={updatingItems}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        styles.itemAvailabilityToggleText,
+                        isUnavail ? styles.restoreItemText : styles.markOutItemText,
+                      ]}>
+                        {isUnavail ? t('Restore') : t('Mark Out')}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               );
             })}
@@ -642,11 +922,34 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
                 <Text style={styles.summaryValue}>₹{subtotalAmt.toFixed(2)}</Text>
               </View>
 
-              {discountAmt > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, { color: colors.success }]}>Discount Applied</Text>
-                  <Text style={[styles.summaryValue, { color: colors.success }]}>-₹{discountAmt.toFixed(2)}</Text>
+              {/* Shopkeeper Discount Controls - Direct numeric input only */}
+              {isShopkeeper && !['COMPLETED', 'COLLECTED', 'DECLINED', 'CANCELLED_BY_CUSTOMER', 'AUTO_CANCELLED_EXPIRED'].includes(currentOrder.status) && !currentOrder.paymentRequested ? (
+                <View style={styles.discountControlContainer}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Tag size={14} color={colors.primary} />
+                      <Text style={styles.discountControlLabel}>{t('Give Extra Discount:')}</Text>
+                    </View>
+                    <View style={styles.customDiscountInputWrapper}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>₹</Text>
+                      <TextInput
+                        style={styles.customDiscountInput}
+                        keyboardType="numeric"
+                        placeholder="0"
+                        placeholderTextColor={colors.textMuted}
+                        value={customDiscount}
+                        onChangeText={(val) => setCustomDiscount(val.replace(/\D/g, ''))}
+                      />
+                    </View>
+                  </View>
                 </View>
+              ) : (
+                discountAmt > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={[styles.summaryLabel, { color: colors.success }]}>Discount Applied</Text>
+                    <Text style={[styles.summaryValue, { color: colors.success }]}>-₹{discountAmt.toFixed(2)}</Text>
+                  </View>
+                )
               )}
 
               <View style={styles.totalRow}>
@@ -660,6 +963,207 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
               </View>
             </View>
           </View>
+
+          {/* Shopkeeper Interactive Action Controls */}
+          {isShopkeeper && (
+            <View style={styles.shopkeeperActionCard}>
+              {/* Status: PENDING */}
+              {currentOrder.status === 'PENDING' && (
+                <View>
+                  <Text style={styles.actionCardSectionTitle}>Manage & Accept Order</Text>
+                  <Text style={styles.actionCardSub}>
+                    Select estimated packing time before accepting:
+                  </Text>
+                  
+                  {/* Packing Minutes Chips */}
+                  <View style={styles.packingChipsRow}>
+                    {[10, 15, 20, 30, 45].map((m) => {
+                      const isSelected = packingMinutes === m;
+                      return (
+                        <TouchableOpacity
+                          key={m}
+                          style={[
+                            styles.packingChip,
+                            isSelected && styles.packingChipActive,
+                          ]}
+                          onPress={() => setPackingMinutes(m)}
+                        >
+                          <Clock size={12} color={isSelected ? '#ffffff' : colors.text} />
+                          <Text
+                            style={[
+                              styles.packingChipText,
+                              isSelected && styles.packingChipTextActive,
+                            ]}
+                          >
+                            {m} mins
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Accept and Decline Buttons */}
+                  <View style={styles.actionButtonsRow}>
+                    <TouchableOpacity
+                      style={[styles.bottomBtn, styles.declineOutlineBtn]}
+                      onPress={() => setShowDeclineModal(true)}
+                      disabled={isProcessingAction}
+                      activeOpacity={0.8}
+                    >
+                      <XCircle size={16} color={colors.danger} />
+                      <Text style={styles.declineOutlineBtnText}>Decline Order</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.bottomBtn, styles.acceptBigBtn]}
+                      onPress={handleAcceptOrderAction}
+                      disabled={isProcessingAction}
+                      activeOpacity={0.8}
+                    >
+                      {isProcessingAction ? (
+                        <ActivityIndicator color="#ffffff" size="small" />
+                      ) : (
+                        <>
+                          <CheckCircle2 size={16} color="#ffffff" />
+                          <Text style={styles.acceptBigBtnText}>Accept Order (~{packingMinutes}m)</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Status: PACKING */}
+              {currentOrder.status === 'PACKING' && (
+                <View>
+                  <View style={styles.statusNoticeBox}>
+                    <Clock size={18} color="#b45309" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.statusNoticeTitle}>Order is Being Packed (~{currentOrder.packingMinutes || 15}m)</Text>
+                      <Text style={styles.statusNoticeSub}>
+                        Once packed and ready on the counter, mark it ready for customer pickup.
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.markReadyBtn}
+                    onPress={handleMarkReadyAction}
+                    disabled={isProcessingAction}
+                    activeOpacity={0.8}
+                  >
+                    {isProcessingAction ? (
+                      <ActivityIndicator color="#ffffff" size="small" />
+                    ) : (
+                      <>
+                        <PackageCheck size={18} color="#ffffff" />
+                        <Text style={styles.markReadyBtnText}>Mark Ready for Pickup</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Status: READY */}
+              {currentOrder.status === 'READY' && (
+                <View>
+                  {!currentOrder.paymentRequested ? (
+                    <View>
+                      <View style={[styles.statusNoticeBox, { backgroundColor: '#e0f2fe', borderColor: '#bae6fd' }]}>
+                        <PackageCheck size={18} color="#0369a1" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.statusNoticeTitle, { color: '#0369a1' }]}>Order Ready for Pickup</Text>
+                          <Text style={[styles.statusNoticeSub, { color: '#0284c7' }]}>
+                            Customer will arrive to pick up. Choose payment method and send payment request:
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Payment Mode Selector */}
+                      <View style={styles.paymentModeChipsRow}>
+                        {['Cash', 'Online / UPI', 'Add to Book'].map((mode) => {
+                          const isSelected = paymentMode === mode;
+                          return (
+                            <TouchableOpacity
+                              key={mode}
+                              style={[
+                                styles.paymentModeChip,
+                                isSelected && styles.paymentModeChipActive,
+                              ]}
+                              onPress={() => setPaymentMode(mode)}
+                            >
+                              <Text
+                                style={[
+                                  styles.paymentModeChipText,
+                                  isSelected && styles.paymentModeChipTextActive,
+                                ]}
+                              >
+                                {mode}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.requestPaymentBtn}
+                        onPress={handleSendPaymentRequestAction}
+                        disabled={isProcessingAction}
+                        activeOpacity={0.8}
+                      >
+                        {isProcessingAction ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <>
+                            <CreditCard size={18} color="#ffffff" />
+                            <Text style={styles.requestPaymentBtnText}>
+                              Send Payment Request (₹{finalPayableAmt.toFixed(2)})
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.otpVerifyCard}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                        <ShieldCheck size={18} color="#15803d" />
+                        <Text style={styles.otpVerifyTitle}>Customer Handover & OTP Verification</Text>
+                      </View>
+                      <Text style={styles.otpVerifySub}>
+                        Payment Requested: <Text style={{ fontWeight: '800' }}>₹{Number(currentOrder.requestedAmount || finalPayableAmt).toFixed(2)}</Text> ({currentOrder.paymentMethod || 'Cash'})
+                      </Text>
+
+                      <View style={styles.otpInputContainer}>
+                        <TextInput
+                          style={styles.otpLargeInput}
+                          keyboardType="number-pad"
+                          maxLength={4}
+                          placeholder="[ _ _ _ _ ]"
+                          placeholderTextColor={colors.textMuted}
+                          value={otpValue}
+                          onChangeText={(val) => setOtpValue(val.replace(/\D/g, ''))}
+                        />
+                        <TouchableOpacity
+                          style={styles.verifyOtpBtn}
+                          onPress={handleVerifyOtpAction}
+                          disabled={isProcessingAction}
+                          activeOpacity={0.8}
+                        >
+                          {isProcessingAction ? (
+                            <ActivityIndicator color="#ffffff" size="small" />
+                          ) : (
+                            <>
+                              <CheckCircle2 size={16} color="#ffffff" />
+                              <Text style={styles.verifyOtpBtnText}>Verify OTP & Complete</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Download Receipt Banner Action */}
           <View style={styles.downloadReceiptBanner}>
@@ -719,37 +1223,39 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
             })}
           </View>
 
-          {/* Customer Card explicitly at the last with pickup note */}
-          <View style={styles.customerPickupCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <User size={18} color="#059669" />
-              <Text style={styles.customerPickupTitle}>CUSTOMER PICKUP INFORMATION</Text>
-            </View>
-
-            <View style={styles.customerFieldRow}>
-              <Text style={styles.customerFieldLabel}>Customer Name:</Text>
-              <Text style={styles.customerFieldVal}>
-                {customerName} {customerShortId ? `(${customerShortId})` : ''}
-              </Text>
-            </View>
-
-            {customerPhone ? (
-              <View style={styles.customerFieldRow}>
-                <Text style={styles.customerFieldLabel}>Contact Number:</Text>
-                <Text style={styles.customerFieldVal}>{customerPhone}</Text>
+          {/* Customer Card explicitly at the last with pickup note (for customer view only, shopkeeper has it at top) */}
+          {!isShopkeeper && (
+            <View style={styles.customerPickupCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <User size={18} color="#059669" />
+                <Text style={styles.customerPickupTitle}>CUSTOMER PICKUP INFORMATION</Text>
               </View>
-            ) : null}
 
-            <View style={styles.pickupHighlightBox}>
-              <ShoppingBag size={16} color="#15803d" />
-              <Text style={styles.pickupHighlightText}>
-                (Customer will pick up the order)
-              </Text>
+              <View style={styles.customerFieldRow}>
+                <Text style={styles.customerFieldLabel}>Customer Name:</Text>
+                <Text style={styles.customerFieldVal}>
+                  {customerName} {customerShortId ? `(${customerShortId})` : ''}
+                </Text>
+              </View>
+
+              {customerPhone ? (
+                <View style={styles.customerFieldRow}>
+                  <Text style={styles.customerFieldLabel}>Contact Number:</Text>
+                  <Text style={styles.customerFieldVal}>{customerPhone}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.pickupHighlightBox}>
+                <ShoppingBag size={16} color="#15803d" />
+                <Text style={styles.pickupHighlightText}>
+                  (Customer will pick up the order)
+                </Text>
+              </View>
             </View>
-          </View>
+          )}
 
-          {/* Shopkeeper Action Buttons if status is PENDING */}
-          {order.status === 'PENDING' && (onAccept || onDecline) && (
+          {/* Fallback Non-shopkeeper Action Buttons if status is PENDING */}
+          {!isShopkeeper && currentOrder.status === 'PENDING' && (onAccept || onDecline) && (
             <View style={styles.actionButtonsRow}>
               {onDecline && (
                 <TouchableOpacity
@@ -778,6 +1284,79 @@ export default function OrderDetailModal({ visible, order, onClose, onAccept, on
           </TouchableOpacity>
 
         </ScrollView>
+
+        {/* Decline Order Reason Modal */}
+        <Modal visible={showDeclineModal} transparent animationType="fade" onRequestClose={() => setShowDeclineModal(false)}>
+          <View style={styles.declineModalOverlay}>
+            <View style={styles.declineModalContent}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <Text style={styles.declineModalTitle}>Decline Order #{orderNumber}</Text>
+                <TouchableOpacity onPress={() => setShowDeclineModal(false)}>
+                  <X size={20} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.declineModalSub}>Please select a reason for declining:</Text>
+              {[
+                'Item out of stock',
+                'Shop closing soon',
+                'Too busy right now',
+                'Other',
+              ].map((reason) => (
+                <TouchableOpacity
+                  key={reason}
+                  style={[
+                    styles.declineReasonOption,
+                    declineReason === reason && styles.declineReasonOptionSelected,
+                  ]}
+                  onPress={() => setDeclineReason(reason)}
+                >
+                  <View style={[
+                    styles.declineRadioCircle,
+                    declineReason === reason && styles.declineRadioCircleSelected,
+                  ]} />
+                  <Text style={[
+                    styles.declineReasonText,
+                    declineReason === reason && styles.declineReasonTextSelected,
+                  ]}>
+                    {reason}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              {declineReason === 'Other' && (
+                <TextInput
+                  style={styles.declineReasonInput}
+                  placeholder="Enter custom reason..."
+                  placeholderTextColor={colors.textMuted}
+                  value={customDeclineReason}
+                  onChangeText={setCustomDeclineReason}
+                />
+              )}
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                <TouchableOpacity
+                  style={styles.declineCancelBtn}
+                  onPress={() => setShowDeclineModal(false)}
+                >
+                  <Text style={styles.declineCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.declineConfirmBtn}
+                  onPress={handleDeclineOrderAction}
+                  disabled={isProcessingAction}
+                >
+                  {isProcessingAction ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <Text style={styles.declineConfirmBtnText}>Confirm Decline</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </Modal>
   );
@@ -1217,5 +1796,372 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     fontWeight: '700',
+  },
+  sectionHint: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  itemAvailabilityToggleBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markOutItemBtn: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#fca5a5',
+  },
+  markOutItemText: {
+    color: '#b91c1c',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  restoreItemBtn: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#86efac',
+  },
+  restoreItemText: {
+    color: '#15803d',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  discountControlContainer: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 8,
+  },
+  discountControlLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  customDiscountInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  customDiscountInput: {
+    width: 65,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+    padding: 2,
+  },
+
+  shopkeeperActionCard: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 14,
+    ...shadowMedium,
+  },
+  actionCardSectionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  actionCardSub: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginBottom: 10,
+  },
+  packingChipsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginBottom: 12,
+  },
+  packingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  packingChipActive: {
+    backgroundColor: '#0284c7',
+    borderColor: '#0284c7',
+  },
+  packingChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  packingChipTextActive: {
+    color: '#ffffff',
+  },
+  declineOutlineBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    backgroundColor: '#ffffff',
+  },
+  declineOutlineBtnText: {
+    color: colors.danger,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  acceptBigBtn: {
+    flex: 1.4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: colors.success,
+  },
+  acceptBigBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  statusNoticeBox: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 10,
+    padding: 10,
+  },
+  statusNoticeTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#b45309',
+  },
+  statusNoticeSub: {
+    fontSize: 11,
+    color: '#92400e',
+    marginTop: 2,
+  },
+  markReadyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingVertical: 13,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  markReadyBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  paymentModeChipsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 10,
+  },
+  paymentModeChip: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+  },
+  paymentModeChipActive: {
+    backgroundColor: '#eff6ff',
+    borderColor: colors.primary,
+  },
+  paymentModeChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textMuted,
+  },
+  paymentModeChipTextActive: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  requestPaymentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#0284c7',
+    paddingVertical: 13,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  requestPaymentBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  otpVerifyCard: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 10,
+    padding: 12,
+  },
+  otpVerifyTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  otpVerifySub: {
+    fontSize: 11,
+    color: '#166534',
+    marginTop: 1,
+  },
+  otpInputContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  otpLargeInput: {
+    borderWidth: 1,
+    borderColor: '#86efac',
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    width: 110,
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+    letterSpacing: 3,
+    color: '#0f172a',
+  },
+  verifyOtpBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: colors.success,
+    paddingVertical: 11,
+    borderRadius: 8,
+  },
+  verifyOtpBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  declineModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  declineModalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 18,
+    ...shadowLarge,
+  },
+  declineModalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  declineModalSub: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 12,
+  },
+  declineReasonOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 8,
+    backgroundColor: '#f8fafc',
+  },
+  declineReasonOptionSelected: {
+    borderColor: colors.danger,
+    backgroundColor: '#fef2f2',
+  },
+  declineRadioCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#94a3b8',
+  },
+  declineRadioCircleSelected: {
+    borderColor: colors.danger,
+    backgroundColor: colors.danger,
+  },
+  declineReasonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  declineReasonTextSelected: {
+    color: colors.danger,
+    fontWeight: '700',
+  },
+  declineReasonInput: {
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: colors.text,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  declineCancelBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  declineCancelBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textMuted,
+  },
+  declineConfirmBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+  },
+  declineConfirmBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });

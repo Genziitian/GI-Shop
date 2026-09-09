@@ -36,6 +36,10 @@ import {
   ChevronRight,
   Check,
   X,
+  MoreVertical,
+  Link2,
+  Lock,
+  ShieldCheck,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import {
@@ -54,8 +58,13 @@ import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
 import SettleDueModal from '../../components/SettleDueModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
+import LinkCustomerModal from '../../components/LinkCustomerModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import { showErrorAlert } from '../../utils/errorHandler';
+import {
+  loadCachedCustomers,
+  saveCachedCustomers,
+} from '../../utils/cache';
 
 const FILTERS = ['All', 'Highest', 'Lowest', 'No Due'];
 
@@ -101,6 +110,7 @@ export function cleanCustomerDisplayName(name, shortId) {
 export default function KhataScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const shopId = user?.shopId || user?.shop?.id || user?.staffRole?.shopId || 'default';
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,9 +124,52 @@ export default function KhataScreen() {
   const [ledgerLoading, setLedgerLoading] = useState(false);
   const [timelineDateFilter, setTimelineDateFilter] = useState('All'); // 'All' | 'Today' | 'Yesterday' | 'Month'
 
-  // Settlement & Add Customer Modals
+  // Settlement, Add Customer & Link Account Modals
   const [settleCustomer, setSettleCustomer] = useState(null);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [linkTargetCustomer, setLinkTargetCustomer] = useState(null);
+
+  const handleLinkSuccess = (updatedCustomer) => {
+    if (!updatedCustomer) return;
+    const newShortId = updatedCustomer.customerShortId || updatedCustomer.shortId;
+    const newEmail = updatedCustomer.customerEmail || updatedCustomer.email;
+    const cleanP = normalizePhone(updatedCustomer.phone || updatedCustomer.customerPhone);
+
+    setCustomers((prev) => {
+      const updatedList = (prev || []).map((c) => {
+        const cP = normalizePhone(c.phone || c.customerPhone);
+        if (cP === cleanP) {
+          return {
+            ...c,
+            shortId: newShortId,
+            customerShortId: newShortId,
+            email: newEmail,
+            customerEmail: newEmail,
+            name: updatedCustomer.name || c.name,
+          };
+        }
+        return c;
+      });
+      saveCachedCustomers(shopId, updatedList).catch(() => {});
+      return updatedList;
+    });
+
+    if (selectedCustomer) {
+      const selP = normalizePhone(selectedCustomer.phone || selectedCustomer.customerPhone);
+      if (selP === cleanP) {
+        setSelectedCustomer((prev) => ({
+          ...prev,
+          shortId: newShortId,
+          customerShortId: newShortId,
+          email: newEmail,
+          customerEmail: newEmail,
+          name: updatedCustomer.name || prev.name,
+        }));
+      }
+    }
+
+    loadCustomers();
+  };
 
   const normalizePhone = (p) => {
     if (!p) return '';
@@ -149,7 +202,30 @@ export default function KhataScreen() {
         return null;
       };
 
-      // 1. Seed with registered shop customers
+      // 0. Seed from local cache so offline or newly enrolled customers are always preserved
+      try {
+        const cached = await loadCachedCustomers(shopId);
+        if (Array.isArray(cached)) {
+          cached.forEach((c) => {
+            const phone = (c.phone || c.customerPhone || '').trim();
+            const shortId = (c.shortId || c.customerShortId || '').trim();
+            const key = (normalizePhone(phone) || shortId).toLowerCase();
+            if (key) {
+              customerMap.set(key, {
+                ...c,
+                phone: phone || shortId,
+                customerPhone: phone || shortId,
+                shortId: shortId || '',
+                customerShortId: shortId || '',
+                name: c.name || 'Customer',
+                totalDue: Number(c.totalDue) || 0,
+              });
+            }
+          });
+        }
+      } catch (cacheErr) {}
+
+      // 1. Merge server registered shop customers (data contains server-computed totalDue, totalBook, totalPaid)
       data.forEach((c) => {
         const phone = (c.phone || c.customerPhone || '').trim();
         const shortId = (c.shortId || c.customerShortId || '').trim();
@@ -162,6 +238,7 @@ export default function KhataScreen() {
             shortId: shortId || '',
             customerShortId: shortId || '',
             name: c.name || 'Customer',
+            totalDue: typeof c.totalDue === 'number' ? c.totalDue : (Number(c.totalDue) || 0),
           });
         }
       });
@@ -199,56 +276,15 @@ export default function KhataScreen() {
 
       const custList = Array.from(customerMap.values());
 
-      // Enrich customer names and phone numbers via registered account search
-      await Promise.all(
-        custList.map(async (c) => {
-          const sId = (c.shortId || c.customerShortId || '').trim();
-          const p = (c.phone || c.customerPhone || '').trim();
-          const isPlaceholderName = !c.name || /^Customer(\s|\(|$)/i.test(c.name.trim());
-          const isPlaceholderPhone = !p || !/\d{5,}/.test(p) || p.toLowerCase() === sId.toLowerCase();
+      // 3. Format customer list with cleaned names and guaranteed accurate totalDue
+      const custsWithDue = custList.map((c) => {
+        const phone = (c.phone || c.customerPhone || '').trim();
+        const cleanPhone = normalizePhone(phone);
+        const shortId = (c.shortId || c.customerShortId || '').trim().toLowerCase();
+        const finalClean = cleanCustomerDisplayName(c.name, shortId);
 
-          if ((isPlaceholderName || isPlaceholderPhone) && (sId || p)) {
-            try {
-              const searchRes = await searchRegisteredCustomer(sId || p);
-              if (Array.isArray(searchRes) && searchRes.length > 0) {
-                const matched = searchRes.find(
-                  (r) => (sId && (r.shortId || '').toLowerCase() === sId.toLowerCase()) || (p && r.phone === p)
-                ) || searchRes[0];
-
-                if (matched) {
-                  const cleanedFoundName = cleanCustomerDisplayName(matched.name, sId);
-                  if (cleanedFoundName && cleanedFoundName.toLowerCase() !== 'customer') {
-                    c.name = cleanedFoundName;
-                  }
-                  if (matched.phone && /\d{5,}/.test(matched.phone)) {
-                    c.phone = matched.phone;
-                    c.customerPhone = matched.phone;
-                  }
-                  if (matched.email && !c.email) {
-                    c.email = matched.email;
-                  }
-                }
-              }
-            } catch (err) {
-              // Silently ignore search lookup error
-            }
-          }
-
-          // Clean any parenthesized shortId from customer name
-          const finalClean = cleanCustomerDisplayName(c.name, sId);
-          c.name = finalClean || 'Customer';
-        })
-      );
-
-      // 3. Compute live dues for each customer
-      const custsWithDue = await Promise.all(
-        custList.map(async (c) => {
-          const phone = (c.phone || c.customerPhone || '').trim();
-          const cleanPhone = normalizePhone(phone);
-          const shortId = (c.shortId || c.customerShortId || '').trim().toLowerCase();
-          const idOrPhone = phone || shortId;
-
-          // Compute due from sales history directly to ensure 100% accuracy
+        let finalDue = typeof c.totalDue === 'number' ? c.totalDue : undefined;
+        if (finalDue === undefined) {
           const matchingSales = salesRaw.filter((s) => {
             const sPhone = (s.customerPhone || '').trim();
             const sClean = normalizePhone(sPhone);
@@ -261,55 +297,46 @@ export default function KhataScreen() {
             if (cleanPhone && sClean && cleanPhone === sClean) return true;
             return false;
           });
+          finalDue = matchingSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+        }
 
-          const bookSalesTotal = matchingSales.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+        return {
+          ...c,
+          name: finalClean || 'Customer',
+          totalDue: Math.max(0, Number(finalDue) || 0),
+          phone: phone || shortId,
+          shortId: shortId || '',
+        };
+      });
 
-          try {
-            const led = await getCustomerLedger(idOrPhone);
-            let finalDue = 0;
-            if (led && typeof led.totalDue === 'number') {
-              finalDue = led.totalDue;
-            } else if (led) {
-              let calculatedDue = 0;
-              (led.sales || [])
-                .filter((s) => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))
-                .forEach((s) => (calculatedDue += (Number(s.total) || 0)));
-              (led.settlements || []).forEach((s) => (calculatedDue -= (Number(s.amount) || 0)));
-              finalDue = Math.max(0, calculatedDue);
-            } else {
-              finalDue = Math.max(0, bookSalesTotal || Number(c.totalDue) || 0);
-            }
-            return {
-              ...c,
-              totalDue: finalDue,
-              phone: phone || shortId,
-              shortId: shortId || '',
-            };
-          } catch (e) {
-            return {
-              ...c,
-              totalDue: Math.max(0, bookSalesTotal || Number(c.totalDue) || 0),
-              phone: phone || shortId,
-              shortId: shortId || '',
-            };
-          }
-        })
-      );
-
-      // Sort with highest due first
+      // Sort with highest due first, then alphabetically by name
       custsWithDue.sort((a, b) => b.totalDue - a.totalDue || (a.name || '').localeCompare(b.name || ''));
       setCustomers(custsWithDue);
+      saveCachedCustomers(shopId, custsWithDue).catch(() => {});
     } catch (e) {
       console.error('Failed to load customers:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [shopId]);
 
   useEffect(() => {
-    loadCustomers();
     let active = true;
+
+    // Load from cache immediately for fast render
+    loadCachedCustomers(shopId)
+      .then((cached) => {
+        if (active && Array.isArray(cached) && cached.length > 0) {
+          setCustomers(cached);
+          setLoading(false);
+        }
+      })
+      .catch(() => {});
+
+    // Refresh from network
+    loadCustomers();
+
     AsyncStorage.getItem('@shop_ledger_active_khata_customer').then((saved) => {
       if (active && saved) {
         try {
@@ -323,7 +350,7 @@ export default function KhataScreen() {
     return () => {
       active = false;
     };
-  }, [loadCustomers]);
+  }, [shopId, loadCustomers]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -537,24 +564,77 @@ export default function KhataScreen() {
         >
           {/* Back & Profile Header */}
           <View style={styles.profileHeaderCard}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={handleCloseLedger}
-              activeOpacity={0.7}
-            >
-              <ArrowLeft size={18} color={colors.primary} />
-              <Text style={styles.backBtnText}>{t('Back to List')}</Text>
-            </TouchableOpacity>
+            {/* Top Bar: Back to List on left, 3-dot & Link options on right */}
+            <View style={styles.profileTopNav}>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={handleCloseLedger}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={16} color={colors.primary} />
+                <Text style={styles.backBtnText}>{t('Back to List')}</Text>
+              </TouchableOpacity>
 
-            <View style={styles.profileInfoRow}>
-              <View style={{ flex: 1, paddingRight: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {!profileShortId && (
+                  <TouchableOpacity
+                    style={styles.linkHeaderBtn}
+                    onPress={() => setLinkTargetCustomer(selectedCustomer)}
+                    activeOpacity={0.8}
+                  >
+                    <Link2 size={12} color="#0284c7" />
+                    <Text style={styles.linkHeaderBtnText}>{t('Link App')}</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={styles.profile3DotBtn}
+                  onPress={() => {
+                    Alert.alert(
+                      profileDisplayName,
+                      `${t('Customer Phone:')} ${selectedCustomer.phone || t('Not set')}\n${profileShortId ? `${t('Linked ID:')} #${profileShortId}` : t('Not linked to app')}`,
+                      [
+                        ...(!profileShortId ? [{
+                          text: t('Link to App Account'),
+                          onPress: () => setLinkTargetCustomer(selectedCustomer),
+                        }] : []),
+                        {
+                          text: t('Call Customer'),
+                          onPress: () => handleCallCustomer(selectedCustomer),
+                        },
+                        ...(selectedCustomer.totalDue > 0 ? [{
+                          text: t('Send WhatsApp Reminder'),
+                          onPress: () => handleRemindCustomer(selectedCustomer),
+                        }, {
+                          text: t('Settle Due'),
+                          onPress: () => setSettleCustomer(selectedCustomer),
+                        }] : []),
+                        { text: t('Cancel'), style: 'cancel' },
+                      ]
+                    );
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <MoreVertical size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Customer Details Row & Outstanding Due Badge */}
+            <View style={styles.profileMainInfoRow}>
+              <View style={{ flex: 1, paddingRight: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <Text style={styles.profileName}>{profileDisplayName}</Text>
+                  <Text style={styles.profileName} numberOfLines={1}>{profileDisplayName}</Text>
                   {profileShortId ? (
                     <View style={styles.shortIdBadge}>
+                      <Lock size={9} color={colors.primary} />
                       <Text style={styles.shortIdText}>#{profileShortId}</Text>
                     </View>
-                  ) : null}
+                  ) : (
+                    <View style={styles.unlinkedPill}>
+                      <Text style={styles.unlinkedPillText}>{t('Offline Customer')}</Text>
+                    </View>
+                  )}
                 </View>
 
                 <View style={styles.metaIconRow}>
@@ -566,7 +646,9 @@ export default function KhataScreen() {
                   ) : (
                     <>
                       <Users size={13} color={colors.textMuted} />
-                      <Text style={styles.profilePhone}>{selectedCustomer.email || t('App Account')}</Text>
+                      <Text style={styles.profilePhone}>
+                        {selectedCustomer.shortId ? `#${selectedCustomer.shortId}` : t('App Account')}
+                      </Text>
                     </>
                   )}
                 </View>
@@ -574,14 +656,17 @@ export default function KhataScreen() {
                 {selectedCustomer.address ? (
                   <View style={styles.metaIconRow}>
                     <MapPin size={13} color={colors.textMuted} />
-                    <Text style={styles.profileAddress}>
+                    <Text style={styles.profileAddress} numberOfLines={1}>
                       {selectedCustomer.address}
                     </Text>
                   </View>
                 ) : null}
               </View>
 
-              <View style={styles.profileDueBox}>
+              <View style={[
+                styles.profileDueBox,
+                selectedCustomer.totalDue > 0 ? styles.profileDueBoxRed : styles.profileDueBoxGreen,
+              ]}>
                 <Text style={styles.profileDueLabel}>{t('Current Due')}</Text>
                 <Text
                   style={[
@@ -593,40 +678,46 @@ export default function KhataScreen() {
                 >
                   ₹{(Number(selectedCustomer?.totalDue) || 0).toFixed(2)}
                 </Text>
-
-                <View style={styles.profileActionRow}>
-                  <TouchableOpacity
-                    style={styles.profileCallBtn}
-                    onPress={() => handleCallCustomer(selectedCustomer)}
-                    activeOpacity={0.8}
-                  >
-                    <Phone size={13} color="#334155" />
-                    <Text style={styles.profileCallBtnText}>{t('Call')}</Text>
-                  </TouchableOpacity>
-
-                  {selectedCustomer.totalDue > 0 && (
-                    <>
-                      <TouchableOpacity
-                        style={styles.profileRemindBtn}
-                        onPress={() => handleRemindCustomer(selectedCustomer)}
-                        activeOpacity={0.8}
-                      >
-                        <MessageCircle size={13} color="#15803d" />
-                        <Text style={styles.profileRemindBtnText}>{t('Remind')}</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.profileSettleBtn}
-                        onPress={() => setSettleCustomer(selectedCustomer)}
-                        activeOpacity={0.8}
-                      >
-                        <DollarSign size={13} color="#ffffff" />
-                        <Text style={styles.profileSettleBtnText}>{t('Settle Due')}</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                </View>
               </View>
+            </View>
+
+            {/* Dedicated Full-Width Action Buttons Row */}
+            <View style={styles.profileActionRow}>
+              <TouchableOpacity
+                style={styles.profileCallBtn}
+                onPress={() => handleCallCustomer(selectedCustomer)}
+                activeOpacity={0.8}
+              >
+                <Phone size={14} color="#334155" />
+                <Text style={styles.profileCallBtnText}>{t('Call')}</Text>
+              </TouchableOpacity>
+
+              {selectedCustomer.totalDue > 0 && (
+                <TouchableOpacity
+                  style={styles.profileRemindBtn}
+                  onPress={() => handleRemindCustomer(selectedCustomer)}
+                  activeOpacity={0.8}
+                >
+                  <MessageCircle size={14} color="#15803d" />
+                  <Text style={styles.profileRemindBtnText}>{t('Remind')}</Text>
+                </TouchableOpacity>
+              )}
+
+              {selectedCustomer.totalDue > 0 ? (
+                <TouchableOpacity
+                  style={styles.profileSettleBtn}
+                  onPress={() => setSettleCustomer(selectedCustomer)}
+                  activeOpacity={0.8}
+                >
+                  <DollarSign size={14} color="#ffffff" />
+                  <Text style={styles.profileSettleBtnText}>{t('Settle Due')}</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.profileAllClearBadge}>
+                  <Check size={14} color={colors.success} />
+                  <Text style={styles.profileAllClearText}>{t('All Settled')}</Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -801,6 +892,14 @@ export default function KhataScreen() {
             await handleOpenLedger(selectedCustomer);
           }}
         />
+
+        {/* Link Customer Modal */}
+        <LinkCustomerModal
+          visible={!!linkTargetCustomer}
+          customer={linkTargetCustomer}
+          onClose={() => setLinkTargetCustomer(null)}
+          onLinkSuccess={handleLinkSuccess}
+        />
       </SafeAreaView>
     );
   }
@@ -954,9 +1053,22 @@ export default function KhataScreen() {
                         </Text>
                         {shortId ? (
                           <View style={styles.shortIdBadge}>
+                            <Lock size={9} color={colors.primary} />
                             <Text style={styles.shortIdText}>#{shortId}</Text>
                           </View>
-                        ) : null}
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.unlinkedPill}
+                            onPress={(e) => {
+                              e.stopPropagation?.();
+                              setLinkTargetCustomer(item);
+                            }}
+                            activeOpacity={0.8}
+                          >
+                            <Link2 size={10} color="#ea580c" />
+                            <Text style={styles.unlinkedPillText}>{t('Link App')}</Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
 
                       <View style={styles.custContactRow}>
@@ -971,7 +1083,7 @@ export default function KhataScreen() {
                           <>
                             <Users size={12} color={colors.textMuted} />
                             <Text style={styles.custPhone}>
-                              {item.email || t('App Account')}
+                              {item.shortId ? `#${item.shortId}` : t('App Account')}
                             </Text>
                           </>
                         )}
@@ -1011,59 +1123,31 @@ export default function KhataScreen() {
                   {/* Divider */}
                   <View style={styles.cardDivider} />
 
-                  {/* Bottom Action Strip */}
+                  {/* Clean Bottom Action Strip (Call, Remind & 3-dot options are inside customer view) */}
                   <View style={styles.cardActionStrip}>
                     <View style={styles.viewLedgerHint}>
-                      <Text style={styles.viewLedgerText}>{t('View Ledger')}</Text>
+                      <Text style={styles.viewLedgerText}>{t('View Ledger & Khata')}</Text>
                       <ChevronRight size={14} color={colors.primary} />
                     </View>
 
-                    <View style={styles.cardActionBtns}>
+                    {hasDue ? (
                       <TouchableOpacity
-                        style={styles.callBtnClean}
+                        style={styles.settleBtnClean}
                         onPress={(e) => {
                           e.stopPropagation?.();
-                          handleCallCustomer(item);
+                          setSettleCustomer(item);
                         }}
                         activeOpacity={0.8}
                       >
-                        <Phone size={12} color="#334155" />
-                        <Text style={styles.callBtnCleanText}>{t('Call')}</Text>
+                        <DollarSign size={12} color="#ffffff" />
+                        <Text style={styles.settleBtnCleanText}>{t('Settle')}</Text>
                       </TouchableOpacity>
-
-                      {hasDue ? (
-                        <>
-                          <TouchableOpacity
-                            style={styles.remindBtnClean}
-                            onPress={(e) => {
-                              e.stopPropagation?.();
-                              handleRemindCustomer(item);
-                            }}
-                            activeOpacity={0.8}
-                          >
-                            <MessageCircle size={12} color="#15803d" />
-                            <Text style={styles.remindBtnCleanText}>{t('Remind')}</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={styles.settleBtnClean}
-                            onPress={(e) => {
-                              e.stopPropagation?.();
-                              setSettleCustomer(item);
-                            }}
-                            activeOpacity={0.8}
-                          >
-                            <DollarSign size={12} color="#ffffff" />
-                            <Text style={styles.settleBtnCleanText}>{t('Settle')}</Text>
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <View style={styles.settledCheckBadge}>
-                          <Check size={13} color={colors.success} />
-                          <Text style={styles.settledCheckText}>{t('No Pending Udhar')}</Text>
-                        </View>
-                      )}
-                    </View>
+                    ) : (
+                      <View style={styles.settledCheckBadge}>
+                        <Check size={12} color={colors.success} />
+                        <Text style={styles.settledCheckText}>{t('All Clear')}</Text>
+                      </View>
+                    )}
                   </View>
                 </TouchableOpacity>
               );
@@ -1097,9 +1181,52 @@ export default function KhataScreen() {
         visible={showAddCustomerModal}
         onClose={() => setShowAddCustomerModal(false)}
         onCustomerAdded={async (custData) => {
-          await saveCustomer(custData);
-          await loadCustomers();
+          const newCust = {
+            id: 'local_' + Date.now(),
+            name: custData.name,
+            phone: custData.phone,
+            customerPhone: custData.phone,
+            customerShortId: custData.customerShortId || '',
+            shortId: custData.customerShortId || '',
+            email: custData.customerEmail || '',
+            customerEmail: custData.customerEmail || '',
+            address: custData.address || '',
+            totalDue: 0,
+            totalBook: 0,
+            totalPaid: 0,
+            status: 'ACTIVE',
+          };
+
+          // Optimistically show newly enrolled customer at the top immediately
+          setCustomers((prev) => {
+            const cleanPhone = normalizePhone(custData.phone);
+            const filtered = (prev || []).filter(
+              (c) => normalizePhone(c.phone || c.customerPhone) !== cleanPhone
+            );
+            const updated = [newCust, ...filtered];
+            saveCachedCustomers(shopId, updated).catch(() => {});
+            return updated;
+          });
+
+          // Reset search and filter to ensure new customer is visible
+          setSearch('');
+          setFilter('All');
+
+          try {
+            await saveCustomer(custData);
+            await loadCustomers();
+          } catch (err) {
+            console.error('Error saving customer:', err);
+          }
         }}
+      />
+
+      {/* Link Customer Modal */}
+      <LinkCustomerModal
+        visible={!!linkTargetCustomer}
+        customer={linkTargetCustomer}
+        onClose={() => setLinkTargetCustomer(null)}
+        onLinkSuccess={handleLinkSuccess}
       />
     </SafeAreaView>
   );
@@ -1309,6 +1436,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   shortIdBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     backgroundColor: '#f1f5f9',
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1320,6 +1450,38 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: colors.textSecondary,
+  },
+  linkPromptBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f0f9ff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+  },
+  linkPromptBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0284c7',
+  },
+  unlinkedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#fff7ed',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+  },
+  unlinkedPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#c2410c',
   },
   custContactRow: {
     flexDirection: 'row',
@@ -1391,6 +1553,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  moreBtnClean: {
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   callBtnClean: {
     flexDirection: 'row',
@@ -1469,25 +1641,61 @@ const styles = StyleSheet.create({
   profileHeaderCard: {
     backgroundColor: colors.surface,
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadowStyle,
   },
+  profileTopNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 12,
+    gap: 6,
+    paddingVertical: 4,
   },
   backBtnText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.primary,
   },
-  profileInfoRow: {
+  linkHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  linkHeaderBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0284c7',
+  },
+  profile3DotBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileMainInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
   profileName: {
     fontSize: 18,
@@ -1511,69 +1719,98 @@ const styles = StyleSheet.create({
   profileDueBox: {
     alignItems: 'flex-end',
     justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  profileDueBoxRed: {
+    backgroundColor: '#fef2f2',
+  },
+  profileDueBoxGreen: {
+    backgroundColor: '#f0fdf4',
   },
   profileDueLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: colors.textMuted,
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   profileDueValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginVertical: 2,
+    fontSize: 20,
+    fontWeight: '900',
+    marginTop: 2,
   },
   profileActionRow: {
     flexDirection: 'row',
-    gap: 6,
-    marginTop: 6,
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 12,
+    alignItems: 'center',
   },
   profileCallBtn: {
+    flex: 1,
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 6,
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   profileCallBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#334155',
   },
   profileRemindBtn: {
+    flex: 1,
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 6,
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#86efac',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   profileRemindBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#15803d',
   },
   profileSettleBtn: {
+    flex: 1.2,
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 6,
     backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   profileSettleBtnText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     color: '#ffffff',
+  },
+  profileAllClearBadge: {
+    flex: 1,
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 10,
+  },
+  profileAllClearText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.success,
   },
   filterChip: {
     paddingHorizontal: 14,

@@ -28,6 +28,9 @@ import {
   ChevronUp,
   Filter,
   Check,
+  Eye,
+  User,
+  Package,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import {
@@ -239,6 +242,7 @@ export default function OrdersScreen({ navigation }) {
       showErrorAlert(e, 'Complete Order');
     }
   };
+  const handleMarkReady = handleCompleteOrder;
 
   const isDateMatch = (dateStr) => {
     if (!dateStr || dateFilter === 'All') return true;
@@ -313,12 +317,26 @@ export default function OrdersScreen({ navigation }) {
     const orderAgeMs = nowMs - new Date(ord.createdAt || ord.date).getTime();
     const isOlderThan24h = orderAgeMs >= twentyFourHoursMs;
 
+    const totalUnits = orderItems.reduce((sum, it) => sum + (Number(it.qty) || 1), 0);
+    const autoCancelCountdown = ord.status === 'PENDING' ? getAutoCancelCountdown(ord.createdAt) : null;
+
     return (
-      <View key={ord.id} style={styles.orderCard}>
+      <TouchableOpacity
+        key={ord.id}
+        style={styles.orderCard}
+        onPress={() => setSelectedDetailOrder(ord)}
+        activeOpacity={0.88}
+      >
+        {/* Card Header: Order #, Customer Info, Timestamp & Status */}
         <View style={styles.orderCardHeader}>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, paddingRight: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <Text style={styles.orderNumText}>{t('Order')} #{ord.orderNumber || ord.id}</Text>
+              {ord.status === 'PENDING' && (
+                <View style={styles.newOrderTag}>
+                  <Text style={styles.newOrderTagText}>{t('NEW ORDER')}</Text>
+                </View>
+              )}
               {isOlderThan24h && (
                 <View style={styles.historyBadge}>
                   <Clock size={10} color="#64748b" />
@@ -326,10 +344,25 @@ export default function OrdersScreen({ navigation }) {
                 </View>
               )}
             </View>
-            <Text style={styles.orderCustName}>
-              {ord.customerName} ({ord.customerPhone})
-            </Text>
-            <Text style={styles.orderDateText}>{dateStr}</Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+              <User size={13} color={colors.textMuted} />
+              <Text style={styles.orderCustName} numberOfLines={1}>
+                {ord.customerName} ({ord.customerPhone})
+              </Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+              <Clock size={12} color={colors.textMuted} />
+              <Text style={styles.orderDateText}>{dateStr}</Text>
+            </View>
+
+            {autoCancelCountdown && autoCancelCountdown !== 'Expired' && (
+              <View style={styles.autoCancelPill}>
+                <Clock size={10} color="#b45309" />
+                <Text style={styles.autoCancelPillText}>Auto-cancels in: {autoCancelCountdown}</Text>
+              </View>
+            )}
           </View>
 
           <View
@@ -349,13 +382,14 @@ export default function OrdersScreen({ navigation }) {
             <Text
               style={[
                 styles.orderStatusPillText,
+                ord.status === 'PENDING' && { color: '#b45309' },
                 ord.status === 'READY' && { color: '#0369a1' },
                 (ord.status === 'COMPLETED' || ord.status === 'COLLECTED') && { color: '#15803d' },
                 (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'AUTO_CANCELLED_EXPIRED' || ord.status === 'DECLINED') && { color: '#b91c1c' },
               ]}
             >
               {ord.status === 'PENDING'
-                ? t('Pending')
+                ? t('New Order')
                 : ord.status === 'PACKING'
                 ? `${t('Packing')} (${ord.packingMinutes}m)`
                 : ord.status === 'READY'
@@ -375,24 +409,6 @@ export default function OrdersScreen({ navigation }) {
           </View>
         </View>
 
-        {ord.status === 'PENDING' ? (
-          <TouchableOpacity
-            style={styles.topDeclineBtn}
-            onPress={() => handleOpenOrderModal(ord, 'DECLINE')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.topDeclineBtnText}>{t('Decline')}</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.topDetailsBtn}
-            onPress={() => setSelectedDetailOrder(ord)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.topDetailsBtnText}>{t('Order Details')}</Text>
-          </TouchableOpacity>
-        )}
-
         {ord.status === 'AUTO_CANCELLED_EXPIRED' && (
           <View style={styles.expiredWarningBox}>
             <XCircle size={13} color="#b91c1c" />
@@ -402,187 +418,32 @@ export default function OrdersScreen({ navigation }) {
           </View>
         )}
 
-        {/* Order Items */}
-        <View style={styles.orderItemsList}>
-          {orderItems.map((it, idx) => {
-            const isUnavail = !!it.isUnavailable;
-            return (
-              <View key={idx} style={[styles.orderItemLine, { alignItems: 'center' }]}>
-                <View style={{ flex: 1, paddingRight: 6 }}>
-                  <Text style={[styles.orderItemName, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
-                    • {it.item?.name || it.name} ({it.qty} {it.item?.unit || it.unit})
-                  </Text>
-                  {isUnavail && (
-                    <Text style={{ fontSize: 10, color: '#b91c1c', fontWeight: '700' }}>{t('UNAVAILABLE')}</Text>
-                  )}
-                </View>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={[styles.orderItemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
-                    ₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}
-                  </Text>
-                  {(ord.status === 'PENDING' || ord.status === 'PACKING') && (
-                    <TouchableOpacity
-                      style={{
-                        paddingHorizontal: 6,
-                        paddingVertical: 3,
-                        borderRadius: 4,
-                        backgroundColor: isUnavail ? '#f1f5f9' : '#fee2e2',
-                        borderWidth: 1,
-                        borderColor: isUnavail ? '#cbd5e1' : '#fca5a5',
-                      }}
-                      onPress={() => handleToggleItemAvailability(ord, idx)}
-                    >
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: isUnavail ? colors.textMuted : '#b91c1c' }}>
-                        {isUnavail ? t('Restore') : t('Mark Out')}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            );
-          })}
+        {/* Clean Items Count & Total Summary Row (Items only shown inside View Order modal) */}
+        <View style={styles.orderSummaryRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Package size={15} color={colors.textSecondary} />
+            <Text style={styles.orderSummaryText}>
+              {orderItems.length} {orderItems.length === 1 ? t('Item') : t('Items')} • {totalUnits} {t('Units')}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5 }}>
+            <Text style={styles.orderTotalLabel}>{t('Total Payable:')}</Text>
+            <Text style={styles.orderTotalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
+          </View>
         </View>
 
-        <View style={styles.orderTotalRow}>
-          <Text style={styles.orderTotalLabel}>{t('Total Payable:')}</Text>
-          <Text style={styles.orderTotalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
-        </View>
-
-        {/* Action Buttons */}
-        {ord.status === 'PENDING' && (
-          <View style={styles.orderActionsRow}>
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.btnDanger]}
-              onPress={() => handleOpenOrderModal(ord, 'DECLINE')}
-            >
-              <XCircle size={16} color="#ffffff" />
-              <Text style={styles.actionBtnText}>{t('Decline')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionBtn, styles.btnSuccess]}
-              onPress={() => handleOpenOrderModal(ord, 'ACCEPT')}
-            >
-              <CheckCircle2 size={16} color="#ffffff" />
-              <Text style={styles.actionBtnText}>{t('Accept Order')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {ord.status === 'PACKING' && (
-          <TouchableOpacity
-            style={styles.completeBtn}
-            onPress={() => handleMarkReady(ord.id)}
-            activeOpacity={0.8}
-          >
-            <CheckCircle2 size={16} color="#ffffff" />
-            <Text style={styles.completeBtnText}>{t('Mark Ready for Pickup')}</Text>
-          </TouchableOpacity>
-        )}
-
-        {ord.status === 'READY' && (
-          <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
-            {/* Before Payment Is Requested */}
-            {!ord.paymentRequested ? (
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ flex: 1, paddingRight: 6 }}>
-                  <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
-                    {t('Order Ready for Pickup')}
-                  </Text>
-                  <Text style={{ fontSize: 11, color: '#854d0e', marginTop: 2 }}>
-                    {t('No payment request sent yet.')}
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={{ backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 }}
-                  onPress={() => handleOpenPaymentModal(ord)}
-                >
-                  <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>
-                    {t('Get Payment')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              /* After Payment Is Requested */
-              <View>
-                <View style={{ marginBottom: 8 }}>
-                  <Text style={{ fontSize: 13, color: '#166534', fontWeight: '700' }}>
-                    {t('Payment Requested')}
-                  </Text>
-                  <Text style={{ fontSize: 11, color: '#15803d', marginTop: 2 }}>
-                    {t('Amount')}: <Text style={{ fontWeight: '700' }}>₹{(Number(ord.requestedAmount) || 0).toFixed(2)}</Text> • {t('Mode')}: <Text style={{ fontWeight: '700' }}>{t(ord.paymentMethod || 'Cash')}</Text>
-                  </Text>
-                </View>
-
-                {/* 4-Digit OTP Verification Input (Only shown while waiting for handover) */}
-                <View style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderWidth: 1, borderRadius: 6, padding: 8, marginTop: 4 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text, marginBottom: 4 }}>
-                    {t('Enter Customer OTP')}
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        borderRadius: 6,
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        width: 100,
-                        fontSize: 16,
-                        fontWeight: '800',
-                        textAlign: 'center',
-                        letterSpacing: 2,
-                        color: colors.text,
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={4}
-                      placeholder="[ _ _ _ _ ]"
-                      value={otpInputs[ord.id] || ''}
-                      onChangeText={(val) => setOtpInputs({ ...otpInputs, [ord.id]: val.replace(/\D/g, '') })}
-                    />
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: colors.success,
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 6,
-                        flex: 1,
-                        alignItems: 'center',
-                      }}
-                      disabled={otpSubmitting[ord.id]}
-                      onPress={() => handleVerifyOtpHandover(ord.id)}
-                    >
-                      {otpSubmitting[ord.id] ? (
-                        <ActivityIndicator color="#fff" size="small" />
-                      ) : (
-                        <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>{t('Verify OTP & Complete')}</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
+        {/* Finalized Status Indicators if applicable */}
         {ord.status === 'COMPLETED' && (
-          <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, padding: 10, borderRadius: 8, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <CheckCircle2 size={18} color="#15803d" />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, color: '#15803d', fontWeight: '800' }}>
-                {t('✓ Order Completed & Handed Over')}
-              </Text>
-              <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
-                {t('Customer verified via OTP. Sale recorded in ledger.')}
-              </Text>
-            </View>
+          <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, padding: 8, borderRadius: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <CheckCircle2 size={16} color="#15803d" />
+            <Text style={{ fontSize: 12, color: '#15803d', fontWeight: '700' }}>
+              {t('✓ Order Completed & Handed Over')}
+            </Text>
           </View>
         )}
 
         {ord.status === 'COLLECTED' && (
-          <View style={{ backgroundColor: '#f0fdf4', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#f0fdf4', padding: 7, borderRadius: 8, marginBottom: 8, alignItems: 'center' }}>
             <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '700' }}>
               {t('Order finalized and collected by customer. (Locked)')}
             </Text>
@@ -590,7 +451,7 @@ export default function OrdersScreen({ navigation }) {
         )}
 
         {ord.status === 'NOT_COLLECTED' && (
-          <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#fef2f2', padding: 7, borderRadius: 8, marginBottom: 8, alignItems: 'center' }}>
             <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '700' }}>
               Customer marked as not collected. (Locked)
             </Text>
@@ -598,13 +459,24 @@ export default function OrdersScreen({ navigation }) {
         )}
 
         {ord.status === 'CANCELLED_BY_CUSTOMER' && (
-          <View style={{ backgroundColor: '#fef2f2', padding: 8, borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#fef2f2', padding: 7, borderRadius: 8, marginBottom: 8, alignItems: 'center' }}>
             <Text style={{ fontSize: 11, color: '#b91c1c', fontWeight: '700' }}>
               Customer cancelled / took back this order. (Locked)
             </Text>
           </View>
         )}
-      </View>
+
+        {/* Clean, Full-Width "View Order" Action Button */}
+        <TouchableOpacity
+          style={styles.viewOrderFullBtn}
+          onPress={() => setSelectedDetailOrder(ord)}
+          activeOpacity={0.8}
+        >
+          <Eye size={16} color="#ffffff" />
+          <Text style={styles.viewOrderFullBtnText}>{t('View Order')}</Text>
+          <ChevronRight size={16} color="#ffffff" />
+        </TouchableOpacity>
+      </TouchableOpacity>
     );
   };
 
@@ -1068,17 +940,10 @@ export default function OrdersScreen({ navigation }) {
       <OrderDetailModal
         visible={!!selectedDetailOrder}
         order={selectedDetailOrder}
+        isShopkeeper={true}
         onClose={() => setSelectedDetailOrder(null)}
-        onAccept={selectedDetailOrder?.status === 'PENDING' ? () => {
-          const ord = selectedDetailOrder;
-          setSelectedDetailOrder(null);
-          handleOpenOrderModal(ord, 'ACCEPT');
-        } : undefined}
-        onDecline={selectedDetailOrder?.status === 'PENDING' ? () => {
-          const ord = selectedDetailOrder;
-          setSelectedDetailOrder(null);
-          handleOpenOrderModal(ord, 'DECLINE');
-        } : undefined}
+        onRefresh={loadOrders}
+        onOrderUpdated={loadOrders}
       />
     </SafeAreaView>
   );
@@ -1321,6 +1186,18 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 2,
   },
+  newOrderTag: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  newOrderTagText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
   orderStatusPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -1328,6 +1205,8 @@ const styles = StyleSheet.create({
   },
   statusPillPending: {
     backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
   },
   statusPillAccepted: {
     backgroundColor: '#eff6ff',
@@ -1343,39 +1222,29 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
   },
-  orderItemsList: {
-    backgroundColor: colors.background,
-    borderRadius: 10,
-    padding: 8,
-    gap: 4,
-    marginBottom: 10,
-  },
-  orderItemLine: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  orderItemName: {
-    fontSize: 12,
-    color: colors.text,
-  },
-  orderItemPrice: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  orderTotalRow: {
+  orderSummaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  orderSummaryText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textSecondary,
   },
   orderTotalLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: colors.textSecondary,
   },
   orderTotalValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
     color: colors.primary,
   },
@@ -1414,35 +1283,39 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-  topDeclineBtn: {
-    backgroundColor: '#fff',
-    borderColor: colors.danger,
+  autoCancelPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 6,
-    marginVertical: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
     alignSelf: 'flex-start',
+    marginTop: 4,
   },
-  topDeclineBtnText: {
-    color: colors.danger,
-    fontSize: 12,
+  autoCancelPillText: {
+    fontSize: 10,
     fontWeight: '700',
+    color: '#b45309',
   },
-  topDetailsBtn: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-    marginVertical: 6,
-    alignSelf: 'flex-start',
+  viewOrderFullBtn: {
+    flexDirection: 'row',
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+    paddingHorizontal: 14,
   },
-  topDetailsBtnText: {
-    color: '#1d4ed8',
-    fontSize: 12,
-    fontWeight: '700',
+  viewOrderFullBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
   },
   orderActionsRow: {
     flexDirection: 'row',

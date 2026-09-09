@@ -319,7 +319,7 @@ export default function CustomerMoreScreen({ navigation }) {
 
         {/* App Version Info */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>GI SHOP Customer Ledger v1.0.20</Text>
+          <Text style={styles.versionText}>GI SHOP Customer Ledger v1.0.21</Text>
           <Text style={styles.copyrightText}>Smart Billing, Khata & Grocery Discovery</Text>
         </View>
       </ScrollView>

@@ -33,6 +33,7 @@ import {
   Minus,
   ChevronUp,
   RefreshCw,
+  WifiOff,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import { getItems, getCustomers, saveSale, saveCustomer, searchRegisteredCustomer } from '../../api/client';
@@ -49,6 +50,9 @@ import {
   saveCachedItems,
   loadCachedCustomers,
   saveCachedCustomers,
+  loadOfflineSales,
+  saveOfflineSale,
+  syncOfflineSales,
 } from '../../utils/cache';
 
 const PAYMENT_MODES = [
@@ -86,6 +90,56 @@ export default function POSScreen({ navigation }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [receiptData, setReceiptData] = useState(null);
   const [completingBill, setCompletingBill] = useState(false);
+
+  // Offline queue state
+  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
+  const [isSyncingOffline, setIsSyncingOffline] = useState(false);
+
+  // Check and background auto-sync offline sales
+  const checkAndSyncOfflineSales = useCallback(async () => {
+    try {
+      const offlineList = await loadOfflineSales(shopId);
+      setOfflineQueueCount(offlineList.length);
+
+      if (offlineList.length > 0) {
+        setIsSyncingOffline(true);
+        const { synced, remaining } = await syncOfflineSales(shopId, saveSale);
+        setOfflineQueueCount(remaining);
+        setIsSyncingOffline(false);
+        if (synced > 0) {
+          console.log(`[POS] Auto-synced ${synced} offline bills to server.`);
+        }
+      }
+    } catch (e) {
+      console.warn('[POS] checkAndSyncOfflineSales error:', e);
+      setIsSyncingOffline(false);
+    }
+  }, [shopId]);
+
+  const handleManualSync = async () => {
+    if (isSyncingOffline) return;
+    setIsSyncingOffline(true);
+    try {
+      const { synced, remaining } = await syncOfflineSales(shopId, saveSale);
+      setOfflineQueueCount(remaining);
+      if (synced > 0) {
+        Alert.alert(
+          t('Sync Complete'),
+          `${synced} ${t('offline bill(s) uploaded successfully to the server.')}`
+        );
+        loadData(true);
+      } else if (remaining > 0) {
+        Alert.alert(
+          t('Sync Incomplete'),
+          t('Could not connect to the server. Please check your internet connection and try again.')
+        );
+      }
+    } catch (err) {
+      Alert.alert(t('Sync Error'), t('Failed to sync offline bills.'));
+    } finally {
+      setIsSyncingOffline(false);
+    }
+  };
 
   // Background sync / fresh pull
   const loadData = useCallback(async (isUserRefresh = false) => {
@@ -189,6 +243,7 @@ export default function POSScreen({ navigation }) {
 
       if (active) {
         loadData(false);
+        checkAndSyncOfflineSales();
       }
     };
 
@@ -197,10 +252,11 @@ export default function POSScreen({ navigation }) {
     return () => {
       active = false;
     };
-  }, [shopId, loadData]);
+  }, [shopId, loadData, checkAndSyncOfflineSales]);
 
   const onRefresh = () => {
     loadData(true);
+    checkAndSyncOfflineSales();
   };
 
   const filteredItems = items.filter((i) =>
@@ -333,19 +389,14 @@ export default function POSScreen({ navigation }) {
     if (paymentMethod === 'Add to Book') {
       if (!selectedCustomer) {
         Alert.alert(
-          'Registered Customer Required',
-          'Khata credit ("Add to Book") requires selecting a registered app customer with a Short ID / Email.',
-          [{ text: 'Assign App Customer', onPress: () => setShowAddCustomerModal(true) }]
+          t('Customer Required'),
+          t('Khata credit ("Add to Book") requires selecting or adding a customer.'),
+          [
+            { text: t('Add / Select Customer'), onPress: () => setShowAddCustomerModal(true) },
+            { text: t('Cancel'), style: 'cancel' }
+          ]
         );
         setShowAddCustomerModal(true);
-        return;
-      }
-      if (!selectedCustomer.shortId && !selectedCustomer.customerShortId) {
-        Alert.alert(
-          'Khata Restriction',
-          'Khata credit ("Add to Book") is strictly restricted to app-registered customers with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.\n\nPlease search and assign the customer by Email / Short ID.',
-          [{ text: 'Search & Link Account', onPress: () => setShowAddCustomerModal(true) }]
-        );
         return;
       }
 
@@ -363,19 +414,20 @@ export default function POSScreen({ navigation }) {
     }
 
     setCompletingBill(true);
-    try {
-      const salePayload = {
-        customerPhone: selectedCustomer ? (selectedCustomer.phone || selectedCustomer.customerPhone) : '',
-        customerShortId: selectedCustomer ? (selectedCustomer.shortId || selectedCustomer.customerShortId || '') : '',
-        customerEmail: selectedCustomer ? (selectedCustomer.email || selectedCustomer.customerEmail || '') : '',
-        customerName: selectedCustomer ? (selectedCustomer.name || '') : '',
-        itemsJSON: JSON.stringify(cart),
-        subtotal,
-        discount: discountNum,
-        total: finalTotal,
-        paymentMethod,
-      };
 
+    const salePayload = {
+      customerPhone: selectedCustomer ? (selectedCustomer.phone || selectedCustomer.customerPhone) : '',
+      customerShortId: selectedCustomer ? (selectedCustomer.shortId || selectedCustomer.customerShortId || '') : '',
+      customerEmail: selectedCustomer ? (selectedCustomer.email || selectedCustomer.customerEmail || '') : '',
+      customerName: selectedCustomer ? (selectedCustomer.name || '') : '',
+      itemsJSON: JSON.stringify(cart),
+      subtotal,
+      discount: discountNum,
+      total: finalTotal,
+      paymentMethod,
+    };
+
+    try {
       const result = await saveSale(salePayload);
       setShowCartModal(false);
       setReceiptData({
@@ -386,8 +438,46 @@ export default function POSScreen({ navigation }) {
         shopName: user?.shop?.shopName || 'GI SHOP',
         shopAddress: user?.shop?.shopAddress || '',
       });
+      resetPOS();
+      checkAndSyncOfflineSales();
     } catch (e) {
-      showErrorAlert(e, 'Billing Error', 'Failed to complete transaction.');
+      const isNetworkError =
+        e?.type === 'network' ||
+        e?.name === 'AbortError' ||
+        (e?.message && (
+          e.message.toLowerCase().includes('network') ||
+          e.message.toLowerCase().includes('connect') ||
+          e.message.toLowerCase().includes('timeout') ||
+          e.message.toLowerCase().includes('offline')
+        ));
+
+      if (isNetworkError) {
+        try {
+          const offlineRecord = await saveOfflineSale(shopId, salePayload);
+          setShowCartModal(false);
+          setReceiptData({
+            ...salePayload,
+            id: offlineRecord.id,
+            date: offlineRecord.offlineCreatedAt,
+            items: cart,
+            shopName: user?.shop?.shopName || 'GI SHOP',
+            shopAddress: user?.shop?.shopAddress || '',
+            isOffline: true,
+          });
+          resetPOS();
+          const offlineList = await loadOfflineSales(shopId);
+          setOfflineQueueCount(offlineList.length);
+          Alert.alert(
+            t('Bill Saved Offline'),
+            t('No internet connection detected. This bill was saved locally and will automatically sync to the server when you are back online.'),
+            [{ text: t('OK') }]
+          );
+        } catch (offlineErr) {
+          showErrorAlert(offlineErr, 'Offline Storage Error', 'Failed to save bill locally.');
+        }
+      } else {
+        showErrorAlert(e, 'Billing Error', 'Failed to complete transaction.');
+      }
     } finally {
       setCompletingBill(false);
     }
@@ -439,6 +529,30 @@ export default function POSScreen({ navigation }) {
                 </TouchableOpacity>
               )}
             </View>
+
+            {/* Offline Sales Pending Sync Banner */}
+            {offlineQueueCount > 0 && (
+              <View style={styles.offlineQueueBanner}>
+                <View style={styles.offlineQueueInfo}>
+                  <WifiOff size={16} color="#92400e" />
+                  <Text style={styles.offlineQueueText}>
+                    {offlineQueueCount} {offlineQueueCount === 1 ? t('offline bill pending sync') : t('offline bills pending sync')}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.offlineQueueSyncBtn}
+                  onPress={handleManualSync}
+                  disabled={isSyncingOffline}
+                  activeOpacity={0.8}
+                >
+                  {isSyncingOffline ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Text style={styles.offlineQueueSyncText}>{t('Sync Now')}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Syncing Indicator Badge */}
             {syncing && items.length > 0 && (
@@ -809,11 +923,11 @@ export default function POSScreen({ navigation }) {
                         setPaymentMethod(mode.id);
                         if (mode.id === 'Add to Book' && !selectedCustomer) {
                           Alert.alert(
-                            t('Customer Account Required'),
-                            t('Khata credit ("Add to Book") requires linking a registered customer account. Please tap "Search Customer".'),
+                            t('Customer Required'),
+                            t('Khata credit ("Add to Book") requires selecting or adding a customer.'),
                             [
                               {
-                                text: t('Search Customer'),
+                                text: t('Add / Select Customer'),
                                 onPress: () => setShowAddCustomerModal(true),
                               },
                               { text: t('Cancel'), style: 'cancel' }
@@ -892,9 +1006,42 @@ export default function POSScreen({ navigation }) {
         visible={showAddCustomerModal}
         onClose={() => setShowAddCustomerModal(false)}
         onCustomerAdded={async (custData) => {
-          await saveCustomer(custData);
-          await loadData();
-          setSelectedCustomer(custData);
+          const cleanPhone = (custData.phone || '').replace(/\D/g, '').slice(-10);
+          const targetShortId = (custData.customerShortId || '').toLowerCase();
+          const existingCust = customers.find((c) => {
+            const cp = (c.phone || c.customerPhone || '').replace(/\D/g, '').slice(-10);
+            const cs = (c.shortId || c.customerShortId || '').toLowerCase();
+            return (cleanPhone && cp === cleanPhone) || (targetShortId && cs === targetShortId);
+          });
+
+          const newCust = {
+            ...(existingCust || {}),
+            ...custData,
+            customerPhone: custData.phone,
+            customerShortId: custData.customerShortId || existingCust?.customerShortId || '',
+            shortId: custData.customerShortId || existingCust?.shortId || '',
+            totalDue: existingCust?.totalDue || 0,
+            status: 'ACTIVE',
+          };
+          setCustomers((prev) => {
+            const filtered = (prev || []).filter((c) => {
+              const cp = (c.phone || c.customerPhone || '').replace(/\D/g, '').slice(-10);
+              const cs = (c.shortId || c.customerShortId || '').toLowerCase();
+              return !(cleanPhone && cp === cleanPhone) && !(targetShortId && cs === targetShortId);
+            });
+            const updated = [newCust, ...filtered];
+            saveCachedCustomers(shopId, updated).catch(() => {});
+            return updated;
+          });
+          setSelectedCustomer(newCust);
+          setShowCustomerDropdown(false);
+          setCustomerSearch(newCust.phone || newCust.customerPhone || '');
+          try {
+            await saveCustomer(custData);
+            await loadData();
+          } catch (e) {
+            console.warn('saveCustomer error:', e);
+          }
         }}
       />
     </SafeAreaView>
@@ -1029,33 +1176,33 @@ const styles = StyleSheet.create({
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
   productTile: {
-    width: '31%',
+    width: '48%',
     backgroundColor: colors.background,
     borderRadius: 12,
-    padding: 10,
+    padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    minHeight: 80,
+    minHeight: 86,
     justifyContent: 'space-between',
   },
   productTileName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 6,
   },
   productTileBadge: {
     backgroundColor: colors.primaryLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 6,
     alignSelf: 'flex-start',
   },
   productTilePrice: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: colors.primary,
   },
@@ -1074,6 +1221,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.primary,
     fontWeight: '600',
+  },
+  offlineQueueBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#fffbeb',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    marginBottom: 10,
+  },
+  offlineQueueInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  offlineQueueText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400e',
+    flex: 1,
+  },
+  offlineQueueSyncBtn: {
+    backgroundColor: '#d97706',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  offlineQueueSyncText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   offlineBanner: {
     flexDirection: 'row',

@@ -1710,7 +1710,7 @@ app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
   const searchPattern = `%${cleanQuery}%`;
   const phonePattern = cleanPhone ? `%${cleanPhone}%` : `%${rawQuery}%`;
 
-  const sql = `SELECT u.id, u.shortId, u.name, u.email, u.phone, u.city, u.role, s.shopName, s.shortId as shopShortId 
+  const sql = `SELECT u.id, u.shortId, u.name, u.phone, u.city, u.role, s.shopName, s.shortId as shopShortId 
                FROM Users u 
                LEFT JOIN Shops s ON s.ownerId = u.id
                WHERE (u.status = 'ACTIVE' OR u.status IS NULL OR u.status = 'active') 
@@ -1719,8 +1719,6 @@ app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
                  OR LOWER(u.shortId) LIKE ? 
                  OR (s.shortId IS NOT NULL AND (LOWER(s.shortId) = ? OR LOWER(s.shortId) LIKE ?))
                  OR u.phone LIKE ? 
-                 OR LOWER(u.email) = ? 
-                 OR LOWER(u.email) LIKE ?
                  OR LOWER(u.name) LIKE ?
                  OR (s.shopName IS NOT NULL AND LOWER(s.shopName) LIKE ?)
                )
@@ -1732,7 +1730,6 @@ app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
       cleanQuery, searchPattern,
       cleanQuery, searchPattern,
       phonePattern,
-      cleanQuery, searchPattern,
       searchPattern,
       searchPattern
     ],
@@ -1944,11 +1941,43 @@ app.get('/api/shop/customers', authenticate, (req, res) => {
 app.post('/api/shop/customers', authenticate, (req, res) => {
   const shopId = req.user.shopId;
   const { phone, customerShortId, customerEmail, name, address } = req.body;
-  const sId = customerShortId || null;
-  const cEmail = customerEmail || null;
-  db.run(`INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
-          ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?, address=?`,
-    [shopId, phone, sId, cEmail, name, address, sId, cEmail, name, address], () => res.json({ success: true }));
+  const cleanPhone = (phone || '').replace(/\D/g, '').slice(-10) || (phone || '').trim();
+  const sId = customerShortId ? customerShortId.trim() : null;
+  const cEmail = customerEmail ? customerEmail.trim() : null;
+  const custName = (name || 'Customer').trim();
+  const custAddress = (address || '').trim();
+
+  if (!cleanPhone) {
+    return res.status(400).json({ error: 'Customer phone number is required.' });
+  }
+
+  db.run(
+    `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
+     ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?, address=?`,
+    [shopId, cleanPhone, sId, cEmail, custName, custAddress, sId, cEmail, custName, custAddress],
+    function(err) {
+      if (err) {
+        console.error('[POST /api/shop/customers] Error:', err);
+        return res.status(500).json({ error: 'Failed to save customer to store ledger.' });
+      }
+      res.json({
+        success: true,
+        customer: {
+          shopId,
+          phone: cleanPhone,
+          customerPhone: cleanPhone,
+          customerShortId: sId || '',
+          customerEmail: cEmail || '',
+          name: custName,
+          address: custAddress,
+          status: 'ACTIVE',
+          totalDue: 0,
+          totalBook: 0,
+          totalPaid: 0,
+        },
+      });
+    }
+  );
 });
 
 app.put('/api/shop/customers/block', authenticate, (req, res) => {
@@ -1972,6 +2001,106 @@ app.put('/api/shop/customers/terminate', authenticate, (req, res) => {
   db.run(`UPDATE ShopCustomers SET status='TERMINATED' WHERE shopId=? AND customerPhone=?`, [shopId, phone], () => res.json({ success: true }));
 });
 
+// --- LINK UNREGISTERED CUSTOMER TO APP ACCOUNT (CUSTOMER ID + EMAIL VERIFICATION) ---
+app.post('/api/shop/customers/link-account', authenticate, (req, res) => {
+  const shopId = req.user.shopId;
+  const { phone, customerId, email } = req.body;
+  const cleanPhone = (phone || '').replace(/\D/g, '').slice(-10) || (phone || '').trim();
+  const rawPhone = (phone || '').trim();
+  const targetShortId = (customerId || req.body.customerShortId || '').trim();
+  const targetEmail = (email || req.body.customerEmail || '').trim().toLowerCase();
+
+  if (!cleanPhone && !rawPhone) {
+    return res.status(400).json({ error: 'Customer phone number is required.' });
+  }
+  if (!targetShortId || !targetEmail) {
+    return res.status(400).json({ error: 'Both Customer ID and Customer Email are required to link an app account.' });
+  }
+
+  // 1. Check if customer is already linked in ShopCustomers
+  db.get(
+    `SELECT * FROM ShopCustomers WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
+    [shopId, cleanPhone, rawPhone],
+    (custErr, existingCust) => {
+      if (existingCust && existingCust.customerShortId && existingCust.customerShortId.trim()) {
+        return res.status(400).json({
+          error: `This customer is already linked to app account #${existingCust.customerShortId} and cannot be modified.`,
+        });
+      }
+
+      // 2. Validate that targetShortId and targetEmail match an ACTIVE registered user in Users table
+      db.get(
+        `SELECT id, shortId, email, phone, name, status FROM Users 
+         WHERE LOWER(TRIM(shortId)) = LOWER(TRIM(?)) AND LOWER(TRIM(email)) = ? AND status = 'ACTIVE'`,
+        [targetShortId, targetEmail],
+        (userErr, matchedUser) => {
+          if (userErr || !matchedUser) {
+            return res.status(400).json({
+              error: 'Customer ID and Email do not match any registered GI SHOP account. Please verify both details with the customer.',
+            });
+          }
+
+          const activeShortId = matchedUser.shortId;
+          const activeEmail = matchedUser.email;
+          const activeName = (existingCust?.name && !existingCust.name.startsWith('Customer'))
+            ? existingCust.name
+            : matchedUser.name;
+
+          // 3. Update or Insert into ShopCustomers
+          db.run(
+            `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status)
+             VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
+             ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?`,
+            [shopId, cleanPhone, activeShortId, activeEmail, activeName, activeShortId, activeEmail, activeName],
+            (updateCustErr) => {
+              if (updateCustErr) {
+                console.error('[link-account] ShopCustomers update error:', updateCustErr);
+              }
+
+              // 4. Update all past Sales for this customer in this shop
+              db.run(
+                `UPDATE Sales SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
+                [activeShortId, shopId, cleanPhone, rawPhone],
+                () => {}
+              );
+
+              // 5. Update all past Settlements for this customer in this shop
+              db.run(
+                `UPDATE Settlements SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
+                [activeShortId, shopId, cleanPhone, rawPhone],
+                () => {}
+              );
+
+              // 6. Update all past Orders for this customer in this shop
+              db.run(
+                `UPDATE Orders SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
+                [activeShortId, shopId, cleanPhone, rawPhone],
+                () => {}
+              );
+
+              res.json({
+                success: true,
+                message: `Successfully linked customer to GI SHOP account #${activeShortId}.`,
+                customer: {
+                  shopId,
+                  phone: cleanPhone,
+                  customerPhone: cleanPhone,
+                  customerShortId: activeShortId,
+                  shortId: activeShortId,
+                  customerEmail: activeEmail,
+                  email: activeEmail,
+                  name: activeName,
+                  status: 'ACTIVE',
+                },
+              });
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
 // --- SALES & KHATA APIs ---
 app.post('/api/shop/sales', authenticate, (req, res) => {
   const shopId = req.user.shopId;
@@ -1983,32 +2112,58 @@ app.post('/api/shop/sales', authenticate, (req, res) => {
   const sanitizedNote = (note || '').slice(0, 20);
 
   if (paymentMethod === 'Add to Book') {
-    // Check if customer is registered and has shortId
-    const findQuery = customerShortId 
+    const cleanPhone = (customerPhone || '').replace(/\D/g, '').slice(-10) || (customerPhone || '').trim();
+    const sId = (customerShortId || '').trim();
+
+    if (!cleanPhone && !sId) {
+      return res.status(400).json({ error: 'Customer mobile number is required for Khata credit billing ("Add to Book").' });
+    }
+
+    // Attempt to link to registered app user if available (optional)
+    const findQuery = sId 
       ? `SELECT id, shortId, email, phone, name FROM Users WHERE shortId = ? AND status = 'ACTIVE'`
       : `SELECT id, shortId, email, phone, name FROM Users WHERE phone = ? AND status = 'ACTIVE'`;
-    const findParam = customerShortId || customerPhone;
+    const findParam = sId || cleanPhone;
 
     db.get(findQuery, [findParam], (err, user) => {
-      if (err || !user || !user.shortId) {
-        return res.status(400).json({ error: 'Khata credit billing ("Add to Book") requires selecting a registered app customer with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.' });
-      }
+      const activeShortId = user?.shortId || sId || null;
+      const activeEmail = user?.email || customerEmail || null;
+      const activePhone = user?.phone || cleanPhone || '';
+      const finalCustName = (user?.name || req.body.customerName || 'Customer').trim();
 
-      const activeShortId = user.shortId;
-      const activeEmail = user.email || customerEmail || '';
-      const activePhone = user.phone || customerPhone || '';
+      db.run(
+        `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [shopId, activePhone, activeShortId, itemsJSON, subtotal, discount, total, paymentMethod, sanitizedNote, cashierName, date],
+        function(err) {
+          if (err) {
+            console.error('[POST /api/shop/sales Add to Book] Error:', err);
+            return res.status(500).json({ error: 'Failed to record sale' });
+          }
 
-      db.run(`INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [shopId, activePhone, activeShortId, itemsJSON, subtotal, discount, total, paymentMethod, sanitizedNote, cashierName, date], function(err) {
-          if (err) return res.status(500).json({ error: 'Failed to record sale' });
-          
-          db.run(`INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
-                  ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=COALESCE(NULLIF(excluded.name, ''), name)`, 
-            [shopId, activePhone, activeShortId, activeEmail, user.name || 'Customer', activeShortId, activeEmail]);
+          const saleId = this.lastID;
 
-          res.json({ id: this.lastID, date, total, paymentMethod, note: sanitizedNote, customerShortId: activeShortId });
-        });
+          // Proactively ensure customer exists in ShopCustomers
+          if (activePhone) {
+            db.run(
+              `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
+               ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?`,
+              [shopId, activePhone, activeShortId, activeEmail, finalCustName, activeShortId, activeEmail, finalCustName],
+              () => {}
+            );
+          }
+
+          res.json({
+            id: saleId,
+            date,
+            total,
+            paymentMethod,
+            note: sanitizedNote,
+            customerPhone: activePhone,
+            customerShortId: activeShortId,
+          });
+        }
+      );
     });
     return;
   }
@@ -2033,25 +2188,44 @@ app.put('/api/shop/sales/:id/note', authenticate, (req, res) => {
 
 app.post('/api/shop/settlements', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  const { customerPhone, amount, method, note } = req.body;
+  const { customerPhone, customerShortId, amount, method, note } = req.body;
   const date = new Date().toISOString();
   const sanitizedNote = (note || '').slice(0, 50);
+  const cleanPhone = (customerPhone || '').replace(/\D/g, '').slice(-10) || customerPhone;
 
-  db.run(
-    `INSERT INTO Settlements (shopId, customerPhone, amount, method, note, date) VALUES (?, ?, ?, ?, ?, ?)`,
-    [shopId, customerPhone, amount, method, sanitizedNote, date],
-    function(err) {
-      if (err) {
-        // Fallback in case 'note' column is not yet present on remote DB
-        return db.run(
-          `INSERT INTO Settlements (shopId, customerPhone, amount, method, date) VALUES (?, ?, ?, ?, ?)`,
-          [shopId, customerPhone, amount, method, date],
-          function() {
-            res.json({ id: this.lastID, date, note: sanitizedNote });
+  // Query customerShortId from ShopCustomers if not provided directly
+  db.get(
+    `SELECT customerShortId FROM ShopCustomers WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
+    [shopId, cleanPhone, customerPhone],
+    (cErr, custRow) => {
+      const sId = (customerShortId || custRow?.customerShortId || '').trim() || null;
+
+      db.run(
+        `INSERT INTO Settlements (shopId, customerPhone, customerShortId, amount, method, note, date) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [shopId, customerPhone, sId, amount, method, sanitizedNote, date],
+        function(err) {
+          if (err) {
+            // Fallback in case 'customerShortId' or 'note' column is not yet present on remote DB
+            return db.run(
+              `INSERT INTO Settlements (shopId, customerPhone, amount, method, note, date) VALUES (?, ?, ?, ?, ?, ?)`,
+              [shopId, customerPhone, amount, method, sanitizedNote, date],
+              function(fallbackErr) {
+                if (fallbackErr) {
+                  return db.run(
+                    `INSERT INTO Settlements (shopId, customerPhone, amount, method, date) VALUES (?, ?, ?, ?, ?)`,
+                    [shopId, customerPhone, amount, method, date],
+                    function() {
+                      res.json({ id: this.lastID, date, note: sanitizedNote, customerShortId: sId });
+                    }
+                  );
+                }
+                res.json({ id: this.lastID, date, note: sanitizedNote, customerShortId: sId });
+              }
+            );
           }
-        );
-      }
-      res.json({ id: this.lastID, date, note: sanitizedNote });
+          res.json({ id: this.lastID, date, note: sanitizedNote, customerShortId: sId });
+        }
+      );
     }
   );
 });
@@ -2474,36 +2648,41 @@ app.put('/api/admin/support-settings', authenticate, (req, res) => {
   });
 });
 
-// --- CUSTOMER PURCHASES TIMELINE API ---
+// --- CUSTOMER PURCHASES TIMELINE API (ONLY VERIFIED LINKED SALES) ---
 app.get('/api/customer/history', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
-  const phone = req.user.phone;
-  const shortId = req.user.shortId || '';
+  const shortId = (req.user.shortId || '').trim();
+  if (!shortId) return res.json({ sales: [] });
+
   db.all(`SELECT Sales.*, Shops.shopName, Shops.city as shopCity, Shops.shopAddress, Shops.shopPhone 
           FROM Sales JOIN Shops ON Sales.shopId = Shops.id 
-          WHERE (Sales.customerPhone = ? OR (Sales.customerShortId IS NOT NULL AND Sales.customerShortId != '' AND Sales.customerShortId = ?)) AND Shops.status = 'ACTIVE' 
-          ORDER BY Sales.date DESC`, [phone, shortId], (err, sales) => {
+          WHERE Sales.customerShortId IS NOT NULL AND Sales.customerShortId != '' AND Sales.customerShortId = ? AND Shops.status = 'ACTIVE' 
+          ORDER BY Sales.date DESC`, [shortId], (err, sales) => {
     res.json({ sales: sales || [] });
   });
 });
 
-// --- CUSTOMER MULTI-STORE KHATA & TRANSACTION LEDGER APIs (READ ONLY) ---
+// --- CUSTOMER MULTI-STORE KHATA & TRANSACTION LEDGER APIs (READ ONLY, VERIFIED LINKED ONLY) ---
 app.get('/api/customer/khata', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
-  const phone = (req.user.phone || '').trim();
   const shortId = (req.user.shortId || '').trim();
-  const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+  const userId = req.user.id;
+
+  if (!shortId) {
+    return res.json({ overallDue: 0, stores: [] });
+  }
 
   db.all(`SELECT id, shortId, shopName, city, shopAddress, shopPhone, timings, isOpen, status FROM Shops WHERE status = 'ACTIVE'`, [], (err, shops) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch shops' });
 
-    const salesSql = `SELECT * FROM Sales WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)`;
-    const settlementsSql = `SELECT * FROM Settlements WHERE customerPhone = ? OR (? != '' AND customerPhone LIKE ?)`;
-    const ordersSql = `SELECT * FROM Orders WHERE customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)`;
+    // Strictly match records linked to this customer's verified Short ID
+    const salesSql = `SELECT * FROM Sales WHERE customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?`;
+    const settlementsSql = `SELECT * FROM Settlements WHERE customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?`;
+    const ordersSql = `SELECT * FROM Orders WHERE (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR customerId = ?`;
 
-    db.all(salesSql, [phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, sales) => {
-      db.all(settlementsSql, [phone, cleanPhone, `%${cleanPhone}%`], (err, settlements) => {
-        db.all(ordersSql, [phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, orders) => {
+    db.all(salesSql, [shortId], (err, sales) => {
+      db.all(settlementsSql, [shortId], (err, settlements) => {
+        db.all(ordersSql, [shortId, userId], (err, orders) => {
           
           const khataStores = [];
           let overallDue = 0;
@@ -2572,21 +2751,25 @@ app.get('/api/customer/khata', authenticate, (req, res) => {
 
 app.get('/api/customer/khata/:shopId', authenticate, (req, res) => {
   if (req.user.role !== 'Customer') return res.status(403).json({ error: 'Forbidden' });
-  const phone = (req.user.phone || '').trim();
   const shortId = (req.user.shortId || '').trim();
-  const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+  const userId = req.user.id;
   const shopId = parseInt(req.params.shopId);
+
+  if (!shortId) {
+    return res.status(404).json({ error: 'No linked account found' });
+  }
 
   db.get(`SELECT id, shortId, shopName, city, shopAddress, shopPhone, timings, isOpen, status FROM Shops WHERE id = ?`, [shopId], (err, shop) => {
     if (err || !shop) return res.status(404).json({ error: 'Shop not found' });
 
-    const salesSql = `SELECT * FROM Sales WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)) ORDER BY date DESC`;
-    const settlementsSql = `SELECT * FROM Settlements WHERE shopId = ? AND (customerPhone = ? OR (? != '' AND customerPhone LIKE ?)) ORDER BY date DESC`;
-    const ordersSql = `SELECT * FROM Orders WHERE shopId = ? AND (customerPhone = ? OR (customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR (? != '' AND customerPhone LIKE ?)) ORDER BY createdAt DESC`;
+    // Strictly match records explicitly linked to this customer's verified Short ID
+    const salesSql = `SELECT * FROM Sales WHERE shopId = ? AND customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ? ORDER BY date DESC`;
+    const settlementsSql = `SELECT * FROM Settlements WHERE shopId = ? AND customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ? ORDER BY date DESC`;
+    const ordersSql = `SELECT * FROM Orders WHERE shopId = ? AND ((customerShortId IS NOT NULL AND customerShortId != '' AND customerShortId = ?) OR customerId = ?) ORDER BY createdAt DESC`;
 
-    db.all(salesSql, [shopId, phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, sales) => {
-      db.all(settlementsSql, [shopId, phone, cleanPhone, `%${cleanPhone}%`], (err, settlements) => {
-        db.all(ordersSql, [shopId, phone, shortId, cleanPhone, `%${cleanPhone}%`], (err, orders) => {
+    db.all(salesSql, [shopId, shortId], (err, sales) => {
+      db.all(settlementsSql, [shopId, shortId], (err, settlements) => {
+        db.all(ordersSql, [shopId, shortId, userId], (err, orders) => {
           
           const salesBook = (sales || [])
             .filter(s => s.paymentMethod === 'Add to Book' || (s.paymentMethod && s.paymentMethod.includes('Book')))

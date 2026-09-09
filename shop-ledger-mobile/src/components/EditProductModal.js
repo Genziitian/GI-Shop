@@ -12,25 +12,12 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { X, Package, Check, Sparkles, Plus } from 'lucide-react-native';
+import { X, Package, Check, Sparkles } from 'lucide-react-native';
 import { colors, shadowLarge, shadowStyle } from '../theme/colors';
 import { MASTER_GROCERY_CATALOG } from '../data/masterGroceryCatalog';
 import { showErrorAlert, validatePrice } from '../utils/errorHandler';
 
 const UNITS = ['Piece', 'Kilo', 'Litre'];
-
-const POPULAR_QUICK_PICKS = [
-  { name: 'Amul Taaza Toned Milk (1 Litre)', price: 54, unit: 'Piece', label: '🥛 Milk 1L' },
-  { name: 'Aashirvaad Shudh Chakki Atta (5kg)', price: 240, unit: 'Piece', label: '🌾 Atta 5kg' },
-  { name: 'Toor Dal / Arhar Dal (Premium)', price: 160, unit: 'Kilo', label: '🫘 Toor Dal' },
-  { name: 'Basmati Rice (Daawat Rozana)', price: 85, unit: 'Kilo', label: '🍚 Basmati Rice' },
-  { name: 'Fortune Mustard Oil (1 Litre)', price: 155, unit: 'Piece', label: '🛢️ Mustard Oil' },
-  { name: 'Premium Refined Sugar (Loose)', price: 44, unit: 'Kilo', label: '🍬 Sugar' },
-  { name: 'Tata Tea Gold (250g)', price: 140, unit: 'Piece', label: '☕ Tata Tea' },
-  { name: 'Maggi 2-Minute Noodles (Pack of 4)', price: 56, unit: 'Piece', label: '🍜 Maggi' },
-  { name: 'Tata Salt Vacuum Evaporated (1kg)', price: 28, unit: 'Piece', label: '🧂 Tata Salt' },
-  { name: 'Farm Fresh Eggs (Pack of 6)', price: 42, unit: 'Piece', label: '🥚 Eggs' },
-];
 
 export default function EditProductModal({ visible, product, onClose, onSave }) {
   const [name, setName] = useState('');
@@ -173,29 +160,7 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
                   )}
                 </View>
 
-                {/* Quick Pick Chips (when adding new item) */}
-                {!isEditing && !name && (
-                  <View style={{ marginBottom: 14 }}>
-                    <Text style={styles.quickPickHeader}>⚡ Quick Pick Popular Items</Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
-                    >
-                      {POPULAR_QUICK_PICKS.map((item, idx) => (
-                        <TouchableOpacity
-                          key={idx}
-                          style={styles.quickPickChip}
-                          onPress={() => handleSelectSuggestion(item)}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.quickPickChipText}>{item.label}</Text>
-                          <Text style={styles.quickPickChipPrice}>₹{item.price}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
+
 
                 {/* Selling Price */}
                 <View style={styles.inputGroup}>
@@ -358,35 +323,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primaryDark,
   },
-  quickPickHeader: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  quickPickChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  quickPickChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  quickPickChipPrice: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primary,
-  },
+
   unitRow: {
     flexDirection: 'row',
     gap: 8,
