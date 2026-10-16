@@ -18,9 +18,37 @@ import {
 import { useTranslation } from '../lib/i18n';
 import logoImg from '../assets/logo.png';
 import OrderTimelineModal from '../components/OrderTimelineModal';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { ShopCardSkeleton, ProductGridSkeleton, OrderCardSkeleton, KhataOverviewSkeleton } from '../components/SkeletonLoader';
 
+// Defensive helpers: bad/missing server data must never blank the screen.
+const safeItems = (raw) => {
+  try {
+    const v = typeof raw === 'string' ? JSON.parse(raw || '[]') : raw;
+    return Array.isArray(v) ? v.filter(Boolean) : [];
+  } catch (e) {
+    return [];
+  }
+};
+const num = (v) => Number(v) || 0;
+const money = (v) => `₹${num(v).toFixed(2)}`;
+const lineAmount = (e) => num(e?.amount) || num(e?.rate) * num(e?.qty) || num(e?.item?.price) * num(e?.qty);
+const orderTotal = (o, items) => (num(o?.estimatedTotal) > 0 ? num(o.estimatedTotal) : items.reduce((s, it) => s + lineAmount(it), 0));
+const statusMeta = (st) => ({
+  PENDING: { label: 'Pending', tone: 'amber' },
+  PACKING: { label: 'Packing', tone: 'amber' },
+  READY: { label: 'Ready for pickup', tone: 'blue' },
+  COMPLETED: { label: 'Completed', tone: 'green' },
+  COLLECTED: { label: 'Collected', tone: 'green' },
+  NOT_COLLECTED: { label: 'Not collected', tone: 'red' },
+  CANCELLED_BY_CUSTOMER: { label: 'Cancelled', tone: 'red' },
+  AUTO_CANCELLED_EXPIRED: { label: 'Expired', tone: 'red' },
+  DECLINED: { label: 'Declined', tone: 'red' },
+}[st] || { label: String(st || 'Order'), tone: 'grey' });
+
 export default function Customer() {
+  const [openCards, setOpenCards] = useState({});
+  const toggleCard = (k) => setOpenCards(p => ({ ...p, [k]: !p[k] }));
   const navigate = useNavigate();
   const { t, language, setLanguage } = useTranslation();
   const [currentUser, setCurrentUser] = useState(() => {
@@ -604,7 +632,7 @@ export default function Customer() {
         const orderRows = filteredOrders.map(o => {
           let itemsText = '';
           try {
-            const parsed = JSON.parse(o.itemsJSON || '[]');
+            const parsed = safeItems(o.itemsJSON);
             itemsText = parsed.map(i => `${i.name} (Qty: ${i.quantity || 1})`).join('; ');
           } catch(e) { itemsText = o.itemsJSON || ''; }
 
@@ -1143,46 +1171,36 @@ export default function Customer() {
             {shopsLoading ? (
               <ShopCardSkeleton count={6} />
             ) : (
-              <div className="grid grid-2">
-                {filteredShops.map(shop => (
-                <div 
-                  key={shop.id} 
-                  className="panel" 
-                  style={{ cursor: 'pointer', transition: 'all 0.15s ease', border: '1px solid var(--border)' }}
-                  onClick={() => handleOpenShop(shop)}
-                >
-                  <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-                    <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>{shop.shopName}</div>
-                    <span className="badge" style={{
-                      background: shop.isOpen ? '#dff3e6' : '#fee2e2',
-                      color: shop.isOpen ? '#0f7a43' : '#b91c1c',
-                      borderColor: shop.isOpen ? '#c4e8d1' : '#fecaca'
-                    }}>
-                      {shop.isOpen ? 'OPEN' : 'CLOSED'}
-                    </span>
-                  </div>
-
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                    Shop ID: <strong style={{ color: 'var(--primary)' }}>{shop.shortId}</strong> • {shop.city}
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.85rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
-                      <MapPin size={14} /> {shop.shopAddress}
+              <div className="cx-list cx-grid">
+                {filteredShops.map(shop => {
+                  const k = `shop-${shop.id}`;
+                  const open = !!openCards[k];
+                  return (
+                    <div key={shop.id} className={`cx-card ${open ? 'open' : ''}`}>
+                      <button type="button" className="cx-card-head" onClick={() => toggleCard(k)}>
+                        <span className="cx-avatar"><Store size={18} /></span>
+                        <span className="cx-main">
+                          <span className="cx-title">{shop.shopName}</span>
+                          <span className="cx-sub">{shop.shopAddress || shop.city}</span>
+                        </span>
+                        <span className="cx-end">
+                          <span className={`cx-pill ${shop.isOpen ? 'cx-green' : 'cx-red'}`}>{shop.isOpen ? 'Open' : 'Closed'}</span>
+                        </span>
+                      </button>
+                      {open && (
+                        <div className="cx-body">
+                          <div className="cx-meta"><Clock size={14} /> {shop.timings || '—'}</div>
+                          {shop.shopPhone && <div className="cx-meta"><Phone size={14} /> {shop.shopPhone}</div>}
+                          <div className="cx-meta"><MapPin size={14} /> {shop.city} · ID {shop.shortId}</div>
+                          <div className="cx-actions">
+                            <button type="button" className="btn btn-sm" onClick={() => handleOpenShop(shop)}>View catalog &amp; order <ArrowRight size={14} /></button>
+                            {shop.shopPhone && <a href={`tel:${shop.shopPhone}`} className="btn btn-outline btn-sm"><Phone size={14} /> Call</a>}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
-                      <Clock size={14} /> {shop.timings}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
-                      <Phone size={14} /> {shop.shopPhone}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>View Catalog & Order →</span>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
               {filteredShops.length === 0 && (
                 <div className="panel" style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem 1rem' }}>
                   <p className="subtitle">No open shops found in {selectedCity}. Try selecting another city above.</p>
@@ -1564,37 +1582,12 @@ export default function Customer() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
                 {/* Overall Outstanding Due Banner */}
-                <div className="panel" style={{ background: 'linear-gradient(135deg, #1d2939, #101828)', color: '#fff', padding: '1.25rem', borderRadius: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
-                        <BookOpen size={20} color="#38bdf8" />
-                        <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800' }}>My Khata Ledger</h2>
-                      </div>
-                    </div>
-
-                    <div style={{ background: 'rgba(255,255,255,0.07)', padding: '0.65rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                      <div style={{ fontSize: '0.72rem', color: '#d0d5dd', fontWeight: '600' }}>Total Amount Due to Pay</div>
-                      <h2 style={{ margin: '0.15rem 0 0 0', fontSize: '1.5rem', color: khataOverview.overallDue > 0 ? '#f87171' : '#4ade80', fontWeight: '900' }}>
-                        ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span className="badge" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.72rem', padding: '2px 8px' }}>
-                        {khataOverview.stores.length} Enrolled Stores
-                      </span>
-                      <span className="badge" style={{ background: khataOverview.stores.filter(s => s.totalDue > 0).length > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)', color: '#fff', fontSize: '0.72rem', padding: '2px 8px' }}>
-                        {khataOverview.stores.filter(s => s.totalDue > 0).length} Stores with Due
-                      </span>
-                    </div>
-
-                    <div style={{ fontSize: '0.72rem', color: '#98a2b3', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                      <ShieldCheck size={13} color="#38bdf8" /> Official Store Records (Read-Only)
-                    </div>
-                  </div>
+                <div className={`cx-hero ${num(khataOverview?.overallDue) > 0 ? 'cx-hero-red' : 'cx-hero-green'}`}>
+                  <span className="cx-hero-label">Total due to pay</span>
+                  <strong className="cx-hero-value">{money(khataOverview?.overallDue)}</strong>
+                  <span className="cx-hero-meta">
+                    {khataOverview.stores.length} stores · {khataOverview.stores.filter(x => num(x.totalDue) > 0).length} with due
+                  </span>
                 </div>
 
                 {/* Stores List */}
@@ -1602,122 +1595,43 @@ export default function Customer() {
                   <KhataOverviewSkeleton />
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                    {khataOverview.stores.map((st) => (
-                    <div 
-                      key={`khata-store-${st.shopId}`}
-                      className="panel"
-                      style={{ 
-                        padding: '1rem', 
-                        cursor: 'pointer',
-                        borderRadius: '12px',
-                        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                        borderLeft: st.totalDue > 0 ? '4px solid var(--danger)' : '4px solid var(--success)'
-                      }}
-                      onClick={() => loadStoreKhataDetails(st)}
-                    >
-                      {/* Store Top Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text)', fontWeight: 800 }}>{st.shopName}</h3>
-                            <span className="badge" style={{ fontSize: '0.68rem', background: '#e9f6ee', color: 'var(--primary)', fontWeight: '700', padding: '1px 6px' }}>
-                              ID: {st.shortId || `shp${st.shopId}`}
+                    {khataOverview.stores.map((st) => {
+                      const k = `khata-${st.shopId}`;
+                      const open = !!openCards[k];
+                      const due = num(st.totalDue);
+                      return (
+                        <div key={k} className={`cx-card ${due > 0 ? 'cx-due' : 'cx-clear'} ${open ? 'open' : ''}`}>
+                          <button type="button" className="cx-card-head" onClick={() => toggleCard(k)}>
+                            <span className="cx-avatar"><BookOpen size={18} /></span>
+                            <span className="cx-main">
+                              <span className="cx-title">{st.shopName}</span>
+                              <span className="cx-sub">{st.isOpen ? 'Open' : 'Closed'} · {st.city}</span>
                             </span>
-                            <span className="badge" style={{ fontSize: '0.68rem', background: st.isOpen ? '#dff3e6' : '#fee2e2', color: st.isOpen ? '#0f7a43' : '#b91c1c', padding: '1px 6px' }}>
-                              {st.isOpen ? 'Open' : 'Closed'}
+                            <span className="cx-end">
+                              <span className={`cx-amount ${due > 0 ? 'cx-text-red' : 'cx-text-green'}`}>{money(due)}</span>
+                              <span className={`cx-pill ${due > 0 ? 'cx-red' : 'cx-green'}`}>{due > 0 ? 'Due' : 'Clear'}</span>
                             </span>
-                          </div>
-                          <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {st.shopAddress ? `${st.shopAddress}, ${st.city}` : st.city} {st.timings ? `• ${st.timings}` : ''}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Contact Buttons */}
-                      {st.shopPhone && (
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                          <a 
-                            href={`tel:${st.shopPhone}`}
-                            className="btn btn-outline"
-                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Phone size={12} /> Call Now
-                          </a>
-                          <a 
-                            href={`https://wa.me/91${st.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${st.shopName}, I would like to check my khata and place an order.`)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-outline"
-                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none', color: '#1f9d5a', borderColor: '#c4e8d1', background: '#eef8f1' }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MessageCircle size={12} /> WhatsApp
-                          </a>
-                        </div>
-                      )}
-
-                      {/* Highlighted Due Amount Box */}
-                      <div style={{ 
-                        background: st.totalDue > 0 ? '#fff5f5' : '#eef8f1', 
-                        border: `1px solid ${st.totalDue > 0 ? '#fed7d7' : '#c4e8d1'}`, 
-                        borderRadius: '8px', 
-                        padding: '0.65rem 0.85rem', 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        marginBottom: '0.75rem'
-                      }}>
-                        <div>
-                          <div style={{ fontSize: '0.7rem', fontWeight: '800', color: st.totalDue > 0 ? '#dc2626' : '#0f7a43', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {st.totalDue > 0 ? 'Amount Due to Pay' : 'Account Status'}
-                          </div>
-                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: st.totalDue > 0 ? '#dc2626' : '#0f7a43', lineHeight: 1.1, marginTop: '2px' }}>
-                            {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
-                          </div>
-                        </div>
-
-                        <div>
-                          {st.totalDue === 0 ? (
-                            <span className="badge" style={{ background: '#dff3e6', color: '#0f7a43', fontSize: '0.72rem', fontWeight: '700' }}>
-                              ✓ No Due Clear
-                            </span>
-                          ) : (
-                            <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', fontSize: '0.72rem', fontWeight: '700' }}>
-                              Pending Due
-                            </span>
+                          </button>
+                          {open && (
+                            <div className="cx-body">
+                              <div className="cx-lines">
+                                <div className="cx-line"><span>Khata credit</span><span>{money(st.totalBook)}</span></div>
+                                <div className="cx-line"><span>Paid</span><span>{money(st.totalPaid)}</span></div>
+                                {(st.shopAddress || st.timings) && <div className="cx-line"><span>{st.shopAddress || ''}</span><span>{st.timings || ''}</span></div>}
+                              </div>
+                              <div className="cx-actions">
+                                <button type="button" className="btn btn-sm" onClick={() => loadStoreKhataDetails(st)}><BookOpen size={14} /> History</button>
+                                <button type="button" className="btn btn-outline btn-sm" onClick={() => handleStartNewOrderFromStore(st)}><Plus size={14} /> New order</button>
+                                {st.shopPhone && <a href={`tel:${st.shopPhone}`} className="btn btn-outline btn-sm"><Phone size={14} /></a>}
+                                {st.shopPhone && (
+                                  <a href={`https://wa.me/91${String(st.shopPhone).replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${st.shopName}, I would like to check my khata and place an order.`)}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><MessageCircle size={14} /></a>
+                                )}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      </div>
-
-                      {/* Store Card Footer with Action Buttons */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', paddingTop: '0.6rem', borderTop: '1px dashed var(--border)' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          Khata Credit: <strong>₹{(Number(st?.totalBook) || 0).toFixed(2)}</strong> • Paid: <strong>₹{(Number(st?.totalPaid) || 0).toFixed(2)}</strong>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          <button 
-                            type="button" 
-                            className="btn" 
-                            style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem', background: '#0284c7' }}
-                            onClick={(e) => { e.stopPropagation(); handleStartNewOrderFromStore(st); }}
-                          >
-                            <Plus size={13} /> New Order +
-                          </button>
-                          
-                          <button 
-                            type="button" 
-                            className="btn btn-outline" 
-                            style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem' }}
-                            onClick={(e) => { e.stopPropagation(); loadStoreKhataDetails(st); }}
-                          >
-                            <BookOpen size={13} /> View History →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
 
                   {khataOverview.stores.length === 0 && !khataLoading && (
                     <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: '#f7f8fa', borderRadius: '12px', border: '1px dashed var(--border)' }}>
@@ -1925,7 +1839,7 @@ export default function Customer() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                         {timeline.map((entry, idx) => {
                           if (entry.type === 'PURCHASE') {
-                            const items = JSON.parse(entry.itemsJSON || '[]');
+                            const items = safeItems(entry.itemsJSON);
                             const isKhataMethod = entry.paymentMethod === 'Add to Book';
                             return (
                               <div key={`timeline-purch-${entry.id}-${idx}`} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
@@ -2012,7 +1926,7 @@ export default function Customer() {
                           }
 
                           if (entry.type === 'ORDER') {
-                            const items = JSON.parse(entry.itemsJSON || '[]');
+                            const items = safeItems(entry.itemsJSON);
                             return (
                               <div key={`timeline-order-${entry.id}-${idx}`} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
                                 <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -2085,436 +1999,182 @@ export default function Customer() {
         )}
 
         {/* TAB 3: ALL ORDERS (ACTIVE REQUESTS < 24H & ALL ORDERS / RECEIPTS) */}
-        {activeTab === 'orders' && (() => {
+        {activeTab === 'orders' && (
+          <ErrorBoundary resetKey={activeTab} onRetry={loadOrders}>
+          {(() => {
           const now = new Date();
           const nowMs = now.getTime();
-          const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-          const safeOrd = Array.isArray(orders) ? orders : [];
-          const safePurch = Array.isArray(purchases) ? purchases : [];
-          const recentOrders = safeOrd.filter(o => {
-            const d = new Date(o.createdAt || o.date);
-            return !isNaN(d.getTime()) && (nowMs - d.getTime()) < twentyFourHoursMs;
-          });
-          const pastOrders = safeOrd.filter(o => {
-            const d = new Date(o.createdAt || o.date);
-            return isNaN(d.getTime()) || (nowMs - d.getTime()) >= twentyFourHoursMs;
-          });
-          const grandTotal = (safePurch.reduce((sum, p) => sum + (Number(p?.total) || 0), 0)) + safeOrd.reduce((sum, o) => sum + (Number(o?.estimatedTotal) || 0), 0);
+          const dayMs = 24 * 60 * 60 * 1000;
+          const safeOrd = Array.isArray(orders) ? orders.filter(Boolean) : [];
+          const safePurch = Array.isArray(purchases) ? purchases.filter(Boolean) : [];
+          const isRecent = (o) => { const d = new Date(o.createdAt || o.date); return !isNaN(d.getTime()) && (nowMs - d.getTime()) < dayMs; };
+          const recentOrders = safeOrd.filter(isRecent);
+          const pastOrders = safeOrd.filter(o => !isRecent(o));
+          const grandTotal = safePurch.reduce((s, p) => s + num(p.total), 0) + safeOrd.reduce((s, o) => s + num(o.estimatedTotal), 0);
 
-          // Date Filter helper
-          const isDateMatchingFilter = (dateStr) => {
+          const matches = (dateStr) => {
             if (!dateStr || ordersDateFilter === 'All') return true;
-            const itemDate = new Date(dateStr);
-            if (isNaN(itemDate.getTime())) return true;
-            
-            if (ordersDateFilter === 'Today') {
-              const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-              return itemDate >= startToday && itemDate <= endToday;
-            }
-
-            if (ordersDateFilter === 'Yesterday') {
-              const startYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-              const endYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
-              return itemDate >= startYest && itemDate <= endYest;
-            }
-
-            if (ordersDateFilter === 'Month') {
-              const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-              const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-              return itemDate >= startMonth && itemDate <= endMonth;
-            }
-
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return true;
+            const y = now.getFullYear(), m = now.getMonth(), day = now.getDate();
+            if (ordersDateFilter === 'Today') return d >= new Date(y, m, day) && d <= new Date(y, m, day, 23, 59, 59, 999);
+            if (ordersDateFilter === 'Yesterday') return d >= new Date(y, m, day - 1) && d <= new Date(y, m, day - 1, 23, 59, 59, 999);
+            if (ordersDateFilter === 'Month') return d >= new Date(y, m, 1) && d <= new Date(y, m + 1, 0, 23, 59, 59, 999);
             if (ordersDateFilter === 'Custom') {
-              if (!ordersCustomStart && !ordersCustomEnd) return true;
-              const start = ordersCustomStart ? new Date(ordersCustomStart + 'T00:00:00') : new Date(0);
-              const end = ordersCustomEnd ? new Date(ordersCustomEnd + 'T23:59:59.999') : new Date(8640000000000000);
-              return itemDate >= start && itemDate <= end;
+              const a = ordersCustomStart ? new Date(ordersCustomStart + 'T00:00:00') : new Date(0);
+              const b = ordersCustomEnd ? new Date(ordersCustomEnd + 'T23:59:59.999') : new Date(8640000000000000);
+              return d >= a && d <= b;
             }
-
             return true;
           };
+          const filteredPastOrders = pastOrders.filter(o => matches(o.createdAt || o.date));
+          const filteredPurchases = safePurch.filter(p => matches(p.date || p.createdAt));
+          const totalCount = filteredPastOrders.length + filteredPurchases.length;
+          const fmtDate = (v) => { const d = new Date(v); return isNaN(d.getTime()) ? '' : d.toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
 
-          const filteredPastOrders = pastOrders.filter(o => isDateMatchingFilter(o.createdAt || o.date));
-          const filteredPurchases = safePurch.filter(p => isDateMatchingFilter(p.date || p.createdAt));
-          const totalFilteredAllOrdersCount = filteredPastOrders.length + filteredPurchases.length;
+          const renderOrder = (order, key) => {
+            const items = safeItems(order.itemsJSON);
+            const meta = statusMeta(order.status);
+            const open = !!openCards[key];
+            const canCancel = order.status === 'PENDING' || order.status === 'PACKING';
+            return (
+              <div key={key} className={`cx-card ${open ? 'open' : ''}`}>
+                <button type="button" className="cx-card-head" onClick={() => toggleCard(key)}>
+                  <span className="cx-avatar"><Receipt size={18} /></span>
+                  <span className="cx-main">
+                    <span className="cx-title">{order.shopName || 'Shop'}</span>
+                    <span className="cx-sub">#{order.orderNumber} · {fmtDate(order.createdAt)}</span>
+                  </span>
+                  <span className="cx-end">
+                    <span className="cx-amount">{money(orderTotal(order, items))}</span>
+                    <span className={`cx-pill cx-${meta.tone}`}>{meta.label}</span>
+                  </span>
+                </button>
+
+                {order.status === 'READY' && (
+                  <div className="cx-otp">
+                    <div>
+                      <div className="cx-otp-label">Pickup OTP</div>
+                      <div className="cx-otp-code">{order.otpCode || '----'}</div>
+                    </div>
+                    <span className="cx-otp-hint">Show this code to the shopkeeper</span>
+                  </div>
+                )}
+
+                {open && (
+                  <div className="cx-body">
+                    {order.status === 'PENDING' && <div className="cx-note cx-note-amber">Shopkeeper must accept within 45 minutes or the order is cancelled.</div>}
+                    {order.status === 'PACKING' && <div className="cx-note cx-note-amber">Packing · ETA about {num(order.packingMinutes)} min</div>}
+                    {order.status === 'AUTO_CANCELLED_EXPIRED' && <div className="cx-note cx-note-red">Auto-cancelled: not accepted within 45 minutes.</div>}
+                    {order.status === 'DECLINED' && <div className="cx-note cx-note-red">Declined: {order.declineReason || 'Unavailable'}</div>}
+                    <div className="cx-lines">
+                      {items.map((e, i) => (
+                        <div key={i} className={`cx-line ${e.isUnavailable ? 'off' : ''}`}>
+                          <span>{e.item?.name || e.name || 'Item'} × {e.qty}</span>
+                          <span>{money(lineAmount(e))}</span>
+                        </div>
+                      ))}
+                      {items.length === 0 && <div className="cx-line"><span>No item details</span></div>}
+                      <div className="cx-line cx-total"><span>Total</span><span>{money(orderTotal(order, items))}</span></div>
+                    </div>
+                    <div className="cx-actions">
+                      <button type="button" className="btn btn-sm" onClick={() => setSelectedOrderForDetails(order)}>Order slip</button>
+                      <button type="button" className="btn btn-outline btn-sm" onClick={() => setSelectedTimelineOrder(order)}>Timeline</button>
+                      {canCancel && (
+                        <button type="button" className="btn btn-outline btn-sm cx-danger" onClick={() => handleCancelCustomerOrder(order.id)}>Cancel</button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          };
 
           return ordersLoading ? (
             <OrderCardSkeleton count={3} />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              
-              {/* Grand Total Spending Banner */}
-              <div className="panel" style={{ background: '#f7f8fa', padding: '1rem 1.25rem' }}>
-                <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Purchases &amp; Orders Value</div>
-                    <h2 style={{ margin: 0, color: 'var(--success)', fontSize: '1.75rem' }}>₹{(Number(grandTotal) || 0).toFixed(2)}</h2>
-                  </div>
-                  <div style={{ display: 'flex', gap: '1.5rem', textAlign: 'right' }}>
-                    <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Order Requests (&lt;24h)</div>
-                      <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{recentOrders.length}</strong>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>All Orders &amp; Receipts</div>
-                      <strong style={{ fontSize: '1.1rem', color: '#101828' }}>{pastOrders.length + purchases.length}</strong>
-                    </div>
-                  </div>
-                </div>
+            <div className="cx-stack">
+              <div className="cx-stats">
+                <div className="cx-stat cx-stat-main"><span>Total spent</span><strong>{money(grandTotal)}</strong></div>
+                <div className="cx-stat"><span>Active</span><strong>{recentOrders.length}</strong></div>
+                <div className="cx-stat"><span>All</span><strong>{pastOrders.length + safePurch.length}</strong></div>
               </div>
 
-              {/* SECTION 1: MY ORDER REQUESTS (< 24 HOURS) */}
-              <div className="panel">
-                <div className="flex-between" style={{ marginBottom: '1rem' }}>
-                  <div>
-                    <h3 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Clock size={20} color="var(--primary)" /> My Order Requests
-                    </h3>
-                  </div>
-                  <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
-                    {recentOrders.length} Active
-                  </span>
-                </div>
-
+              <div>
+                <div className="cx-section">Active orders <em>{recentOrders.length}</em></div>
                 {recentOrders.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {recentOrders.map(order => {
-                      const items = JSON.parse(order.itemsJSON || '[]');
-                      return (
-                        <div 
-                          key={order.id} 
-                          style={{ 
-                            background: '#f7f8fa', 
-                            border: '1px solid var(--border)', 
-                            borderRadius: '8px', 
-                            padding: '1rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                          onClick={() => setSelectedOrderForDetails(order)}
-                        >
-                          <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            <div>
-                              <strong style={{ fontSize: '1rem' }}>Order #{order.orderNumber}</strong>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                Shop: <strong>{order.shopName}</strong> {order.shopShortId ? `(${order.shopShortId})` : ''} • {new Date(order.createdAt).toLocaleString()}
-                              </div>
-                            </div>
-
-                            <span className="badge" style={{
-                              background: order.status === 'PACKING' ? '#fdf0cf' 
-                                : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
-                                : (order.status === 'COLLECTED' ? '#dff3e6' 
-                                : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#e9f6ee'))),
-                              color: order.status === 'PACKING' ? '#a8620a' 
-                                : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
-                                : (order.status === 'COLLECTED' ? '#0f7a43' 
-                                : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#0b5e33'))),
-                              borderColor: 'transparent',
-                              padding: '0.4rem 0.75rem',
-                              fontWeight: '700'
-                            }}>
-                              {order.status === 'PACKING' && `PACKING (ETA: ~${order.packingMinutes} mins)`}
-                              {order.status === 'PENDING' && 'PENDING ACCEPTANCE (45m Window)'}
-                              {(order.status === 'COMPLETED' || order.status === 'READY') && 'PACKED & READY FOR PICKUP'}
-                              {order.status === 'COLLECTED' && 'COLLECTED BY YOU (LOCKED)'}
-                              {order.status === 'NOT_COLLECTED' && 'MARKED NOT COLLECTED (LOCKED)'}
-                              {order.status === 'CANCELLED_BY_CUSTOMER' && 'CANCELLED / TAKEN BACK (LOCKED)'}
-                              {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
-                              {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
-                            </span>
-                          </div>
-
-                          {order.status === 'AUTO_CANCELLED_EXPIRED' && (
-                            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '0.5rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#b91c1c', fontWeight: '600' }}>
-                              Order automatically cancelled: Shopkeeper did not accept within 45 minutes.
-                            </div>
-                          )}
-
-                          {order.status === 'PENDING' && (
-                            <div style={{ background: '#fff8e6', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.5rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
-                              Shopkeeper must accept within 45 minutes of order placement or it will be cancelled automatically.
-                            </div>
-                          )}
-
-                          <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
-                            {items.map((entry, idx) => {
-                              const isUnavail = !!entry.isUnavailable;
-                              return (
-                                <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#98a2b3' : 'inherit' }}>
-                                  <span>{entry.item?.name || entry.name} x {entry.qty} {isUnavail ? '(Unavailable)' : ''}</span>
-                                  <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
-                                </div>
-                              );
-                            })}
-                            <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
-                              <span>Total Payable:</span>
-                              <span style={{ color: 'var(--success)' }}>
-                                ₹{((order.estimatedTotal && order.estimatedTotal > 0) ? order.estimatedTotal : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)).toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Customer Confirmation & 4-Digit OTP Box when Ready */}
-                          {order.status === 'READY' && (
-                            <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0' }}>
-                              <div style={{ fontWeight: '700', color: '#0b5e33', fontSize: '0.9rem', marginBottom: '0.35rem' }}>
-                                🎉 Your Order is Packed &amp; Ready for Pickup!
-                              </div>
-                              <div style={{ fontSize: '0.82rem', color: '#0f7a43', marginBottom: '0.5rem' }}>
-                                Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong> • Amount: <strong>₹{(Number(order.requestedAmount || order.estimatedTotal) || 0).toFixed(2)}</strong>
-                              </div>
-                              
-                              {/* 4-Digit OTP Box */}
-                              <div style={{ background: '#ffffff', border: '2px dashed #22c55e', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                <div>
-                                  <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Handover 4-Digit OTP</div>
-                                  <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0f7a43', letterSpacing: '4px' }}>
-                                    {order.otpCode || '----'}
-                                  </div>
-                                </div>
-                                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Share this 4-digit code with shopkeeper at pickup</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {order.status === 'COMPLETED' && (
-                            <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.65rem 0.85rem', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0b5e33', fontWeight: '700', fontSize: '0.85rem' }}>
-                              <CheckCircle size={16} color="#0b5e33" /> Order Picked Up &amp; Completed
-                            </div>
-                          )}
-
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                              <button
-                                type="button"
-                                className="btn btn-outline"
-                                style={{ padding: '0.4rem 0.85rem', fontSize: '0.82rem', fontWeight: '700', background: '#fff' }}
-                                onClick={() => setSelectedTimelineOrder(order)}
-                              >
-                                Order Details
-                              </button>
-                              {(order.status === 'PENDING' || order.status === 'PACKING') && (
-                                <button 
-                                  type="button" 
-                                  className="btn btn-outline" 
-                                  style={{ color: '#ef4444', borderColor: '#fca5a5', padding: '0.4rem 0.85rem', fontSize: '0.82rem', fontWeight: '600', background: '#fff' }}
-                                  onClick={(e) => { e.stopPropagation(); handleCancelCustomerOrder(order.id); }}
-                                >
-                                  Cancel Order
-                                </button>
-                              )}
-                              {['COLLECTED', 'NOT_COLLECTED', 'CANCELLED_BY_CUSTOMER'].includes(order.status) && (
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                                  <Lock size={12} /> Status finalized &amp; locked
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <div className="cx-list">{recentOrders.map(o => renderOrder(o, `ord-${o.id}`))}</div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '1.5rem', background: '#f7f8fa', borderRadius: '8px', border: '1px dashed var(--border)' }}>
-                    <p className="subtitle" style={{ margin: 0 }}>No active order requests in the last 24 hours. Older requests have been archived into "All Orders" below.</p>
-                  </div>
+                  <div className="cx-empty"><p className="cx-empty-sub">No active orders in the last 24 hours.</p></div>
                 )}
               </div>
 
-              {/* SECTION 2: ALL ORDERS & PURCHASE RECEIPTS (Past Orders > 24h + In-Store Bills) */}
-              <div className="panel">
-                <div className="flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div>
-                    <h3 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Receipt size={20} color="var(--success)" /> All Orders &amp; Receipts
-                    </h3>
-                  </div>
-                  <span className="badge" style={{ background: '#eff1f4', color: '#475467', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
-                    {totalFilteredAllOrdersCount} {ordersDateFilter !== 'All' ? `(${ordersDateFilter})` : 'Total'}
-                  </span>
-                </div>
-
-                {/* Date Filter Pills: Today, Yesterday, Month, Custom, All */}
-                <div className="filter-pills-scroll" style={{ marginBottom: '1rem' }}>
+              <div>
+                <div className="cx-section">History <em>{totalCount}</em></div>
+                <div className="cx-chips">
                   {['All', 'Today', 'Yesterday', 'Month', 'Custom'].map(f => (
-                    <button
-                      key={f}
-                      type="button"
-                      className={`btn ${ordersDateFilter === f ? '' : 'btn-outline'}`}
-                      style={{ 
-                        padding: '0.35rem 0.75rem', 
-                        fontSize: '0.8rem', 
-                        borderRadius: '6px',
-                        fontWeight: ordersDateFilter === f ? '700' : '500',
-                        whiteSpace: 'nowrap'
-                      }}
-                      onClick={() => setOrdersDateFilter(f)}
-                    >
-                      {f === 'Month' ? 'This Month' : f}
+                    <button key={f} type="button" className={`cx-chip ${ordersDateFilter === f ? 'on' : ''}`} onClick={() => setOrdersDateFilter(f)}>
+                      {f === 'Month' ? 'This month' : f}
                     </button>
                   ))}
                 </div>
-
-                {/* Custom Date Range Picker */}
                 {ordersDateFilter === 'Custom' && (
-                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#f7f8fa', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
-                      <input 
-                        type="date" 
-                        className="input" 
-                        style={{ width: '150px', margin: 0, padding: '0.35rem 0.5rem', fontSize: '0.85rem' }} 
-                        value={ordersCustomStart} 
-                        onChange={e => setOrdersCustomStart(e.target.value)} 
-                      />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>To:</span>
-                      <input 
-                        type="date" 
-                        className="input" 
-                        style={{ width: '150px', margin: 0, padding: '0.35rem 0.5rem', fontSize: '0.85rem' }} 
-                        value={ordersCustomEnd} 
-                        onChange={e => setOrdersCustomEnd(e.target.value)} 
-                      />
-                    </div>
-                    {(ordersCustomStart || ordersCustomEnd) && (
-                      <button 
-                        type="button" 
-                        className="btn btn-outline" 
-                        style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }}
-                        onClick={() => { setOrdersCustomStart(''); setOrdersCustomEnd(''); }}
-                      >
-                        Reset Dates
-                      </button>
-                    )}
+                  <div className="cx-dates">
+                    <input type="date" className="input" value={ordersCustomStart} onChange={e => setOrdersCustomStart(e.target.value)} />
+                    <input type="date" className="input" value={ordersCustomEnd} onChange={e => setOrdersCustomEnd(e.target.value)} />
                   </div>
                 )}
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {/* Past Orders (> 24 hours) */}
-                  {filteredPastOrders.map(order => {
-                    const items = JSON.parse(order.itemsJSON || '[]');
+                <div className="cx-list">
+                  {filteredPastOrders.map(o => renderOrder(o, `past-${o.id}`))}
+                  {filteredPurchases.map(p => {
+                    const key = `purch-${p.id}`;
+                    const items = safeItems(p.itemsJSON);
+                    const open = !!openCards[key];
                     return (
-                      <div 
-                        key={`past-ord-${order.id}`} 
-                        style={{ 
-                          background: '#f7f8fa', 
-                          border: '1px solid var(--border)', 
-                          borderRadius: '8px', 
-                          padding: '1rem',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => setSelectedOrderForDetails(order)}
-                      >
-                        <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div>
-                            <strong style={{ fontSize: '1rem' }}>Order #{order.orderNumber}</strong>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                              Shop: <strong>{order.shopName}</strong> • {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+                      <div key={key} className={`cx-card ${open ? 'open' : ''}`}>
+                        <button type="button" className="cx-card-head" onClick={() => toggleCard(key)}>
+                          <span className="cx-avatar cx-avatar-blue"><Store size={18} /></span>
+                          <span className="cx-main">
+                            <span className="cx-title">{p.shopName || 'Shop'}</span>
+                            <span className="cx-sub">In-store bill · {fmtDate(p.date || p.createdAt)}</span>
+                          </span>
+                          <span className="cx-end">
+                            <span className="cx-amount">{money(p.total)}</span>
+                            {p.paymentMethod && <span className="cx-pill cx-grey">{p.paymentMethod}</span>}
+                          </span>
+                        </button>
+                        {open && (
+                          <div className="cx-body">
+                            <div className="cx-lines">
+                              {items.map((c, i) => (
+                                <div key={i} className="cx-line">
+                                  <span>{c.item?.name || c.name || 'Item'} × {c.qty} {c.item?.unit || ''}</span>
+                                  <span>{money(num(c.rate || c.item?.price) * num(c.qty))}</span>
+                                </div>
+                              ))}
                             </div>
-                          </div>
-
-                          <div style={{ textAlign: 'right' }}>
-                            <h3 style={{ margin: 0, color: 'var(--success)' }}>
-                              ₹{((order.estimatedTotal && order.estimatedTotal > 0) ? order.estimatedTotal : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)).toFixed(2)}
-                            </h3>
-                            <span className="badge" style={{ fontSize: '0.75rem', background: '#dff3e6', color: '#0f7a43' }}>
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
-                          {items.map((entry, idx) => (
-                            <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                              <span>{entry.item?.name || entry.name} x {entry.qty}</span>
-                              <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
+                            {p.note && <div className="cx-note cx-note-blue">📝 {p.note}</div>}
+                            <div className="cx-actions">
+                              <button type="button" className="btn btn-outline btn-sm" onClick={() => setSelectedReceipt(p)}>Digital receipt</button>
                             </div>
-                          ))}
-                        </div>
-
-                        <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.5rem' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Online Order Slip</span>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline" 
-                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
-                            onClick={(e) => { e.stopPropagation(); setSelectedOrderForDetails(order); }}
-                          >
-                            View Order Slip
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* In-Store Purchases / Receipts */}
-                  {filteredPurchases.map(purchase => {
-                    const items = JSON.parse(purchase.itemsJSON || '[]');
-                    return (
-                      <div key={`purch-${purchase.id}`} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', background: '#f7f8fa', borderRadius: '8px', border: '1px solid var(--border)', padding: '1rem' }}>
-                        <div className="flex-between" style={{ width: '100%', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                          <div>
-                            <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>{purchase.shopName}</strong>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              {new Date(purchase.date).toLocaleDateString()} at {new Date(purchase.date).toLocaleTimeString()}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <h3 style={{ margin: 0, color: 'var(--success)' }}>₹{(Number(purchase?.total) || 0).toFixed(2)}</h3>
-                            <span className="badge" style={{ fontSize: '0.75rem' }}>{purchase.paymentMethod}</span>
-                          </div>
-                        </div>
-
-                        <div style={{ width: '100%', marginBottom: '0.75rem' }}>
-                          {items.map((c, i) => (
-                            <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                              <span>{c.item?.name || c.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>x {c.qty} {c.item?.unit}</span></span>
-                              <span>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {purchase.note && (
-                          <div style={{ fontSize: '0.8rem', color: '#6366f1', background: '#eef2ff', padding: '0.25rem 0.5rem', borderRadius: '4px', marginBottom: '0.5rem' }}>
-                            📝 Note: "{purchase.note}"
                           </div>
                         )}
-
-                        <div className="flex-between" style={{ width: '100%', borderTop: '1px dashed var(--border)', paddingTop: '0.5rem' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>In-Store Bill #{purchase.id}</span>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline" 
-                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
-                            onClick={() => setSelectedReceipt(purchase)}
-                          >
-                            View Digital Receipt
-                          </button>
-                        </div>
                       </div>
                     );
                   })}
-
-                  {totalFilteredAllOrdersCount === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', background: '#f7f8fa', borderRadius: '8px', border: '1px dashed var(--border)' }}>
-                      <Receipt size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem auto' }} />
-                      <p className="subtitle" style={{ margin: 0 }}>
-                        {ordersDateFilter === 'All' 
-                          ? 'No past orders or purchase receipts recorded yet.' 
-                          : `No orders or receipts found for ${ordersDateFilter === 'Month' ? 'This Month' : ordersDateFilter}.`}
-                      </p>
+                  {totalCount === 0 && (
+                    <div className="cx-empty">
+                      <Receipt size={30} color="var(--text-muted)" />
+                      <p className="cx-empty-sub">{ordersDateFilter === 'All' ? 'No past orders or receipts yet.' : 'Nothing found for this period.'}</p>
                     </div>
                   )}
                 </div>
               </div>
-
             </div>
           );
-        })()}
+          })()}
+          </ErrorBoundary>
+        )}
 
         {/* ORDER DETAILS & DOWNLOAD RECEIPT MODAL */}
         {selectedOrderForDetails && (
@@ -2670,12 +2330,12 @@ export default function Customer() {
                       </tr>
                     </thead>
                     <tbody>
-                      {JSON.parse(selectedOrderForDetails.itemsJSON || '[]').map((entry, idx) => (
+                      {safeItems(selectedOrderForDetails.itemsJSON).map((entry, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid #eff1f4' }}>
                           <td style={{ padding: '0.5rem' }}>{entry.item?.name || entry.name}</td>
                           <td style={{ textAlign: 'center', padding: '0.5rem' }}>{entry.qty} {entry.item?.unit || ''}</td>
                           <td style={{ textAlign: 'right', padding: '0.5rem' }}>₹{entry.rate || entry.item?.price || 0}</td>
-                          <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: '600' }}>₹{(entry.amount || ((entry.rate || entry.price || 0) * entry.qty)).toFixed(2)}</td>
+                          <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: '600' }}>{money(lineAmount(entry))}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -2688,10 +2348,7 @@ export default function Customer() {
                 <div className="flex-between" style={{ fontSize: '1.2rem', fontWeight: '700' }}>
                   <span>Total Payable:</span>
                   <span style={{ color: 'var(--success)' }}>
-                    ₹{((selectedOrderForDetails.estimatedTotal && selectedOrderForDetails.estimatedTotal > 0)
-                      ? selectedOrderForDetails.estimatedTotal
-                      : JSON.parse(selectedOrderForDetails.itemsJSON || '[]').reduce((s, it) => s + (it.amount || (it.rate * it.qty) || ((it.item?.price || 0) * it.qty) || 0), 0)
-                    ).toFixed(2)}
+                    {money(orderTotal(selectedOrderForDetails, safeItems(selectedOrderForDetails.itemsJSON)))}
                   </span>
                 </div>
               </div>
@@ -2862,7 +2519,7 @@ export default function Customer() {
               </div>
 
               <div style={{ marginBottom: '0.75rem' }}>
-                {JSON.parse(selectedReceipt.itemsJSON || '[]').map((c, i) => (
+                {safeItems(selectedReceipt.itemsJSON).map((c, i) => (
                   <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.35rem' }}>
                     <span>{c.item?.name || c.name} ({c.qty} {c.item?.unit})</span>
                     <span>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</span>
