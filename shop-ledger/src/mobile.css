@@ -187,3 +187,45 @@ button.m-row:active { background: #f2f4f7; }
   .mobile-cart-payment-btn.active { border-color: var(--primary); background: var(--primary-tint); }
   .mobile-cart-cta { position: sticky; bottom: 0; width: 100%; min-height: 54px; font-size: 1.05rem; font-weight: 800; border-radius: 16px; margin: 0.5rem 0 calc(0.8rem + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -10px 20px var(--bg-color), 0 8px 20px rgba(15, 122, 67, 0.3); }
 }
+
+/* ==========================================================================
+   Inner screens & sheets (Products, Staff, Settings, Order details)
+   ========================================================================== */
+.m-back-btn { border: 1px solid var(--border-strong); background: #fff; font: inherit; font-weight: 600; font-size: 0.85rem; color: var(--text); padding: 0.4rem 0.85rem; border-radius: 10px; cursor: pointer; }
+
+@media (max-width: 768px) {
+  .m-back-btn { border: 0; background: none; color: var(--primary); font-size: 1rem; padding: 0.3rem 0; min-height: 40px; }
+
+  /* Generic form stacking */
+  .m-form-stack { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0.6rem !important; }
+  .m-form-stack > * { width: 100% !important; min-width: 0 !important; flex: none !important; margin: 0 !important; }
+  .m-form-stack > :first-child, .m-form-stack > button { grid-column: 1 / -1; }
+  .m-form-row { flex-direction: column; max-width: none !important; }
+  .m-form-row > * { width: 100% !important; flex: none !important; }
+  .m-wrap { flex-wrap: wrap; gap: 0.6rem; }
+  .m-wrap .btn { width: 100%; }
+
+  /* Product rows */
+  .prod-row { padding: 0.75rem 0.85rem !important; gap: 0.6rem; border-radius: 14px !important; background: #fff !important; }
+  .prod-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .prod-main .badge { align-self: flex-start; margin-left: 0 !important; }
+  .prod-btn { width: 40px; min-height: 40px !important; padding: 0 !important; border-radius: 12px !important; }
+
+  /* Full-page settings: scrollable tabs, single-column forms */
+  .m-tabs-scroll { display: flex !important; overflow-x: auto; scrollbar-width: none; gap: 0.3rem !important; }
+  .m-tabs-scroll::-webkit-scrollbar { display: none; }
+  .m-tabs-scroll > button { flex: 0 0 auto !important; white-space: nowrap; padding-left: 0.9rem !important; padding-right: 0.9rem !important; }
+  .modal-full [style*="1fr 1fr"] { grid-template-columns: 1fr !important; }
+  .modal-full label { flex-wrap: wrap; row-gap: 2px; }
+  .modal-full .input, .modal-full .select { margin-bottom: 0.6rem; }
+
+  /* Sheets: tidy header rows and spacing */
+  .modal-dialog .flex-between { flex-wrap: wrap; gap: 0.3rem 0.75rem; }
+  .modal-dialog.modal-flush { padding: 0 !important; height: 94dvh !important; max-height: 94dvh !important; overflow: hidden; }
+  .modal-flush .otm-body { padding: 1.4rem 1rem 1.5rem !important; }
+  .otm-head { flex-wrap: nowrap !important; align-items: flex-start !important; }
+  .otm-head-main { min-width: 0; }
+  .otm-titlerow { flex-wrap: wrap; row-gap: 0.3rem; }
+  .otm-titlerow h3 { font-size: 1.25rem !important; white-space: nowrap; }
+  .modal-flush .badge { white-space: nowrap; }
+}

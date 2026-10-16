@@ -14,7 +14,7 @@ export function MobileTopBar({ title, right }) {
         <span className="m-spacer" />
         {right}
       </div>
-      <h1 className="m-title">{title}</h1>
+      {title && <h1 className="m-title">{title}</h1>}
     </header>
   );
 }

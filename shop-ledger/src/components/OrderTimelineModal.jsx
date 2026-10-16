@@ -457,15 +457,15 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
 
   return (
     <div className="modal-overlay" style={{ zIndex: 1200 }}>
-      <div className="panel modal-dialog" style={{ width: '880px', maxWidth: '96vw', height: '92vh', maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', borderRadius: '16px', padding: '0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+      <div className="panel modal-dialog modal-flush" style={{ width: '880px', maxWidth: '96vw', height: '92vh', maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', borderRadius: '16px', padding: '0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
         
         {/* Modal Scrollable Container */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+        <div className="otm-body" style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         
         {/* Header */}
-        <div className="flex-between" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem', marginBottom: '1.25rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
+        <div className="flex-between otm-head" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem', marginBottom: '1.25rem' }}>
+          <div className="otm-head-main">
+            <div className="otm-titlerow" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
               <h3 className="title" style={{ margin: 0, fontSize: '1.2rem' }}>
                 Order #{orderNumber}
               </h3>
@@ -478,7 +478,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-primary m-hide"
               onClick={handleDownloadReceipt}
               style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', padding: '0.45rem 0.85rem' }}
             >

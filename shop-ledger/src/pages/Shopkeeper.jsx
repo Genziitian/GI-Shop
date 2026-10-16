@@ -1060,7 +1060,7 @@ export default function Shopkeeper() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
       {/* Phone app bar */}
       <MobileTopBar
-        title={{ pos: 'Billing', khata: 'Khata', orders: 'Orders', transactions: 'Sales', more: 'Settings', items: 'Products', staff: 'Staff' }[activeTab] || 'GI SHOP'}
+        title={{ pos: 'Billing', khata: 'Khata', orders: 'Orders', transactions: 'Sales', more: 'Settings' }[activeTab] || ''}
         right={<span className="m-chip-id">{currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}</span>}
       />
 
@@ -1821,13 +1821,8 @@ export default function Shopkeeper() {
         {activeTab === 'items' && isOwner && (
           <div>
             <div style={{ marginBottom: '0.75rem' }}>
-              <button 
-                type="button" 
-                className="btn btn-outline" 
-                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', gap: '0.35rem' }} 
-                onClick={() => setActiveTab('more')}
-              >
-                ← Back to More
+              <button type="button" className="m-back-btn" onClick={() => setActiveTab('more')}>
+                ← Back
               </button>
             </div>
 
@@ -1839,7 +1834,7 @@ export default function Shopkeeper() {
 
             {/* Add Item Form with Live Auto-Complete Suggestions */}
             <div className="panel" style={{ marginBottom: '1.25rem' }}>
-              <div className="flex-between" style={{ marginBottom: '0.75rem' }}>
+              <div className="flex-between m-wrap" style={{ marginBottom: '0.75rem' }}>
                 <h3 className="title" style={{ margin: 0, fontSize: '1.15rem' }}>Add Inventory Product</h3>
                 <button
                   type="button"
@@ -1851,7 +1846,7 @@ export default function Shopkeeper() {
                 </button>
               </div>
 
-              <form onSubmit={handleAddItem} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', position: 'relative' }}>
+              <form onSubmit={handleAddItem} className="m-form-stack" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', position: 'relative' }}>
                 
                 {/* Auto-Complete Input */}
                 <div style={{ flex: 1, minWidth: '220px', position: 'relative' }}>
@@ -1989,16 +1984,16 @@ export default function Shopkeeper() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {(items || []).map(item => (
-                  <div key={item.id || item._id} className="list-item" style={{ background: '#f7f8fa', borderRadius: '8px', border: '1px solid var(--border)', padding: '0.65rem 0.85rem' }}>
-                    <div>
+                  <div key={item.id || item._id} className="list-item prod-row" style={{ background: '#f7f8fa', borderRadius: '8px', border: '1px solid var(--border)', padding: '0.65rem 0.85rem' }}>
+                    <div className="prod-main">
                       <strong style={{ fontSize: '0.95rem' }}>{item.name}</strong>
                       <span className="badge" style={{ marginLeft: '0.5rem' }}>₹{(Number(item?.price ?? item?.rate) || 0).toFixed(2)} / {item?.unit || 'unit'}</span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
-                      <button type="button" className="btn btn-outline" style={{ padding: '0.35rem 0.65rem' }} onClick={() => setEditingItem(item)}>
+                      <button type="button" className="btn btn-outline prod-btn" style={{ padding: '0.35rem 0.65rem' }} onClick={() => setEditingItem(item)}>
                         <Edit2 size={14} />
                       </button>
-                      <button type="button" className="btn btn-danger" style={{ padding: '0.35rem 0.65rem' }} onClick={() => handleDeleteItem(item.id || item._id)}>
+                      <button type="button" className="btn btn-danger prod-btn" style={{ padding: '0.35rem 0.65rem' }} onClick={() => handleDeleteItem(item.id || item._id)}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -2010,8 +2005,8 @@ export default function Shopkeeper() {
 
             {/* Edit Item Modal */}
             {editingItem && (
-              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-                <div className="panel" style={{ width: '380px', maxWidth: '100%' }}>
+              <div className="modal-overlay">
+                <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%' }}>
                   <div className="flex-between" style={{ marginBottom: '1rem' }}>
                     <h3 className="title" style={{ margin: 0 }}>Edit Product</h3>
                     <X size={20} style={{ cursor: 'pointer' }} onClick={() => setEditingItem(null)} />
@@ -2045,19 +2040,14 @@ export default function Shopkeeper() {
         {activeTab === 'staff' && isOwner && (
           <div className="panel">
             <div style={{ marginBottom: '0.75rem' }}>
-              <button 
-                type="button" 
-                className="btn btn-outline" 
-                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', gap: '0.35rem' }} 
-                onClick={() => setActiveTab('more')}
-              >
-                ← Back to More
+              <button type="button" className="m-back-btn" onClick={() => setActiveTab('more')}>
+                ← Back
               </button>
             </div>
 
             <h3 className="title">Invite Staff / Cashier</h3>
 
-            <form onSubmit={handleInviteStaff} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', maxWidth: '500px' }}>
+            <form onSubmit={handleInviteStaff} className="m-form-row" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', maxWidth: '500px' }}>
               <input 
                 className="input" 
                 style={{ margin: 0, flex: 1 }} 
@@ -2463,7 +2453,7 @@ export default function Shopkeeper() {
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#eff1f4', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+            <div className="m-tabs-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#eff1f4', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
               <button
                 type="button"
                 onClick={() => setSettingsTab('store')}

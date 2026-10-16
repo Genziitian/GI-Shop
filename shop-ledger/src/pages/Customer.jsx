@@ -1202,8 +1202,8 @@ export default function Customer() {
                   );
                 })}
               {filteredShops.length === 0 && (
-                <div className="panel" style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem 1rem' }}>
-                  <p className="subtitle">No open shops found in {selectedCity}. Try selecting another city above.</p>
+                <div className="cx-empty" style={{ gridColumn: '1 / -1' }}>
+                  <span className="cx-empty-title">No shops found in {selectedCity}</span>
                 </div>
               )}
             </div>
@@ -1213,145 +1213,98 @@ export default function Customer() {
 
         {/* TAB 2: PRICE COMPARISON & SEARCH ITEMS */}
         {activeTab === 'compare' && (
-          <div>
-            <div className="panel" style={{ marginBottom: '1.25rem' }}>
-              <h3 className="title" style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Tag size={18} color="var(--primary)" /> Compare Grocery Prices in {selectedCity}
-              </h3>
-
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  className="input"
-                  style={{ margin: 0, paddingLeft: '2.5rem', background: '#fff', fontSize: '1rem', padding: '0.75rem 2.5rem' }}
-                  placeholder="Search item to compare (e.g. Milk, Rice, Kurkure, Atta, Oil, Sugar)..."
-                  value={compareQuery}
-                  onChange={e => { setCompareQuery(e.target.value); loadCompareData(selectedCity, e.target.value); }}
-                />
-                <Search size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-              </div>
+          <div className="cx-stack">
+            <div className="cmp-search">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder={`Search items in ${selectedCity}`}
+                value={compareQuery}
+                onChange={e => { setCompareQuery(e.target.value); loadCompareData(selectedCity, e.target.value); }}
+              />
             </div>
 
-            {/* Compared Items Grid */}
             {compareLoading ? (
               <ProductGridSkeleton count={6} />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="cx-list">
                 {Object.keys(groupedCompare).map(key => {
-                const group = groupedCompare[key];
-                const sortedOffers = [...group.offers].sort((a, b) => a.price - b.price);
-                const lowestPrice = sortedOffers[0]?.price;
+                  const group = groupedCompare[key];
+                  const sortedOffers = [...group.offers].sort((a, b) => a.price - b.price);
+                  const lowestPrice = sortedOffers[0]?.price;
 
-                return (
-                  <div key={key} className="panel" style={{ border: '1px solid var(--border)' }}>
-                    <div className="flex-between" style={{ marginBottom: '0.75rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
-                      <div>
-                        <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>{group.displayName}</h4>
-                        <span className="badge" style={{ marginTop: '4px' }}>Sold per {group.unit}</span>
+                  return (
+                    <div key={key} className="cx-card cmp-card">
+                      <div className="cmp-head">
+                        <div className="cx-main">
+                          <span className="cx-title">{group.displayName}</span>
+                          <span className="cx-sub">per {group.unit}</span>
+                        </div>
+                        <div className="cmp-best">
+                          <span>Best price</span>
+                          <strong>₹{(Number(lowestPrice) || 0).toFixed(2)}</strong>
+                        </div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Best Available Rate</div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--success)' }}>₹{(Number(lowestPrice) || 0).toFixed(2)}</div>
-                      </div>
-                    </div>
 
-                    {/* Shop Offers for this item */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {sortedOffers.map(offer => {
-                        const isBestPrice = offer.price === lowestPrice && sortedOffers.length > 1;
-                        const inCartQty = orderList[offer.id]?.qty || 0;
+                      <div className="cmp-offers">
+                        {sortedOffers.map(offer => {
+                          const isBestPrice = offer.price === lowestPrice && sortedOffers.length > 1;
+                          const inCartQty = orderList[offer.id]?.qty || 0;
 
-                        return (
-                          <div 
-                            key={offer.id} 
-                            style={{ 
-                              background: '#ffffff', 
-                              border: isBestPrice ? '1px solid #86efac' : '1px solid var(--border)', 
-                              borderRadius: '10px', 
-                              padding: '0.85rem', 
-                              display: 'flex', 
-                              flexDirection: 'column',
-                              gap: '0.6rem'
-                            }}
-                          >
-                            {/* Top row: Store Name & Price */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                              <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                                  <strong style={{ fontSize: '0.95rem', color: 'var(--text)' }}>{offer.shopName}</strong>
-                                  <span className="badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{offer.shopShortId}</span>
-                                  {isBestPrice && (
-                                    <span className="badge" style={{ background: '#dff3e6', color: '#0f7a43', borderColor: '#c4e8d1', fontSize: '0.68rem', padding: '1px 5px' }}>
-                                      🏆 Lowest Price
-                                    </span>
-                                  )}
-                                  <span className="badge" style={{
-                                    background: offer.isOpen ? '#dff3e6' : '#fee2e2',
-                                    color: offer.isOpen ? '#0f7a43' : '#b91c1c',
-                                    fontSize: '0.68rem',
-                                    padding: '1px 5px'
-                                  }}>
-                                    {offer.isOpen ? 'OPEN' : 'CLOSED'}
+                          return (
+                            <div key={offer.id} className={`cmp-offer ${isBestPrice ? 'best' : ''}`}>
+                              <div className="cmp-offer-top">
+                                <div className="cx-main">
+                                  <span className="cmp-shop">
+                                    <span className="cx-title">{offer.shopName}</span>
+                                    <span className={`cx-pill ${offer.isOpen ? 'cx-green' : 'cx-red'}`}>{offer.isOpen ? 'Open' : 'Closed'}</span>
+                                    {isBestPrice && <span className="cx-pill cx-amber">Lowest</span>}
                                   </span>
+                                  <span className="cx-sub">{[offer.shopAddress, offer.timings].filter(Boolean).join(' • ')}</span>
                                 </div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px' }}>
-                                  {offer.shopAddress} • {offer.timings}
+                                <div className="cmp-price">
+                                  <strong>₹{(Number(offer?.price) || 0).toFixed(2)}</strong>
+                                  <span>/{offer.unit}</span>
                                 </div>
                               </div>
 
-                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                <strong style={{ fontSize: '1.2rem', color: isBestPrice ? 'var(--success)' : 'var(--text)' }}>
-                                  ₹{(Number(offer?.price) || 0).toFixed(2)}
-                                </strong>
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>/{offer.unit}</div>
+                              <div className="cmp-actions">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline btn-sm"
+                                  onClick={() => handleOpenShop({ id: offer.shopId, shopName: offer.shopName })}
+                                >
+                                  View shop
+                                </button>
+
+                                {inCartQty > 0 ? (
+                                  <button type="button" className="btn btn-sm" onClick={() => setShowCartModal(true)}>
+                                    <ShoppingCart size={14} /> In cart ({inCartQty})
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm"
+                                    disabled={!offer.isOpen}
+                                    onClick={() => handleAddItemToCart({ id: offer.id, name: offer.name, price: offer.price, unit: offer.unit }, { id: offer.shopId, shopName: offer.shopName })}
+                                  >
+                                    + Add
+                                  </button>
+                                )}
                               </div>
                             </div>
-
-                            {/* Actions Row */}
-                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px dashed #eff1f4', paddingTop: '0.5rem' }}>
-                              <button 
-                                type="button" 
-                                className="btn btn-outline" 
-                                style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem', flex: 1, maxWidth: '160px' }}
-                                onClick={() => handleOpenShop({ id: offer.shopId, shopName: offer.shopName })}
-                              >
-                                Check More Items
-                              </button>
-
-                              {inCartQty > 0 ? (
-                                <button 
-                                  type="button" 
-                                  className="btn" 
-                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', background: '#1f9d5a', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                                  onClick={() => setShowCartModal(true)}
-                                >
-                                  <ShoppingCart size={13} /> In Cart ({inCartQty})
-                                </button>
-                              ) : (
-                                <button 
-                                  type="button" 
-                                  className="btn" 
-                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
-                                  disabled={!offer.isOpen}
-                                  onClick={() => handleAddItemToCart({ id: offer.id, name: offer.name, price: offer.price, unit: offer.unit }, { id: offer.shopId, shopName: offer.shopName })}
-                                >
-                                  + Add
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
+                  );
+                })}
+                {Object.keys(groupedCompare).length === 0 && (
+                  <div className="cx-empty">
+                    <span className="cx-empty-title">No products found</span>
                   </div>
-                );
-              })}
-              {Object.keys(groupedCompare).length === 0 && (
-                <div className="panel" style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                  <p className="subtitle">No products found matching your search in {selectedCity}.</p>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1359,74 +1312,31 @@ export default function Customer() {
         {/* SHOP SHOWCASE & "MAKE A LIST" ORDER CREATOR */}
         {activeTab === 'explore' && activeShop && (
           <div>
-            {/* Shop Header Banner */}
-            <div className="panel" style={{ marginBottom: '1rem' }}>
-              <div className="flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <button type="button" className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setActiveShop(null)}>
-                  ← Back to All Shops
-                </button>
-                <span className="badge" style={{
-                  background: activeShop.isOpen ? '#dff3e6' : '#fee2e2',
-                  color: activeShop.isOpen ? '#0f7a43' : '#b91c1c'
-                }}>
-                  {activeShop.isOpen ? 'OPEN' : 'CLOSED'}
-                </span>
-              </div>
-
-              <h2 className="title" style={{ margin: '0 0 0.25rem 0' }}>{activeShop.shopName}</h2>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                Shop ID: <strong style={{ color: 'var(--primary)' }}>{activeShop.shortId}</strong> • {activeShop.city}
-              </div>
-              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
-                <div><MapPin size={14} style={{ verticalAlign: 'middle' }} /> {activeShop.shopAddress}</div>
-                <div><Clock size={14} style={{ verticalAlign: 'middle' }} /> {activeShop.timings}</div>
-                {activeShop.shopPhone && <div><Phone size={14} style={{ verticalAlign: 'middle' }} /> {activeShop.shopPhone}</div>}
-              </div>
-
-              {/* Instant Contact Action Buttons */}
-              {activeShop.shopPhone && (
-                <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-                  <a 
-                    href={`tel:${activeShop.shopPhone}`}
-                    className="btn" 
-                    style={{ 
-                      background: '#0f7a43', 
-                      color: '#fff', 
-                      padding: '0.45rem 1rem', 
-                      fontSize: '0.85rem', 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      gap: '0.45rem', 
-                      textDecoration: 'none', 
-                      borderRadius: '6px',
-                      fontWeight: '600'
-                    }}
-                  >
-                    <Phone size={15} /> Call Now
-                  </a>
-
-                  <a 
-                    href={`https://wa.me/91${activeShop.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${activeShop.shopName}, I found your shop on GI Shop and would like to ask about grocery items.`)}`}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn" 
-                    style={{ 
-                      background: '#1f9d5a', 
-                      color: '#fff', 
-                      padding: '0.45rem 1rem', 
-                      fontSize: '0.85rem', 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      gap: '0.45rem', 
-                      textDecoration: 'none', 
-                      borderRadius: '6px',
-                      fontWeight: '600'
-                    }}
-                  >
-                    <MessageCircle size={15} /> WhatsApp Us
-                  </a>
+            {/* Shop header */}
+            <div className="shop-head">
+              <button type="button" className="m-back-btn" onClick={() => setActiveShop(null)}>← Shops</button>
+              <div className="shop-head-card">
+                <div className="shop-head-top">
+                  <div className="cx-main">
+                    <span className="shop-name">{activeShop.shopName}</span>
+                    <span className="cx-sub">{[activeShop.shopAddress, activeShop.timings].filter(Boolean).join(' • ')}</span>
+                  </div>
+                  <span className={`cx-pill ${activeShop.isOpen ? 'cx-green' : 'cx-red'}`}>{activeShop.isOpen ? 'Open' : 'Closed'}</span>
                 </div>
-              )}
+                {activeShop.shopPhone && (
+                  <div className="shop-head-actions">
+                    <a href={`tel:${activeShop.shopPhone}`} className="btn btn-sm"><Phone size={15} /> Call</a>
+                    <a
+                      href={`https://wa.me/91${activeShop.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${activeShop.shopName}, I found your shop on GI Shop and would like to ask about grocery items.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-outline btn-sm"
+                    >
+                      <MessageCircle size={15} /> WhatsApp
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
 
             {orderErrorMsg && (
@@ -1445,83 +1355,58 @@ export default function Customer() {
             <div className="grid shop-showcase-grid">
               
               {/* Product Catalog */}
-              <div className="panel">
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div className="shop-catalog">
+                <div className="cmp-search" style={{ marginBottom: '0.75rem' }}>
+                  <Search size={18} />
                   <input
                     type="text"
-                    className="input"
-                    style={{ margin: 0 }}
-                    placeholder="Search items in this shop..."
+                    placeholder="Search items"
                     value={itemSearch}
                     onChange={e => setItemSearch(e.target.value)}
                   />
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div className="item-list">
                   {filteredShopItems.map(item => {
                     const currentEntry = orderList[item.id];
                     const currentQty = currentEntry?.qty || 0;
                     const isAdded = currentQty > 0;
 
                     return (
-                      <div 
-                        key={item.id} 
-                        className="list-item" 
-                        style={{ 
-                          background: isAdded ? '#eef8f1' : '#f7f8fa', 
-                          border: isAdded ? '1px solid #86efac' : '1px solid var(--border)',
-                          borderRadius: '10px', 
-                          padding: '0.85rem 1rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease'
-                        }}
+                      <div
+                        key={item.id}
+                        className={`item-row ${isAdded ? 'added' : ''}`}
                         onClick={() => openItemModal(item, activeShop)}
                       >
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text)' }}>{item.name}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>₹{(Number(item?.price) || 0).toFixed(2)}</strong>
-                            <span>/ {item.unit}</span>
-                          </div>
-
-                          {isAdded && (
-                            <div style={{ marginTop: '0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dff3e6', color: '#0f7a43', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
-                              <CheckCircle size={12} /> In List: {currentQty} {item.unit} (₹{(Number(currentEntry?.amount) || 0).toFixed(2)})
-                            </div>
-                          )}
+                        <div className="item-info">
+                          <div className="item-name">{item.name}</div>
+                          <div className="item-price"><strong>₹{(Number(item?.price) || 0).toFixed(2)}</strong> / {item.unit}</div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={e => e.stopPropagation()}>
-                          {isAdded ? (
-                            <button 
-                              type="button" 
-                              className="btn" 
-                              style={{ background: '#1f9d5a', color: '#fff', padding: '0.4rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '700' }}
-                              onClick={() => openItemModal(item, activeShop)}
-                            >
-                              {currentQty} {item.unit}
-                            </button>
-                          ) : (
-                            <button 
-                              type="button" 
-                              className="btn btn-outline" 
-                              style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', fontWeight: '600', borderRadius: '6px' }}
-                              disabled={!activeShop.isOpen}
-                              onClick={() => openItemModal(item, activeShop)}
-                            >
-                              + Select Qty
-                            </button>
-                          )}
-                        </div>
+                        {isAdded ? (
+                          <span className="item-qty">{currentQty} {item.unit}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="item-add"
+                            aria-label={`Add ${item.name}`}
+                            disabled={!activeShop.isOpen}
+                            onClick={(e) => { e.stopPropagation(); openItemModal(item, activeShop); }}
+                          >
+                            <Plus size={18} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}
-                  {filteredShopItems.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No items found in this shop.</p>}
+                  {filteredShopItems.length === 0 && (
+                    <div className="cx-empty"><span className="cx-empty-title">No items found</span></div>
+                  )}
                 </div>
               </div>
 
               {/* Shopping List / Send Order Box */}
-              <div className="panel" style={{ position: 'sticky', top: '1rem' }}>
+              <div className="panel desktop-only-block" style={{ position: 'sticky', top: '1rem' }}>
                 <div className="flex-between" style={{ marginBottom: '0.75rem' }}>
                   <h3 className="title" style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <ShoppingCart size={18} /> Cart / Order List
@@ -1637,9 +1522,6 @@ export default function Customer() {
                     <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: '#f7f8fa', borderRadius: '12px', border: '1px dashed var(--border)' }}>
                       <BookOpen size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem auto' }} />
                       <h3 style={{ margin: '0 0 0.5rem 0' }}>No Khata Records Found</h3>
-                      <p className="subtitle" style={{ maxWidth: '450px', margin: '0 auto 1.5rem auto' }}>
-                        When local shopkeepers bill your purchases with "Add to Book" or when you place orders, your store credit ledger will appear here.
-                      </p>
                       <button 
                         type="button" 
                         className="btn"

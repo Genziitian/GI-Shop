@@ -122,7 +122,7 @@ export default function CustomerOrdersScreen({ navigation }) {
               });
               break;
             } else if (!prev.paymentRequested && curr.paymentRequested) {
-              const amt = (curr.requestedAmount || curr.estimatedTotal || 0).toFixed(2);
+              const amt = (Number(curr.requestedAmount || curr.estimatedTotal) || 0).toFixed(2);
               setActiveAlert({
                 type: 'PAYMENT',
                 title: 'Payment Requested',
@@ -470,7 +470,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                               {it.item?.name || it.name} x {it.qty} {it.item?.unit || ''} {isUnavail ? '(Unavailable)' : ''}
                             </Text>
                             <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#98a2b3' }]}>
-                              ₹{(it.amount || (it.rate * it.qty) || 0).toFixed(2)}
+                              ₹{(Number(it.amount || (it.rate * it.qty)) || 0).toFixed(2)}
                             </Text>
                           </View>
                         );

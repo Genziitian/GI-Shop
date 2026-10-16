@@ -691,9 +691,6 @@ export default function CustomerLedger({ currentShop }) {
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowAddModal(false)} />
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 0, marginBottom: '1rem' }}>
-              Search customer by <strong>Email ID</strong>, <strong>Short ID</strong> (e.g. <code>ayu32</code>), or <strong>Phone</strong> to assign them to your shop's Khata book.
-            </p>
 
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               <input 
