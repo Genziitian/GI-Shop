@@ -24,5 +24,9 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.3",
     "sqlite3": "^5.1.7"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6",
+    "source-map-js": "^1.2.2"
   }
 }
