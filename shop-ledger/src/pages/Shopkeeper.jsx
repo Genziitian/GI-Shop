@@ -1288,7 +1288,7 @@ export default function Shopkeeper() {
 
                 {(['PENDING', 'PACKING'].includes(order.status)) && (
                   <details className="order-items-details">
-                    <summary>Review items ({items.length}) &amp; mark unavailable</summary>
+                    <summary>Review items ({items.length})</summary>
                 <div className="order-items">
                   <div style={{ fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span>ORDER ITEMS</span>
@@ -1332,10 +1332,7 @@ export default function Shopkeeper() {
                   {order.status === 'PENDING' && (
                     <>
                       <button type="button" className="btn btn-success" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleOpenOrderModal(order, 'ACCEPT')}>
-                        Accept &amp; Set Packing Time
-                      </button>
-                      <button type="button" className="btn btn-danger" style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }} onClick={() => handleOpenOrderModal(order, 'DECLINE')}>
-                        Decline
+                        Accept order
                       </button>
                     </>
                   )}
@@ -4050,6 +4047,7 @@ export default function Shopkeeper() {
         visible={!!selectedTimelineOrder} 
         order={selectedTimelineOrder} 
         viewer="shop"
+        onDecline={(o) => { setSelectedTimelineOrder(null); handleOpenOrderModal(o, 'DECLINE'); }}
         onClose={() => setSelectedTimelineOrder(null)} 
       />
     </div>

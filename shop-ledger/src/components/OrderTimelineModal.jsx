@@ -15,7 +15,7 @@ import {
   User,
 } from 'lucide-react';
 
-export default function OrderTimelineModal({ visible, order, onClose, viewer = 'customer' }) {
+export default function OrderTimelineModal({ visible, order, onClose, viewer = 'customer', onDecline }) {
   const isShopView = viewer === 'shop';
   if (!visible || !order) return null;
 
@@ -506,6 +506,7 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
             </a>
           )}
         </div>
+        </div>
         ) : (
         <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
           {/* Shop Details Card with Contact Number */}
@@ -706,6 +707,11 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
           >
             <Download size={16} /> Receipt
           </button>
+          {isShopView && onDecline && order.status === 'PENDING' && (
+            <button type="button" className="btn btn-outline otm-decline" onClick={() => onDecline(order)}>
+              Decline
+            </button>
+          )}
           <button type="button" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontWeight: '700' }} onClick={onClose}>
             Close
           </button>

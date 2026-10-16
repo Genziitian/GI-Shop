@@ -51,12 +51,15 @@ import {
 } from '../../api/client';
 import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
+import OrderSuccessModal from '../../components/OrderSuccessModal';
 import ProductUnitModal from '../../components/ProductUnitModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import { showErrorAlert } from '../../utils/errorHandler';
 
 export default function CustomerExploreScreen({ navigation, route }) {
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(null);
   const { t } = useTranslation();
   const { user, lock } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -222,29 +225,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
         deliveryAddress: user?.address || 'Customer Profile Address',
       });
 
-      Alert.alert(
-        'Order Placed! 🎉',
-        `Your order of ₹${totalAmount.toFixed(2)} was sent to ${activeCartShop.name}. Track live status under All Orders!`,
-        [
-          {
-            text: 'View Orders',
-            onPress: () => {
-              setOrderList({});
-              setActiveCartShop(null);
-              setShowCartModal(false);
-              navigation.navigate('CustomerOrders');
-            },
-          },
-          {
-            text: 'OK',
-            onPress: () => {
-              setOrderList({});
-              setActiveCartShop(null);
-              setShowCartModal(false);
-            },
-          },
-        ]
-      );
+      setOrderSuccess({ total: totalAmount, shopName: activeCartShop.name });
     } catch (e) {
       showErrorAlert(e, 'Order Submission');
     } finally {
@@ -353,7 +334,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
               <Text style={styles.emptySub}>{t('Try selecting a different city from above.')}</Text>
             </View>
           }
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <FadeInView index={index} style={styles.shopCard}>
               <View style={styles.shopHeaderRow}>
                 <View style={{ flex: 1 }}>
@@ -496,20 +477,49 @@ export default function CustomerExploreScreen({ navigation, route }) {
                   <View style={[styles.catalogInfoRow, { marginTop: 4 }]}>
                     <Clock size={13} color={colors.textMuted} />
                     <Text style={styles.catalogInfoText}>
-                      {activeShop.timings} {activeShop.shopPhone ? `• 📞 ${activeShop.shopPhone}` : ''}
+                      {activeShop.timings}
                     </Text>
                   </View>
                 )}
 
+                {activeShop.shopPhone ? (
+                  <View style={styles.catalogActionRow}>
+                    <TouchableOpacity
+                      style={styles.catalogCallBtn}
+                      activeOpacity={0.85}
+                      onPress={() => Linking.openURL(`tel:${activeShop.shopPhone}`)}
+                    >
+                      <Phone size={16} color="#ffffff" />
+                      <Text style={styles.catalogCallText}>Call Shop</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.catalogWaBtn}
+                      activeOpacity={0.85}
+                      onPress={() =>
+                        Linking.openURL(
+                          `https://wa.me/91${String(activeShop.shopPhone).replace(/\D/g, '')}?text=${encodeURIComponent(
+                            `Hello ${activeShop.shopName}, I found your shop on GI Shop and would like to ask about grocery items.`
+                          )}`
+                        )
+                      }
+                    >
+                      <MessageCircle size={16} color="#1f9d5a" />
+                      <Text style={styles.catalogWaText}>WhatsApp</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+
                 {/* Search Input Box */}
-                <View style={styles.catalogSearchContainer}>
-                  <Search size={16} color={colors.textMuted} />
+                <View style={[styles.catalogSearchContainer, searchFocused && styles.catalogSearchFocused]}>
+                  <Search size={18} color={searchFocused ? colors.primary : colors.textMuted} />
                   <TextInput
                     style={styles.catalogSearchInput}
                     placeholder="Search products in this shop..."
                     placeholderTextColor={colors.textMuted}
                     value={catalogSearch}
                     onChangeText={setCatalogSearch}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
                   />
                   {catalogSearch.length > 0 && (
                     <TouchableOpacity onPress={() => setCatalogSearch('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -682,6 +692,25 @@ export default function CustomerExploreScreen({ navigation, route }) {
           </View>
         </SafeAreaView>
       </Modal>
+
+      <OrderSuccessModal
+        visible={!!orderSuccess}
+        amount={orderSuccess?.total}
+        shopName={orderSuccess?.shopName}
+        onClose={() => {
+          setOrderSuccess(null);
+          setOrderList({});
+          setActiveCartShop(null);
+          setShowCartModal(false);
+        }}
+        onViewOrders={() => {
+          setOrderSuccess(null);
+          setOrderList({});
+          setActiveCartShop(null);
+          setShowCartModal(false);
+          navigation.navigate('CustomerOrders');
+        }}
+      />
 
       {/* SINGLE-SHOP CART CONFLICT MODAL */}
       <Modal visible={!!cartConflict} transparent animationType="fade" onRequestClose={() => setCartConflict(null)}>
@@ -1250,18 +1279,57 @@ const styles = StyleSheet.create({
   catalogSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: '#ffffff',
     borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 10,
-    marginTop: 12,
-    paddingHorizontal: 12,
-    height: 42,
-    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    marginTop: 14,
+    paddingHorizontal: 14,
+    height: 50,
+    gap: 10,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
+  catalogSearchFocused: {
+    borderColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.25,
+  },
+  catalogActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  catalogCallBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+  },
+  catalogCallText: { color: '#ffffff', fontSize: 14, fontWeight: '800' },
+  catalogWaBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#eef8f1',
+    borderWidth: 1,
+    borderColor: '#c4e8d1',
+  },
+  catalogWaText: { color: '#0b5e33', fontSize: 14, fontWeight: '800' },
   catalogSearchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 15,
     color: colors.text,
     paddingVertical: 0,
   },
@@ -1391,35 +1459,46 @@ const styles = StyleSheet.create({
   cartItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eff1f4',
-    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 10,
+    gap: 10,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cartItemName: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.text,
   },
   cartItemRate: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textMuted,
     marginTop: 2,
   },
   cartItemAmount: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.primary,
   },
   cartDeleteBtn: {
-    padding: 6,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: colors.dangerLight,
   },
   cartSummaryBox: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 18,
+    padding: 16,
     marginVertical: 12,
   },
   flexBetween: {
@@ -1433,7 +1512,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   summaryTotal: {
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.success,
   },
@@ -1444,14 +1523,20 @@ const styles = StyleSheet.create({
   },
   sendOrderBtn: {
     backgroundColor: colors.primary,
-    padding: 14,
-    borderRadius: 8,
+    height: 56,
+    justifyContent: 'center',
+    borderRadius: 16,
     alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
   },
   sendOrderBtnText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
   },
   clearCartBtn: {
     padding: 10,

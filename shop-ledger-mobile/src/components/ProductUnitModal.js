@@ -110,7 +110,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={() => {}}>
@@ -118,6 +118,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={styles.modalContent}
             >
+              <View style={styles.handle} />
               {/* Header */}
               <View style={styles.header}>
                 <View style={{ flex: 1 }}>
@@ -135,11 +136,11 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
               {isPiece && (
                 <View style={styles.stepperContainer}>
                   <TouchableOpacity
-                    style={styles.stepperBtn}
+                    style={[styles.stepperBtn, qtyInput <= 1 && { opacity: 0.45 }]}
                     onPress={() => handleQtyChange(Math.max(1, qtyInput - 1))}
                     activeOpacity={0.7}
                   >
-                    <Minus size={24} color={colors.primary} />
+                    <Minus size={24} color="#ffffff" />
                   </TouchableOpacity>
 
                   <View style={styles.stepperValueContainer}>
@@ -152,7 +153,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                     onPress={() => handleQtyChange(qtyInput + 1)}
                     activeOpacity={0.7}
                   >
-                    <Plus size={24} color={colors.primary} />
+                    <Plus size={24} color="#ffffff" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -268,7 +269,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
               <TouchableOpacity style={styles.addBtn} onPress={handleAdd} activeOpacity={0.8}>
                 <Check size={20} color="#fff" style={{ marginRight: 6 }} />
                 <Text style={styles.addBtnText}>
-                  Add ₹{(Number(priceInput) || 0).toFixed(2)} to Cart
+                  Add to Cart  •  ₹{(Number(priceInput) || 0).toFixed(2)}
                 </Text>
               </TouchableOpacity>
             </KeyboardAvoidingView>
@@ -283,16 +284,23 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(16, 24, 40, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    justifyContent: 'flex-end',
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#d0d5dd',
+    marginBottom: 16,
   },
   modalContent: {
     width: '100%',
-    maxWidth: 420,
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 20,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 22,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 26,
     ...shadowLarge,
   },
   header: {
@@ -312,26 +320,29 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius: 20,
     backgroundColor: colors.badgeBg,
   },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 24,
-    gap: 20,
+    marginVertical: 22,
+    gap: 22,
+    alignSelf: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   stepperBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: colors.primaryLight,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.primary,
   },
   stepperValueContainer: {
     alignItems: 'center',
@@ -390,12 +401,17 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     flexDirection: 'row',
-    height: 50,
+    height: 56,
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
   },
   addBtnText: {
     fontSize: 16,
