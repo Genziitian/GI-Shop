@@ -16,7 +16,9 @@ import {
   Easing,
 } from 'react-native';
 import { TouchableOpacity } from '../components/ui/Touchable';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { FadeInView } from '../components/ui/Motion';
+import GoogleLogo from '../components/GoogleLogo';
 import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff, Sparkles, CheckCircle, X } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
@@ -49,11 +51,7 @@ const getGoogleSigninModule = () => {
   return null;
 };
 
-const GoogleIcon = () => (
-  <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-    <Text style={{ fontSize: 18, fontWeight: '800', color: '#4285F4' }}>G</Text>
-  </View>
-);
+const GOOGLE_COLORS = ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
 
 export default function AuthScreen() {
   const { login, loginWithGoogle } = useAuth();
@@ -81,9 +79,29 @@ export default function AuthScreen() {
   const [onboardingShopAddress, setOnboardingShopAddress] = useState('');
   const [onboardingPin, setOnboardingPin] = useState('1234');
 
+  const [focusedField, setFocusedField] = useState(null);
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const googleBarAnim = useRef(new Animated.Value(0)).current;
+  const floatY = floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -7] });
   const screenAnim = useRef(new Animated.Value(0)).current;
   const roleModalAnim = useRef(new Animated.Value(0)).current;
   const formModalAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(floatAnim, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [floatAnim]);
+
+  useEffect(() => {
+    googleBarAnim.setValue(0);
+    Animated.timing(googleBarAnim, { toValue: 1, duration: 900, delay: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [isLogin, googleBarAnim]);
 
   useEffect(() => {
     screenAnim.setValue(0);
@@ -300,127 +318,188 @@ export default function AuthScreen() {
     ],
   };
 
+  const renderHero = (title, accent, subtitle) => (
+    <View style={styles.hero}>
+      <View style={styles.heroBlobA} />
+      <View style={styles.heroBlobB} />
+      <View style={styles.heroBlobC} />
+      <Animated.View style={[styles.logoContainer, { transform: [{ translateY: floatY }] }]}>
+        <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
+      </Animated.View>
+      <FadeInView delay={120}>
+        <Text style={styles.welcomeTitle}>{title} <Text style={styles.welcomeTitleAccent}>{accent}</Text></Text>
+      </FadeInView>
+      <FadeInView delay={220}>
+        <Text style={styles.welcomeSubtitle}>{subtitle}</Text>
+      </FadeInView>
+    </View>
+  );
+
+  const renderGoogleButton = (label) => (
+    <FadeInView delay={300}>
+      <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.8} disabled={loading}>
+        <GoogleLogo size={22} />
+        <Text style={styles.googleBtnText}>{label}</Text>
+        <View style={styles.googleBar}>
+          {GOOGLE_COLORS.map((c, i) => (
+            <Animated.View
+              key={c}
+              style={{
+                flex: 1,
+                backgroundColor: c,
+                transform: [{ scaleX: googleBarAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }],
+              }}
+            />
+          ))}
+        </View>
+      </TouchableOpacity>
+    </FadeInView>
+  );
+
+  const renderFooter = () => (
+    <>
+      <View style={{ flex: 1, minHeight: 28 }} />
+      <View style={styles.footerLinks}>
+        <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}><Text style={styles.footerLinkText}>Privacy Policy</Text></TouchableOpacity>
+        <Text style={styles.footerDot}>•</Text>
+        <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}><Text style={styles.footerLinkText}>Terms & Conditions</Text></TouchableOpacity>
+        <Text style={styles.footerDot}>•</Text>
+        <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
+      </View>
+      <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
+    </>
+  );
+
+  const inputBorder = (key) => (focusedField === key ? styles.inputFocused : null);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar style="light" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
         {isLogin ? (
-          <Animated.ScrollView
+          <ScrollView
             contentContainerStyle={styles.loginScrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            style={screenAnimatedStyle}
+            bounces={false}
           >
-            <View style={[styles.logoContainer, { marginTop: 20 }]}>
-              <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
-            </View>
-            <View style={styles.welcomeHeader}>
-              <Text style={styles.welcomeTitle}>Welcome <Text style={styles.welcomeTitleGreen}>Back!</Text></Text>
-              <Text style={styles.welcomeSubtitle}>Login to continue to GI SHOP</Text>
-            </View>
-            <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
-              <View style={styles.googleIconContainer}>
-                <Text style={styles.googleG}>G</Text>
-              </View>
-              <Text style={styles.googleBtnText}>Continue with Google</Text>
-            </TouchableOpacity>
+            {renderHero('Welcome', 'Back!', 'Login to continue to GI SHOP')}
+            <View style={styles.sheet}>
+              {renderGoogleButton('Continue with Google')}
 
-            {loginStep === 'IDENTIFIER' ? (
-              <>
-                <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} /><Text style={styles.dividerText}>or continue with</Text><View style={styles.dividerLine} />
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email ID or Short ID</Text>
-                  <View style={styles.inputWrapper}>
-                    <TextInput style={styles.input} placeholder="Enter your email or Short ID" placeholderTextColor="#98a2b3" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
-                  <Text style={styles.submitBtnText}>Next</Text>
-                  <ArrowRight size={18} color="#ffffff" />
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <View style={styles.accountPill}>
-                  <View style={styles.accountPillLeft}>
-                    <User size={16} color="#667085" /><Text style={styles.accountPillText}>{email}</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Text style={styles.accountPillChange}>Change</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Password</Text>
-                  <View style={styles.inputWrapper}>
-                    <TextInput style={styles.input} placeholder="Enter your password" placeholderTextColor="#98a2b3" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} autoFocus />
-                    <TouchableOpacity style={styles.inputIcon} onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
-                      {showPassword ? <EyeOff size={18} color="#98a2b3" /> : <Eye size={18} color="#98a2b3" />}
+              {loginStep === 'IDENTIFIER' ? (
+                <>
+                  <FadeInView delay={380}>
+                    <View style={styles.dividerRow}>
+                      <View style={styles.dividerLine} /><Text style={styles.dividerText}>or continue with</Text><View style={styles.dividerLine} />
+                    </View>
+                  </FadeInView>
+                  <FadeInView delay={450}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Email ID or Short ID</Text>
+                      <View style={styles.inputWrapper}>
+                        <View style={styles.inputLeadIcon}><Mail size={18} color={focusedField === 'email' ? '#1f9d5a' : '#98a2b3'} /></View>
+                        <TextInput
+                          style={[styles.input, styles.inputWithLead, inputBorder('email')]}
+                          placeholder="Enter your email or Short ID"
+                          placeholderTextColor="#98a2b3"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          value={email}
+                          onChangeText={setEmail}
+                          onFocus={() => setFocusedField('email')}
+                          onBlur={() => setFocusedField(null)}
+                          onSubmitEditing={handleLogin}
+                          returnKeyType="next"
+                        />
+                      </View>
+                    </View>
+                  </FadeInView>
+                  <FadeInView delay={520}>
+                    <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
+                      <Text style={styles.submitBtnText}>Next</Text>
+                      <ArrowRight size={18} color="#ffffff" />
+                    </TouchableOpacity>
+                  </FadeInView>
+                </>
+              ) : (
+                <FadeInView key="pw" distance={20}>
+                  <View style={styles.accountPill}>
+                    <View style={styles.accountPillLeft}>
+                      <User size={16} color="#667085" /><Text style={styles.accountPillText}>{email}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Text style={styles.accountPillChange}>Change</Text>
                     </TouchableOpacity>
                   </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Password</Text>
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.inputLeadIcon}><Lock size={18} color={focusedField === 'password' ? '#1f9d5a' : '#98a2b3'} /></View>
+                      <TextInput
+                        style={[styles.input, styles.inputWithLead, inputBorder('password')]}
+                        placeholder="Enter your password"
+                        placeholderTextColor="#98a2b3"
+                        secureTextEntry={!showPassword}
+                        value={password}
+                        onChangeText={setPassword}
+                        onFocus={() => setFocusedField('password')}
+                        onBlur={() => setFocusedField(null)}
+                        onSubmitEditing={handleLogin}
+                        autoFocus
+                      />
+                      <TouchableOpacity style={styles.inputIcon} onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
+                        {showPassword ? <EyeOff size={18} color="#98a2b3" /> : <Eye size={18} color="#98a2b3" />}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
+                    <Text style={styles.submitBtnText}>Login</Text>
+                    <ArrowRight size={18} color="#ffffff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.backToEmailBtn} onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }}>
+                    <Text style={styles.backToEmailText}>← Back to email</Text>
+                  </TouchableOpacity>
+                </FadeInView>
+              )}
+
+              <FadeInView delay={600}>
+                <View style={styles.toggleRow}>
+                  <Text style={styles.toggleText}>Don't have an account? </Text>
+                  <TouchableOpacity onPress={() => { setIsLogin(false); setLoginStep('IDENTIFIER'); }}>
+                    <Text style={styles.toggleLink}>Sign Up</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
-                  <Text style={styles.submitBtnText}>Login</Text>
-                  <ArrowRight size={18} color="#ffffff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.backToEmailBtn} onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }}>
-                  <Text style={styles.backToEmailText}>← Back to email</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            <View style={styles.toggleRow}>
-              <Text style={styles.toggleText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => { setIsLogin(false); setLoginStep('IDENTIFIER'); }}>
-                <Text style={styles.toggleLink}>Sign Up</Text>
-              </TouchableOpacity>
+              </FadeInView>
+              {renderFooter()}
             </View>
-            <View style={{ flex: 1, minHeight: 40 }} />
-            <View style={styles.footerLinks}>
-              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}><Text style={styles.footerLinkText}>Privacy Policy</Text></TouchableOpacity>
-              <Text style={styles.footerDot}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}><Text style={styles.footerLinkText}>Terms & Conditions</Text></TouchableOpacity>
-              <Text style={styles.footerDot}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
-            </View>
-            <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
-          </Animated.ScrollView>
+          </ScrollView>
         ) : (
-          <Animated.ScrollView contentContainerStyle={styles.loginScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" style={screenAnimatedStyle}>
-            <View style={[styles.logoContainer, { marginTop: 20 }]}>
-              <Image source={require('../../assets/icon.png')} style={styles.logoImage} />
+          <ScrollView contentContainerStyle={styles.loginScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" bounces={false}>
+            {renderHero('Create', 'Account', 'Sign up & verify securely with Google')}
+            <View style={styles.sheet}>
+              {renderGoogleButton(loading ? 'Verifying with Google...' : 'Sign Up with Google')}
+              <FadeInView delay={400}>
+                <View style={styles.googleInfoBox}>
+                  <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>Instant 1-tap Google identity verification</Text></View>
+                  <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>New users choose Customer or Shopkeeper after Google</Text></View>
+                  <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>Only the needed setup details are asked next</Text></View>
+                </View>
+              </FadeInView>
+              <FadeInView delay={500}>
+                <View style={styles.toggleRow}>
+                  <Text style={styles.toggleText}>Already have an account? </Text>
+                  <TouchableOpacity onPress={() => { setIsLogin(true); setLoginStep('IDENTIFIER'); }}>
+                    <Text style={styles.toggleLink}>Sign In</Text>
+                  </TouchableOpacity>
+                </View>
+              </FadeInView>
+              {renderFooter()}
             </View>
-            <View style={styles.welcomeHeader}>
-              <Text style={styles.welcomeTitle}>Create <Text style={styles.welcomeTitleGreen}>Account</Text></Text>
-              <Text style={styles.welcomeSubtitle}>Sign up & verify securely with Google</Text>
-            </View>
-            <TouchableOpacity style={[styles.googleBtn, { borderColor: '#1f9d5a', borderWidth: 2, height: 56 }]} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
-              <View style={styles.googleIconContainer}><Text style={styles.googleG}>G</Text></View>
-              <Text style={[styles.googleBtnText, { fontSize: 16, fontWeight: '800' }]}>{loading ? 'Verifying with Google...' : 'Sign Up with Google'}</Text>
-            </TouchableOpacity>
-            <View style={styles.googleInfoBox}>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>Instant 1-tap Google identity verification</Text></View>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>New users choose Customer or Shopkeeper after Google</Text></View>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>Only the needed setup details are asked next</Text></View>
-            </View>
-            <View style={styles.toggleRow}>
-              <Text style={styles.toggleText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => { setIsLogin(true); setLoginStep('IDENTIFIER'); }}>
-                <Text style={styles.toggleLink}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={{ flex: 1, minHeight: 40 }} />
-            <View style={styles.footerLinks}>
-              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/privacy')}><Text style={styles.footerLinkText}>Privacy Policy</Text></TouchableOpacity>
-              <Text style={styles.footerDot}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL('https://gi-shop.web.app/terms')}><Text style={styles.footerLinkText}>Terms & Conditions</Text></TouchableOpacity>
-              <Text style={styles.footerDot}>•</Text>
-              <TouchableOpacity onPress={() => Linking.openURL('mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query')}><Text style={[styles.footerLinkText, { fontWeight: '600' }]}>Contact Us</Text></TouchableOpacity>
-            </View>
-            <Text style={styles.footerCopyright}>© 2026 GI SHOP • Apni Dukaan, Apna Hisab. All Rights Reserved.</Text>
-          </Animated.ScrollView>
+          </ScrollView>
         )}
       </KeyboardAvoidingView>
 
@@ -522,7 +601,7 @@ export default function AuthScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -531,70 +610,90 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  // ---- Login View Styles (matching web screenshot) ----
+  // ---- Login View Styles ----
   loginScrollContent: {
     flexGrow: 1,
-    padding: 24,
-    paddingTop: 8,
+    backgroundColor: '#0f7a43',
   },
-  topBarLogin: {
-    flexDirection: 'row',
+  hero: {
+    backgroundColor: '#0f7a43',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 24,
+    paddingTop: Platform.OS === 'ios' ? 72 : 56,
+    paddingBottom: 64,
+    paddingHorizontal: 24,
+    overflow: 'hidden',
+  },
+  heroBlobA: { position: 'absolute', top: -70, right: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: '#0b5e33', opacity: 0.6 },
+  heroBlobB: { position: 'absolute', bottom: -40, left: -50, width: 160, height: 160, borderRadius: 80, backgroundColor: '#1f9d5a', opacity: 0.55 },
+  heroBlobC: { position: 'absolute', top: 70, left: 28, width: 18, height: 18, borderRadius: 9, backgroundColor: '#f2a516', opacity: 0.9 },
+  sheet: {
+    flexGrow: 1,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -32,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 16,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
   },
   logoImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
+    width: 84,
+    height: 84,
+    borderRadius: 22,
     resizeMode: 'contain',
-    borderWidth: 1,
-    borderColor: '#e4e7ec',
-  },
-  welcomeHeader: {
-    alignItems: 'center',
-    marginBottom: 28,
+    backgroundColor: '#ffffff',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.9)',
   },
   welcomeTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '900',
-    color: '#101828',
+    color: '#ffffff',
     letterSpacing: -0.5,
+    textAlign: 'center',
     marginBottom: 6,
   },
-  welcomeTitleGreen: {
-    color: '#1f9d5a',
+  welcomeTitleAccent: {
+    color: '#f2a516',
   },
   welcomeSubtitle: {
     fontSize: 15,
-    color: '#667085',
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
   },
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 52,
-    borderRadius: 12,
+    height: 54,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: '#e4e7ec',
     backgroundColor: '#ffffff',
-    marginBottom: 20,
     gap: 12,
+    overflow: 'hidden',
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  googleIconContainer: {
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleG: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#4285F4',
+  googleBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 3,
+    flexDirection: 'row',
   },
   googleBtnText: {
     fontSize: 15,
@@ -604,7 +703,7 @@ const styles = StyleSheet.create({
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 22,
   },
   dividerLine: {
     flex: 1,
@@ -813,8 +912,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   input: {
-    height: 48,
-    borderRadius: 10,
+    height: 52,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e4e7ec',
     backgroundColor: '#ffffff',
@@ -826,7 +925,21 @@ const styles = StyleSheet.create({
   inputIcon: {
     position: 'absolute',
     right: 14,
-    top: 14,
+    top: 15,
+  },
+  inputLeadIcon: {
+    position: 'absolute',
+    left: 14,
+    top: 15,
+    zIndex: 1,
+  },
+  inputWithLead: {
+    paddingLeft: 44,
+  },
+  inputFocused: {
+    borderColor: '#1f9d5a',
+    borderWidth: 1.5,
+    backgroundColor: '#f6fcf8',
   },
   submitBtn: {
     flexDirection: 'row',

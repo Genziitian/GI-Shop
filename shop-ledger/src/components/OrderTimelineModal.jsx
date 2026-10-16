@@ -490,8 +490,8 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
         </div>
 
         {isShopView ? (
-        {/* Customer card (shop owner view) */}
         <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
+          {/* Customer card (shop owner view) */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '180px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '800' }}>
@@ -510,8 +510,8 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
         </div>
 
         ) : (
-        {/* Shop Details Card with Contact Number */}
         <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
+          {/* Shop Details Card with Contact Number */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '220px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '800' }}>
@@ -676,8 +676,8 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
         </div>
 
         {!isShopView && (
-        {/* Customer Pickup Details Card at the Very End */}
         <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '12px', padding: '0.85rem 1rem', marginTop: '1.5rem' }}>
+          {/* Customer Pickup Details Card at the Very End */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0f7a43', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.5rem' }}>
             <User size={15} /> PICKUP CUSTOMER DETAILS
           </div>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, ActivityIndicator, Image, StyleSheet } from 'react-native';
-import { FadeInView, Pulse } from '../components/ui/Motion';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import AnimatedSplash from '../components/AnimatedSplash';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import AuthScreen from '../screens/AuthScreen';
@@ -12,19 +12,23 @@ const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
   const { user, token, isLoading, isLocked } = useAuth();
+  const [minTimeDone, setMinTimeDone] = useState(false);
+  const [splashGone, setSplashGone] = useState(false);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color="#1f9d5a" />
-          <Text style={styles.loadingTitle}>Opening GI SHOP</Text>
-          <Text style={styles.loadingSubtitle}>Getting your account ready...</Text>
-          <ActivityIndicator size="small" color="#0f7a43" style={{ marginTop: 14 }} />
-        </FadeInView>
-      </View>
-    );
-  }
+  // Keep the splash up long enough for the intro animation to play.
+  useEffect(() => {
+    const t = setTimeout(() => setMinTimeDone(true), 2400);
+    return () => clearTimeout(t);
+  }, []);
+
+  const splashVisible = isLoading || !minTimeDone;
+
+  useEffect(() => {
+    if (!splashVisible) {
+      const t = setTimeout(() => setSplashGone(true), 450);
+      return () => clearTimeout(t);
+    }
+  }, [splashVisible]);
 
   // Lock feature disabled from UI per user preference (code preserved for future use)
   // if (token && user && isLocked) {
@@ -32,6 +36,8 @@ export default function RootNavigator() {
   // }
 
   return (
+    <View style={{ flex: 1 }}>
+    {!isLoading && (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#f2f4f7' } }}>
       {!token || !user ? (
         <Stack.Screen name="Auth" component={AuthScreen} />
@@ -41,6 +47,9 @@ export default function RootNavigator() {
         <Stack.Screen name="CustomerFlow" component={CustomerNavigator} />
       )}
     </Stack.Navigator>
+    )}
+    {!splashGone && <AnimatedSplash visible={splashVisible} />}
+    </View>
   );
 }
 

@@ -177,6 +177,19 @@ The project is pre-configured with `app.json` and `eas.json` for Android Google 
 
 If you prefer building locally without EAS cloud:
 
+The checked-in Android project requires Android API 24 or newer and uses NDK
+`28.2.13676358` (r28c), configured through `android.ndkVersion` in
+`android/gradle.properties`. Install that NDK version through Android Studio's
+SDK Manager. A complete installation includes `meta/platforms.json` and
+`build/cmake/android.toolchain.cmake`; a directory with only `source.properties`
+is incomplete and can cause misleading CMake/Prefab minimum API errors.
+Keep minimum API settings in the Android project rather than editing Expo's
+files in `node_modules` or passing `ANDROID_PLATFORM` manually.
+
+For an emulator debug build, start Metro with `npm run expo -- --localhost`, then
+run `./gradlew installDebug` from `android/`. The existing native project can be
+built directly without regenerating it.
+
 1. **Generate Native Android Project:**
    ```bash
    npx expo prebuild --platform android
