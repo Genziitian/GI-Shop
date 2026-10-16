@@ -32,7 +32,7 @@ export default function RootNavigator() {
   // }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#faf7f0' } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#ecebe4' } }}>
       {!token || !user ? (
         <Stack.Screen name="Auth" component={AuthScreen} />
       ) : user.role === 'Shopkeeper' ? (
@@ -47,7 +47,7 @@ export default function RootNavigator() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#ecebe4',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

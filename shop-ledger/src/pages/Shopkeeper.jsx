@@ -1254,8 +1254,8 @@ export default function Shopkeeper() {
             const isOlderThan24h = (nowMs - new Date(order.createdAt).getTime()) >= twentyFourHoursMs;
 
             return (
-              <div key={order.id} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '10px', padding: '1.15rem' }}>
-                <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div key={order.id} className="order-card">
+                <div className="order-head">
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <strong style={{ fontSize: '1.05rem' }}>Order #{order.orderNumber}</strong>
@@ -1270,11 +1270,11 @@ export default function Shopkeeper() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div className="order-head-actions">
                     <button
                       type="button"
-                      className="btn btn-outline"
-                      style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', fontWeight: '700', background: '#fff' }}
+                      className="btn btn-outline btn-sm"
+                      style={{}}
                       onClick={() => setSelectedTimelineOrder(order)}
                     >
                       Order Details
@@ -1313,8 +1313,8 @@ export default function Shopkeeper() {
                   </div>
                 )}
 
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+                <div className="order-items">
+                  <div style={{ fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span>ORDER ITEMS</span>
                     <span>{(['PENDING', 'PACKING'].includes(order.status)) ? 'Click to toggle item availability' : ''}</span>
                   </div>
@@ -1444,24 +1444,24 @@ export default function Shopkeeper() {
           };
 
           return (
-            <div className="panel">
-              <div className="flex-between" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div className="page-flat">
+              <div className="page-head">
                 <div>
-                  <h3 className="title" style={{ margin: 0 }}>Incoming Customer Orders</h3>
+                  <h3 className="title page-title">Incoming Customer Orders</h3>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     {activeOrders.length} active live orders • {pastOrders.length} past orders
                   </div>
                 </div>
 
                 {/* Search Bar */}
-                <div style={{ position: 'relative', minWidth: '240px' }}>
+                <div className="page-search">
                   <input
                     type="text"
                     className="input"
                     placeholder="Search order #, customer, phone..."
                     value={orderSearch}
                     onChange={(e) => setOrderSearch(e.target.value)}
-                    style={{ margin: 0, padding: '0.4rem 2rem 0.4rem 0.75rem', fontSize: '0.84rem' }}
+                    style={{ margin: 0, paddingRight: '2rem' }}
                   />
                   {orderSearch && (
                     <button
@@ -1476,7 +1476,7 @@ export default function Shopkeeper() {
               </div>
 
               {/* Date & Status Filter Dropdowns in Same Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div className="filter-grid">
                 <div style={{ position: 'relative' }}>
                   <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Date Filter
@@ -1485,8 +1485,8 @@ export default function Shopkeeper() {
                     <select
                       value={orderDateFilter}
                       onChange={(e) => setOrderDateFilter(e.target.value)}
-                      className="input-field"
-                      style={{ paddingLeft: '2rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', width: '100%', borderRadius: '10px' }}
+                      className="input select-field"
+                      style={{ paddingLeft: '2.1rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer', fontWeight: '700' }}
                     >
                       <option value="All">All Dates</option>
                       <option value="Today">Today</option>
@@ -1506,8 +1506,8 @@ export default function Shopkeeper() {
                     <select
                       value={orderStatusFilter}
                       onChange={(e) => setOrderStatusFilter(e.target.value)}
-                      className="input-field"
-                      style={{ paddingLeft: '2rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', width: '100%', borderRadius: '10px' }}
+                      className="input select-field"
+                      style={{ paddingLeft: '2.1rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer', fontWeight: '700' }}
                     >
                       <option value="All">All Status</option>
                       <option value="Pending">Pending</option>
@@ -1525,7 +1525,7 @@ export default function Shopkeeper() {
               {/* SECTION 1: ACTIVE ORDERS (<24H) */}
               {orderDateFilter !== 'Older (>24h)' && (
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
+                  <div className="flex-between section-head">
                     <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#12201a' }}>
                       Active Orders (&lt;24h)
                     </h4>

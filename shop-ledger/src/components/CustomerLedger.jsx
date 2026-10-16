@@ -518,8 +518,8 @@ export default function CustomerLedger({ currentShop }) {
   return (
     <div className="panel">
       {/* Search & Filter Header */}
-      <div className="flex-between" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+      <div className="toolbar">
+        <div className="toolbar-search">
           <input
             type="text"
             className="input"
@@ -531,7 +531,7 @@ export default function CustomerLedger({ currentShop }) {
           <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
         </div>
 
-        <select className="select" style={{ width: '150px', margin: 0 }} value={filter} onChange={e => setFilter(e.target.value)}>
+        <select className="select toolbar-select" style={{ margin: 0 }} value={filter} onChange={e => setFilter(e.target.value)}>
           <option value="All">All Customers</option>
           <option value="Highest">Highest Due</option>
           <option value="Lowest">Lowest Due</option>
@@ -540,8 +540,7 @@ export default function CustomerLedger({ currentShop }) {
 
         <button 
           type="button" 
-          className="btn" 
-          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.85rem' }}
+          className="btn toolbar-action"
           onClick={() => setShowAddModal(true)}
         >
           <UserCheck size={16} /> Assign Customer by Email / Short ID
@@ -554,55 +553,39 @@ export default function CustomerLedger({ currentShop }) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {displayedCustomers.map(customer => (
-          <div 
-            key={customer.id || customer.phone} 
-            className="list-item" 
-            style={{ background: '#faf7f0', borderRadius: '8px', cursor: 'pointer', border: '1px solid var(--border)' }} 
+          <div
+            key={customer.id || customer.phone}
+            className="khata-card"
             onClick={() => handleOpenLedger(customer)}
           >
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>
-                {customer.name}
-                {customer.shortId && <span style={{ color: 'var(--primary)', fontSize: '0.8rem', marginLeft: '0.35rem' }}>({customer.shortId})</span>}
-                {customer.isBlocked === 1 && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', marginLeft: '0.4rem' }}>Blocked</span>}
+            <div className="khata-avatar" aria-hidden="true">{(customer.name || '?').trim().charAt(0).toUpperCase()}</div>
+
+            <div className="khata-main">
+              <div className="khata-name">
+                <span className="khata-name-text">{customer.name}</span>
+                {customer.shortId && <span className="khata-shortid">{customer.shortId}</span>}
+                {customer.isBlocked === 1 && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c' }}>Blocked</span>}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{customer.phone}</div>
+              <div className="khata-phone">{customer.phone}</div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Due</div>
-                <div style={{ fontWeight: '700', fontSize: '1.05rem', color: customer.totalDue > 0 ? 'var(--danger)' : 'var(--success)' }}>
-                  ₹{customer.totalDue.toFixed(2)}
-                </div>
-              </div>
-
-              {customer.totalDue > 0 && (
-                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                  <button 
-                    type="button" 
-                    className="btn" 
-                    style={{ 
-                      background: '#25D366', 
-                      borderColor: '#25D366', 
-                      color: '#ffffff', 
-                      padding: '0.35rem 0.65rem', 
-                      fontSize: '0.8rem', 
-                      fontWeight: '700',
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.3rem' 
-                    }} 
-                    onClick={(e) => handleRemindPayment(e, customer)}
-                  >
-                    <MessageCircle size={14} /> Remind
-                  </button>
-                  <button type="button" className="btn btn-success" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }} onClick={(e) => handleOpenSettle(e, customer)}>
-                    Settle
-                  </button>
-                </div>
-              )}
+            <div className="khata-due">
+              <span className="khata-due-label">Total Due</span>
+              <span className="khata-due-amount" style={{ color: customer.totalDue > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                ₹{customer.totalDue.toFixed(2)}
+              </span>
             </div>
+
+            {customer.totalDue > 0 && (
+              <div className="khata-actions">
+                <button type="button" className="btn btn-whatsapp" onClick={(e) => handleRemindPayment(e, customer)}>
+                  <MessageCircle size={14} /> Remind
+                </button>
+                <button type="button" className="btn btn-success" onClick={(e) => handleOpenSettle(e, customer)}>
+                  Settle
+                </button>
+              </div>
+            )}
           </div>
         ))}
         {displayedCustomers.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No matching customers found.</p>}

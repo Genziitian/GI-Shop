@@ -21,11 +21,11 @@ export const colors = {
   infoLight: '#e0f2fe',
 
   // Surfaces
-  background: '#faf7f0',    // warm cream canvas
+  background: '#ecebe4',    // page canvas (cards are white on top of it)
   surface: '#ffffff',
   card: '#ffffff',
-  border: '#e8e1d0',
-  borderDark: '#d5ccb6',
+  border: '#e0dccf',
+  borderDark: '#cdc8b8',
   badgeBg: '#f3eee2',
 
   // Text
