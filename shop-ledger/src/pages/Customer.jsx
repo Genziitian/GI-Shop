@@ -7,6 +7,7 @@ import {
   cancelCustomerOrder, updateOrderCollection
 } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
+import { MobileTopBar, MGroup, MRow, MSegment } from '../components/MobileKit';
 import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { 
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
@@ -1004,8 +1005,14 @@ export default function Customer() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
-      {/* Top Header */}
-      <div className="nav-bar" style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
+      {/* Phone app bar */}
+      <MobileTopBar
+        title={{ explore: 'Explore', compare: 'Compare', khata: 'My Khata', orders: 'Orders', more: 'Account' }[activeTab] || 'GI SHOP'}
+        right={currentUser?.shortId ? <span className="m-chip-id">{currentUser.shortId}</span> : null}
+      />
+
+      {/* Desktop Top Header */}
+      <div className="nav-bar desktop-only-flex" style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
           <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f7a43', letterSpacing: '-0.02em' }}>GI SHOP</span>
@@ -3630,7 +3637,42 @@ export default function Customer() {
 
         {/* TAB 5: MORE (Profile, Security, Export & Session) */}
         {activeTab === 'more' && (
-          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1rem', marginBottom: '2rem' }}>
+          <>
+          <div className="m-only">
+            <MGroup>
+              <div className="m-profile">
+                <div className="m-profile-avatar"><User size={26} /></div>
+                <div className="m-profile-info">
+                  <div className="m-profile-name">{currentUser?.name || 'My Account'}</div>
+                  <div className="m-profile-sub">{currentUser?.shortId}{currentUser?.phone ? ` • ${currentUser.phone}` : ''}</div>
+                </div>
+                <button type="button" className="btn btn-outline btn-sm" onClick={handleOpenProfileModal}>Edit</button>
+              </div>
+            </MGroup>
+
+            <MGroup label="Language">
+              <div className="m-row m-row-seg">
+                <MSegment
+                  value={language}
+                  onChange={setLanguage}
+                  options={[{ value: 'en', label: 'English' }, { value: 'hi', label: 'हिंदी' }]}
+                />
+              </div>
+            </MGroup>
+
+            <MGroup label="Security & legal">
+              <MRow icon={<UserCheck size={18} />} tint="green" title="Profile & password" onClick={handleOpenProfileModal} />
+              <MRow icon={<ShieldCheck size={18} />} tint="green" title="Privacy policy" onClick={() => navigate('/privacy')} />
+              <MRow icon={<FileText size={18} />} tint="blue" title="Terms & conditions" onClick={() => navigate('/terms')} />
+            </MGroup>
+
+            <MGroup>
+              <MRow icon={<Trash2 size={18} />} tint="red" title="Account deletion request" onClick={() => navigate('/delete')} danger />
+              <MRow icon={<LogOut size={18} />} tint="red" title="Log out" onClick={handleLogout} danger chevron={false} />
+            </MGroup>
+          </div>
+
+          <div className="panel desktop-only-block" style={{ background: '#fff', borderRadius: '16px', padding: '1rem', marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>Account &amp; Settings</h2>
@@ -3779,6 +3821,7 @@ export default function Customer() {
               </button>
             </div>
           </div>
+          </>
         )}
 
         {/* SMART QUANTITY & UNIT SELECTOR MODAL (Shopkeeper POS Experience for Customer) */}

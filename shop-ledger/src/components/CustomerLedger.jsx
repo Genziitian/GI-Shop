@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MHero } from './MobileKit';
 import { getCustomers, getCustomerLedger, saveSettlement, terminateCustomer, blockCustomer, unblockCustomer, getMyDetailedShop, searchRegisteredCustomer, saveCustomer } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
 import { ArrowLeft, Search, Plus, Ban, CheckCircle, ShieldAlert, X, MessageCircle, UserCheck, Receipt, Printer } from 'lucide-react';
@@ -548,6 +549,16 @@ export default function CustomerLedger({ currentShop }) {
 
   return (
     <div className="panel">
+      {/* Phone: total-to-collect hero */}
+      <div className="m-only">
+        <MHero
+          tone="red"
+          label="Total to collect"
+          value={`₹${customers.reduce((sum, c) => sum + (Number(c.totalDue) > 0 ? Number(c.totalDue) : 0), 0).toFixed(2)}`}
+          meta={`${customers.filter(c => Number(c.totalDue) > 0).length} customers with dues`}
+        />
+      </div>
+
       {/* Search & Filter Header */}
       <div className="toolbar">
         <div className="toolbar-search">
@@ -622,6 +633,10 @@ export default function CustomerLedger({ currentShop }) {
         {displayedCustomers.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No matching customers found.</p>}
       </div>
       )}
+
+      <button type="button" className="m-only m-fab" aria-label="Assign customer" onClick={() => setShowAddModal(true)}>
+        <UserCheck size={24} />
+      </button>
 
       {/* Assign Registered App Customer Modal */}
       {showAddModal && (

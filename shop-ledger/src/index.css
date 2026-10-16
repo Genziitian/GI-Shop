@@ -1561,3 +1561,27 @@ img, video, canvas { max-width: 100%; }
   .modal-dialog.modal-full > * { padding-left: 0.85rem; padding-right: 0.85rem; }
   .modal-dialog.modal-full > .flex-between { padding: 0.75rem 0.85rem !important; }
 }
+
+/* Order cards v3 — compact, scannable, grid on wide screens */
+.order-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 1rem; align-items: start; }
+.order-card { display: flex; flex-direction: column; gap: 0.85rem; padding: 1rem; }
+.order-top { display: flex; align-items: center; gap: 0.75rem; }
+.order-avatar { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; background: var(--primary-tint); color: var(--primary-hover); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+.order-who { flex: 1 1 auto; min-width: 0; }
+.order-name { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; font-size: 1rem; min-width: 0; }
+.order-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.order-chip { font-size: 0.68rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 999px; background: #f0ece0; color: var(--text-muted); }
+.order-status { flex: 0 0 auto; max-width: 46%; white-space: normal; text-align: center; line-height: 1.2; font-size: 0.68rem !important; letter-spacing: 0.02em; }
+.order-facts { display: grid; grid-template-columns: 1.3fr 1fr 0.9fr; gap: 0.5rem; background: #f7f5ee; border: 1px solid var(--border); border-radius: 12px; padding: 0.7rem 0.8rem; }
+.order-fact { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.order-fact span { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+.order-fact strong { font-size: 0.86rem; font-weight: 700; }
+.order-fact-total { text-align: right; align-items: flex-end; }
+.order-fact-total strong { font-size: 1.1rem; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.order-foot { display: flex; }
+.order-foot .btn { width: 100%; }
+@media (max-width: 480px) {
+  .order-facts { grid-template-columns: 1fr 1fr; }
+  .order-fact-total { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; text-align: left; border-top: 1px dashed var(--border); padding-top: 0.5rem; }
+}

@@ -23,6 +23,7 @@ import CustomerLedger from '../components/CustomerLedger';
 import OrderTimelineModal from '../components/OrderTimelineModal';
 import logoImg from '../assets/logo.png';
 import { CountUp } from '../components/Motion';
+import { MobileTopBar, MGroup, MRow, MSegment, MChips } from '../components/MobileKit';
 
 export default function Shopkeeper() {
   const navigate = useNavigate();
@@ -1056,22 +1057,11 @@ export default function Shopkeeper() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
-      {/* Mobile App Header (Matches Native App Image 1) */}
-      <div className="mobile-app-header">
-        <div className="mobile-app-header-left">
-          <img src={logoImg} alt="GI SHOP" className="mobile-app-header-logo" />
-          <div style={{ minWidth: 0 }}>
-            <div className="mobile-app-header-title">GI SHOP</div>
-            <div className="mobile-app-header-subtitle">
-              Point of Sale &amp; Smart Billing
-            </div>
-          </div>
-        </div>
-
-        <div className="mobile-app-header-badge">
-          Shop ID: {currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}
-        </div>
-      </div>
+      {/* Phone app bar */}
+      <MobileTopBar
+        title={{ pos: 'Billing', khata: 'Khata', orders: 'Orders', transactions: 'Sales', more: 'Settings', items: 'Products', staff: 'Staff' }[activeTab] || 'GI SHOP'}
+        right={<span className="m-chip-id">{currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}</span>}
+      />
 
       {/* Desktop Header */}
       <div className="nav-bar desktop-only">
@@ -1255,33 +1245,19 @@ export default function Shopkeeper() {
 
             return (
               <div key={order.id} className="order-card">
-                <div className="order-head">
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <strong style={{ fontSize: '1.05rem' }}>Order #{order.orderNumber}</strong>
-                      {isOlderThan24h && (
-                        <span className="badge" style={{ background: '#f3eee2', color: '#666c60', fontSize: '0.72rem', fontWeight: '700' }}>
-                          Past 24h
-                        </span>
-                      )}
+                <div className="order-top">
+                  <div className="order-avatar" aria-hidden="true">{(order.customerName || '?').trim().charAt(0).toUpperCase()}</div>
+                  <div className="order-who">
+                    <div className="order-name">
+                      <span className="order-name-text">{order.customerName}</span>
+                      {order.customerShortId && <span className="khata-shortid">{order.customerShortId}</span>}
                     </div>
-                    <div className="order-meta">
-                      <strong>{order.customerName}</strong>
-                      <span className="order-meta-dim"> ({order.customerShortId || '—'}) • {order.customerPhone}</span>
+                    <div className="order-sub">
+                      {order.customerPhone} • Order #{order.orderNumber}
+                      {isOlderThan24h && <span className="order-chip">Past 24h</span>}
                     </div>
-                    <div className="order-meta-dim">{new Date(order.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
                   </div>
-
-                  <div className="order-head-actions">
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-sm"
-                      style={{}}
-                      onClick={() => setSelectedTimelineOrder(order)}
-                    >
-                      Order Details
-                    </button>
-                    <span className="badge" style={{
+                  <span className="badge order-status" style={{
                       background: order.status === 'PENDING' ? '#e9f6ee' 
                         : (order.status === 'PACKING' ? '#fdf0cf' 
                         : (order.status === 'READY' ? '#e0f2fe' 
@@ -1306,6 +1282,20 @@ export default function Shopkeeper() {
                       {order.status === 'AUTO_CANCELLED_EXPIRED' && 'AUTO-CANCELLED (45m EXPIRED)'}
                       {order.status === 'DECLINED' && `DECLINED (${order.declineReason || 'Unavailable'})`}
                     </span>
+                </div>
+
+                <div className="order-facts">
+                  <div className="order-fact">
+                    <span>Date</span>
+                    <strong>{new Date(order.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</strong>
+                  </div>
+                  <div className="order-fact">
+                    <span>Payment</span>
+                    <strong>{order.paymentRequested ? (order.paymentMethod || 'Cash') : 'Not requested'}</strong>
+                  </div>
+                  <div className="order-fact order-fact-total">
+                    <span>Total</span>
+                    <strong>₹{(Number(order.estimatedTotal || 0)).toFixed(2)}</strong>
                   </div>
                 </div>
 
@@ -1314,11 +1304,6 @@ export default function Shopkeeper() {
                     This order was automatically cancelled because 45 minutes elapsed without acceptance.
                   </div>
                 )}
-
-                <div className="order-total-row">
-                  <span>Total</span>
-                  <strong>₹{(Number(order.estimatedTotal || 0)).toFixed(2)}</strong>
-                </div>
 
                 {(['PENDING', 'PACKING'].includes(order.status)) && (
                   <details className="order-items-details">
@@ -1360,6 +1345,10 @@ export default function Shopkeeper() {
                     </div>
                   </details>
                 )}
+
+                <div className="order-foot">
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => setSelectedTimelineOrder(order)}>View Details</button>
+                </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   {order.status === 'PENDING' && (
@@ -1453,7 +1442,7 @@ export default function Shopkeeper() {
             <div className="page-flat">
               <div className="page-head">
                 <div>
-                  <h3 className="title page-title">Incoming Customer Orders</h3>
+                  <h3 className="title page-title m-hide">Incoming Customer Orders</h3>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     {activeOrders.length} active live orders • {pastOrders.length} past orders
                   </div>
@@ -1482,7 +1471,19 @@ export default function Shopkeeper() {
               </div>
 
               {/* Date & Status Filter Dropdowns in Same Row */}
-              <div className="filter-grid">
+              <div className="m-only">
+                <MChips
+                  value={orderStatusFilter}
+                  onChange={setOrderStatusFilter}
+                  options={['All', 'Pending', 'Packing', 'Ready', 'Completed', 'Cancelled'].map(v => ({ value: v, label: v === 'All' ? 'All orders' : v }))}
+                />
+                <MChips
+                  value={orderDateFilter}
+                  onChange={setOrderDateFilter}
+                  options={[{ value: 'All', label: 'Any date' }, { value: 'Today', label: 'Today' }, { value: 'Yesterday', label: 'Yesterday' }, { value: 'Older (>24h)', label: 'Older' }]}
+                />
+              </div>
+              <div className="filter-grid m-hide">
                 <div style={{ position: 'relative' }}>
                   <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Date Filter
@@ -1545,7 +1546,7 @@ export default function Shopkeeper() {
                       No active orders under 24 hours.
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <div className="order-grid">
                       {activeOrders.map(o => renderSingleOrder(o, false))}
                     </div>
                   )}
@@ -1573,7 +1574,7 @@ export default function Shopkeeper() {
                     No past orders matching filters.
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <div className="order-grid">
                     {pastOrders.map(o => renderSingleOrder(o, true))}
                   </div>
                 )}
@@ -2146,7 +2147,64 @@ export default function Shopkeeper() {
 
         {/* TAB 7: MORE (Store Profile, Security PIN, Legal & Account) */}
         {activeTab === 'more' && (
-          <div className="panel" style={{ background: '#fff', borderRadius: '16px', padding: '1rem', marginBottom: '2rem' }}>
+          <>
+          <div className="m-only">
+            <MGroup>
+              <div className="m-profile">
+                <div className="m-profile-avatar"><Store size={26} /></div>
+                <div className="m-profile-info">
+                  <div className="m-profile-name">{currentShop?.shopName || 'My Shop'}</div>
+                  <div className="m-profile-sub">{currentShop?.shortId}{currentShop?.city ? ` • ${currentShop.city}` : ''}</div>
+                </div>
+                <button type="button" className="btn btn-outline btn-sm" onClick={handleOpenShopDetails}>Edit</button>
+              </div>
+              <MRow
+                icon={<Store size={18} />}
+                tint={isOpen ? 'green' : 'red'}
+                title="Store status"
+                value={isOpen ? 'Open for customers' : 'Closed'}
+                onClick={handleToggleStatus}
+                chevron={false}
+              >
+                <span className={`m-switch ${isOpen ? 'on' : ''}`} aria-hidden="true"><i /></span>
+              </MRow>
+            </MGroup>
+
+            {isOwner && (
+              <MGroup label="Manage">
+                <MRow icon={<Plus size={18} />} title="Items & Products" value={`${items.length} items`} onClick={() => setActiveTab('items')} />
+                <MRow icon={<UserPlus size={18} />} tint="blue" title="Staff & Cashiers" value={`${staffList.length} members`} onClick={() => setActiveTab('staff')} />
+              </MGroup>
+            )}
+
+            <MGroup label="Store details">
+              <MRow icon={<Phone size={18} />} tint="grey" title="Phone" value={currentShop?.shopPhone || currentUser?.phone || 'N/A'} />
+              <MRow icon={<Clock size={18} />} tint="grey" title="Timings" value={currentShop?.timings || '08:00 AM - 10:00 PM'} />
+            </MGroup>
+
+            <MGroup label="Language">
+              <div className="m-row m-row-seg">
+                <MSegment
+                  value={language}
+                  onChange={setLanguage}
+                  options={[{ value: 'en', label: 'English' }, { value: 'hi', label: 'हिंदी' }]}
+                />
+              </div>
+            </MGroup>
+
+            <MGroup label="Security & legal">
+              <MRow icon={<Key size={18} />} tint="amber" title="Change password" onClick={handleOpenShopDetails} />
+              <MRow icon={<ShieldCheck size={18} />} tint="green" title="Privacy policy" onClick={() => navigate('/privacy')} />
+              <MRow icon={<FileText size={18} />} tint="blue" title="Terms & conditions" onClick={() => navigate('/terms')} />
+            </MGroup>
+
+            <MGroup>
+              <MRow icon={<Trash2 size={18} />} tint="red" title="Account deletion request" onClick={() => navigate('/delete')} danger />
+              <MRow icon={<LogOut size={18} />} tint="red" title="Log out" onClick={handleLogout} danger chevron={false} />
+            </MGroup>
+          </div>
+
+          <div className="panel desktop-only-block" style={{ background: '#fff', borderRadius: '16px', padding: '1rem', marginBottom: '2rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations &amp; Settings</h2>
@@ -2365,6 +2423,7 @@ export default function Shopkeeper() {
               </button>
             </div>
           </div>
+          </>
         )}
       </div>
 
