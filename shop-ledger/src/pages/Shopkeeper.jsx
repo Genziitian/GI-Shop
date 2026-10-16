@@ -1153,7 +1153,7 @@ export default function Shopkeeper() {
             title={language === 'en' ? 'हिंदी में बदलें (Switch to Hindi)' : 'Switch to English'}
           >
             <Globe size={15} color="var(--primary)" />
-            <span>{language === 'en' ? '🇮🇳 हिंदी' : '🇬🇧 English'}</span>
+            <span className="nav-label">{language === 'en' ? '🇮🇳 हिंदी' : '🇬🇧 English'}</span>
           </button>
 
           {/* Settings Button */}
@@ -1163,11 +1163,11 @@ export default function Shopkeeper() {
             onClick={handleOpenShopDetails} 
             style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            <Settings size={16} /> {t('more.title', 'Settings')}
+            <Settings size={16} /> <span className="nav-label">{t('more.title', 'Settings')}</span>
           </button>
 
           <button type="button" className="btn btn-outline" onClick={handleLogout} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
-            <LogOut size={16} /> {t('common.logout', 'Logout')}
+            <LogOut size={16} /> <span className="nav-label">{t('common.logout', 'Logout')}</span>
           </button>
         </div>
       </div>
@@ -2567,7 +2567,7 @@ export default function Shopkeeper() {
                 )}
 
                 <form onSubmit={handleSaveShopDetails} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                  <div className="m-form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                     <div>
                       <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>Store Name</label>
                       <input 
@@ -2592,7 +2592,7 @@ export default function Shopkeeper() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>City / Region</label>
                         <span style={{ fontSize: '0.72rem', color: '#98a2b3', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <Lock size={11} /> Locked (SuperAdmin only)
+                          <Lock size={11} /> Locked
                         </span>
                       </div>
                       <input 
@@ -2602,9 +2602,6 @@ export default function Shopkeeper() {
                         disabled 
                         style={{ background: '#f7f8fa', color: '#667085', cursor: 'not-allowed', marginBottom: '2px' }}
                       />
-                      <span style={{ fontSize: '0.72rem', color: '#98a2b3', display: 'block' }}>
-                        Store city is locked to protect records. Contact SuperAdmin to request a transfer.
-                      </span>
                     </div>
                   </div>
 
@@ -2623,7 +2620,7 @@ export default function Shopkeeper() {
                     <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>Operating Timings</label>
                     
                     {/* 2 Time Pickers (Opens At & Closes At) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <div className="m-keep2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
                       <div>
                         <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Opens At (From)
@@ -2665,7 +2662,7 @@ export default function Shopkeeper() {
 
                     {/* Quick Presets */}
                     {isOwner && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.45rem' }}>
+                      <div className="m-preset-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.45rem' }}>
                         {[
                           { label: '8 AM - 10 PM', open: '08:00', close: '22:00' },
                           { label: '9 AM - 9 PM', open: '09:00', close: '21:00' },
@@ -2702,20 +2699,21 @@ export default function Shopkeeper() {
                     </div>
                   </div>
 
-                  <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+                  <div className="m-hide" style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
                     <div>Total Active Inventory: <strong>{detailedShop?.totalItemsCount || items.length} products</strong></div>
                     <div>Active Staff Enrolled: <strong>{detailedShop?.totalStaffCount || staffList.length} cashiers</strong></div>
                   </div>
 
-                  <div className="flex-between" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div className="flex-between m-savebar" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <a 
+                      className="m-hide"
                       href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20Request" 
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                     >
                       <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
                     </a>
                     
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="m-savebar-btns" style={{ display: 'flex', gap: '0.5rem' }}>
                       <button type="button" className="btn btn-outline" onClick={() => setShowShopDetailsModal(false)}>
                         Close
                       </button>
@@ -4051,6 +4049,7 @@ export default function Shopkeeper() {
       <OrderTimelineModal 
         visible={!!selectedTimelineOrder} 
         order={selectedTimelineOrder} 
+        viewer="shop"
         onClose={() => setSelectedTimelineOrder(null)} 
       />
     </div>

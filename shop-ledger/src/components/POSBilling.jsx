@@ -411,7 +411,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
             <input 
               type="text"
               className="pos-mobile-customer-input"
-              placeholder="Customer phone or name (optional)"
+              placeholder="Customer phone or name"
               value={selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.phone || selectedCustomer.customerPhone})` : searchCustomer}
               onChange={e => {
                 setSearchCustomer(e.target.value);

@@ -5,7 +5,7 @@ import logoImg from '../assets/logo.png';
 // Phone-only building blocks. Hidden on desktop by .m-only (see mobile.css).
 
 // Large-title app bar: small brand row + big screen title.
-export function MobileTopBar({ title, right }) {
+export function MobileTopBar({ right }) {
   return (
     <header className="m-only m-topbar">
       <div className="m-topbar-row">
@@ -14,7 +14,6 @@ export function MobileTopBar({ title, right }) {
         <span className="m-spacer" />
         {right}
       </div>
-      {title && <h1 className="m-title">{title}</h1>}
     </header>
   );
 }

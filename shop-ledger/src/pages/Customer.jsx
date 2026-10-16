@@ -1539,107 +1539,62 @@ export default function Customer() {
               // 2. SPECIFIC STORE KHATA & TRANSACTION STATEMENT
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
-                {/* Back Button and Store Header Banner */}
-                <div className="panel" style={{ padding: '1.25rem' }}>
-                  <button 
-                    type="button" 
-                    className="btn btn-outline" 
-                    style={{ marginBottom: '1rem', padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-                    onClick={() => setSelectedKhataStore(null)}
-                  >
-                    ← Back to All Stores Khata
-                  </button>
+                {/* Store header */}
+                <div className="skh">
+                  <button type="button" className="m-back-btn" onClick={() => setSelectedKhataStore(null)}>← Stores</button>
 
-                  <div className="flex-between" style={{ flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{selectedKhataStore.shopName}</h2>
-                        <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)', fontWeight: '700' }}>
-                          ID: {selectedKhataStore.shortId || `shp${selectedKhataStore.shopId || selectedKhataStore.id}`}
-                        </span>
-                        <span className="badge" style={{ background: selectedKhataStore.isOpen ? '#dff3e6' : '#fee2e2', color: selectedKhataStore.isOpen ? '#0f7a43' : '#b91c1c' }}>
-                          {selectedKhataStore.isOpen ? 'Open' : 'Closed'}
-                        </span>
+                  <div className="skh-card">
+                    <div className="skh-top">
+                      <div className="cx-main">
+                        <span className="shop-name">{selectedKhataStore.shopName}</span>
+                        <span className="cx-sub">{selectedKhataStore.shopAddress ? `${selectedKhataStore.shopAddress}, ${selectedKhataStore.city}` : selectedKhataStore.city}</span>
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        {selectedKhataStore.shopAddress ? `${selectedKhataStore.shopAddress}, ${selectedKhataStore.city}` : selectedKhataStore.city}
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
-                        <button 
-                          type="button" 
-                          className="btn" 
-                          style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', background: 'var(--primary)' }}
-                          onClick={() => handleStartNewOrderFromStore(selectedKhataStore)}
-                        >
-                          <Plus size={15} /> New Order +
-                        </button>
-                        {selectedKhataStore.shopPhone && (
-                          <a 
-                            href={`tel:${selectedKhataStore.shopPhone}`}
-                            className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                          >
-                            <Phone size={15} /> Call Now
-                          </a>
-                        )}
-                        {selectedKhataStore.shopPhone && (
-                          <a 
-                            href={`https://wa.me/91${selectedKhataStore.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${selectedKhataStore.shopName}, I am reviewing my khata ledger.`)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none', color: '#1f9d5a', borderColor: '#c4e8d1', background: '#eef8f1', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                          >
-                            <MessageCircle size={15} /> WhatsApp
-                          </a>
-                        )}
-                      </div>
+                      <span className={`cx-pill ${selectedKhataStore.isOpen ? 'cx-green' : 'cx-red'}`}>{selectedKhataStore.isOpen ? 'Open' : 'Closed'}</span>
                     </div>
 
-                    {/* Due metric */}
-                    <div style={{ background: '#f7f8fa', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border)', textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Amount Due to Pay</div>
-                      <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', color: (storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '900' }}>
+                    <div className="skh-due">
+                      <span className="skh-due-label">Amount due</span>
+                      <strong style={{ color: (storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)' }}>
                         ₹{(Number(storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue) || 0).toFixed(2)}
-                      </h2>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Credit Taken: ₹{(Number(storeKhataDetails?.totalBook ?? selectedKhataStore?.totalBook) || 0).toFixed(2)} • Paid: ₹{(Number(storeKhataDetails?.totalPaid ?? selectedKhataStore?.totalPaid) || 0).toFixed(2)}
-                      </div>
+                      </strong>
+                      <span className="skh-due-meta">Credit ₹{(Number(storeKhataDetails?.totalBook ?? selectedKhataStore?.totalBook) || 0).toFixed(2)} · Paid ₹{(Number(storeKhataDetails?.totalPaid ?? selectedKhataStore?.totalPaid) || 0).toFixed(2)}</span>
                     </div>
-                  </div>
 
-                  <div style={{ background: '#eff1f4', borderRadius: '6px', padding: '0.5rem 0.75rem', marginTop: '1rem', fontSize: '0.8rem', color: '#475467', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <ShieldCheck size={16} color="var(--primary)" />
-                    <span><strong>Synchronized Store Khata:</strong> All entries are certified by the store. Customer cannot edit ledger records.</span>
+                    <div className="skh-actions">
+                      <button type="button" className="btn btn-sm" onClick={() => handleStartNewOrderFromStore(selectedKhataStore)}>
+                        <Plus size={15} /> New order
+                      </button>
+                      {selectedKhataStore.shopPhone && (
+                        <a href={`tel:${selectedKhataStore.shopPhone}`} className="btn btn-outline btn-sm">
+                          <Phone size={15} /> Call
+                        </a>
+                      )}
+                      {selectedKhataStore.shopPhone && (
+                        <a
+                          href={`https://wa.me/91${selectedKhataStore.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${selectedKhataStore.shopName}, I am reviewing my khata ledger.`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-outline btn-sm skh-wa"
+                        >
+                          <MessageCircle size={15} /> Chat
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Filters for Store Transaction History */}
-                <div className="panel">
-                  <div className="flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <h3 className="title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Receipt size={20} color="var(--primary)" /> Order &amp; Transaction History
-                    </h3>
-                  </div>
+                <div className="th-wrap">
 
-                  {/* Filter Pills */}
-                  <div className="filter-pills-scroll" style={{ marginBottom: '1rem' }}>
+                  <div className="cx-chips">
                     {['All', 'Today', 'Yesterday', 'Month', 'Custom'].map(f => (
                       <button
                         key={f}
                         type="button"
-                        className={`btn ${storeKhataFilter === f ? '' : 'btn-outline'}`}
-                        style={{ 
-                          padding: '0.35rem 0.75rem', 
-                          fontSize: '0.8rem', 
-                          borderRadius: '6px',
-                          fontWeight: storeKhataFilter === f ? '700' : '500',
-                          whiteSpace: 'nowrap'
-                        }}
+                        className={`cx-chip ${storeKhataFilter === f ? 'on' : ''}`}
                         onClick={() => setStoreKhataFilter(f)}
                       >
-                        {f === 'Month' ? 'This Month' : f}
+                        {f === 'Month' ? 'This month' : f}
                       </button>
                     ))}
                   </div>
@@ -1720,89 +1675,55 @@ export default function Customer() {
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                         {timeline.map((entry, idx) => {
+                          const when = `${new Date(entry.date).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })} · ${new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
                           if (entry.type === 'PURCHASE') {
                             const items = safeItems(entry.itemsJSON);
                             const isKhataMethod = entry.paymentMethod === 'Add to Book';
                             return (
-                              <div key={`timeline-purch-${entry.id}-${idx}`} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
-                                <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                  <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                      <strong style={{ fontSize: '0.95rem' }}>In-Store Purchase #{entry.id}</strong>
-                                      <span className="badge" style={{ fontSize: '0.75rem', background: isKhataMethod ? '#fee2e2' : '#dff3e6', color: isKhataMethod ? '#b91c1c' : '#0f7a43', fontWeight: '700' }}>
-                                        {isKhataMethod ? 'Added to Khata (Due)' : `Paid (${entry.paymentMethod})`}
-                                      </span>
-                                    </div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                      {new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString()} {entry.billedBy ? `• Billed by: ${entry.billedBy}` : ''}
-                                    </div>
+                              <div key={`timeline-purch-${entry.id}-${idx}`} className="th-card">
+                                <div className="th-top">
+                                  <div className="th-title">
+                                    <strong>Bill #{entry.id}</strong>
+                                    <span className={`cx-pill ${isKhataMethod ? 'cx-red' : 'cx-green'}`}>{isKhataMethod ? 'On credit' : `Paid · ${entry.paymentMethod}`}</span>
                                   </div>
-
-                                  <div style={{ textAlign: 'right' }}>
-                                    <h3 style={{ margin: 0, color: isKhataMethod ? 'var(--danger)' : 'var(--success)' }}>
-                                      {isKhataMethod ? `+₹${(Number(entry?.total) || 0).toFixed(2)} Due` : `₹${(Number(entry?.total) || 0).toFixed(2)}`}
-                                    </h3>
+                                  <div className="th-amt" style={{ color: isKhataMethod ? 'var(--danger)' : 'var(--ink)' }}>
+                                    {isKhataMethod ? '+' : ''}₹{(Number(entry?.total) || 0).toFixed(2)}
                                   </div>
                                 </div>
+                                <div className="th-sub">{when}{entry.billedBy ? ` · ${entry.billedBy}` : ''}</div>
 
-                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
+                                <details className="th-items">
+                                  <summary>{items.length} {items.length === 1 ? 'item' : 'items'}</summary>
                                   {items.map((c, i) => (
-                                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
-                                      <span>{c.item?.name || c.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>x {c.qty} {c.item?.unit}</span></span>
-                                      <span>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</span>
+                                    <div key={i} className="th-line">
+                                      <span>{c.item?.name || c.name} <em>× {c.qty} {c.item?.unit}</em></span>
+                                      <b>₹{(Number((c.rate || c.item?.price || 0) * c.qty) || 0).toFixed(2)}</b>
                                     </div>
                                   ))}
-                                </div>
+                                </details>
 
-                                {entry.note && (
-                                  <div style={{ fontSize: '0.8rem', color: '#6366f1', background: '#eef2ff', padding: '0.25rem 0.5rem', borderRadius: '4px', marginBottom: '0.5rem' }}>
-                                    📝 Note: "{entry.note}"
-                                  </div>
-                                )}
+                                {entry.note && <div className="cx-note cx-note-blue">{entry.note}</div>}
 
-                                <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.4rem' }}>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Store Verified Bill</span>
-                                  <button 
-                                    type="button" 
-                                    className="btn btn-outline" 
-                                    style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
-                                    onClick={() => setSelectedReceipt({ ...entry, shopName: selectedKhataStore.shopName })}
-                                  >
-                                    View Digital Receipt
-                                  </button>
-                                </div>
+                                <button type="button" className="th-link" onClick={() => setSelectedReceipt({ ...entry, shopName: selectedKhataStore.shopName })}>
+                                  View receipt →
+                                </button>
                               </div>
                             );
                           }
 
                           if (entry.type === 'SETTLEMENT') {
                             return (
-                              <div key={`timeline-settle-${entry.id}-${idx}`} style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '1rem' }}>
-                                <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
-                                  <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                      <CheckCircle size={16} color="#1f9d5a" />
-                                      <strong style={{ fontSize: '0.95rem', color: '#0f7a43' }}>Payment Settlement Received</strong>
-                                      <span className="badge" style={{ fontSize: '0.75rem', background: '#dff3e6', color: '#0f7a43', fontWeight: '700' }}>
-                                        {entry.method}
-                                      </span>
-                                    </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#0b5e33' }}>
-                                      {new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString()}
-                                    </div>
+                              <div key={`timeline-settle-${entry.id}-${idx}`} className="th-card th-settle">
+                                <div className="th-top">
+                                  <div className="th-title">
+                                    <strong>Payment received</strong>
+                                    <span className="cx-pill cx-green">{entry.method}</span>
                                   </div>
-
-                                  <div style={{ textAlign: 'right' }}>
-                                    <h3 style={{ margin: 0, color: '#0f7a43', fontWeight: '800' }}>-₹{(Number(entry?.amount) || 0).toFixed(2)}</h3>
-                                    <span style={{ fontSize: '0.75rem', color: '#0b5e33' }}>Paid / Cleared</span>
-                                  </div>
+                                  <div className="th-amt" style={{ color: '#067647' }}>−₹{(Number(entry?.amount) || 0).toFixed(2)}</div>
                                 </div>
-
-                                {entry.note && (
-                                  <div style={{ fontSize: '0.8rem', color: '#0f7a43', marginTop: '0.4rem' }}>
-                                    📝 Note: "{entry.note}"
-                                  </div>
-                                )}
+                                <div className="th-sub">{when}</div>
+                                {entry.note && <div className="cx-note cx-note-blue">{entry.note}</div>}
                               </div>
                             );
                           }
@@ -1810,49 +1731,35 @@ export default function Customer() {
                           if (entry.type === 'ORDER') {
                             const items = safeItems(entry.itemsJSON);
                             return (
-                              <div key={`timeline-order-${entry.id}-${idx}`} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
-                                <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                  <div>
-                                    <strong style={{ fontSize: '0.95rem' }}>Online Order #{entry.orderNumber}</strong>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                      {new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString()}
-                                    </div>
+                              <div key={`timeline-order-${entry.id}-${idx}`} className="th-card">
+                                <div className="th-top">
+                                  <div className="th-title">
+                                    <strong>Order #{entry.orderNumber}</strong>
+                                    <span className="cx-pill cx-blue">{entry.status}</span>
                                   </div>
-
-                                  <div style={{ textAlign: 'right' }}>
-                                    <h3 style={{ margin: 0, color: 'var(--primary)' }}>
-                                      ₹{(Number(
-                                        (entry.estimatedTotal && entry.estimatedTotal > 0)
-                                          ? entry.estimatedTotal
-                                          : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)
-                                      ) || 0).toFixed(2)}
-                                    </h3>
-                                    <span className="badge" style={{ fontSize: '0.75rem', background: '#e9f6ee', color: 'var(--primary)' }}>
-                                      {entry.status}
-                                    </span>
+                                  <div className="th-amt">
+                                    ₹{(Number(
+                                      (entry.estimatedTotal && entry.estimatedTotal > 0)
+                                        ? entry.estimatedTotal
+                                        : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)
+                                    ) || 0).toFixed(2)}
                                   </div>
                                 </div>
+                                <div className="th-sub">{when}</div>
 
-                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
+                                <details className="th-items">
+                                  <summary>{items.length} {items.length === 1 ? 'item' : 'items'}</summary>
                                   {items.map((it, i) => (
-                                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
-                                      <span>{it.item?.name || it.name} x {it.qty}</span>
-                                      <span>₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}</span>
+                                    <div key={i} className="th-line">
+                                      <span>{it.item?.name || it.name} <em>× {it.qty}</em></span>
+                                      <b>₹{(Number(it.amount || ((it.rate || it.price) * it.qty)) || 0).toFixed(2)}</b>
                                     </div>
                                   ))}
-                                </div>
+                                </details>
 
-                                <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.4rem' }}>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Online Grocery Request</span>
-                                  <button 
-                                    type="button" 
-                                    className="btn btn-outline" 
-                                    style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
-                                    onClick={() => setSelectedOrderForDetails({ ...entry, shopName: selectedKhataStore.shopName })}
-                                  >
-                                    View Order Slip
-                                  </button>
-                                </div>
+                                <button type="button" className="th-link" onClick={() => setSelectedOrderForDetails({ ...entry, shopName: selectedKhataStore.shopName })}>
+                                  View order slip →
+                                </button>
                               </div>
                             );
                           }
@@ -1861,14 +1768,7 @@ export default function Customer() {
                         })}
 
                         {timeline.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '2rem', background: '#f7f8fa', borderRadius: '8px', border: '1px dashed var(--border)' }}>
-                            <Receipt size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem auto' }} />
-                            <p className="subtitle" style={{ margin: 0 }}>
-                              {storeKhataFilter === 'All' 
-                                ? 'No order or transaction records recorded for this shop yet.' 
-                                : `No transaction records found for ${storeKhataFilter === 'Month' ? 'This Month' : storeKhataFilter}.`}
-                            </p>
-                          </div>
+                          <div className="cx-empty"><span className="cx-empty-title">No records</span></div>
                         )}
                       </div>
                     );
@@ -2429,8 +2329,8 @@ export default function Customer() {
 
         {/* CUSTOMER ACCOUNT, SECURITY & DATA EXPORT MODAL */}
         {showProfileModal && (
-          <div className="modal-overlay">
-            <div className="panel modal-dialog" style={{ width: '860px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.75rem', borderRadius: '22px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+          <div className="modal-overlay modal-fullpage">
+            <div className="panel modal-dialog modal-full">
               
               {/* Modal Header */}
               <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem' }}>
@@ -2439,17 +2339,15 @@ export default function Customer() {
                     <User size={24} />
                   </div>
                   <div>
-                    <h3 className="title" style={{ margin: 0, fontSize: '1.3rem' }}>Customer Account & Settings</h3>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                      Customer ID: <strong style={{ color: 'var(--primary)' }}>{currentUser?.shortId}</strong> • Name: <strong>{currentUser?.name}</strong>
-                    </div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--ink)' }}>{currentUser?.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>{currentUser?.shortId}</div>
                   </div>
                 </div>
                 <X size={22} style={{ cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => setShowProfileModal(false)} />
               </div>
 
               {/* Tab Navigation */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#eff1f4', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+              <div className="m-tabs-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#eff1f4', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
                 <button
                   type="button"
                   onClick={() => setCustomerSettingsTab('profile')}

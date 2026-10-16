@@ -229,3 +229,49 @@ button.m-row:active { background: #f2f4f7; }
   .otm-titlerow h3 { font-size: 1.25rem !important; white-space: nowrap; }
   .modal-flush .badge { white-space: nowrap; }
 }
+
+/* Order details: status + date on one row */
+.otm-meta { display: flex; align-items: center; gap: 0.6rem; min-width: 0; flex-wrap: nowrap; }
+.otm-meta .badge { flex: 0 0 auto; white-space: nowrap; }
+.otm-date { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* No big screen titles on phones — the tab bar already says where you are */
+.m-title { display: none; }
+.m-topbar { padding-bottom: 0.6rem; }
+.pos-mobile-customer-input-row > div { flex: 1; min-width: 0; }
+.pos-mobile-customer-input { width: 100%; min-width: 0; box-sizing: border-box; }
+
+/* Khata: search + filter share one row */
+@media (max-width: 768px) {
+  .toolbar { flex-direction: row !important; align-items: center !important; flex-wrap: nowrap !important; gap: 0.5rem !important; }
+  .toolbar-search { flex: 1 1 auto !important; width: auto !important; min-width: 0; }
+  .toolbar-select { flex: 0 0 auto !important; width: 122px !important; min-width: 0 !important; padding-left: 0.7rem !important; padding-right: 1.6rem !important; font-size: 0.88rem !important; font-weight: 600; }
+}
+
+/* Khata actions: calm, tonal buttons instead of loud solid blocks */
+.khata-actions .btn, .m-cust-actions .btn { min-height: 38px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; box-shadow: none; padding: 0.4rem 0.9rem; }
+.khata-actions .btn-whatsapp, .m-cust-actions .btn-whatsapp { background: #ecfdf3; color: #067647; border: 1px solid #abefc6; }
+.khata-actions .btn-whatsapp:hover, .m-cust-actions .btn-whatsapp:hover { background: #d1fadf; filter: none; }
+.khata-actions .btn-success, .m-cust-actions .btn-success { background: #101828; color: #fff; border: 1px solid #101828; }
+.khata-actions .btn-success:hover, .m-cust-actions .btn-success:hover { background: #1d2939; filter: none; }
+@media (max-width: 768px) {
+  .khata-actions { gap: 0.5rem; padding-top: 0.15rem; }
+  .khata-actions .btn { min-height: 40px; }
+}
+
+/* ---- Settings (full page) — phone form layout ---- */
+@media (max-width: 768px) {
+  .modal-dialog .m-form-grid { grid-template-columns: 1fr !important; gap: 0.2rem !important; }
+  .modal-full .m-keep2 { grid-template-columns: 1fr 1fr !important; }
+  .modal-full form label { font-size: 0.78rem !important; font-weight: 700 !important; letter-spacing: 0.02em; margin-bottom: 0.3rem; display: flex; }
+  .modal-full form > div, .modal-full form > .m-form-grid > div { margin-bottom: 0.35rem; }
+  .modal-full .input[disabled], .modal-full .input:disabled { background: #eef0f3 !important; color: #667085 !important; }
+  .m-preset-row { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; margin: 0 -0.85rem 0.6rem !important; padding: 0 0.85rem; }
+  .m-preset-row::-webkit-scrollbar { display: none; }
+  .m-preset-row button { flex: 0 0 auto; min-height: 36px; padding: 0 0.9rem !important; border-radius: 999px !important; font-size: 0.82rem !important; white-space: nowrap; }
+
+  /* Sticky Close / Save bar */
+  .m-savebar { position: sticky; bottom: 0; z-index: 6; margin: 1rem -0.85rem 0 !important; padding: 0.75rem 0.85rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important; background: rgba(242, 244, 247, 0.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid var(--border) !important; }
+  .m-savebar-btns { width: 100%; display: grid !important; grid-template-columns: 1fr 1.6fr; gap: 0.6rem !important; }
+  .m-savebar-btns .btn { width: 100%; }
+}

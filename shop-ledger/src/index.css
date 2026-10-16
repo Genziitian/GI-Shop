@@ -1784,3 +1784,46 @@ img, video, canvas { max-width: 100%; }
 .item-add:disabled { opacity: 0.4; cursor: not-allowed; }
 .item-qty { flex: 0 0 auto; background: var(--primary); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 999px; white-space: nowrap; }
 @media (max-width: 768px) { .shop-showcase-grid { gap: 0 !important; } }
+
+/* Header: always one row on tablet/desktop */
+@media (min-width: 769px) {
+  .nav-bar { flex-wrap: nowrap !important; gap: 1rem; }
+  .nav-bar > div { min-width: 0; flex-wrap: nowrap; }
+  .nav-bar > div:last-child { flex: 0 0 auto; }
+}
+@media (min-width: 769px) and (max-width: 1180px) {
+  .nav-label { display: none; }
+  .nav-bar .btn { padding-left: 0.65rem !important; padding-right: 0.65rem !important; }
+}
+
+/* Customer → single-store khata */
+.skh { display: flex; flex-direction: column; gap: 0.25rem; }
+.skh-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 1rem; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 0.9rem; }
+.skh-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.skh-top .cx-sub { white-space: normal; }
+.skh-due { display: flex; flex-direction: column; gap: 2px; background: #f7f8fa; border-radius: 14px; padding: 0.85rem 1rem; }
+.skh-due-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.skh-due strong { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.skh-due-meta { font-size: 0.78rem; color: var(--text-muted); }
+.skh-actions { display: flex; gap: 0.5rem; }
+.skh-actions .btn { flex: 1; text-decoration: none; white-space: nowrap; }
+.skh-wa { color: #067647 !important; background: #ecfdf3 !important; border-color: #abefc6 !important; }
+
+/* Transaction history cards */
+.th-wrap { margin-top: 0.4rem; }
+.th-wrap input[type="date"] { width: 100% !important; }
+.th-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 0.85rem 0.95rem; box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 0.35rem; }
+.th-card.th-settle { border-left: 3px solid #12b76a; }
+.th-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.th-title { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; min-width: 0; }
+.th-title strong { font-size: 0.96rem; }
+.th-amt { font-size: 1.1rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.th-sub { font-size: 0.78rem; color: var(--text-muted); }
+.th-items { margin-top: 0.2rem; }
+.th-items > summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); list-style: none; padding: 0.25rem 0; }
+.th-items > summary::-webkit-details-marker { display: none; }
+.th-items > summary::before { content: '▸ '; }
+.th-items[open] > summary::before { content: '▾ '; }
+.th-line { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.85rem; padding: 0.3rem 0; border-top: 1px solid #f2f4f7; }
+.th-line em { font-style: normal; color: var(--text-muted); font-size: 0.78rem; }
+.th-link { align-self: flex-start; border: 0; background: none; padding: 0.35rem 0 0; font: inherit; font-size: 0.82rem; font-weight: 700; color: var(--primary); cursor: pointer; }

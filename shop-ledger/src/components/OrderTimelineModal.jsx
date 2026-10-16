@@ -15,7 +15,8 @@ import {
   User,
 } from 'lucide-react';
 
-export default function OrderTimelineModal({ visible, order, onClose }) {
+export default function OrderTimelineModal({ visible, order, onClose, viewer = 'customer' }) {
+  const isShopView = viewer === 'shop';
   if (!visible || !order) return null;
 
   const items = Array.isArray(order.items)
@@ -469,10 +470,10 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
               <h3 className="title" style={{ margin: 0, fontSize: '1.2rem' }}>
                 Order #{orderNumber}
               </h3>
-              {getStatusBadge(order.status)}
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Placed on {formattedCreatedDate}
+            <div className="otm-meta">
+              {getStatusBadge(order.status)}
+              <span className="otm-date">{formattedCreatedDate}</span>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -488,6 +489,27 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           </div>
         </div>
 
+        {isShopView ? (
+        {/* Customer card (shop owner view) */}
+        <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '180px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '800' }}>
+                <User size={14} color="var(--primary)" /> CUSTOMER
+              </div>
+              <div style={{ fontWeight: '800', color: '#101828', fontSize: '1.05rem', marginTop: '2px' }}>
+                {customerName}{customerShortId ? <span className="khata-shortid" style={{ marginLeft: '0.4rem' }}>{customerShortId}</span> : null}
+              </div>
+            </div>
+            {customerPhone && (
+              <a href={`tel:${customerPhone}`} className="btn btn-sm" style={{ textDecoration: 'none' }}>
+                <Phone size={14} /> {customerPhone}
+              </a>
+            )}
+          </div>
+        </div>
+
+        ) : (
         {/* Shop Details Card with Contact Number */}
         <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
@@ -518,6 +540,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
             )}
           </div>
         </div>
+        )}
 
         {/* SECTION 1: ORDERED ITEMS BREAKDOWN */}
         <div style={{ marginBottom: '1.5rem' }}>
@@ -652,6 +675,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           </div>
         </div>
 
+        {!isShopView && (
         {/* Customer Pickup Details Card at the Very End */}
         <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '12px', padding: '0.85rem 1rem', marginTop: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0f7a43', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.5rem' }}>
@@ -673,6 +697,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
             </div>
           </div>
         </div>
+        )}
 
         {/* Footer Actions */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
