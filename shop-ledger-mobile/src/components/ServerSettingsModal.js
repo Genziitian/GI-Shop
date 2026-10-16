@@ -135,7 +135,7 @@ export default function ServerSettingsModal({ visible, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.6)',
+    backgroundColor: 'rgba(16, 24, 40, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

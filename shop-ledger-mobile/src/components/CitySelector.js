@@ -89,7 +89,7 @@ export default function CitySelector({ selectedCity, onSelectCity, label = 'City
                 placeholder="Search city..."
                 value={search}
                 onChangeText={setSearch}
-                placeholderTextColor="#a0a294"
+                placeholderTextColor="#98a2b3"
               />
             </View>
 
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#343c35',
+    color: '#344054',
     marginBottom: 6,
   },
   selectorBtn: {
@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     backgroundColor: '#ffffff',
     paddingHorizontal: 14,
   },
   selectorDisabled: {
-    backgroundColor: '#f3eee2',
-    borderColor: '#e8e1d0',
+    backgroundColor: '#eff1f4',
+    borderColor: '#e4e7ec',
   },
   selectorLeft: {
     flexDirection: 'row',
@@ -159,11 +159,11 @@ const styles = StyleSheet.create({
   selectorText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#12201a',
+    color: '#101828',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.55)',
+    backgroundColor: 'rgba(16, 24, 40, 0.55)',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -187,11 +187,11 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#12201a',
+    color: '#101828',
   },
   modalSub: {
     fontSize: 13,
-    color: '#666c60',
+    color: '#667085',
     marginBottom: 14,
   },
   closeBtn: {
@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     borderRadius: 10,
     paddingHorizontal: 12,
     height: 44,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#12201a',
+    color: '#101828',
   },
   cityItem: {
     flexDirection: 'row',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 10,
     marginBottom: 6,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
   },
   cityItemSelected: {
     backgroundColor: '#e9f6ee',
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   cityName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1b2a22',
+    color: '#1d2939',
   },
   cityNameSelected: {
     fontWeight: '800',

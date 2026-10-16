@@ -375,7 +375,7 @@ export default function SuperManager() {
             <div className="table-responsive">
               <table style={{ width: '100%', minWidth: '650px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
+                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
                     <th style={{ textAlign: 'left', padding: '0.75rem' }}>Shop Info</th>
                     <th style={{ textAlign: 'left', padding: '0.75rem' }}>City & Timings</th>
                     <th style={{ textAlign: 'left', padding: '0.75rem' }}>Owner Info</th>
@@ -428,7 +428,7 @@ export default function SuperManager() {
                           <button
                             type="button"
                             className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#d5ccb6', color: '#4a5148' }}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#d0d5dd', color: '#475467' }}
                             title="Reset 4-Digit Security PIN"
                             onClick={() => handleResetPin(shop)}
                           >
@@ -469,7 +469,7 @@ export default function SuperManager() {
             <div className="table-responsive">
               <table style={{ width: '100%', minWidth: '650px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
+                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
                     <th style={{ textAlign: 'left', padding: '0.75rem' }}>User Info</th>
                     <th style={{ textAlign: 'left', padding: '0.75rem' }}>Role</th>
                     <th style={{ textAlign: 'left', padding: '0.75rem' }}>Contact</th>
@@ -514,7 +514,7 @@ export default function SuperManager() {
                           <button
                             type="button"
                             className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#d5ccb6', color: '#4a5148' }}
+                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#d0d5dd', color: '#475467' }}
                             title="Reset 4-Digit Security PIN"
                             onClick={() => handleResetPin(user)}
                           >
@@ -578,7 +578,7 @@ export default function SuperManager() {
               <div className="table-responsive">
                 <table style={{ width: '100%', minWidth: '500px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
+                    <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
                       <th style={{ textAlign: 'left', padding: '0.75rem' }}>City Name</th>
                       <th style={{ textAlign: 'center', padding: '0.75rem' }}>Active Shops</th>
                       <th style={{ textAlign: 'left', padding: '0.75rem' }}>Date Created</th>
@@ -608,9 +608,9 @@ export default function SuperManager() {
                               type="button"
                               className="btn btn-outline"
                               style={{
-                                color: '#666c60',
-                                borderColor: '#d5ccb6',
-                                background: '#faf7f0',
+                                color: '#667085',
+                                borderColor: '#d0d5dd',
+                                background: '#f7f8fa',
                                 padding: '0.35rem 0.65rem',
                                 fontSize: '0.8rem',
                                 opacity: 0.8,
@@ -873,7 +873,7 @@ export default function SuperManager() {
                             <strong>{c.shopName || 'Shop #' + c.shopId}</strong>
                           </td>
                           <td>
-                            <span className="badge" style={{ background: '#f3eee2', color: '#4a5148' }}>
+                            <span className="badge" style={{ background: '#eff1f4', color: '#475467' }}>
                               📍 {c.city || 'N/A'}
                             </span>
                           </td>
@@ -914,8 +914,8 @@ export default function SuperManager() {
                     {syncedContacts.length === 0 && (
                       <tr>
                         <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                          <Smartphone size={40} style={{ margin: '0 auto 0.75rem auto', display: 'block', color: '#d5ccb6' }} />
-                          <strong style={{ display: 'block', fontSize: '1rem', color: '#4a5148', marginBottom: '0.25rem' }}>
+                          <Smartphone size={40} style={{ margin: '0 auto 0.75rem auto', display: 'block', color: '#d0d5dd' }} />
+                          <strong style={{ display: 'block', fontSize: '1rem', color: '#475467', marginBottom: '0.25rem' }}>
                             No Synced Contacts Yet
                           </strong>
                           When shopkeepers tap "Import from Device Contacts" on their phone, contacts will sync and display here.
@@ -932,15 +932,15 @@ export default function SuperManager() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(18, 32, 26, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(16, 24, 40, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
           <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
               <LogOut size={26} />
             </div>
-            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#12201a' }}>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#101828' }}>
               Log Out?
             </h3>
-            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#666c60', lineHeight: '1.45' }}>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#667085', lineHeight: '1.45' }}>
               Are you sure you want to log out of SuperManager Admin?
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -971,7 +971,7 @@ export default function SuperManager() {
           zIndex: 9999,
           position: 'fixed',
           inset: 0,
-          background: 'rgba(18, 32, 26, 0.7)',
+          background: 'rgba(16, 24, 40, 0.7)',
           backdropFilter: 'blur(5px)',
           display: 'flex',
           alignItems: 'center',
@@ -1006,10 +1006,10 @@ export default function SuperManager() {
                   <AlertOctagon size={24} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#12201a' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '800', color: '#101828' }}>
                     Permanently Delete Shop
                   </h3>
-                  <div style={{ fontSize: '0.8rem', color: '#666c60' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#667085' }}>
                     3-Stage Safety Confirmation • Step {deleteStep} of 3
                   </div>
                 </div>
@@ -1022,7 +1022,7 @@ export default function SuperManager() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#a0a294',
+                  color: '#98a2b3',
                   cursor: 'pointer',
                   padding: '6px',
                   borderRadius: '8px',
@@ -1041,10 +1041,10 @@ export default function SuperManager() {
               gridTemplateColumns: '1fr 1fr 1fr',
               gap: '0.5rem',
               marginBottom: '1.5rem',
-              background: '#faf7f0',
+              background: '#f7f8fa',
               padding: '0.5rem',
               borderRadius: '12px',
-              border: '1px solid #e8e1d0'
+              border: '1px solid #e4e7ec'
             }}>
               <div style={{
                 textAlign: 'center',
@@ -1053,7 +1053,7 @@ export default function SuperManager() {
                 fontSize: '0.78rem',
                 fontWeight: '700',
                 background: deleteStep === 1 ? '#ef4444' : (deleteStep > 1 ? '#dff3e6' : 'transparent'),
-                color: deleteStep === 1 ? '#ffffff' : (deleteStep > 1 ? '#0f7a43' : '#666c60')
+                color: deleteStep === 1 ? '#ffffff' : (deleteStep > 1 ? '#0f7a43' : '#667085')
               }}>
                 1. Data Impact {deleteStep > 1 && '✓'}
               </div>
@@ -1064,7 +1064,7 @@ export default function SuperManager() {
                 fontSize: '0.78rem',
                 fontWeight: '700',
                 background: deleteStep === 2 ? '#ef4444' : (deleteStep > 2 ? '#dff3e6' : 'transparent'),
-                color: deleteStep === 2 ? '#ffffff' : (deleteStep > 2 ? '#0f7a43' : '#666c60')
+                color: deleteStep === 2 ? '#ffffff' : (deleteStep > 2 ? '#0f7a43' : '#667085')
               }}>
                 2. User Downgrade {deleteStep > 2 && '✓'}
               </div>
@@ -1075,7 +1075,7 @@ export default function SuperManager() {
                 fontSize: '0.78rem',
                 fontWeight: '700',
                 background: deleteStep === 3 ? '#ef4444' : 'transparent',
-                color: deleteStep === 3 ? '#ffffff' : '#666c60'
+                color: deleteStep === 3 ? '#ffffff' : '#667085'
               }}>
                 3. Final Authorize
               </div>
@@ -1083,8 +1083,8 @@ export default function SuperManager() {
 
             {/* Target Shop Summary Card */}
             <div style={{
-              background: '#faf7f0',
-              border: '1px solid #e8e1d0',
+              background: '#f7f8fa',
+              border: '1px solid #e4e7ec',
               borderRadius: '12px',
               padding: '0.85rem 1rem',
               marginBottom: '1.25rem',
@@ -1094,15 +1094,15 @@ export default function SuperManager() {
               gap: '0.75rem'
             }}>
               <div>
-                <div style={{ fontWeight: '800', fontSize: '1rem', color: '#12201a' }}>
+                <div style={{ fontWeight: '800', fontSize: '1rem', color: '#101828' }}>
                   {shopToDelete.shopName}
                 </div>
-                <div style={{ fontSize: '0.78rem', color: '#666c60' }}>
+                <div style={{ fontSize: '0.78rem', color: '#667085' }}>
                   ID: <span style={{ color: '#0284c7', fontWeight: '700' }}>{shopToDelete.shortId}</span> • City: <span style={{ fontWeight: '600', color: '#0369a1' }}>{shopToDelete.city}</span>
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.78rem', color: '#666c60' }}>Owner: <strong style={{ color: '#12201a' }}>{shopToDelete.ownerName}</strong></div>
+                <div style={{ fontSize: '0.78rem', color: '#667085' }}>Owner: <strong style={{ color: '#101828' }}>{shopToDelete.ownerName}</strong></div>
                 <div style={{ fontSize: '0.75rem', color: '#1f9d5a', fontWeight: '700' }}>
                   ₹{(Number(shopToDelete.totalRevenue) || 0).toFixed(2)} ({shopToDelete.totalSalesCount || 0} bills)
                 </div>
@@ -1136,8 +1136,8 @@ export default function SuperManager() {
                   gap: '0.75rem',
                   cursor: 'pointer',
                   padding: '0.85rem',
-                  background: confirmCheck1 ? '#fee2e2' : '#faf7f0',
-                  border: `1.5px solid ${confirmCheck1 ? '#ef4444' : '#d5ccb6'}`,
+                  background: confirmCheck1 ? '#fee2e2' : '#f7f8fa',
+                  border: `1.5px solid ${confirmCheck1 ? '#ef4444' : '#d0d5dd'}`,
                   borderRadius: '12px',
                   marginBottom: '1.5rem',
                   transition: 'all 0.2s'
@@ -1148,7 +1148,7 @@ export default function SuperManager() {
                     onChange={e => setConfirmCheck1(e.target.checked)}
                     style={{ marginTop: '0.2rem', width: '18px', height: '18px', accentColor: '#ef4444' }}
                   />
-                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#12201a', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#101828', lineHeight: '1.4' }}>
                     I understand that deleting this shop will permanently destroy all its products, orders, and sales history.
                   </span>
                 </label>
@@ -1232,8 +1232,8 @@ export default function SuperManager() {
                   gap: '0.75rem',
                   cursor: 'pointer',
                   padding: '0.85rem',
-                  background: confirmCheck2 ? '#e9f6ee' : '#faf7f0',
-                  border: `1.5px solid ${confirmCheck2 ? '#0f7a43' : '#d5ccb6'}`,
+                  background: confirmCheck2 ? '#e9f6ee' : '#f7f8fa',
+                  border: `1.5px solid ${confirmCheck2 ? '#0f7a43' : '#d0d5dd'}`,
                   borderRadius: '12px',
                   marginBottom: '1.5rem',
                   transition: 'all 0.2s'
@@ -1244,7 +1244,7 @@ export default function SuperManager() {
                     onChange={e => setConfirmCheck2(e.target.checked)}
                     style={{ marginTop: '0.2rem', width: '18px', height: '18px', accentColor: '#0f7a43' }}
                   />
-                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#12201a', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#101828', lineHeight: '1.4' }}>
                     I confirm that {shopToDelete.ownerName} will become a normal Customer account.
                   </span>
                 </label>
@@ -1319,8 +1319,8 @@ export default function SuperManager() {
                   gap: '0.75rem',
                   cursor: 'pointer',
                   padding: '0.85rem',
-                  background: confirmCheck3 ? '#fee2e2' : '#faf7f0',
-                  border: `1.5px solid ${confirmCheck3 ? '#ef4444' : '#d5ccb6'}`,
+                  background: confirmCheck3 ? '#fee2e2' : '#f7f8fa',
+                  border: `1.5px solid ${confirmCheck3 ? '#ef4444' : '#d0d5dd'}`,
                   borderRadius: '12px',
                   marginBottom: '1.5rem',
                   transition: 'all 0.2s'
@@ -1331,7 +1331,7 @@ export default function SuperManager() {
                     onChange={e => setConfirmCheck3(e.target.checked)}
                     style={{ marginTop: '0.2rem', width: '18px', height: '18px', accentColor: '#dc2626' }}
                   />
-                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#12201a', lineHeight: '1.4' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#101828', lineHeight: '1.4' }}>
                     I authorize the immediate permanent deletion of this shop and account downgrade.
                   </span>
                 </label>
@@ -1360,8 +1360,8 @@ export default function SuperManager() {
                           padding: '0.75rem',
                           fontWeight: '800',
                           borderRadius: '10px',
-                          background: canExecute ? '#dc2626' : '#a0a294',
-                          borderColor: canExecute ? '#b91c1c' : '#a0a294',
+                          background: canExecute ? '#dc2626' : '#98a2b3',
+                          borderColor: canExecute ? '#b91c1c' : '#98a2b3',
                           cursor: canExecute ? 'pointer' : 'not-allowed',
                           display: 'flex',
                           alignItems: 'center',

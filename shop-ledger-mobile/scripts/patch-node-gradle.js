@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const nodeFinderSnippet = `def findNodeCmd() {\n  def home = System.getProperty("user.home")\n  for (path in ["/opt/homebrew/bin/node", "/usr/local/bin/node", home + "/.gemini/antigravity/bin/node", System.getenv("NODE_BINARY")]) {\n    if (path && new File(path).exists()) return path\n  }\n  return "node"\n}\ndef nodeCmd = findNodeCmd()\ncommandLine(nodeCmd,`;
+const nodeFinderSnippet = `def nodeCmd = ["/opt/homebrew/bin/node", "/usr/local/bin/node", System.getProperty("user.home") + "/.gemini/antigravity/bin/node", System.getenv("NODE_BINARY")].find { it && new File(it).exists() } ?: "node"\ncommandLine(nodeCmd,`;
 
 const filesToPatch = [
   {

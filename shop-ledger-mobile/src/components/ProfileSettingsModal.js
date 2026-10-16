@@ -223,7 +223,7 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#faf7f0' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f8fa' }}>
         {/* Top Header */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -303,9 +303,9 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                 <Text style={styles.fieldLabel}>Mobile Phone</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={{
-                    backgroundColor: '#f3eee2',
+                    backgroundColor: '#eff1f4',
                     borderWidth: 1,
-                    borderColor: '#d5ccb6',
+                    borderColor: '#d0d5dd',
                     borderTopLeftRadius: 8,
                     borderBottomLeftRadius: 8,
                     paddingHorizontal: 12,
@@ -313,7 +313,7 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                     justifyContent: 'center',
                     alignItems: 'center',
                   }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#4a5148' }}>+91</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#475467' }}>+91</Text>
                   </View>
                   <TextInput
                     style={[styles.input, { flex: 1, borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeftWidth: 0 }]}
@@ -335,16 +335,16 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <Text style={styles.fieldLabel}>Shop City / Region</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Lock size={12} color="#a0a294" />
-                      <Text style={{ fontSize: 11, color: '#a0a294', fontWeight: '600' }}>Locked (SuperAdmin only)</Text>
+                      <Lock size={12} color="#98a2b3" />
+                      <Text style={{ fontSize: 11, color: '#98a2b3', fontWeight: '600' }}>Locked (SuperAdmin only)</Text>
                     </View>
                   </View>
-                  <View style={[styles.input, { backgroundColor: '#f3eee2', borderColor: '#e8e1d0', justifyContent: 'center' }]}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#4a5148' }}>
+                  <View style={[styles.input, { backgroundColor: '#eff1f4', borderColor: '#e4e7ec', justifyContent: 'center' }]}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#475467' }}>
                       📍 {form.city || user?.city || 'Delhi'}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 11, color: '#666c60', marginTop: 4 }}>
+                  <Text style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>
                     Store location is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.
                   </Text>
                 </View>
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderRadius: 16,
   },
   tabBar: {
@@ -508,8 +508,8 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   shortIdBox: {
-    backgroundColor: '#faf7f0',
-    borderColor: '#d5ccb6',
+    backgroundColor: '#f7f8fa',
+    borderColor: '#d0d5dd',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   input: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 8,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   pinBtn: {
-    backgroundColor: '#12201a',
+    backgroundColor: '#101828',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   lockNowBtn: {
-    backgroundColor: '#1b2a22',
+    backgroundColor: '#1d2939',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   toggleLabel: {
     fontSize: 13,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
   },
   langChipActive: {
     backgroundColor: colors.primary,
@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   supportIconCircle: {
     width: 38,
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   aboutLabel: {
     fontSize: 12,

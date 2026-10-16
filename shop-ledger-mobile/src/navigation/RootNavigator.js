@@ -32,7 +32,7 @@ export default function RootNavigator() {
   // }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#ecebe4' } }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#f2f4f7' } }}>
       {!token || !user ? (
         <Stack.Screen name="Auth" component={AuthScreen} />
       ) : user.role === 'Shopkeeper' ? (
@@ -47,7 +47,7 @@ export default function RootNavigator() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#ecebe4',
+    backgroundColor: '#f2f4f7',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
-    shadowColor: '#12201a',
+    borderColor: '#e4e7ec',
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 18,
@@ -71,12 +71,12 @@ const styles = StyleSheet.create({
   loadingTitle: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#12201a',
+    color: '#101828',
     marginTop: 14,
   },
   loadingSubtitle: {
     fontSize: 13,
-    color: '#666c60',
+    color: '#667085',
     marginTop: 6,
     fontWeight: '600',
   },

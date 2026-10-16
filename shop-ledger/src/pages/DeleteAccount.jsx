@@ -51,7 +51,7 @@ export default function DeleteAccount() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#faf7f0',
+      backgroundColor: '#f7f8fa',
       padding: '2rem 1rem 3rem 1rem',
       display: 'flex',
       flexDirection: 'column',
@@ -69,10 +69,10 @@ export default function DeleteAccount() {
             alignItems: 'center',
             gap: '0.4rem',
             background: '#ffffff',
-            border: '1px solid #e8e1d0',
+            border: '1px solid #e4e7ec',
             borderRadius: '8px',
             padding: '0.5rem 0.9rem',
-            color: '#4a5148',
+            color: '#475467',
             fontSize: '0.88rem',
             fontWeight: '600',
             cursor: 'pointer',
@@ -80,7 +80,7 @@ export default function DeleteAccount() {
             boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
             transition: 'all 0.15s ease'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f3eee2'}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#eff1f4'}
           onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
         >
           <ArrowLeft size={16} /> Back to GI Shop
@@ -89,7 +89,7 @@ export default function DeleteAccount() {
         {/* Main Card */}
         <div style={{
           background: '#ffffff',
-          border: '1px solid #e8e1d0',
+          border: '1px solid #e4e7ec',
           borderRadius: '16px',
           padding: '2rem',
           boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
@@ -114,7 +114,7 @@ export default function DeleteAccount() {
             <h1 style={{ 
               fontSize: '1.5rem', 
               fontWeight: '800', 
-              color: '#12201a', 
+              color: '#101828', 
               margin: '0 0 0.4rem 0',
               display: 'flex',
               alignItems: 'center',
@@ -126,7 +126,7 @@ export default function DeleteAccount() {
             </h1>
             <p style={{ 
               fontSize: '0.92rem', 
-              color: '#666c60', 
+              color: '#667085', 
               margin: 0,
               lineHeight: '1.4'
             }}>
@@ -150,7 +150,7 @@ export default function DeleteAccount() {
               <div style={{ fontWeight: '700', fontSize: '0.98rem', color: '#1e3a8a', marginBottom: '0.35rem' }}>
                 Sorry to hear you want to delete your account
               </div>
-              <div style={{ fontSize: '0.88rem', color: '#343c35', lineHeight: '1.5' }}>
+              <div style={{ fontSize: '0.88rem', color: '#344054', lineHeight: '1.5' }}>
                 Let us assure you that everything is okay and your personal data & transactions are always treated with utmost privacy and security. If you are experiencing any issue, store difficulty, or billing question, our team is always ready to assist you.
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function DeleteAccount() {
           {/* How to Delete Box */}
           <div style={{
             background: '#fff',
-            border: '1px solid #e8e1d0',
+            border: '1px solid #e4e7ec',
             borderRadius: '12px',
             padding: '1.35rem',
             marginBottom: '1.5rem'
@@ -167,7 +167,7 @@ export default function DeleteAccount() {
             <h3 style={{ 
               fontSize: '1.05rem', 
               fontWeight: '700', 
-              color: '#12201a', 
+              color: '#101828', 
               margin: '0 0 0.6rem 0',
               display: 'flex',
               alignItems: 'center',
@@ -176,14 +176,14 @@ export default function DeleteAccount() {
               <Mail size={18} color="#0f7a43" /> If you still want to delete your account
             </h3>
             
-            <p style={{ fontSize: '0.9rem', color: '#4a5148', lineHeight: '1.5', margin: '0 0 1rem 0' }}>
+            <p style={{ fontSize: '0.9rem', color: '#475467', lineHeight: '1.5', margin: '0 0 1rem 0' }}>
               Please send an account deletion request directly to our administrator email:
             </p>
 
             {/* Email Highlight Box */}
             <div style={{
-              background: '#faf7f0',
-              border: '1px dashed #d5ccb6',
+              background: '#f7f8fa',
+              border: '1px dashed #d0d5dd',
               borderRadius: '10px',
               padding: '0.85rem 1rem',
               display: 'flex',
@@ -194,8 +194,8 @@ export default function DeleteAccount() {
               marginBottom: '1.1rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.82rem', color: '#666c60', fontWeight: '500' }}>Email:</span>
-                <strong style={{ fontSize: '0.98rem', color: '#12201a', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: '0.82rem', color: '#667085', fontWeight: '500' }}>Email:</span>
+                <strong style={{ fontSize: '0.98rem', color: '#101828', fontFamily: 'monospace' }}>
                   {supportEmail}
                 </strong>
               </div>
@@ -205,8 +205,8 @@ export default function DeleteAccount() {
                   onClick={handleCopyEmail}
                   style={{
                     background: copied ? '#1f9d5a' : '#ffffff',
-                    color: copied ? '#ffffff' : '#343c35',
-                    border: '1px solid #d5ccb6',
+                    color: copied ? '#ffffff' : '#344054',
+                    border: '1px solid #d0d5dd',
                     borderRadius: '6px',
                     padding: '0.4rem 0.75rem',
                     fontSize: '0.82rem',
@@ -283,20 +283,20 @@ export default function DeleteAccount() {
 
             {/* Verification Card */}
             <div style={{
-              background: '#faf7f0',
-              border: '1px solid #e8e1d0',
+              background: '#f7f8fa',
+              border: '1px solid #e4e7ec',
               borderRadius: '10px',
               padding: '1rem',
               display: 'flex',
               gap: '0.75rem',
               alignItems: 'flex-start'
             }}>
-              <Smartphone size={22} color="#4a5148" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <Smartphone size={22} color="#475467" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1b2a22', marginBottom: '0.25rem' }}>
+                <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1d2939', marginBottom: '0.25rem' }}>
                   What to Include in Email
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#4a5148', lineHeight: '1.4' }}>
+                <div style={{ fontSize: '0.82rem', color: '#475467', lineHeight: '1.4' }}>
                   Include your <strong>Registered Phone Number</strong>, <strong>Email</strong>, or <strong>Short ID</strong> so we can locate your account.
                 </div>
               </div>
@@ -305,26 +305,26 @@ export default function DeleteAccount() {
 
           {/* Data Deletion Details */}
           <div style={{
-            borderTop: '1px solid #f3eee2',
+            borderTop: '1px solid #eff1f4',
             paddingTop: '1.25rem',
             marginBottom: '1.25rem'
           }}>
             <h4 style={{ 
               fontSize: '0.92rem', 
               fontWeight: '700', 
-              color: '#343c35', 
+              color: '#344054', 
               margin: '0 0 0.5rem 0',
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem'
             }}>
-              <Info size={16} color="#666c60" /> What happens upon deletion?
+              <Info size={16} color="#667085" /> What happens upon deletion?
             </h4>
             <ul style={{ 
               margin: 0, 
               paddingLeft: '1.2rem', 
               fontSize: '0.84rem', 
-              color: '#666c60', 
+              color: '#667085', 
               lineHeight: '1.6' 
             }}>
               <li>All personal profile information (name, phone number, address, and password) will be permanently erased.</li>
@@ -337,9 +337,9 @@ export default function DeleteAccount() {
           {/* Footer Note */}
           <div style={{ 
             textAlign: 'center', 
-            borderTop: '1px solid #e8e1d0', 
+            borderTop: '1px solid #e4e7ec', 
             paddingTop: '1.25rem',
-            color: '#666c60',
+            color: '#667085',
             fontSize: '0.85rem'
           }}>
             <p style={{ margin: '0 0 0.75rem 0', fontWeight: '500' }}>
@@ -349,7 +349,7 @@ export default function DeleteAccount() {
               onClick={() => navigate('/')}
               style={{
                 background: 'transparent',
-                border: '1px solid #d5ccb6',
+                border: '1px solid #d0d5dd',
                 borderRadius: '6px',
                 padding: '0.45rem 1rem',
                 fontSize: '0.82rem',
@@ -358,7 +358,7 @@ export default function DeleteAccount() {
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#faf7f0'}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#f7f8fa'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               Return to GI Shop Home
@@ -368,7 +368,7 @@ export default function DeleteAccount() {
         </div>
 
         {/* Bottom copyright */}
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#a0a294' }}>
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#98a2b3' }}>
           &copy; {new Date().getFullYear()} GI SHOP • All Rights Reserved
         </div>
 

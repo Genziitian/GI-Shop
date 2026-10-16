@@ -340,7 +340,7 @@ export default function OrdersScreen({ navigation }) {
               )}
               {isOlderThan24h && (
                 <View style={styles.historyBadge}>
-                  <Clock size={10} color="#666c60" />
+                  <Clock size={10} color="#667085" />
                   <Text style={styles.historyBadgeText}>{t('Past 24h')}</Text>
                 </View>
               )}
@@ -872,7 +872,7 @@ export default function OrdersScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <View style={{ backgroundColor: '#faf7f0', padding: 12, borderRadius: 8, marginBottom: 12 }}>
+            <View style={{ backgroundColor: '#f7f8fa', padding: 12, borderRadius: 8, marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                 <Text style={{ fontSize: 13, color: colors.textMuted }}>Order Total:</Text>
                 <Text style={{ fontSize: 13, fontWeight: '700' }}>₹{(Number(paymentOrder?.estimatedTotal) || 0).toFixed(2)}</Text>
@@ -1124,7 +1124,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   countBadge: {
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 9999,
@@ -1150,7 +1150,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1160,7 +1160,7 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     fontSize: 9.5,
     fontWeight: '700',
-    color: '#666c60',
+    color: '#667085',
   },
   orderCard: {
     backgroundColor: colors.surface,

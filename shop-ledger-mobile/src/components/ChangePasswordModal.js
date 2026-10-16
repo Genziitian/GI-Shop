@@ -66,7 +66,7 @@ export default function ChangePasswordModal({ visible, onClose }) {
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#faf7f0' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f8fa' }}>
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderRadius: 16,
   },
   sectionCard: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4a5148',
+    color: '#475467',
     marginBottom: 6,
   },
   passwordInputContainer: {

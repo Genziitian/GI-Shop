@@ -7,10 +7,10 @@ export const colors = {
   primaryDark: '#0b5e33',
   accent: '#f2a516',        // saffron highlight
   accentLight: '#fdf0cf',
-  ink: '#12201a',           // deep ink for text / dark surfaces
+  ink: '#101828',           // deep ink for text / dark surfaces
 
   // Status
-  secondary: '#666c60',
+  secondary: '#667085',
   success: '#1f9d5a',
   successLight: '#eef8f1',
   danger: '#d93a2f',
@@ -21,19 +21,19 @@ export const colors = {
   infoLight: '#e0f2fe',
 
   // Surfaces
-  background: '#ecebe4',    // page canvas (cards are white on top of it)
+  background: '#f2f4f7',    // page canvas (cards are white on top of it)
   surface: '#ffffff',
   card: '#ffffff',
-  border: '#e0dccf',
-  borderDark: '#cdc8b8',
-  badgeBg: '#f3eee2',
+  border: '#e4e7ec',
+  borderDark: '#d0d5dd',
+  badgeBg: '#eff1f4',
 
   // Text
-  text: '#12201a',
-  textMuted: '#666c60',
-  textSecondary: '#4a5148',
+  text: '#101828',
+  textMuted: '#667085',
+  textSecondary: '#475467',
 
-  shadow: '#12201a',
+  shadow: '#101828',
 };
 
 // Per-role accent. Same system, a different "flavour" for each role.
@@ -51,7 +51,7 @@ export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 export const motion = { fast: 140, base: 260, slow: 480, stagger: 55 };
 
 export const shadowStyle = {
-  shadowColor: '#12201a',
+  shadowColor: '#101828',
   shadowOffset: { width: 0, height: 3 },
   shadowOpacity: 0.07,
   shadowRadius: 10,
@@ -59,7 +59,7 @@ export const shadowStyle = {
 };
 
 export const shadowLarge = {
-  shadowColor: '#12201a',
+  shadowColor: '#101828',
   shadowOffset: { width: 0, height: 10 },
   shadowOpacity: 0.14,
   shadowRadius: 22,

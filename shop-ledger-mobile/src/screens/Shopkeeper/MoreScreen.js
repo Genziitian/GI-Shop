@@ -535,7 +535,7 @@ export default function MoreScreen({ navigation }) {
                     borderRadius: 10,
                     borderWidth: 1.5,
                     borderColor: language === 'en' ? colors.primary : colors.border,
-                    backgroundColor: language === 'en' ? '#e9f6ee' : '#faf7f0',
+                    backgroundColor: language === 'en' ? '#e9f6ee' : '#f7f8fa',
                     alignItems: 'center',
                     flexDirection: 'row',
                     justifyContent: 'center',
@@ -564,7 +564,7 @@ export default function MoreScreen({ navigation }) {
                     borderRadius: 10,
                     borderWidth: 1.5,
                     borderColor: language === 'hi' ? colors.primary : colors.border,
-                    backgroundColor: language === 'hi' ? '#e9f6ee' : '#faf7f0',
+                    backgroundColor: language === 'hi' ? '#e9f6ee' : '#f7f8fa',
                     alignItems: 'center',
                     flexDirection: 'row',
                     justifyContent: 'center',
@@ -1055,16 +1055,16 @@ export default function MoreScreen({ navigation }) {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                   <Text style={styles.formLabel}>{t('Shop City / Region')}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Lock size={12} color="#a0a294" />
-                    <Text style={{ fontSize: 11, color: '#a0a294', fontWeight: '600' }}>{t('Locked (SuperAdmin only)')}</Text>
+                    <Lock size={12} color="#98a2b3" />
+                    <Text style={{ fontSize: 11, color: '#98a2b3', fontWeight: '600' }}>{t('Locked (SuperAdmin only)')}</Text>
                   </View>
                 </View>
-                <View style={[styles.formInput, { backgroundColor: '#f3eee2', borderColor: '#e8e1d0', justifyContent: 'center' }]}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#4a5148' }}>
+                <View style={[styles.formInput, { backgroundColor: '#eff1f4', borderColor: '#e4e7ec', justifyContent: 'center' }]}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#475467' }}>
                     📍 {shopForm.city || 'Delhi'}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 11, color: '#666c60', marginTop: 4 }}>
+                <Text style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>
                   {t('Store city is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.')}
                 </Text>
               </View>
@@ -1646,7 +1646,7 @@ const legalStyles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderRadius: 20,
   },
   bodyText: {

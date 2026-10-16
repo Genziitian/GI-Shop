@@ -406,28 +406,12 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
     <div>
       {/* Mobile Customer Account Card (Matches Native App Image 1) */}
       <div className="pos-mobile-section-card mobile-only-block">
-        <div className="pos-mobile-card-header">
-          <div className="pos-mobile-card-title">
-            <UserCheck size={18} color="var(--primary)" />
-            <span>Customer Account</span>
-          </div>
-          {selectedCustomer && (
-            <button 
-              type="button" 
-              onClick={handleClearCustomer}
-              style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}
-            >
-              Clear
-            </button>
-          )}
-        </div>
-
         <div className="pos-mobile-customer-input-row">
           <div style={{ flex: 1, position: 'relative' }}>
             <input 
               type="text"
               className="pos-mobile-customer-input"
-              placeholder="Enter Phone or Name (Optional)"
+              placeholder="Customer phone or name (optional)"
               value={selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.phone || selectedCustomer.customerPhone})` : searchCustomer}
               onChange={e => {
                 setSearchCustomer(e.target.value);
@@ -438,6 +422,11 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
             />
           </div>
 
+          {selectedCustomer && (
+            <button type="button" className="pos-mobile-customer-clear" onClick={handleClearCustomer} aria-label="Clear customer">
+              <X size={16} />
+            </button>
+          )}
           <button 
             type="button" 
             className="pos-mobile-customer-btn"
@@ -462,7 +451,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
             ))}
 
             {inlineAppResults.length > 0 && (
-              <div style={{ background: '#faf7f0', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d5ccb6' }}>
+              <div style={{ background: '#f7f8fa', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d0d5dd' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.35rem' }}>
                   🌐 Registered GI SHOP Accounts ({inlineAppResults.length})
                 </div>
@@ -473,7 +462,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                       padding: '0.45rem', 
                       cursor: 'pointer', 
                       borderRadius: '6px', 
-                      border: '1px solid #e8e1d0', 
+                      border: '1px solid #e4e7ec', 
                       marginBottom: '0.35rem', 
                       background: '#ffffff',
                       display: 'flex',
@@ -542,18 +531,25 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
             <ProductGridSkeleton count={8} />
           ) : (
               <div className="pos-product-catalog-grid">
-                {filteredItems.map(item => (
-                  <div 
-                    key={item.id} 
-                    className="pos-product-card" 
-                    onClick={() => openModal(item)}
-                  >
-                    <div className="pos-product-card-name">{item.name}</div>
-                    <div className="pos-product-card-badge">
-                      ₹{Number(item.price).toFixed(2)} / {item.unit}
+                {filteredItems.map(item => {
+                  const inCart = cart.filter(c => c.item.id === item.id).reduce((n, c) => n + c.qty, 0);
+                  return (
+                    <div 
+                      key={item.id} 
+                      className={`pos-product-card ${inCart > 0 ? 'in-cart' : ''}`}
+                      onClick={() => openModal(item)}
+                    >
+                      <div className="pos-product-card-name">{item.name}</div>
+                      <div className="pos-product-card-foot">
+                        <div className="pos-product-price">
+                          <strong>₹{Number(item.price).toFixed(Number(item.price) % 1 ? 2 : 0)}</strong>
+                          <span>/ {item.unit}</span>
+                        </div>
+                        <span className="pos-product-add">{inCart > 0 ? inCart : <Plus size={16} />}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {filteredItems.length === 0 && (
                   <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
                     No matching products found
@@ -627,7 +623,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
 
               {/* Registered GI SHOP Accounts matching query (e.g. rajjgd59) */}
               {inlineAppResults.length > 0 && (
-                <div style={{ background: '#faf7f0', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d5ccb6' }}>
+                <div style={{ background: '#f7f8fa', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d0d5dd' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.35rem' }}>
                     🌐 Registered GI SHOP App Accounts ({inlineAppResults.length})
                   </div>
@@ -638,7 +634,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                         padding: '0.5rem', 
                         cursor: 'pointer', 
                         borderRadius: '6px', 
-                        border: '1px solid #e8e1d0', 
+                        border: '1px solid #e4e7ec', 
                         marginBottom: '0.35rem', 
                         background: '#ffffff',
                         display: 'flex',
@@ -704,7 +700,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
               </thead>
               <tbody>
                 {cart.map((c, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #f3eee2' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid #eff1f4' }}>
                     <td style={{ padding: '0.4rem 0' }}>{c.item.name}</td>
                     <td style={{ textAlign: 'right', padding: '0.4rem 0' }}>{c.qty}</td>
                     <td style={{ textAlign: 'right', padding: '0.4rem 0' }}>{c.amount.toFixed(2)}</td>
@@ -912,7 +908,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
               </div>
 
               {/* Calculations & Discount */}
-              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem', marginBottom: '0.85rem' }}>
+              <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem', marginBottom: '0.85rem' }}>
                 <div className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.35rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
                   <span style={{ fontWeight: 700 }}>₹{subtotal.toFixed(2)}</span>
@@ -983,8 +979,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
               {/* Complete Bill CTA Button */}
               <button 
                 type="button" 
-                className="btn btn-success" 
-                style={{ width: '100%', padding: '0.85rem', fontSize: '1.05rem', fontWeight: 800, borderRadius: '12px', gap: '0.5rem', marginTop: '0.25rem' }}
+                className="btn btn-success mobile-cart-cta" 
                 onClick={handleCheckout}
               >
                 <Check size={20} /> Complete Bill • ₹{finalTotal.toFixed(2)}
@@ -1042,7 +1037,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                       <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>
                         Quantity
                       </label>
-                      <div style={{ display: 'inline-flex', background: '#e8e1d0', borderRadius: '6px', padding: '2px', gap: '2px' }}>
+                      <div style={{ display: 'inline-flex', background: '#e4e7ec', borderRadius: '6px', padding: '2px', gap: '2px' }}>
                         <button
                           type="button"
                           style={{
@@ -1053,7 +1048,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                             borderRadius: '4px',
                             cursor: 'pointer',
                             background: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? 'var(--primary)' : 'transparent',
-                            color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#fff' : '#4a5148',
+                            color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#fff' : '#475467',
                             transition: 'all 0.15s ease'
                           }}
                           onClick={() => handleToggleSubUnitMode(selectedProduct.unit === 'Litre' ? 'Litre' : 'Kilo')}
@@ -1070,7 +1065,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                             borderRadius: '4px',
                             cursor: 'pointer',
                             background: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? 'var(--primary)' : 'transparent',
-                            color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#fff' : '#4a5148',
+                            color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#fff' : '#475467',
                             transition: 'all 0.15s ease'
                           }}
                           onClick={() => handleToggleSubUnitMode(selectedProduct.unit === 'Litre' ? 'ML' : 'Gram')}
@@ -1163,7 +1158,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    background: '#faf7f0' 
+                    background: '#f7f8fa' 
                   }}
                 >
                   <div>

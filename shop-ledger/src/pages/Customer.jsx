@@ -712,18 +712,18 @@ export default function Customer() {
       <head>
         <title>${currentUser?.name || 'Customer'} - Account Statement</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1b2a22; line-height: 1.5; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #12201a; padding-bottom: 12px; margin-bottom: 20px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1d2939; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #101828; padding-bottom: 12px; margin-bottom: 20px; }
           .title { font-size: 24px; font-weight: 800; color: #0284c7; margin: 0; }
           .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 12px; }
           .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-          .card { border: 1px solid #e8e1d0; border-radius: 10px; padding: 12px; background: #faf7f0; }
-          .card-title { font-size: 11px; font-weight: 700; color: #666c60; text-transform: uppercase; margin-bottom: 4px; }
-          .card-val { font-size: 20px; font-weight: 800; color: #12201a; }
+          .card { border: 1px solid #e4e7ec; border-radius: 10px; padding: 12px; background: #f7f8fa; }
+          .card-title { font-size: 11px; font-weight: 700; color: #667085; text-transform: uppercase; margin-bottom: 4px; }
+          .card-val { font-size: 20px; font-weight: 800; color: #101828; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-          th, td { border: 1px solid #d5ccb6; padding: 8px 10px; text-align: left; }
-          th { background: #f3eee2; font-weight: 700; }
-          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e8e1d0; font-size: 11px; color: #a0a294; text-align: center; }
+          th, td { border: 1px solid #d0d5dd; padding: 8px 10px; text-align: left; }
+          th { background: #eff1f4; font-weight: 700; }
+          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e4e7ec; font-size: 11px; color: #98a2b3; text-align: center; }
           @media print { body { padding: 0; } }
         </style>
       </head>
@@ -731,14 +731,14 @@ export default function Customer() {
         <div class="header">
           <div>
             <h1 class="title">${currentUser?.name || 'Customer Statement'}</h1>
-            <div style="font-size: 13px; color: #4a5148; margin-top: 2px;">
+            <div style="font-size: 13px; color: #475467; margin-top: 2px;">
               Customer ID: <strong>${currentUser?.shortId || ''}</strong> • Phone: ${currentUser?.phone || ''}
             </div>
-            <div style="font-size: 12px; color: #666c60;">${currentUser?.address || ''}, ${currentUser?.city || ''}</div>
+            <div style="font-size: 12px; color: #667085;">${currentUser?.address || ''}, ${currentUser?.city || ''}</div>
           </div>
           <div style="text-align: right;">
             <div class="badge">Period: ${exportDateRange}</div>
-            <div style="font-size: 11px; color: #a0a294; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
+            <div style="font-size: 11px; color: #98a2b3; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
           </div>
         </div>
 
@@ -1071,7 +1071,7 @@ export default function Customer() {
               alignItems: 'center',
               gap: '0.4rem',
               borderColor: 'var(--border)',
-              background: '#faf7f0'
+              background: '#f7f8fa'
             }}
             title={language === 'en' ? 'हिंदी में बदलें (Switch to Hindi)' : 'Switch to English'}
           >
@@ -1290,7 +1290,7 @@ export default function Customer() {
                             </div>
 
                             {/* Actions Row */}
-                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px dashed #f3eee2', paddingTop: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px dashed #eff1f4', paddingTop: '0.5rem' }}>
                               <button 
                                 type="button" 
                                 className="btn btn-outline" 
@@ -1450,7 +1450,7 @@ export default function Customer() {
                         key={item.id} 
                         className="list-item" 
                         style={{ 
-                          background: isAdded ? '#eef8f1' : '#faf7f0', 
+                          background: isAdded ? '#eef8f1' : '#f7f8fa', 
                           border: isAdded ? '1px solid #86efac' : '1px solid var(--border)',
                           borderRadius: '10px', 
                           padding: '0.85rem 1rem',
@@ -1523,7 +1523,7 @@ export default function Customer() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {Object.values(orderList).map(entry => (
-                        <div key={entry.item.id} className="flex-between" style={{ fontSize: '0.85rem', paddingBottom: '0.35rem', borderBottom: '1px solid #f3eee2' }}>
+                        <div key={entry.item.id} className="flex-between" style={{ fontSize: '0.85rem', paddingBottom: '0.35rem', borderBottom: '1px solid #eff1f4' }}>
                           <div>
                             <div>{entry.item.name}</div>
                             <small style={{ color: 'var(--text-muted)' }}>{entry.qty} x ₹{entry.rate}</small>
@@ -1564,7 +1564,7 @@ export default function Customer() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
                 {/* Overall Outstanding Due Banner */}
-                <div className="panel" style={{ background: 'linear-gradient(135deg, #1b2a22, #12201a)', color: '#fff', padding: '1.25rem', borderRadius: '14px' }}>
+                <div className="panel" style={{ background: 'linear-gradient(135deg, #1d2939, #101828)', color: '#fff', padding: '1.25rem', borderRadius: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
@@ -1574,7 +1574,7 @@ export default function Customer() {
                     </div>
 
                     <div style={{ background: 'rgba(255,255,255,0.07)', padding: '0.65rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                      <div style={{ fontSize: '0.72rem', color: '#d5ccb6', fontWeight: '600' }}>Total Amount Due to Pay</div>
+                      <div style={{ fontSize: '0.72rem', color: '#d0d5dd', fontWeight: '600' }}>Total Amount Due to Pay</div>
                       <h2 style={{ margin: '0.15rem 0 0 0', fontSize: '1.5rem', color: khataOverview.overallDue > 0 ? '#f87171' : '#4ade80', fontWeight: '900' }}>
                         ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
                       </h2>
@@ -1591,7 +1591,7 @@ export default function Customer() {
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.72rem', color: '#a0a294', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#98a2b3', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                       <ShieldCheck size={13} color="#38bdf8" /> Official Store Records (Read-Only)
                     </div>
                   </div>
@@ -1720,7 +1720,7 @@ export default function Customer() {
                   ))}
 
                   {khataOverview.stores.length === 0 && !khataLoading && (
-                    <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: '#faf7f0', borderRadius: '12px', border: '1px dashed var(--border)' }}>
+                    <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: '#f7f8fa', borderRadius: '12px', border: '1px dashed var(--border)' }}>
                       <BookOpen size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem auto' }} />
                       <h3 style={{ margin: '0 0 0.5rem 0' }}>No Khata Records Found</h3>
                       <p className="subtitle" style={{ maxWidth: '450px', margin: '0 auto 1.5rem auto' }}>
@@ -1802,7 +1802,7 @@ export default function Customer() {
                     </div>
 
                     {/* Due metric */}
-                    <div style={{ background: '#faf7f0', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border)', textAlign: 'right' }}>
+                    <div style={{ background: '#f7f8fa', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border)', textAlign: 'right' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Amount Due to Pay</div>
                       <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', color: (storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '900' }}>
                         ₹{(Number(storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue) || 0).toFixed(2)}
@@ -1813,7 +1813,7 @@ export default function Customer() {
                     </div>
                   </div>
 
-                  <div style={{ background: '#f3eee2', borderRadius: '6px', padding: '0.5rem 0.75rem', marginTop: '1rem', fontSize: '0.8rem', color: '#4a5148', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ background: '#eff1f4', borderRadius: '6px', padding: '0.5rem 0.75rem', marginTop: '1rem', fontSize: '0.8rem', color: '#475467', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <ShieldCheck size={16} color="var(--primary)" />
                     <span><strong>Synchronized Store Khata:</strong> All entries are certified by the store. Customer cannot edit ledger records.</span>
                   </div>
@@ -1850,7 +1850,7 @@ export default function Customer() {
 
                   {/* Custom Date Range Picker */}
                   {storeKhataFilter === 'Custom' && (
-                    <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#faf7f0', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#f7f8fa', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
                         <input 
@@ -1928,7 +1928,7 @@ export default function Customer() {
                             const items = JSON.parse(entry.itemsJSON || '[]');
                             const isKhataMethod = entry.paymentMethod === 'Add to Book';
                             return (
-                              <div key={`timeline-purch-${entry.id}-${idx}`} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
+                              <div key={`timeline-purch-${entry.id}-${idx}`} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
                                 <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                                   <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -1949,7 +1949,7 @@ export default function Customer() {
                                   </div>
                                 </div>
 
-                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
+                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
                                   {items.map((c, i) => (
                                     <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                                       <span>{c.item?.name || c.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>x {c.qty} {c.item?.unit}</span></span>
@@ -2014,7 +2014,7 @@ export default function Customer() {
                           if (entry.type === 'ORDER') {
                             const items = JSON.parse(entry.itemsJSON || '[]');
                             return (
-                              <div key={`timeline-order-${entry.id}-${idx}`} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
+                              <div key={`timeline-order-${entry.id}-${idx}`} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
                                 <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                                   <div>
                                     <strong style={{ fontSize: '0.95rem' }}>Online Order #{entry.orderNumber}</strong>
@@ -2037,7 +2037,7 @@ export default function Customer() {
                                   </div>
                                 </div>
 
-                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
+                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
                                   {items.map((it, i) => (
                                     <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                                       <span>{it.item?.name || it.name} x {it.qty}</span>
@@ -2065,7 +2065,7 @@ export default function Customer() {
                         })}
 
                         {timeline.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '2rem', background: '#faf7f0', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                          <div style={{ textAlign: 'center', padding: '2rem', background: '#f7f8fa', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                             <Receipt size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem auto' }} />
                             <p className="subtitle" style={{ margin: 0 }}>
                               {storeKhataFilter === 'All' 
@@ -2145,7 +2145,7 @@ export default function Customer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               
               {/* Grand Total Spending Banner */}
-              <div className="panel" style={{ background: '#faf7f0', padding: '1rem 1.25rem' }}>
+              <div className="panel" style={{ background: '#f7f8fa', padding: '1rem 1.25rem' }}>
                 <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Purchases &amp; Orders Value</div>
@@ -2158,7 +2158,7 @@ export default function Customer() {
                     </div>
                     <div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>All Orders &amp; Receipts</div>
-                      <strong style={{ fontSize: '1.1rem', color: '#12201a' }}>{pastOrders.length + purchases.length}</strong>
+                      <strong style={{ fontSize: '1.1rem', color: '#101828' }}>{pastOrders.length + purchases.length}</strong>
                     </div>
                   </div>
                 </div>
@@ -2185,7 +2185,7 @@ export default function Customer() {
                         <div 
                           key={order.id} 
                           style={{ 
-                            background: '#faf7f0', 
+                            background: '#f7f8fa', 
                             border: '1px solid var(--border)', 
                             borderRadius: '8px', 
                             padding: '1rem',
@@ -2238,11 +2238,11 @@ export default function Customer() {
                             </div>
                           )}
 
-                          <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
+                          <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
                             {items.map((entry, idx) => {
                               const isUnavail = !!entry.isUnavailable;
                               return (
-                                <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#a0a294' : 'inherit' }}>
+                                <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#98a2b3' : 'inherit' }}>
                                   <span>{entry.item?.name || entry.name} x {entry.qty} {isUnavail ? '(Unavailable)' : ''}</span>
                                   <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
                                 </div>
@@ -2317,7 +2317,7 @@ export default function Customer() {
                     })}
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '1.5rem', background: '#faf7f0', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                  <div style={{ textAlign: 'center', padding: '1.5rem', background: '#f7f8fa', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                     <p className="subtitle" style={{ margin: 0 }}>No active order requests in the last 24 hours. Older requests have been archived into "All Orders" below.</p>
                   </div>
                 )}
@@ -2331,7 +2331,7 @@ export default function Customer() {
                       <Receipt size={20} color="var(--success)" /> All Orders &amp; Receipts
                     </h3>
                   </div>
-                  <span className="badge" style={{ background: '#f3eee2', color: '#4a5148', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
+                  <span className="badge" style={{ background: '#eff1f4', color: '#475467', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
                     {totalFilteredAllOrdersCount} {ordersDateFilter !== 'All' ? `(${ordersDateFilter})` : 'Total'}
                   </span>
                 </div>
@@ -2359,7 +2359,7 @@ export default function Customer() {
 
                 {/* Custom Date Range Picker */}
                 {ordersDateFilter === 'Custom' && (
-                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#faf7f0', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#f7f8fa', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
                       <input 
@@ -2401,7 +2401,7 @@ export default function Customer() {
                       <div 
                         key={`past-ord-${order.id}`} 
                         style={{ 
-                          background: '#faf7f0', 
+                          background: '#f7f8fa', 
                           border: '1px solid var(--border)', 
                           borderRadius: '8px', 
                           padding: '1rem',
@@ -2427,7 +2427,7 @@ export default function Customer() {
                           </div>
                         </div>
 
-                        <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
+                        <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #eff1f4' }}>
                           {items.map((entry, idx) => (
                             <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                               <span>{entry.item?.name || entry.name} x {entry.qty}</span>
@@ -2455,7 +2455,7 @@ export default function Customer() {
                   {filteredPurchases.map(purchase => {
                     const items = JSON.parse(purchase.itemsJSON || '[]');
                     return (
-                      <div key={`purch-${purchase.id}`} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', background: '#faf7f0', borderRadius: '8px', border: '1px solid var(--border)', padding: '1rem' }}>
+                      <div key={`purch-${purchase.id}`} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', background: '#f7f8fa', borderRadius: '8px', border: '1px solid var(--border)', padding: '1rem' }}>
                         <div className="flex-between" style={{ width: '100%', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                           <div>
                             <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>{purchase.shopName}</strong>
@@ -2500,7 +2500,7 @@ export default function Customer() {
                   })}
 
                   {totalFilteredAllOrdersCount === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', background: '#faf7f0', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                    <div style={{ textAlign: 'center', padding: '2rem', background: '#f7f8fa', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                       <Receipt size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem auto' }} />
                       <p className="subtitle" style={{ margin: 0 }}>
                         {ordersDateFilter === 'All' 
@@ -2532,7 +2532,7 @@ export default function Customer() {
               </div>
 
               {/* Shop Details Block */}
-              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem' }}>
+              <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem' }}>
                 <div className="flex-between" style={{ marginBottom: '0.4rem' }}>
                   <strong style={{ fontSize: '1rem', color: 'var(--primary)' }}>
                     {selectedOrderForDetails.shopName}
@@ -2593,7 +2593,7 @@ export default function Customer() {
               </div>
 
               {/* Status Box */}
-              <div style={{ background: '#f3eee2', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ background: '#eff1f4', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Placed on</div>
                   <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{new Date(selectedOrderForDetails.createdAt).toLocaleString()}</div>
@@ -2662,7 +2662,7 @@ export default function Customer() {
                 <div style={{ border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ background: '#faf7f0', borderBottom: '1px solid var(--border)' }}>
+                      <tr style={{ background: '#f7f8fa', borderBottom: '1px solid var(--border)' }}>
                         <th style={{ textAlign: 'left', padding: '0.5rem' }}>Item</th>
                         <th style={{ textAlign: 'center', padding: '0.5rem' }}>Qty</th>
                         <th style={{ textAlign: 'right', padding: '0.5rem' }}>Rate</th>
@@ -2671,7 +2671,7 @@ export default function Customer() {
                     </thead>
                     <tbody>
                       {JSON.parse(selectedOrderForDetails.itemsJSON || '[]').map((entry, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid #f3eee2' }}>
+                        <tr key={idx} style={{ borderBottom: '1px solid #eff1f4' }}>
                           <td style={{ padding: '0.5rem' }}>{entry.item?.name || entry.name}</td>
                           <td style={{ textAlign: 'center', padding: '0.5rem' }}>{entry.qty} {entry.item?.unit || ''}</td>
                           <td style={{ textAlign: 'right', padding: '0.5rem' }}>₹{entry.rate || entry.item?.price || 0}</td>
@@ -2697,7 +2697,7 @@ export default function Customer() {
               </div>
 
               {/* Customer Delivery Info */}
-              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 <div>Customer: <strong>{selectedOrderForDetails.customerName || currentUser?.name}</strong> ({selectedOrderForDetails.customerShortId || currentUser?.shortId})</div>
                 <div>Contact: {selectedOrderForDetails.customerPhone || currentUser?.phone}</div>
                 {selectedOrderForDetails.customerAddress && <div>Address: {selectedOrderForDetails.customerAddress}</div>}
@@ -2760,7 +2760,7 @@ export default function Customer() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
                 {Object.values(orderList).map(entry => (
-                  <div key={entry.item.id} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={entry.item.id} style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{entry.item.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>₹{entry.rate} / {entry.item.unit}</div>
@@ -2910,7 +2910,7 @@ export default function Customer() {
               </div>
 
               {/* Tab Navigation */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f3eee2', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#eff1f4', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
                 <button
                   type="button"
                   onClick={() => setCustomerSettingsTab('profile')}
@@ -2984,13 +2984,13 @@ export default function Customer() {
               {/* TAB 1: PROFILE DETAILS */}
               {customerSettingsTab === 'profile' && (
                 <div>
-                  <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e8e1d0' }}>
+                  <div style={{ background: '#f7f8fa', border: '1.5px solid #e4e7ec', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e4e7ec' }}>
                       <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.3rem' }}>
                         {(currentUser?.name || 'C')[0].toUpperCase()}
                       </div>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#12201a' }}>{currentUser?.name}</h4>
+                        <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#101828' }}>{currentUser?.name}</h4>
                         <span style={{ fontSize: '0.76rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '5px', fontWeight: '700' }}>
                           Verified Customer Account
                         </span>
@@ -3000,7 +3000,7 @@ export default function Customer() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.86rem' }}>
                       <div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>GOOGLE EMAIL</div>
-                        <div style={{ fontWeight: '700', color: '#12201a', wordBreak: 'break-all' }}>{currentUser?.email}</div>
+                        <div style={{ fontWeight: '700', color: '#101828', wordBreak: 'break-all' }}>{currentUser?.email}</div>
                       </div>
                       <div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>CUSTOMER SHORT ID</div>
@@ -3008,7 +3008,7 @@ export default function Customer() {
                       </div>
                       <div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>CONTACT PHONE</div>
-                        <div style={{ fontWeight: '700', color: '#12201a' }}>{currentUser?.phone || 'Not set'}</div>
+                        <div style={{ fontWeight: '700', color: '#101828' }}>{currentUser?.phone || 'Not set'}</div>
                       </div>
                     </div>
                   </div>
@@ -3191,10 +3191,10 @@ export default function Customer() {
                     </form>
 
                     {/* 2. Set / Change Password */}
-                    <form onSubmit={handleChangePassword} style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <form onSubmit={handleChangePassword} style={{ background: '#f7f8fa', border: '1.5px solid #e4e7ec', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.96rem', color: '#101828', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <Key size={17} /> Account Password
                           </h4>
                           {currentUser?.hasPasswordSet === 1 ? (
@@ -3341,14 +3341,14 @@ export default function Customer() {
               {customerSettingsTab === 'export' && (
                 <div>
                   {/* Summary Banner */}
-                  <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e8e1d0' }}>
+                  <div style={{ background: '#f7f8fa', border: '1.5px solid #e4e7ec', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e4e7ec' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Download size={22} />
                         </div>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#12201a' }}>Export Your Orders & Khata Data</h4>
+                          <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#101828' }}>Export Your Orders & Khata Data</h4>
                         </div>
                       </div>
 
@@ -3356,24 +3356,24 @@ export default function Customer() {
                         type="button"
                         onClick={handlePrintSummary}
                         className="btn btn-outline"
-                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#d5ccb6', background: '#fff' }}
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#d0d5dd', background: '#fff' }}
                       >
                         <Printer size={15} /> Print Statement
                       </button>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
-                      <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e4e7ec', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Orders Placed</div>
                         <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--primary)' }}>{orders.length}</div>
                       </div>
-                      <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e4e7ec', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Active Dues</div>
                         <div style={{ fontSize: '1.3rem', fontWeight: '800', color: (khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#1f9d5a' }}>
                           ₹{(khataOverview.overallDue || 0).toFixed(2)}
                         </div>
                       </div>
-                      <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e4e7ec', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Linked Stores</div>
                         <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#7c3aed' }}>{(khataOverview.stores || []).length}</div>
                       </div>
@@ -3394,9 +3394,9 @@ export default function Customer() {
                   )}
 
                   {/* STEP 1: DATE RANGE */}
-                  <div style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ background: '#ffffff', border: '1.5px solid #e4e7ec', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#101828', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         <CalendarRange size={18} color="var(--primary)" />
                         <span>Step 1: Choose Date Range & Time Period</span>
                       </div>
@@ -3423,9 +3423,9 @@ export default function Customer() {
                             fontSize: '0.82rem',
                             fontWeight: '700',
                             borderRadius: '8px',
-                            border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #d5ccb6',
+                            border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #d0d5dd',
                             background: exportDateRange === preset.id ? '#e9f6ee' : '#ffffff',
-                            color: exportDateRange === preset.id ? 'var(--primary)' : '#4a5148',
+                            color: exportDateRange === preset.id ? 'var(--primary)' : '#475467',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
@@ -3436,7 +3436,7 @@ export default function Customer() {
                     </div>
 
                     {exportDateRange === 'CUSTOM' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#faf7f0', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e8e1d0' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#f7f8fa', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e4e7ec' }}>
                         <div>
                           <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                             Start Date (From)
@@ -3466,9 +3466,9 @@ export default function Customer() {
                   </div>
 
                   {/* STEP 2: WHAT TO EXPORT */}
-                  <div style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ background: '#ffffff', border: '1.5px solid #e4e7ec', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#101828', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         <FileSpreadsheet size={18} color="#1f9d5a" />
                         <span>Step 2: Select What to Export</span>
                       </div>
@@ -3481,11 +3481,11 @@ export default function Customer() {
                         >
                           Select All
                         </button>
-                        <span style={{ color: '#d5ccb6' }}>•</span>
+                        <span style={{ color: '#d0d5dd' }}>•</span>
                         <button
                           type="button"
                           onClick={() => setExportCategories({ orders: false, khata: false, profile: false, summary: false })}
-                          style={{ background: 'none', border: 'none', color: '#666c60', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                          style={{ background: 'none', border: 'none', color: '#667085', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                         >
                           Deselect All
                         </button>
@@ -3538,18 +3538,18 @@ export default function Customer() {
                               gap: '0.75rem',
                               padding: '0.85rem',
                               borderRadius: '10px',
-                              border: isChecked ? '1.5px solid #1f9d5a' : '1px solid #e8e1d0',
+                              border: isChecked ? '1.5px solid #1f9d5a' : '1px solid #e4e7ec',
                               background: isChecked ? '#eef8f1' : '#ffffff',
                               cursor: 'pointer',
                               transition: 'all 0.15s ease'
                             }}
                           >
-                            <div style={{ marginTop: '2px', color: isChecked ? '#1f9d5a' : '#a0a294' }}>
+                            <div style={{ marginTop: '2px', color: isChecked ? '#1f9d5a' : '#98a2b3' }}>
                               {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
-                                <strong style={{ fontSize: '0.86rem', color: isChecked ? '#12201a' : '#666c60' }}>{cat.title}</strong>
+                                <strong style={{ fontSize: '0.86rem', color: isChecked ? '#101828' : '#667085' }}>{cat.title}</strong>
                                 <span style={{ fontSize: '0.7rem', fontWeight: '700', color: cat.badgeColor, background: cat.badgeBg, padding: '0.15rem 0.45rem', borderRadius: '5px' }}>
                                   {cat.count}
                                 </span>
@@ -3599,8 +3599,8 @@ export default function Customer() {
                       style={{
                         padding: '0.85rem 1.25rem',
                         background: '#ffffff',
-                        color: '#12201a',
-                        borderColor: '#12201a',
+                        color: '#101828',
+                        borderColor: '#101828',
                         borderRadius: '12px',
                         fontSize: '0.92rem',
                         fontWeight: '800',
@@ -3684,7 +3684,7 @@ export default function Customer() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
               {/* Language Selection Card */}
-              <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
+              <div style={{ background: '#f7f8fa', border: '1.5px solid #e4e7ec', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3698,14 +3698,14 @@ export default function Customer() {
                   </div>
 
                   {/* Language Selection Buttons */}
-                  <div style={{ display: 'inline-flex', background: '#e8e1d0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                  <div style={{ display: 'inline-flex', background: '#e4e7ec', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                     <button
                       type="button"
                       onClick={() => setLanguage('en')}
                       style={{
                         border: 'none',
                         background: language === 'en' ? '#ffffff' : 'transparent',
-                        color: language === 'en' ? 'var(--primary)' : '#4a5148',
+                        color: language === 'en' ? 'var(--primary)' : '#475467',
                         fontWeight: language === 'en' ? 800 : 600,
                         padding: '0.45rem 1rem',
                         borderRadius: '7px',
@@ -3726,7 +3726,7 @@ export default function Customer() {
                       style={{
                         border: 'none',
                         background: language === 'hi' ? 'var(--primary)' : 'transparent',
-                        color: language === 'hi' ? '#ffffff' : '#4a5148',
+                        color: language === 'hi' ? '#ffffff' : '#475467',
                         fontWeight: language === 'hi' ? 800 : 600,
                         padding: '0.45rem 1rem',
                         borderRadius: '7px',
@@ -3746,7 +3746,7 @@ export default function Customer() {
               </div>
 
               {/* Profile Overview Card */}
-              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3766,7 +3766,7 @@ export default function Customer() {
                     Edit
                   </button>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#475467', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <div>📞 Phone: <strong>{currentUser?.phone || 'N/A'}</strong></div>
                   <div>📍 City: <strong>{currentUser?.city || 'Delhi'}</strong></div>
                   <div>🏠 Address: <span>{currentUser?.address || 'Not specified'}</span></div>
@@ -3774,7 +3774,7 @@ export default function Customer() {
               </div>
 
               {/* Security & PIN Card */}
-              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eef8f1', color: '#1f9d5a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ShieldCheck size={18} />
@@ -3783,7 +3783,7 @@ export default function Customer() {
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Security &amp; Lock</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#475467', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
                     <Key size={15} color="#1f9d5a" /> Change Account Password
                   </button>
@@ -3791,7 +3791,7 @@ export default function Customer() {
               </div>
 
               {/* Legal & Privacy Card */}
-              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#f7f8fa', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Shield size={18} />
@@ -3800,7 +3800,7 @@ export default function Customer() {
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Legal &amp; Privacy</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#475467', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
                     <ShieldCheck size={15} color="#1f9d5a" /> Privacy Policy
                   </button>
@@ -3941,7 +3941,7 @@ export default function Customer() {
                           Quantity
                         </label>
                         {/* Compact Unit Toggle Buttons (No Emoji) */}
-                        <div style={{ display: 'inline-flex', background: '#e8e1d0', borderRadius: '6px', padding: '2px', gap: '2px' }}>
+                        <div style={{ display: 'inline-flex', background: '#e4e7ec', borderRadius: '6px', padding: '2px', gap: '2px' }}>
                           <button
                             type="button"
                             style={{
@@ -3952,7 +3952,7 @@ export default function Customer() {
                               borderRadius: '4px',
                               cursor: 'pointer',
                               background: (modalSubUnitMode === 'Kilo' || modalSubUnitMode === 'Litre') ? 'var(--primary)' : 'transparent',
-                              color: (modalSubUnitMode === 'Kilo' || modalSubUnitMode === 'Litre') ? '#fff' : '#4a5148',
+                              color: (modalSubUnitMode === 'Kilo' || modalSubUnitMode === 'Litre') ? '#fff' : '#475467',
                               transition: 'all 0.15s ease'
                             }}
                             onClick={() => handleToggleModalSubUnitMode(selectedModalProduct.unit === 'Litre' ? 'Litre' : 'Kilo')}
@@ -3969,7 +3969,7 @@ export default function Customer() {
                               borderRadius: '4px',
                               cursor: 'pointer',
                               background: (modalSubUnitMode === 'Gram' || modalSubUnitMode === 'ML') ? 'var(--primary)' : 'transparent',
-                              color: (modalSubUnitMode === 'Gram' || modalSubUnitMode === 'ML') ? '#fff' : '#4a5148',
+                              color: (modalSubUnitMode === 'Gram' || modalSubUnitMode === 'ML') ? '#fff' : '#475467',
                               transition: 'all 0.15s ease'
                             }}
                             onClick={() => handleToggleModalSubUnitMode(selectedModalProduct.unit === 'Litre' ? 'ML' : 'Gram')}
@@ -4095,15 +4095,15 @@ export default function Customer() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(18, 32, 26, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(16, 24, 40, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
           <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
               <LogOut size={26} />
             </div>
-            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#12201a' }}>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#101828' }}>
               Log Out?
             </h3>
-            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#666c60', lineHeight: '1.45' }}>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#667085', lineHeight: '1.45' }}>
               Are you sure you want to log out of your GI SHOP account?
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -4135,7 +4135,7 @@ export default function Customer() {
             position: 'fixed', 
             inset: 0, 
             zIndex: 99999, 
-            background: 'linear-gradient(135deg, #12201a 0%, #1b2a22 100%)', 
+            background: 'linear-gradient(135deg, #101828 0%, #1d2939 100%)', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
@@ -4149,10 +4149,10 @@ export default function Customer() {
               <Lock size={32} />
             </div>
 
-            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#faf7f0' }}>
+            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#f7f8fa' }}>
               {currentUser?.name || 'Account Locked'}
             </h2>
-            <div style={{ fontSize: '0.85rem', color: '#a0a294', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.85rem', color: '#98a2b3', marginBottom: '1.25rem' }}>
               {unlockMode === 'PIN' ? 'Enter 4-digit PIN to unlock account' : 'Enter account password to unlock'}
             </div>
 
@@ -4259,7 +4259,7 @@ export default function Customer() {
                       borderRadius: '14px',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       background: 'rgba(255, 255, 255, 0.04)',
-                      color: '#a0a294',
+                      color: '#98a2b3',
                       fontSize: '0.9rem',
                       fontWeight: '700',
                       cursor: 'pointer',
@@ -4335,7 +4335,7 @@ export default function Customer() {
                   <button
                     type="button"
                     onClick={() => setShowUnlockPassword(!showUnlockPassword)}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#a0a294', padding: 0 }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#98a2b3', padding: 0 }}
                   >
                     {showUnlockPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -4374,7 +4374,7 @@ export default function Customer() {
                   background: 'rgba(255, 255, 255, 0.08)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: '12px',
-                  color: '#faf7f0',
+                  color: '#f7f8fa',
                   fontSize: '0.9rem',
                   fontWeight: '700',
                   cursor: 'pointer',
@@ -4396,7 +4396,7 @@ export default function Customer() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#a0a294',
+                  color: '#98a2b3',
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -4407,7 +4407,7 @@ export default function Customer() {
                 Switch Account / Log Out
               </button>
 
-              <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#666c60' }}>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#667085' }}>
                 Forgot PIN or Password?{' '}
                 <a 
                   href="tel:7323809242" 

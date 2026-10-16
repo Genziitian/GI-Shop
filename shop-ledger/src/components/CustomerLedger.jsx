@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MHero } from './MobileKit';
+import { MHero, MGroup, MRow } from './MobileKit';
 import { getCustomers, getCustomerLedger, saveSettlement, terminateCustomer, blockCustomer, unblockCustomer, getMyDetailedShop, searchRegisteredCustomer, saveCustomer } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
 import { ArrowLeft, Search, Plus, Ban, CheckCircle, ShieldAlert, X, MessageCircle, UserCheck, Receipt, Printer } from 'lucide-react';
@@ -220,7 +220,37 @@ export default function CustomerLedger({ currentShop }) {
   if (selectedCustomer) {
     return (
       <div className="panel">
-        <div className="flex-between" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        {/* Phone: compact customer header */}
+        <div className="m-only">
+          <button type="button" className="m-back" onClick={() => setSelectedCustomer(null)}>
+            <ArrowLeft size={18} /> Customers
+          </button>
+          <div className="m-cust-card">
+            <div className="m-cust-top">
+              <div className="m-cust-avatar">{(selectedCustomer.name || '?').trim().charAt(0).toUpperCase()}</div>
+              <div className="m-cust-info">
+                <div className="m-cust-name">{selectedCustomer.name}</div>
+                <div className="m-cust-sub">{[selectedCustomer.shortId, selectedCustomer.phone].filter(Boolean).join(' • ')}</div>
+              </div>
+            </div>
+            <div className="m-cust-balance">
+              <span>Outstanding balance</span>
+              <strong style={{ color: currentDue > 0 ? 'var(--danger)' : 'var(--success)' }}>₹{currentDue.toFixed(2)}</strong>
+            </div>
+            {currentDue > 0 && (
+              <div className="m-cust-actions">
+                <button type="button" className="btn btn-whatsapp" onClick={(e) => handleRemindPayment(e, selectedCustomer)}>
+                  <MessageCircle size={16} /> Remind
+                </button>
+                <button type="button" className="btn btn-success" onClick={(e) => handleOpenSettle(e, selectedCustomer)}>
+                  Settle due
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-between m-hide" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <button type="button" className="btn btn-outline" onClick={() => setSelectedCustomer(null)}>
             <ArrowLeft size={16} /> Back to Customers
           </button>
@@ -242,7 +272,7 @@ export default function CustomerLedger({ currentShop }) {
         </div>
 
         {/* Customer Actions Bar */}
-        <div className="action-bar">
+        <div className="action-bar m-hide">
           {currentDue > 0 && (
             <>
               <button 
@@ -293,7 +323,7 @@ export default function CustomerLedger({ currentShop }) {
 
         {/* Chronological Ledger Header with Date Filter */}
         <div className="flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Transaction Timeline &amp; Ledger</h3>
+          <h3 className="m-section-title" style={{ fontSize: '1rem', fontWeight: '600', margin: 0 }}>Transactions</h3>
 
           {/* Filter Pills */}
           <div className="filter-pills-scroll">
@@ -319,7 +349,7 @@ export default function CustomerLedger({ currentShop }) {
 
         {/* Custom Date Range Picker */}
         {timelineFilter === 'Custom' && (
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.85rem', alignItems: 'center', flexWrap: 'wrap', background: '#faf7f0', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.85rem', alignItems: 'center', flexWrap: 'wrap', background: '#f7f8fa', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
               <input 
@@ -393,7 +423,7 @@ export default function CustomerLedger({ currentShop }) {
             <div className="table-responsive">
               <table className="ledger-table" style={{ width: '100%', fontSize: '0.85rem', minWidth: '600px', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
+                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
                     <th style={{ textAlign: 'left', padding: '0.5rem' }}>Date &amp; Time</th>
                     <th style={{ textAlign: 'left', padding: '0.5rem' }}>Description</th>
                     <th style={{ textAlign: 'right', padding: '0.5rem' }}>Debit (+Due)</th>
@@ -479,6 +509,18 @@ export default function CustomerLedger({ currentShop }) {
             </div>
           );
         })()}
+
+        <div className="m-only" style={{ marginTop: '1.25rem' }}>
+          <MGroup label="Manage customer">
+            <MRow
+              icon={<Ban size={18} />}
+              tint="amber"
+              title={selectedCustomer.isBlocked ? 'Unblock customer' : 'Block from ordering'}
+              onClick={() => handleToggleBlock(selectedCustomer)}
+            />
+            <MRow icon={<ShieldAlert size={18} />} tint="red" title="Terminate relationship" onClick={handleTerminate} danger />
+          </MGroup>
+        </div>
 
         {/* Settle Modal */}
         {showSettleModal && (
@@ -686,7 +728,7 @@ export default function CustomerLedger({ currentShop }) {
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    background: '#faf7f0' 
+                    background: '#f7f8fa' 
                   }}
                 >
                   <div>
@@ -746,7 +788,7 @@ export default function CustomerLedger({ currentShop }) {
             </div>
 
             {/* Customer Info */}
-            <div style={{ background: '#faf7f0', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+            <div style={{ background: '#f7f8fa', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Customer Details</div>
               <div style={{ fontWeight: '700' }}>
                 {selectedReceipt.customerPhone || selectedCustomer?.name || 'Customer'}
@@ -773,7 +815,7 @@ export default function CustomerLedger({ currentShop }) {
                   const lineTotal = (c.amount || (rate * qty)) || 0;
 
                   return (
-                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f3eee2' }}>
+                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #eff1f4' }}>
                       <div>
                         <div style={{ fontWeight: '600' }}>{itemName}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>

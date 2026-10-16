@@ -271,11 +271,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     marginBottom: 12,
   },
   customerInfoLeft: {

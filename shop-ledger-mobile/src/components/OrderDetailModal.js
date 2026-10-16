@@ -216,7 +216,7 @@ export default function OrderDetailModal({
       case 'CANCELLED_BY_CUSTOMER':
         return <AlertCircle size={14} color="#dc2626" />;
       default:
-        return <Clock size={14} color="#666c60" />;
+        return <Clock size={14} color="#667085" />;
     }
   };
 
@@ -312,7 +312,7 @@ export default function OrderDetailModal({
           }
           body {
             font-family: 'Courier New', Courier, Consolas, Monaco, monospace;
-            background-color: #faf7f0;
+            background-color: #f7f8fa;
             color: #111827;
             margin: 0;
             padding: 14px;
@@ -326,7 +326,7 @@ export default function OrderDetailModal({
             max-width: 380px;
             background: #ffffff;
             padding: 20px 16px;
-            border: 1px dashed #a0a294;
+            border: 1px dashed #98a2b3;
             box-shadow: 0 4px 14px rgba(0,0,0,0.06);
           }
           .center { text-align: center; }
@@ -334,12 +334,12 @@ export default function OrderDetailModal({
           .left { text-align: left; }
           .bold { font-weight: 700; }
           .d-dash {
-            border-top: 1px dashed #1b2a22;
+            border-top: 1px dashed #1d2939;
             margin: 8px 0;
           }
           .d-double {
-            border-top: 2px solid #12201a;
-            border-bottom: 2px solid #12201a;
+            border-top: 2px solid #101828;
+            border-bottom: 2px solid #101828;
             height: 3px;
             margin: 8px 0;
           }
@@ -352,14 +352,14 @@ export default function OrderDetailModal({
           }
           .store-detail {
             font-size: 10.5px;
-            color: #343c35;
+            color: #344054;
             margin-bottom: 2px;
           }
           .receipt-type-pill {
             display: inline-block;
             margin-top: 6px;
             padding: 3px 12px;
-            border: 1px solid #12201a;
+            border: 1px solid #101828;
             font-size: 10px;
             font-weight: 800;
             letter-spacing: 1px;
@@ -378,8 +378,8 @@ export default function OrderDetailModal({
           }
           .items-table th {
             padding: 6px 2px;
-            border-top: 1px dashed #1b2a22;
-            border-bottom: 1px dashed #1b2a22;
+            border-top: 1px dashed #1d2939;
+            border-bottom: 1px dashed #1d2939;
             font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
@@ -397,8 +397,8 @@ export default function OrderDetailModal({
           .pickup-box {
             margin-top: 10px;
             padding: 8px 10px;
-            border: 1px dashed #1b2a22;
-            background: #faf7f0;
+            border: 1px dashed #1d2939;
+            background: #f7f8fa;
           }
           .barcode-box {
             margin-top: 16px;
@@ -410,17 +410,17 @@ export default function OrderDetailModal({
             width: 220px;
             background: repeating-linear-gradient(
               90deg,
-              #12201a 0px, #12201a 2px,
+              #101828 0px, #101828 2px,
               #fff 2px, #fff 4px,
-              #12201a 4px, #12201a 6px,
+              #101828 4px, #101828 6px,
               #fff 6px, #fff 9px,
-              #12201a 9px, #12201a 12px,
+              #101828 9px, #101828 12px,
               #fff 12px, #fff 14px,
-              #12201a 14px, #12201a 15px,
+              #101828 14px, #101828 15px,
               #fff 15px, #fff 18px,
-              #12201a 18px, #12201a 21px,
+              #101828 18px, #101828 21px,
               #fff 21px, #fff 24px,
-              #12201a 24px, #12201a 25px,
+              #101828 24px, #101828 25px,
               #fff 25px, #fff 28px
             );
           }
@@ -428,13 +428,13 @@ export default function OrderDetailModal({
             font-size: 9.5px;
             letter-spacing: 2px;
             margin-top: 2px;
-            color: #343c35;
+            color: #344054;
           }
           .receipt-footer {
             margin-top: 14px;
             text-align: center;
             font-size: 10px;
-            color: #4a5148;
+            color: #475467;
             line-height: 1.4;
           }
         </style>
@@ -509,10 +509,10 @@ export default function OrderDetailModal({
             <div style="font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #0f7a43; margin-bottom: 2px;">
               &#10003; PICKUP CUSTOMER DETAILS
             </div>
-            <div style="font-size: 11.5px; font-weight: 800; color: #12201a;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #101828;">
               ${customerName} ${customerShortId ? `(${customerShortId})` : ''}
             </div>
-            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #343c35;">Phone: ${customerPhone}</div>` : ''}
+            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #344054;">Phone: ${customerPhone}</div>` : ''}
             <div style="margin-top: 4px; font-size: 10.5px; font-weight: 800; color: #0b5e33;">
               (Customer will pick up the order)
             </div>
@@ -528,7 +528,7 @@ export default function OrderDetailModal({
           <div class="receipt-footer">
             <div class="bold">&#9733; THANK YOU FOR SHOPPING WITH US &#9733;</div>
             <div>PLEASE VISIT AGAIN!</div>
-            <div style="font-size: 9px; color: #666c60; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
+            <div style="font-size: 9px; color: #667085; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
           </div>
         </div>
       </body>
@@ -1365,7 +1365,7 @@ export default function OrderDetailModal({
 const styles = StyleSheet.create({
   fullPageContainer: {
     flex: 1,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
   },
   navBar: {
     flexDirection: 'row',
@@ -1374,14 +1374,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e8e1d0',
+    borderBottomColor: '#e4e7ec',
     ...shadowMedium,
     zIndex: 10,
   },
   navBackBtn: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
   },
   navTitle: {
     fontSize: 16,
@@ -1425,7 +1425,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     marginBottom: 14,
     ...shadowMedium,
   },
@@ -1459,9 +1459,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderTopWidth: 1,
-    borderTopColor: '#f3eee2',
+    borderTopColor: '#eff1f4',
     marginTop: 12,
     paddingTop: 10,
   },
@@ -1511,7 +1511,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     paddingHorizontal: 12,
     paddingVertical: 6,
     ...shadowMedium,
@@ -1521,7 +1521,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   itemRowUnavail: {
     backgroundColor: '#fef2f2',
@@ -1591,7 +1591,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     marginTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#e8e1d0',
+    borderTopColor: '#e4e7ec',
   },
   totalLabel: {
     fontSize: 14,
@@ -1652,7 +1652,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     padding: 14,
     marginTop: 8,
     ...shadowMedium,
@@ -1669,15 +1669,15 @@ const styles = StyleSheet.create({
     top: 28,
     bottom: 0,
     width: 2,
-    backgroundColor: '#e8e1d0',
+    backgroundColor: '#e4e7ec',
   },
   stepIconDot: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 2,
-    borderColor: '#a0a294',
+    borderColor: '#98a2b3',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
@@ -1688,8 +1688,8 @@ const styles = StyleSheet.create({
   },
   stepBox: {
     flex: 1,
-    backgroundColor: '#faf7f0',
-    borderColor: '#e8e1d0',
+    backgroundColor: '#f7f8fa',
+    borderColor: '#e4e7ec',
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
@@ -1706,7 +1706,7 @@ const styles = StyleSheet.create({
   },
   stepDesc: {
     fontSize: 11,
-    color: '#4a5148',
+    color: '#475467',
     marginTop: 3,
     lineHeight: 15,
   },
@@ -1739,7 +1739,7 @@ const styles = StyleSheet.create({
   customerFieldVal: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#12201a',
+    color: '#101828',
   },
   pickupHighlightBox: {
     flexDirection: 'row',
@@ -1786,7 +1786,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   closeFullBtn: {
-    backgroundColor: '#e8e1d0',
+    backgroundColor: '#e4e7ec',
     paddingVertical: 13,
     borderRadius: 12,
     alignItems: 'center',
@@ -1831,9 +1831,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   discountControlContainer: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     borderRadius: 10,
     padding: 10,
     marginVertical: 8,
@@ -1848,7 +1848,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1864,7 +1864,7 @@ const styles = StyleSheet.create({
   shopkeeperActionCard: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     borderRadius: 14,
     padding: 14,
     marginTop: 14,
@@ -1894,9 +1894,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
   },
   packingChipActive: {
     backgroundColor: '#0284c7',
@@ -1986,9 +1986,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     alignItems: 'center',
   },
   paymentModeChipActive: {
@@ -2054,7 +2054,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: 3,
-    color: '#12201a',
+    color: '#101828',
   },
   verifyOtpBtn: {
     flex: 1,
@@ -2101,9 +2101,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     marginBottom: 8,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
   },
   declineReasonOptionSelected: {
     borderColor: colors.danger,
@@ -2114,7 +2114,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#a0a294',
+    borderColor: '#98a2b3',
   },
   declineRadioCircleSelected: {
     borderColor: colors.danger,
@@ -2131,7 +2131,7 @@ const styles = StyleSheet.create({
   },
   declineReasonInput: {
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -2144,7 +2144,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 11,
     borderRadius: 8,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     alignItems: 'center',
   },
   declineCancelBtnText: {

@@ -196,7 +196,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                         <Text style={[styles.inputLabel, { marginBottom: 0 }]}>
                           Quantity
                         </Text>
-                        <View style={{ flexDirection: 'row', backgroundColor: '#e8e1d0', borderRadius: 5, padding: 2 }}>
+                        <View style={{ flexDirection: 'row', backgroundColor: '#e4e7ec', borderRadius: 5, padding: 2 }}>
                           <TouchableOpacity
                             style={{
                               paddingHorizontal: 6,
@@ -210,7 +210,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                               style={{
                                 fontSize: 10,
                                 fontWeight: '700',
-                                color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#ffffff' : '#666c60',
+                                color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#ffffff' : '#667085',
                               }}
                             >
                               {isLitre ? 'Litre' : 'Kilo'}
@@ -230,7 +230,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                               style={{
                                 fontSize: 10,
                                 fontWeight: '700',
-                                color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#ffffff' : '#666c60',
+                                color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#ffffff' : '#667085',
                               }}
                             >
                               {isLitre ? 'ML' : 'Gram'}
@@ -282,7 +282,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.6)',
+    backgroundColor: 'rgba(16, 24, 40, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

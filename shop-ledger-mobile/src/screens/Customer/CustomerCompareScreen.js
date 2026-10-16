@@ -202,7 +202,7 @@ export default function CustomerCompareScreen({ navigation }) {
                       <View style={{ alignItems: 'flex-end', gap: 4 }}>
                         <Text style={styles.offerRate}>₹{(Number(shop?.price) || 0).toFixed(2)}</Text>
                         <TouchableOpacity
-                          style={[styles.shopOrderBtn, !shop.isOpen && { backgroundColor: '#d5ccb6' }]}
+                          style={[styles.shopOrderBtn, !shop.isOpen && { backgroundColor: '#d0d5dd' }]}
                           disabled={!shop.isOpen}
                           onPress={() => handleSelectShop(shop)}
                         >
@@ -293,9 +293,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     gap: 4,
   },
   profileAvatar: {
@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#faf7f0',
-    borderColor: '#d5ccb6',
+    backgroundColor: '#f7f8fa',
+    borderColor: '#d0d5dd',
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 6,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   kwChip: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 14,
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
     paddingBottom: 8,
   },
   groupName: {
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   storeRow: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderRadius: 8,
     padding: 10,
     flexDirection: 'row',

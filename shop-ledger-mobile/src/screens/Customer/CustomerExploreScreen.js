@@ -388,7 +388,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
               <View style={styles.shopActionsRow}>
                 <TouchableOpacity
-                  style={[styles.primaryActionBtn, !item.isOpen && { backgroundColor: '#666c60' }]}
+                  style={[styles.primaryActionBtn, !item.isOpen && { backgroundColor: '#667085' }]}
                   onPress={() => handleOpenShop(item)}
                   activeOpacity={0.8}
                 >
@@ -426,7 +426,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
       {/* CATALOG LOADING SPINNER */}
       <Modal visible={catalogLoading} transparent animationType="fade" onRequestClose={() => setCatalogLoading(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(18, 32, 26, 0.5)', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(16, 24, 40, 0.5)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: '#ffffff', padding: 24, borderRadius: 16, alignItems: 'center', gap: 12 }}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Loading Shop Catalog...</Text>
@@ -441,7 +441,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
         transparent={false}
         onRequestClose={() => setActiveShop(null)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#faf7f0' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f8fa' }}>
           {activeShop && (
             <View style={{ flex: 1 }}>
               {/* Top Navigation Bar */}
@@ -557,7 +557,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                         style={[
                           styles.addBtn,
                           isInCart ? styles.addBtnActive : {},
-                          !activeShop.isOpen ? { backgroundColor: '#d5ccb6' } : {},
+                          !activeShop.isOpen ? { backgroundColor: '#d0d5dd' } : {},
                         ]}
                         disabled={!activeShop.isOpen}
                         onPress={() => openItemModal(item, activeShop)}
@@ -700,10 +700,10 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <TouchableOpacity
-                style={[styles.conflictBtn, { backgroundColor: '#f3eee2' }]}
+                style={[styles.conflictBtn, { backgroundColor: '#eff1f4' }]}
                 onPress={() => setCartConflict(null)}
               >
-                <Text style={[styles.conflictBtnText, { color: '#4a5148' }]}>Keep Cart</Text>
+                <Text style={[styles.conflictBtnText, { color: '#475467' }]}>Keep Cart</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.conflictBtn, { backgroundColor: colors.danger }]}
@@ -798,9 +798,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     gap: 4,
   },
   profileAvatar: {
@@ -866,8 +866,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#faf7f0',
-    borderColor: '#d5ccb6',
+    backgroundColor: '#f7f8fa',
+    borderColor: '#d0d5dd',
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 6,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderColor: colors.border,
     borderWidth: 1,
   },
@@ -1141,7 +1141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#f3eee2',
+    borderTopColor: '#eff1f4',
     paddingTop: 10,
   },
   primaryActionBtn: {
@@ -1393,7 +1393,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
     gap: 8,
   },
   cartItemName: {

@@ -335,7 +335,7 @@ export default function AuthScreen() {
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Email ID or Short ID</Text>
                   <View style={styles.inputWrapper}>
-                    <TextInput style={styles.input} placeholder="Enter your email or Short ID" placeholderTextColor="#a0a294" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                    <TextInput style={styles.input} placeholder="Enter your email or Short ID" placeholderTextColor="#98a2b3" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
                   </View>
                 </View>
                 <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
@@ -347,7 +347,7 @@ export default function AuthScreen() {
               <>
                 <View style={styles.accountPill}>
                   <View style={styles.accountPillLeft}>
-                    <User size={16} color="#666c60" /><Text style={styles.accountPillText}>{email}</Text>
+                    <User size={16} color="#667085" /><Text style={styles.accountPillText}>{email}</Text>
                   </View>
                   <TouchableOpacity onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                     <Text style={styles.accountPillChange}>Change</Text>
@@ -356,9 +356,9 @@ export default function AuthScreen() {
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Password</Text>
                   <View style={styles.inputWrapper}>
-                    <TextInput style={styles.input} placeholder="Enter your password" placeholderTextColor="#a0a294" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} autoFocus />
+                    <TextInput style={styles.input} placeholder="Enter your password" placeholderTextColor="#98a2b3" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} autoFocus />
                     <TouchableOpacity style={styles.inputIcon} onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
-                      {showPassword ? <EyeOff size={18} color="#a0a294" /> : <Eye size={18} color="#a0a294" />}
+                      {showPassword ? <EyeOff size={18} color="#98a2b3" /> : <Eye size={18} color="#98a2b3" />}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -461,7 +461,7 @@ export default function AuthScreen() {
                 <Text style={styles.modalTitle}>{role === 'Shopkeeper' ? 'Configure Your Store' : 'Complete Your Profile'}</Text>
                 <Text style={styles.modalSubtitle}>{onboardingUser?.googleUser?.email || 'Verified Google Account'}</Text>
               </View>
-              <TouchableOpacity onPress={() => setShowOnboardingModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><X size={22} color="#666c60" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowOnboardingModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><X size={22} color="#667085" /></TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <TouchableOpacity style={styles.selectedRolePill} onPress={() => { setShowOnboardingModal(false); setShowRoleModal(true); }} activeOpacity={0.75}>
@@ -471,21 +471,21 @@ export default function AuthScreen() {
               </TouchableOpacity>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Full Name *</Text>
-                <TextInput style={styles.input} placeholder="e.g. Ramesh Kumar" placeholderTextColor="#a0a294" value={onboardingName} onChangeText={setOnboardingName} />
+                <TextInput style={styles.input} placeholder="e.g. Ramesh Kumar" placeholderTextColor="#98a2b3" value={onboardingName} onChangeText={setOnboardingName} />
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>10-Digit Mobile Phone *</Text>
-                <TextInput style={styles.input} placeholder="e.g. 9812345678" placeholderTextColor="#a0a294" keyboardType="phone-pad" maxLength={10} value={onboardingPhone} onChangeText={setOnboardingPhone} />
+                <TextInput style={styles.input} placeholder="e.g. 9812345678" placeholderTextColor="#98a2b3" keyboardType="phone-pad" maxLength={10} value={onboardingPhone} onChangeText={setOnboardingPhone} />
               </View>
               {role === 'Shopkeeper' && (
                 <>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Shop Name *</Text>
-                    <TextInput style={styles.input} placeholder="e.g. Krishna Super Market" placeholderTextColor="#a0a294" value={onboardingShopName} onChangeText={setOnboardingShopName} />
+                    <TextInput style={styles.input} placeholder="e.g. Krishna Super Market" placeholderTextColor="#98a2b3" value={onboardingShopName} onChangeText={setOnboardingShopName} />
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Shop Address *</Text>
-                    <TextInput style={styles.input} placeholder="e.g. Shop #12, Main Market" placeholderTextColor="#a0a294" value={onboardingShopAddress} onChangeText={setOnboardingShopAddress} />
+                    <TextInput style={styles.input} placeholder="e.g. Shop #12, Main Market" placeholderTextColor="#98a2b3" value={onboardingShopAddress} onChangeText={setOnboardingShopAddress} />
                   </View>
                   <View style={{ marginBottom: 14 }}>
                     <CitySelector
@@ -493,7 +493,7 @@ export default function AuthScreen() {
                       onSelectCity={setOnboardingCity}
                       label="Choose Shop City *"
                     />
-                    <Text style={{ fontSize: 11, color: '#666c60', marginTop: 4 }}>
+                    <Text style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>
                       Store city is locked after registration. Only SuperAdmin can modify it.
                     </Text>
                   </View>
@@ -502,7 +502,7 @@ export default function AuthScreen() {
               {role === 'Customer' && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Delivery / Home Address (Optional)</Text>
-                  <TextInput style={styles.input} placeholder="e.g. Flat 301, Sunrise Tower" placeholderTextColor="#a0a294" value={onboardingAddress} onChangeText={setOnboardingAddress} />
+                  <TextInput style={styles.input} placeholder="e.g. Flat 301, Sunrise Tower" placeholderTextColor="#98a2b3" value={onboardingAddress} onChangeText={setOnboardingAddress} />
                 </View>
               )}
               <TouchableOpacity style={[styles.submitBtn, { marginTop: 16 }]} onPress={handleCompleteOnboarding} disabled={loading} activeOpacity={0.8}>
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     resizeMode: 'contain',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
   },
   welcomeHeader: {
     alignItems: 'center',
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#12201a',
+    color: '#101828',
     letterSpacing: -0.5,
     marginBottom: 6,
   },
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
   },
   welcomeSubtitle: {
     fontSize: 15,
-    color: '#666c60',
+    color: '#667085',
   },
   googleBtn: {
     flexDirection: 'row',
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     backgroundColor: '#ffffff',
     marginBottom: 20,
     gap: 12,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   googleBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1b2a22',
+    color: '#1d2939',
   },
   dividerRow: {
     flexDirection: 'row',
@@ -609,21 +609,21 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e8e1d0',
+    backgroundColor: '#e4e7ec',
   },
   dividerText: {
     paddingHorizontal: 14,
     fontSize: 13,
-    color: '#a0a294',
+    color: '#98a2b3',
     fontWeight: '500',
   },
   accountPill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
   accountPillText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1b2a22',
+    color: '#1d2939',
   },
   accountPillChange: {
     fontSize: 13,
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   backToEmailText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666c60',
+    color: '#667085',
   },
   toggleRow: {
     flexDirection: 'row',
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: 14,
-    color: '#666c60',
+    color: '#667085',
   },
   toggleLink: {
     fontSize: 14,
@@ -679,17 +679,17 @@ const styles = StyleSheet.create({
   },
   footerLinkText: {
     fontSize: 12.5,
-    color: '#a0a294',
+    color: '#98a2b3',
     textDecorationLine: 'underline',
   },
   footerDot: {
     fontSize: 12,
-    color: '#a0a294',
+    color: '#98a2b3',
   },
   footerCopyright: {
     textAlign: 'center',
     fontSize: 11.5,
-    color: '#d5ccb6',
+    color: '#d0d5dd',
     marginTop: 4,
   },
   // ---- Registration View Styles ----
@@ -729,9 +729,9 @@ const styles = StyleSheet.create({
   settingsBtn: {
     padding: 8,
     borderRadius: 10,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
   },
   card: {
     backgroundColor: colors.surface,
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#343c35',
+    color: '#344054',
     marginBottom: 6,
   },
   inputWrapper: {
@@ -816,12 +816,12 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     backgroundColor: '#ffffff',
     paddingHorizontal: 14,
     paddingRight: 42,
     fontSize: 15,
-    color: '#12201a',
+    color: '#101828',
   },
   inputIcon: {
     position: 'absolute',
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.65)',
+    backgroundColor: 'rgba(16, 24, 40, 0.65)',
     justifyContent: 'flex-end',
   },
   modalHandle: {
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#d5ccb6',
+    backgroundColor: '#d0d5dd',
     marginBottom: 18,
   },
   roleModalContent: {
@@ -907,13 +907,13 @@ const styles = StyleSheet.create({
   roleQuestionTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#12201a',
+    color: '#101828',
     textAlign: 'center',
     marginBottom: 6,
   },
   roleQuestionSubtitle: {
     fontSize: 13,
-    color: '#666c60',
+    color: '#667085',
     textAlign: 'center',
     marginBottom: 20,
     fontWeight: '600',
@@ -947,13 +947,13 @@ const styles = StyleSheet.create({
   roleChoiceTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#12201a',
+    color: '#101828',
     marginBottom: 4,
   },
   roleChoiceText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666c60',
+    color: '#667085',
     textAlign: 'center',
   },
   modalTextButton: {
@@ -963,7 +963,7 @@ const styles = StyleSheet.create({
   modalTextButtonText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#666c60',
+    color: '#667085',
   },
   modalContent: {
     backgroundColor: '#ffffff',
@@ -979,17 +979,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#12201a',
+    color: '#101828',
     letterSpacing: -0.3,
   },
   modalSubtitle: {
     fontSize: 13,
-    color: '#666c60',
+    color: '#667085',
     marginTop: 2,
     fontWeight: '500',
   },
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.45)',
+    backgroundColor: 'rgba(16, 24, 40, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -1033,19 +1033,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     ...shadowLarge,
   },
   loadingTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#12201a',
+    color: '#101828',
     marginTop: 14,
     textAlign: 'center',
   },
   loadingSubtitle: {
     fontSize: 13,
-    color: '#666c60',
+    color: '#667085',
     marginTop: 6,
     textAlign: 'center',
     fontWeight: '600',

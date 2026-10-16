@@ -450,7 +450,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.6)',
+    backgroundColor: 'rgba(16, 24, 40, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -549,9 +549,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   inputLocked: {
-    backgroundColor: '#f3eee2',
-    borderColor: '#d5ccb6',
-    color: '#343c35',
+    backgroundColor: '#eff1f4',
+    borderColor: '#d0d5dd',
+    color: '#344054',
     fontWeight: '700',
   },
   actions: {
@@ -587,9 +587,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   appSearchBox: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     borderRadius: 14,
     padding: 12,
     marginBottom: 14,
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     borderRadius: 10,
     padding: 10,
     marginBottom: 6,

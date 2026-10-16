@@ -3,7 +3,7 @@
   "short_name": "GI SHOP",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf7f0",
+  "background_color": "#f2f4f7",
   "theme_color": "#0f7a43",
   "description": "Shopkeeper POS, Khata, Orders & Grocery Discovery",
   "icons": [

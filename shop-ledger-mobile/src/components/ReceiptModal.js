@@ -56,13 +56,13 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
         const amount = (Number(entry.amount || (qty * rate)) || 0).toFixed(2);
         return `
           <tr>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2; text-align: center; color: #666c60; font-size: 12px;">${idx + 1}</td>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2;">
-              <div style="font-weight: 700; color: #12201a; font-size: 13px;">${itemName}</div>
-              <div style="font-size: 11px; color: #666c60;">&#8377;${rate} / ${unit}</div>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #eff1f4; text-align: center; color: #667085; font-size: 12px;">${idx + 1}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #eff1f4;">
+              <div style="font-weight: 700; color: #101828; font-size: 13px;">${itemName}</div>
+              <div style="font-size: 11px; color: #667085;">&#8377;${rate} / ${unit}</div>
             </td>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2; text-align: center; font-weight: 600; color: #343c35; font-size: 13px;">${qty} ${unit}</td>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2; text-align: right; font-weight: 700; color: #12201a; font-size: 13px;">&#8377;${amount}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #eff1f4; text-align: center; font-weight: 600; color: #344054; font-size: 13px;">${qty} ${unit}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #eff1f4; text-align: right; font-weight: 700; color: #101828; font-size: 13px;">&#8377;${amount}</td>
           </tr>
         `;
       }).join('');
@@ -85,7 +85,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             @page { size: A4 portrait; margin: 12mm; }
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-              color: #12201a;
+              color: #101828;
               background-color: #ffffff;
               margin: 0;
               padding: 16px;
@@ -93,7 +93,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             .invoice-box {
               max-width: 680px;
               margin: 0 auto;
-              border: 1px solid #e8e1d0;
+              border: 1px solid #e4e7ec;
               border-radius: 16px;
               padding: 24px 28px;
               box-shadow: 0 4px 14px rgba(0,0,0,0.04);
@@ -101,18 +101,18 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             .header-center {
               text-align: center;
               padding-bottom: 18px;
-              border-bottom: 2px dashed #e8e1d0;
+              border-bottom: 2px dashed #e4e7ec;
             }
             .store-name {
               font-size: 24px;
               font-weight: 900;
-              color: #12201a;
+              color: #101828;
               margin: 0 0 4px 0;
               letter-spacing: -0.5px;
             }
             .store-address {
               font-size: 12px;
-              color: #666c60;
+              color: #667085;
               margin: 0 0 10px 0;
             }
             .status-pill {
@@ -128,7 +128,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             .meta-grid {
               display: flex;
               flex-wrap: wrap;
-              background: #faf7f0;
+              background: #f7f8fa;
               border-radius: 12px;
               padding: 12px 16px;
               margin: 18px 0;
@@ -140,11 +140,11 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               font-size: 12px;
             }
             .meta-label {
-              color: #666c60;
+              color: #667085;
               font-weight: 500;
             }
             .meta-val {
-              color: #12201a;
+              color: #101828;
               font-weight: 700;
             }
             table {
@@ -156,14 +156,14 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               text-align: left;
               font-size: 11px;
               font-weight: 800;
-              color: #666c60;
+              color: #667085;
               padding: 10px 8px;
-              border-bottom: 2px solid #e8e1d0;
+              border-bottom: 2px solid #e4e7ec;
               letter-spacing: 0.5px;
             }
             .summary-box {
               margin-top: 14px;
-              border-top: 2px dashed #e8e1d0;
+              border-top: 2px dashed #e4e7ec;
               padding-top: 14px;
               max-width: 280px;
               margin-left: auto;
@@ -173,14 +173,14 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               justify-content: space-between;
               padding: 4px 0;
               font-size: 13px;
-              color: #4a5148;
+              color: #475467;
             }
             .total-row {
               display: flex;
               justify-content: space-between;
               padding: 10px 0 0 0;
               margin-top: 8px;
-              border-top: 2px solid #12201a;
+              border-top: 2px solid #101828;
               font-size: 18px;
               font-weight: 900;
               color: #1f9d5a;
@@ -189,9 +189,9 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               text-align: center;
               margin-top: 32px;
               padding-top: 16px;
-              border-top: 1px solid #f3eee2;
+              border-top: 1px solid #eff1f4;
               font-size: 11px;
-              color: #a0a294;
+              color: #98a2b3;
               font-weight: 500;
             }
           </style>
@@ -242,7 +242,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             <div class="summary-box">
               <div class="summary-row">
                 <span>Subtotal</span>
-                <span style="font-weight: 700; color: #12201a;">&#8377;${subtotalAmt}</span>
+                <span style="font-weight: 700; color: #101828;">&#8377;${subtotalAmt}</span>
               </div>
               ${discountHtml}
               <div class="total-row">
@@ -478,7 +478,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(18, 32, 26, 0.7)',
+    backgroundColor: 'rgba(16, 24, 40, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,

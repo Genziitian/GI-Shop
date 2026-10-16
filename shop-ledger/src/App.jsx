@@ -118,7 +118,7 @@ function App() {
           top: '1.25rem',
           right: '1.25rem',
           zIndex: 9999,
-          background: '#1b2a22',
+          background: '#1d2939',
           color: '#ffffff',
           padding: '0.85rem 1.15rem',
           borderRadius: '10px',
@@ -143,14 +143,14 @@ function App() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: '600', fontSize: '0.92rem', marginBottom: '0.15rem' }}>{notification.title}</div>
-            <div style={{ fontSize: '0.82rem', color: '#d5ccb6', lineHeight: '1.3' }}>{notification.body}</div>
+            <div style={{ fontSize: '0.82rem', color: '#d0d5dd', lineHeight: '1.3' }}>{notification.body}</div>
           </div>
           <button 
             onClick={() => setNotification(null)}
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#a0a294',
+              color: '#98a2b3',
               cursor: 'pointer',
               padding: '4px',
               display: 'flex',

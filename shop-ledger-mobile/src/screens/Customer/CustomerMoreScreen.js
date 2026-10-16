@@ -167,7 +167,7 @@ export default function CustomerMoreScreen({ navigation }) {
                 borderRadius: 10,
                 borderWidth: 1.5,
                 borderColor: language === 'en' ? colors.primary : colors.border,
-                backgroundColor: language === 'en' ? '#e9f6ee' : '#faf7f0',
+                backgroundColor: language === 'en' ? '#e9f6ee' : '#f7f8fa',
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
@@ -196,7 +196,7 @@ export default function CustomerMoreScreen({ navigation }) {
                 borderRadius: 10,
                 borderWidth: 1.5,
                 borderColor: language === 'hi' ? colors.primary : colors.border,
-                backgroundColor: language === 'hi' ? '#e9f6ee' : '#faf7f0',
+                backgroundColor: language === 'hi' ? '#e9f6ee' : '#f7f8fa',
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   menuIconBox: {
     width: 36,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   },
   copyrightText: {
     fontSize: 11,
-    color: '#a0a294',
+    color: '#98a2b3',
     marginTop: 2,
   },
 });
@@ -532,7 +532,7 @@ const legalStyles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderRadius: 20,
   },
   bodyText: {

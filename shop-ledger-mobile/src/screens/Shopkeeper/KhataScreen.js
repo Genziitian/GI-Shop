@@ -689,7 +689,7 @@ export default function KhataScreen() {
                 onPress={() => handleCallCustomer(selectedCustomer)}
                 activeOpacity={0.8}
               >
-                <Phone size={14} color="#343c35" />
+                <Phone size={14} color="#344054" />
                 <Text style={styles.profileCallBtnText}>{t('Call')}</Text>
               </TouchableOpacity>
 
@@ -1404,7 +1404,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     ...shadowStyle,
   },
   cardHeaderRow: {
@@ -1442,12 +1442,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
   },
   shortIdText: {
     fontSize: 10,
@@ -1534,7 +1534,7 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     marginVertical: 10,
   },
   cardActionStrip: {
@@ -1561,9 +1561,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 7,
     borderRadius: 8,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1571,9 +1571,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -1581,7 +1581,7 @@ const styles = StyleSheet.create({
   callBtnCleanText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#343c35',
+    color: '#344054',
   },
   remindBtnClean: {
     flexDirection: 'row',
@@ -1686,9 +1686,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1698,7 +1698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3eee2',
+    borderBottomColor: '#eff1f4',
   },
   profileName: {
     fontSize: 18,
@@ -1756,15 +1756,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     borderRadius: 10,
   },
   profileCallBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#343c35',
+    color: '#344054',
   },
   profileRemindBtn: {
     flex: 1,
@@ -1821,7 +1821,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#d5ccb6',
+    borderColor: '#d0d5dd',
     alignItems: 'center',
     justifyContent: 'center',
     ...shadowStyle,
@@ -1833,7 +1833,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4a5148',
+    color: '#475467',
   },
   filterChipTextActive: {
     color: '#ffffff',
@@ -1940,7 +1940,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#f3eee2',
+    borderTopColor: '#eff1f4',
   },
   timelineNoteText: {
     fontSize: 11,

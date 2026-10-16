@@ -74,7 +74,7 @@ export function OrderCardSkeleton({ count = 3 }) {
 export function KhataOverviewSkeleton() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div className="skeleton-card" style={{ background: '#faf7f0', padding: '1.5rem', textAlign: 'center' }}>
+      <div className="skeleton-card" style={{ background: '#f7f8fa', padding: '1.5rem', textAlign: 'center' }}>
         <div className="skeleton skeleton-text" style={{ width: '140px', margin: '0 auto 0.5rem auto' }} />
         <div className="skeleton" style={{ width: '180px', height: '2.5rem', margin: '0 auto', borderRadius: '8px' }} />
       </div>

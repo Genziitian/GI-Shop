@@ -408,7 +408,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                             ? { backgroundColor: '#dff3e6' }
                             : order.status === 'AUTO_CANCELLED_EXPIRED'
                             ? { backgroundColor: '#fee2e2' }
-                            : { backgroundColor: '#f3eee2' },
+                            : { backgroundColor: '#eff1f4' },
                         ]}
                       >
                         <Text
@@ -424,7 +424,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                               ? { color: '#0f7a43' }
                               : order.status === 'AUTO_CANCELLED_EXPIRED'
                               ? { color: '#b91c1c' }
-                              : { color: '#4a5148' },
+                              : { color: '#475467' },
                           ]}
                         >
                           {order.status === 'PENDING' && `⏳ ${t('PENDING')} (${getAutoCancelCountdown(order.createdAt)})`}
@@ -466,10 +466,10 @@ export default function CustomerOrdersScreen({ navigation }) {
                         const isUnavail = !!it.isUnavailable;
                         return (
                           <View key={idx} style={styles.itemLine}>
-                            <Text style={[styles.itemName, isUnavail && { textDecorationLine: 'line-through', color: '#a0a294' }]}>
+                            <Text style={[styles.itemName, isUnavail && { textDecorationLine: 'line-through', color: '#98a2b3' }]}>
                               {it.item?.name || it.name} x {it.qty} {it.item?.unit || ''} {isUnavail ? '(Unavailable)' : ''}
                             </Text>
-                            <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#a0a294' }]}>
+                            <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#98a2b3' }]}>
                               ₹{(it.amount || (it.rate * it.qty) || 0).toFixed(2)}
                             </Text>
                           </View>
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderColor: colors.border,
     borderWidth: 1,
   },
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   countBadge: {
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#4a5148',
+    color: '#475467',
   },
   orderCard: {
     backgroundColor: colors.surface,
@@ -799,12 +799,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemsBox: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderRadius: 6,
     padding: 8,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: '#f3eee2',
+    borderColor: '#eff1f4',
   },
   itemLine: {
     flexDirection: 'row',
@@ -916,7 +916,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#f3eee2',
+    borderTopColor: '#eff1f4',
     paddingTop: 6,
   },
   viewReceiptBtnText: {
@@ -925,7 +925,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   emptyCard: {
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     borderColor: colors.border,
     borderWidth: 1,
     borderStyle: 'dashed',

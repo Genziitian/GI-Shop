@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   totalDueCard: {
-    backgroundColor: '#12201a',
+    backgroundColor: '#101828',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   },
   totalDueLabel: {
     fontSize: 12,
-    color: '#a0a294',
+    color: '#98a2b3',
     fontWeight: '600',
   },
   totalDueValue: {
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
   },
   totalDueSub: {
     fontSize: 11,
-    color: '#d5ccb6',
+    color: '#d0d5dd',
   },
   totalDueIconBox: {
     backgroundColor: 'rgba(255,255,255,0.08)',
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   countBadge: {
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#4a5148',
+    color: '#475467',
   },
   storeCard: {
     backgroundColor: colors.surface,
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#f3eee2',
+    borderTopColor: '#eff1f4',
     marginTop: 10,
     paddingTop: 8,
   },
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#f3eee2',
+    backgroundColor: '#eff1f4',
     borderColor: colors.border,
     borderWidth: 1,
   },
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 6,
-    backgroundColor: '#faf7f0',
+    backgroundColor: '#f7f8fa',
     alignItems: 'center',
     justifyContent: 'center',
   },

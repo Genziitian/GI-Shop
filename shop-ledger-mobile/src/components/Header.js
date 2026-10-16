@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#e8e1d0',
+    borderColor: '#e4e7ec',
   },
   textContainer: {
     flex: 1,
