@@ -25,6 +25,7 @@ export default class ErrorBoundary extends React.Component {
       <div className="cx-empty" style={{ margin: '1rem 0' }}>
         <div className="cx-empty-title">Something went wrong</div>
         <p className="cx-empty-sub">This section could not be displayed.</p>
+        <code style={{ fontSize: '0.72rem', color: '#b91c1c', wordBreak: 'break-word' }}>{String(this.state.error?.message || this.state.error)}</code>
         <button type="button" className="btn" onClick={() => { this.setState({ error: null }); this.props.onRetry?.(); }}>
           Try again
         </button>
