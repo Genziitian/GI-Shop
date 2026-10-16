@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { colors } from '../theme/colors';
 
 export default function QuickButton({ label, onPress, active }) {

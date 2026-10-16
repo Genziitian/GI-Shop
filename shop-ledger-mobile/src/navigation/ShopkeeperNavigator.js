@@ -2,7 +2,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShoppingCart, Users, ShoppingBag, BarChart2, MoreHorizontal } from 'lucide-react-native';
-import { colors } from '../theme/colors';
+import { colors, roleAccent, shadowLarge } from '../theme/colors';
+import { TabIcon } from '../components/ui/Motion';
 import { useTranslation } from '../context/LanguageContext';
 import POSScreen from '../screens/Shopkeeper/POSScreen';
 import KhataScreen from '../screens/Shopkeeper/KhataScreen';
@@ -14,6 +15,7 @@ const Tab = createBottomTabNavigator();
 
 export default function ShopkeeperNavigator() {
   const insets = useSafeAreaInsets();
+  const accent = roleAccent.Shopkeeper.main;
   const { t } = useTranslation();
 
   return (
@@ -21,19 +23,26 @@ export default function ShopkeeperNavigator() {
       backBehavior="history"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        animation: 'fade',
+        sceneStyle: { backgroundColor: colors.background },
+        tabBarActiveTintColor: accent,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          height: 60 + insets.bottom,
+          borderTopWidth: 0,
+          height: 62 + insets.bottom,
           paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
+          borderTopLeftRadius: 22,
+          borderTopRightRadius: 22,
+          ...shadowLarge,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: '700',
         },
       }}
     >
@@ -42,7 +51,7 @@ export default function ShopkeeperNavigator() {
         component={POSScreen}
         options={{
           tabBarLabel: t('nav.pos', 'POS Billing'),
-          tabBarIcon: ({ color, size }) => <ShoppingCart size={size || 20} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon focused={focused}><ShoppingCart size={size || 20} color={color} /></TabIcon>,
         }}
       />
       <Tab.Screen
@@ -50,7 +59,7 @@ export default function ShopkeeperNavigator() {
         component={KhataScreen}
         options={{
           tabBarLabel: t('nav.khata', 'Khata Ledger'),
-          tabBarIcon: ({ color, size }) => <Users size={size || 20} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon focused={focused}><Users size={size || 20} color={color} /></TabIcon>,
         }}
       />
       <Tab.Screen
@@ -58,7 +67,7 @@ export default function ShopkeeperNavigator() {
         component={OrdersScreen}
         options={{
           tabBarLabel: t('nav.orders', 'Orders'),
-          tabBarIcon: ({ color, size }) => <ShoppingBag size={size || 20} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon focused={focused}><ShoppingBag size={size || 20} color={color} /></TabIcon>,
         }}
       />
       <Tab.Screen
@@ -66,7 +75,7 @@ export default function ShopkeeperNavigator() {
         component={AnalyticsScreen}
         options={{
           tabBarLabel: t('nav.analytics', 'Analytics'),
-          tabBarIcon: ({ color, size }) => <BarChart2 size={size || 20} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon focused={focused}><BarChart2 size={size || 20} color={color} /></TabIcon>,
         }}
       />
       <Tab.Screen
@@ -74,7 +83,7 @@ export default function ShopkeeperNavigator() {
         component={MoreScreen}
         options={{
           tabBarLabel: t('nav.more', 'More'),
-          tabBarIcon: ({ color, size }) => <MoreHorizontal size={size || 20} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <TabIcon focused={focused}><MoreHorizontal size={size || 20} color={color} /></TabIcon>,
         }}
       />
     </Tab.Navigator>

@@ -4,7 +4,6 @@ import {
   Text,
   Modal,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   TouchableWithoutFeedback,
@@ -12,6 +11,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { X, Package, Check, Sparkles } from 'lucide-react-native';
 import { colors, shadowLarge, shadowStyle } from '../theme/colors';
 import { MASTER_GROCERY_CATALOG } from '../data/masterGroceryCatalog';

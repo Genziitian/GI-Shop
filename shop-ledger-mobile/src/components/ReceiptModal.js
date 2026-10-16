@@ -4,13 +4,13 @@ import {
   Text,
   Modal,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
   Linking,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { Receipt, CheckCircle, X, Printer, MessageSquare } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -56,19 +56,19 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
         const amount = (Number(entry.amount || (qty * rate)) || 0).toFixed(2);
         return `
           <tr>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #64748b; font-size: 12px;">${idx + 1}</td>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9;">
-              <div style="font-weight: 700; color: #0f172a; font-size: 13px;">${itemName}</div>
-              <div style="font-size: 11px; color: #64748b;">&#8377;${rate} / ${unit}</div>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2; text-align: center; color: #666c60; font-size: 12px;">${idx + 1}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2;">
+              <div style="font-weight: 700; color: #12201a; font-size: 13px;">${itemName}</div>
+              <div style="font-size: 11px; color: #666c60;">&#8377;${rate} / ${unit}</div>
             </td>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: 600; color: #334155; font-size: 13px;">${qty} ${unit}</td>
-            <td style="padding: 10px 8px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700; color: #0f172a; font-size: 13px;">&#8377;${amount}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2; text-align: center; font-weight: 600; color: #343c35; font-size: 13px;">${qty} ${unit}</td>
+            <td style="padding: 10px 8px; border-bottom: 1px solid #f3eee2; text-align: right; font-weight: 700; color: #12201a; font-size: 13px;">&#8377;${amount}</td>
           </tr>
         `;
       }).join('');
 
       const discountHtml = Number(discountAmt) > 0 ? `
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #16a34a;">
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #1f9d5a;">
           <span>Discount</span>
           <span style="font-weight: 700;">-&#8377;${discountAmt}</span>
         </div>
@@ -85,7 +85,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             @page { size: A4 portrait; margin: 12mm; }
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-              color: #0f172a;
+              color: #12201a;
               background-color: #ffffff;
               margin: 0;
               padding: 16px;
@@ -93,7 +93,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             .invoice-box {
               max-width: 680px;
               margin: 0 auto;
-              border: 1px solid #e2e8f0;
+              border: 1px solid #e8e1d0;
               border-radius: 16px;
               padding: 24px 28px;
               box-shadow: 0 4px 14px rgba(0,0,0,0.04);
@@ -101,24 +101,24 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             .header-center {
               text-align: center;
               padding-bottom: 18px;
-              border-bottom: 2px dashed #e2e8f0;
+              border-bottom: 2px dashed #e8e1d0;
             }
             .store-name {
               font-size: 24px;
               font-weight: 900;
-              color: #0f172a;
+              color: #12201a;
               margin: 0 0 4px 0;
               letter-spacing: -0.5px;
             }
             .store-address {
               font-size: 12px;
-              color: #64748b;
+              color: #666c60;
               margin: 0 0 10px 0;
             }
             .status-pill {
               display: inline-block;
-              background: #dcfce7;
-              color: #15803d;
+              background: #dff3e6;
+              color: #0f7a43;
               font-size: 11px;
               font-weight: 800;
               padding: 4px 14px;
@@ -128,7 +128,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             .meta-grid {
               display: flex;
               flex-wrap: wrap;
-              background: #f8fafc;
+              background: #faf7f0;
               border-radius: 12px;
               padding: 12px 16px;
               margin: 18px 0;
@@ -140,11 +140,11 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               font-size: 12px;
             }
             .meta-label {
-              color: #64748b;
+              color: #666c60;
               font-weight: 500;
             }
             .meta-val {
-              color: #0f172a;
+              color: #12201a;
               font-weight: 700;
             }
             table {
@@ -156,14 +156,14 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               text-align: left;
               font-size: 11px;
               font-weight: 800;
-              color: #64748b;
+              color: #666c60;
               padding: 10px 8px;
-              border-bottom: 2px solid #e2e8f0;
+              border-bottom: 2px solid #e8e1d0;
               letter-spacing: 0.5px;
             }
             .summary-box {
               margin-top: 14px;
-              border-top: 2px dashed #e2e8f0;
+              border-top: 2px dashed #e8e1d0;
               padding-top: 14px;
               max-width: 280px;
               margin-left: auto;
@@ -173,25 +173,25 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
               justify-content: space-between;
               padding: 4px 0;
               font-size: 13px;
-              color: #475569;
+              color: #4a5148;
             }
             .total-row {
               display: flex;
               justify-content: space-between;
               padding: 10px 0 0 0;
               margin-top: 8px;
-              border-top: 2px solid #0f172a;
+              border-top: 2px solid #12201a;
               font-size: 18px;
               font-weight: 900;
-              color: #16a34a;
+              color: #1f9d5a;
             }
             .footer-note {
               text-align: center;
               margin-top: 32px;
               padding-top: 16px;
-              border-top: 1px solid #f1f5f9;
+              border-top: 1px solid #f3eee2;
               font-size: 11px;
-              color: #94a3b8;
+              color: #a0a294;
               font-weight: 500;
             }
           </style>
@@ -242,7 +242,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
             <div class="summary-box">
               <div class="summary-row">
                 <span>Subtotal</span>
-                <span style="font-weight: 700; color: #0f172a;">&#8377;${subtotalAmt}</span>
+                <span style="font-weight: 700; color: #12201a;">&#8377;${subtotalAmt}</span>
               </div>
               ${discountHtml}
               <div class="total-row">
@@ -317,7 +317,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                     <Text style={styles.storeAddress}>{receipt.shopAddress}</Text>
                   )}
                   <View style={[styles.statusBadge, receipt.isOffline && styles.statusBadgeOffline]}>
-                    <CheckCircle size={14} color={receipt.isOffline ? '#d97706' : colors.success} />
+                    <CheckCircle size={14} color={receipt.isOffline ? '#d98a0b' : colors.success} />
                     <Text style={[styles.statusText, receipt.isOffline && styles.statusTextOffline]}>
                       {receipt.isOffline ? 'OFFLINE BILL • SAVED LOCALLY' : 'BILL COMPLETED'}
                     </Text>
@@ -478,7 +478,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    backgroundColor: 'rgba(18, 32, 26, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -533,12 +533,12 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   statusBadgeOffline: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#fff8e6',
     borderColor: '#fde68a',
     borderWidth: 1,
   },
   statusTextOffline: {
-    color: '#b45309',
+    color: '#a8620a',
   },
   metaBox: {
     backgroundColor: colors.background,

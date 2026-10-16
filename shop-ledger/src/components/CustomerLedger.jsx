@@ -318,7 +318,7 @@ export default function CustomerLedger({ currentShop }) {
 
         {/* Custom Date Range Picker */}
         {timelineFilter === 'Custom' && (
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.85rem', alignItems: 'center', flexWrap: 'wrap', background: '#f8fafc', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.85rem', alignItems: 'center', flexWrap: 'wrap', background: '#faf7f0', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
               <input 
@@ -392,7 +392,7 @@ export default function CustomerLedger({ currentShop }) {
             <div className="table-responsive">
               <table style={{ width: '100%', fontSize: '0.85rem', minWidth: '600px', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#f8fafc' }}>
+                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
                     <th style={{ textAlign: 'left', padding: '0.5rem' }}>Date &amp; Time</th>
                     <th style={{ textAlign: 'left', padding: '0.5rem' }}>Description</th>
                     <th style={{ textAlign: 'right', padding: '0.5rem' }}>Debit (+Due)</th>
@@ -557,7 +557,7 @@ export default function CustomerLedger({ currentShop }) {
           <div 
             key={customer.id || customer.phone} 
             className="list-item" 
-            style={{ background: '#f8fafc', borderRadius: '8px', cursor: 'pointer', border: '1px solid var(--border)' }} 
+            style={{ background: '#faf7f0', borderRadius: '8px', cursor: 'pointer', border: '1px solid var(--border)' }} 
             onClick={() => handleOpenLedger(customer)}
           >
             <div>
@@ -657,13 +657,13 @@ export default function CustomerLedger({ currentShop }) {
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    background: '#f8fafc' 
+                    background: '#faf7f0' 
                   }}
                 >
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {user.name} 
-                      <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#eff6ff', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.72rem' }}>
+                      <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#e9f6ee', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.72rem' }}>
                         {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
                       </span>
                       <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem' }}>ID: {user.shortId}</span>
@@ -717,7 +717,7 @@ export default function CustomerLedger({ currentShop }) {
             </div>
 
             {/* Customer Info */}
-            <div style={{ background: '#f8fafc', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+            <div style={{ background: '#faf7f0', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Customer Details</div>
               <div style={{ fontWeight: '700' }}>
                 {selectedReceipt.customerPhone || selectedCustomer?.name || 'Customer'}
@@ -744,7 +744,7 @@ export default function CustomerLedger({ currentShop }) {
                   const lineTotal = (c.amount || (rate * qty)) || 0;
 
                   return (
-                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f3eee2' }}>
                       <div>
                         <div style={{ fontWeight: '600' }}>{itemName}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>

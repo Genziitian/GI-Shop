@@ -4,12 +4,12 @@ import {
   Text,
   Modal,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { X, Plus, Minus, Check } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import QuickButton from './QuickButton';
@@ -196,7 +196,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                         <Text style={[styles.inputLabel, { marginBottom: 0 }]}>
                           Quantity
                         </Text>
-                        <View style={{ flexDirection: 'row', backgroundColor: '#e2e8f0', borderRadius: 5, padding: 2 }}>
+                        <View style={{ flexDirection: 'row', backgroundColor: '#e8e1d0', borderRadius: 5, padding: 2 }}>
                           <TouchableOpacity
                             style={{
                               paddingHorizontal: 6,
@@ -210,7 +210,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                               style={{
                                 fontSize: 10,
                                 fontWeight: '700',
-                                color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#ffffff' : '#64748b',
+                                color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#ffffff' : '#666c60',
                               }}
                             >
                               {isLitre ? 'Litre' : 'Kilo'}
@@ -230,7 +230,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
                               style={{
                                 fontSize: 10,
                                 fontWeight: '700',
-                                color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#ffffff' : '#64748b',
+                                color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#ffffff' : '#666c60',
                               }}
                             >
                               {isLitre ? 'ML' : 'Gram'}
@@ -282,7 +282,7 @@ export default function ProductUnitModal({ visible, product, onClose, onAddToCar
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(18, 32, 26, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

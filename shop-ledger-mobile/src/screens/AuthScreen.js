@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
@@ -16,6 +15,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { TouchableOpacity } from '../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Store, User, ArrowRight, Lock, Mail, Phone, MapPin, Eye, EyeOff, Sparkles, CheckCircle, X } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';
@@ -335,7 +335,7 @@ export default function AuthScreen() {
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Email ID or Short ID</Text>
                   <View style={styles.inputWrapper}>
-                    <TextInput style={styles.input} placeholder="Enter your email or Short ID" placeholderTextColor="#94a3b8" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+                    <TextInput style={styles.input} placeholder="Enter your email or Short ID" placeholderTextColor="#a0a294" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
                   </View>
                 </View>
                 <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
@@ -347,7 +347,7 @@ export default function AuthScreen() {
               <>
                 <View style={styles.accountPill}>
                   <View style={styles.accountPillLeft}>
-                    <User size={16} color="#64748b" /><Text style={styles.accountPillText}>{email}</Text>
+                    <User size={16} color="#666c60" /><Text style={styles.accountPillText}>{email}</Text>
                   </View>
                   <TouchableOpacity onPress={() => { setLoginStep('IDENTIFIER'); setPassword(''); }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                     <Text style={styles.accountPillChange}>Change</Text>
@@ -356,9 +356,9 @@ export default function AuthScreen() {
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Password</Text>
                   <View style={styles.inputWrapper}>
-                    <TextInput style={styles.input} placeholder="Enter your password" placeholderTextColor="#94a3b8" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} autoFocus />
+                    <TextInput style={styles.input} placeholder="Enter your password" placeholderTextColor="#a0a294" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} autoFocus />
                     <TouchableOpacity style={styles.inputIcon} onPress={() => setShowPassword(!showPassword)} activeOpacity={0.7}>
-                      {showPassword ? <EyeOff size={18} color="#94a3b8" /> : <Eye size={18} color="#94a3b8" />}
+                      {showPassword ? <EyeOff size={18} color="#a0a294" /> : <Eye size={18} color="#a0a294" />}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -396,14 +396,14 @@ export default function AuthScreen() {
               <Text style={styles.welcomeTitle}>Create <Text style={styles.welcomeTitleGreen}>Account</Text></Text>
               <Text style={styles.welcomeSubtitle}>Sign up & verify securely with Google</Text>
             </View>
-            <TouchableOpacity style={[styles.googleBtn, { borderColor: '#16a34a', borderWidth: 2, height: 56 }]} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
+            <TouchableOpacity style={[styles.googleBtn, { borderColor: '#1f9d5a', borderWidth: 2, height: 56 }]} onPress={handleGoogleSignIn} activeOpacity={0.7} disabled={loading}>
               <View style={styles.googleIconContainer}><Text style={styles.googleG}>G</Text></View>
               <Text style={[styles.googleBtnText, { fontSize: 16, fontWeight: '800' }]}>{loading ? 'Verifying with Google...' : 'Sign Up with Google'}</Text>
             </TouchableOpacity>
             <View style={styles.googleInfoBox}>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Instant 1-tap Google identity verification</Text></View>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>New users choose Customer or Shopkeeper after Google</Text></View>
-              <View style={styles.infoRow}><CheckCircle size={16} color="#16a34a" /><Text style={styles.infoText}>Only the needed setup details are asked next</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>Instant 1-tap Google identity verification</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>New users choose Customer or Shopkeeper after Google</Text></View>
+              <View style={styles.infoRow}><CheckCircle size={16} color="#1f9d5a" /><Text style={styles.infoText}>Only the needed setup details are asked next</Text></View>
             </View>
             <View style={styles.toggleRow}>
               <Text style={styles.toggleText}>Already have an account? </Text>
@@ -433,14 +433,14 @@ export default function AuthScreen() {
             <View style={styles.roleChoiceGrid}>
               <TouchableOpacity style={styles.roleChoiceCard} onPress={() => handleChooseRole('Customer')} activeOpacity={0.82}>
                 <View style={styles.roleChoiceIcon}>
-                  <User size={24} color="#16a34a" />
+                  <User size={24} color="#1f9d5a" />
                 </View>
                 <Text style={styles.roleChoiceTitle}>Customer</Text>
                 <Text style={styles.roleChoiceText}>I buy from local shops</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.roleChoiceCard} onPress={() => handleChooseRole('Shopkeeper')} activeOpacity={0.82}>
                 <View style={styles.roleChoiceIcon}>
-                  <Store size={24} color="#16a34a" />
+                  <Store size={24} color="#1f9d5a" />
                 </View>
                 <Text style={styles.roleChoiceTitle}>Shopkeeper</Text>
                 <Text style={styles.roleChoiceText}>I manage my shop</Text>
@@ -461,31 +461,31 @@ export default function AuthScreen() {
                 <Text style={styles.modalTitle}>{role === 'Shopkeeper' ? 'Configure Your Store' : 'Complete Your Profile'}</Text>
                 <Text style={styles.modalSubtitle}>{onboardingUser?.googleUser?.email || 'Verified Google Account'}</Text>
               </View>
-              <TouchableOpacity onPress={() => setShowOnboardingModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><X size={22} color="#64748b" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowOnboardingModal(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}><X size={22} color="#666c60" /></TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <TouchableOpacity style={styles.selectedRolePill} onPress={() => { setShowOnboardingModal(false); setShowRoleModal(true); }} activeOpacity={0.75}>
-                {role === 'Shopkeeper' ? <Store size={15} color="#16a34a" /> : <User size={15} color="#16a34a" />}
+                {role === 'Shopkeeper' ? <Store size={15} color="#1f9d5a" /> : <User size={15} color="#1f9d5a" />}
                 <Text style={styles.selectedRoleText}>{role || 'Choose role'}</Text>
                 <Text style={styles.selectedRoleChange}>Change</Text>
               </TouchableOpacity>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Full Name *</Text>
-                <TextInput style={styles.input} placeholder="e.g. Ramesh Kumar" placeholderTextColor="#94a3b8" value={onboardingName} onChangeText={setOnboardingName} />
+                <TextInput style={styles.input} placeholder="e.g. Ramesh Kumar" placeholderTextColor="#a0a294" value={onboardingName} onChangeText={setOnboardingName} />
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>10-Digit Mobile Phone *</Text>
-                <TextInput style={styles.input} placeholder="e.g. 9812345678" placeholderTextColor="#94a3b8" keyboardType="phone-pad" maxLength={10} value={onboardingPhone} onChangeText={setOnboardingPhone} />
+                <TextInput style={styles.input} placeholder="e.g. 9812345678" placeholderTextColor="#a0a294" keyboardType="phone-pad" maxLength={10} value={onboardingPhone} onChangeText={setOnboardingPhone} />
               </View>
               {role === 'Shopkeeper' && (
                 <>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Shop Name *</Text>
-                    <TextInput style={styles.input} placeholder="e.g. Krishna Super Market" placeholderTextColor="#94a3b8" value={onboardingShopName} onChangeText={setOnboardingShopName} />
+                    <TextInput style={styles.input} placeholder="e.g. Krishna Super Market" placeholderTextColor="#a0a294" value={onboardingShopName} onChangeText={setOnboardingShopName} />
                   </View>
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Shop Address *</Text>
-                    <TextInput style={styles.input} placeholder="e.g. Shop #12, Main Market" placeholderTextColor="#94a3b8" value={onboardingShopAddress} onChangeText={setOnboardingShopAddress} />
+                    <TextInput style={styles.input} placeholder="e.g. Shop #12, Main Market" placeholderTextColor="#a0a294" value={onboardingShopAddress} onChangeText={setOnboardingShopAddress} />
                   </View>
                   <View style={{ marginBottom: 14 }}>
                     <CitySelector
@@ -493,7 +493,7 @@ export default function AuthScreen() {
                       onSelectCity={setOnboardingCity}
                       label="Choose Shop City *"
                     />
-                    <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                    <Text style={{ fontSize: 11, color: '#666c60', marginTop: 4 }}>
                       Store city is locked after registration. Only SuperAdmin can modify it.
                     </Text>
                   </View>
@@ -502,7 +502,7 @@ export default function AuthScreen() {
               {role === 'Customer' && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Delivery / Home Address (Optional)</Text>
-                  <TextInput style={styles.input} placeholder="e.g. Flat 301, Sunrise Tower" placeholderTextColor="#94a3b8" value={onboardingAddress} onChangeText={setOnboardingAddress} />
+                  <TextInput style={styles.input} placeholder="e.g. Flat 301, Sunrise Tower" placeholderTextColor="#a0a294" value={onboardingAddress} onChangeText={setOnboardingAddress} />
                 </View>
               )}
               <TouchableOpacity style={[styles.submitBtn, { marginTop: 16 }]} onPress={handleCompleteOnboarding} disabled={loading} activeOpacity={0.8}>
@@ -516,7 +516,7 @@ export default function AuthScreen() {
       <Modal visible={loading} transparent={true} animationType="fade" onRequestClose={() => {}}>
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#16a34a" />
+            <ActivityIndicator size="large" color="#1f9d5a" />
             <Text style={styles.loadingTitle}>{loadingMessage || 'Please wait...'}</Text>
             <Text style={styles.loadingSubtitle}>This usually takes a few seconds.</Text>
           </View>
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     resizeMode: 'contain',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
   },
   welcomeHeader: {
     alignItems: 'center',
@@ -562,16 +562,16 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#12201a',
     letterSpacing: -0.5,
     marginBottom: 6,
   },
   welcomeTitleGreen: {
-    color: '#16a34a',
+    color: '#1f9d5a',
   },
   welcomeSubtitle: {
     fontSize: 15,
-    color: '#64748b',
+    color: '#666c60',
   },
   googleBtn: {
     flexDirection: 'row',
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     backgroundColor: '#ffffff',
     marginBottom: 20,
     gap: 12,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   googleBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#1b2a22',
   },
   dividerRow: {
     flexDirection: 'row',
@@ -609,21 +609,21 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#e8e1d0',
   },
   dividerText: {
     paddingHorizontal: 14,
     fontSize: 13,
-    color: '#94a3b8',
+    color: '#a0a294',
     fontWeight: '500',
   },
   accountPill: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -638,12 +638,12 @@ const styles = StyleSheet.create({
   accountPillText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#1b2a22',
   },
   accountPillChange: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#16a34a',
+    color: '#1f9d5a',
   },
   backToEmailBtn: {
     alignItems: 'center',
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   backToEmailText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#64748b',
+    color: '#666c60',
   },
   toggleRow: {
     flexDirection: 'row',
@@ -662,12 +662,12 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#666c60',
   },
   toggleLink: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#16a34a',
+    color: '#1f9d5a',
   },
   footerLinks: {
     flexDirection: 'row',
@@ -679,17 +679,17 @@ const styles = StyleSheet.create({
   },
   footerLinkText: {
     fontSize: 12.5,
-    color: '#94a3b8',
+    color: '#a0a294',
     textDecorationLine: 'underline',
   },
   footerDot: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#a0a294',
   },
   footerCopyright: {
     textAlign: 'center',
     fontSize: 11.5,
-    color: '#cbd5e1',
+    color: '#d5ccb6',
     marginTop: 4,
   },
   // ---- Registration View Styles ----
@@ -729,9 +729,9 @@ const styles = StyleSheet.create({
   settingsBtn: {
     padding: 8,
     borderRadius: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
   },
   card: {
     backgroundColor: colors.surface,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -797,7 +797,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   roleBtnTextActive: {
-    color: '#1d4ed8',
+    color: '#0b5e33',
     fontWeight: '700',
   },
   inputGroup: {
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
+    color: '#343c35',
     marginBottom: 6,
   },
   inputWrapper: {
@@ -816,12 +816,12 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     backgroundColor: '#ffffff',
     paddingHorizontal: 14,
     paddingRight: 42,
     fontSize: 15,
-    color: '#0f172a',
+    color: '#12201a',
   },
   inputIcon: {
     position: 'absolute',
@@ -832,12 +832,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 52,
     borderRadius: 12,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#1f9d5a',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
     gap: 8,
-    shadowColor: '#16a34a',
+    shadowColor: '#1f9d5a',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 14,
@@ -861,12 +861,12 @@ const styles = StyleSheet.create({
   footerToggleLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#16a34a',
+    color: '#1f9d5a',
   },
   googleInfoBox: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 14,
     padding: 14,
     marginTop: 4,
@@ -881,12 +881,12 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#166534',
+    color: '#0b5e33',
     flex: 1,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(18, 32, 26, 0.65)',
     justifyContent: 'flex-end',
   },
   modalHandle: {
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#cbd5e1',
+    backgroundColor: '#d5ccb6',
     marginBottom: 18,
   },
   roleModalContent: {
@@ -907,13 +907,13 @@ const styles = StyleSheet.create({
   roleQuestionTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#12201a',
     textAlign: 'center',
     marginBottom: 6,
   },
   roleQuestionSubtitle: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666c60',
     textAlign: 'center',
     marginBottom: 20,
     fontWeight: '600',
@@ -927,8 +927,8 @@ const styles = StyleSheet.create({
     minHeight: 136,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#bbf7d0',
-    backgroundColor: '#f0fdf4',
+    borderColor: '#c4e8d1',
+    backgroundColor: '#eef8f1',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 14,
@@ -942,18 +942,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#dcfce7',
+    borderColor: '#dff3e6',
   },
   roleChoiceTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#12201a',
     marginBottom: 4,
   },
   roleChoiceText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748b',
+    color: '#666c60',
     textAlign: 'center',
   },
   modalTextButton: {
@@ -963,7 +963,7 @@ const styles = StyleSheet.create({
   modalTextButtonText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#64748b',
+    color: '#666c60',
   },
   modalContent: {
     backgroundColor: '#ffffff',
@@ -979,26 +979,26 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f3eee2',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#12201a',
     letterSpacing: -0.3,
   },
   modalSubtitle: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666c60',
     marginTop: 2,
     fontWeight: '500',
   },
   selectedRolePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -1010,16 +1010,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '900',
-    color: '#166534',
+    color: '#0b5e33',
   },
   selectedRoleChange: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#16a34a',
+    color: '#1f9d5a',
   },
   loadingOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    backgroundColor: 'rgba(18, 32, 26, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -1033,19 +1033,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     ...shadowLarge,
   },
   loadingTitle: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#12201a',
     marginTop: 14,
     textAlign: 'center',
   },
   loadingSubtitle: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666c60',
     marginTop: 6,
     textAlign: 'center',
     fontWeight: '600',

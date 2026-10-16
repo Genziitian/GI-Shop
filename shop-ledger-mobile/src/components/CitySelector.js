@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   Modal,
   FlatList,
   TextInput,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { MapPin, ChevronDown, Check, X, Search } from 'lucide-react-native';
 import { colors } from '../theme/colors';
 import { getCities } from '../api/client';
@@ -89,7 +89,7 @@ export default function CitySelector({ selectedCity, onSelectCity, label = 'City
                 placeholder="Search city..."
                 value={search}
                 onChangeText={setSearch}
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor="#a0a294"
               />
             </View>
 
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
+    color: '#343c35',
     marginBottom: 6,
   },
   selectorBtn: {
@@ -143,13 +143,13 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     backgroundColor: '#ffffff',
     paddingHorizontal: 14,
   },
   selectorDisabled: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#f3eee2',
+    borderColor: '#e8e1d0',
   },
   selectorLeft: {
     flexDirection: 'row',
@@ -159,11 +159,11 @@ const styles = StyleSheet.create({
   selectorText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#0f172a',
+    color: '#12201a',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    backgroundColor: 'rgba(18, 32, 26, 0.55)',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -187,11 +187,11 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#12201a',
   },
   modalSub: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666c60',
     marginBottom: 14,
   },
   closeBtn: {
@@ -200,9 +200,9 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderRadius: 10,
     paddingHorizontal: 12,
     height: 44,
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#0f172a',
+    color: '#12201a',
   },
   cityItem: {
     flexDirection: 'row',
@@ -222,17 +222,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 10,
     marginBottom: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
   },
   cityItemSelected: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
   },
   cityName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#1b2a22',
   },
   cityNameSelected: {
     fontWeight: '800',

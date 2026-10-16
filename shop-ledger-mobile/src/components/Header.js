@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { Lock } from 'lucide-react-native';
-import { colors } from '../theme/colors';
+import { colors, roleAccent, radius } from '../theme/colors';
+import { FadeInView } from './ui/Motion';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
 
@@ -14,9 +16,10 @@ export default function Header({ title, subtitle, rightElement, showLock = false
     : (user?.shortId || (user?.id ? `cust${user.id}` : ''));
 
   const idLabel = isShopkeeper ? t('Shop ID') : t('ID');
+  const accent = isShopkeeper ? roleAccent.Shopkeeper : roleAccent.Customer;
 
   return (
-    <View style={styles.header}>
+    <FadeInView distance={-8} duration={320} style={styles.header}>
       <View style={styles.leftContainer}>
         <Image
           source={require('../../assets/icon.png')}
@@ -34,8 +37,8 @@ export default function Header({ title, subtitle, rightElement, showLock = false
 
       <View style={styles.rightContainer}>
         {shortId ? (
-          <View style={styles.idBadge}>
-            <Text style={styles.idBadgeText}>
+          <View style={[styles.idBadge, { backgroundColor: accent.tint, borderColor: accent.main + '33' }]}>
+            <Text style={[styles.idBadgeText, { color: accent.main }]}>
               {idLabel}: {shortId}
             </Text>
           </View>
@@ -43,7 +46,7 @@ export default function Header({ title, subtitle, rightElement, showLock = false
 
         {rightComponent || rightElement}
       </View>
-    </View>
+    </FadeInView>
   );
 }
 
@@ -55,8 +58,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomLeftRadius: radius.lg,
+    borderBottomRightRadius: radius.lg,
+    shadowColor: colors.ink,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   leftContainer: {
     flexDirection: 'row',
@@ -67,19 +75,19 @@ const styles = StyleSheet.create({
   appLogoIcon: {
     width: 36,
     height: 36,
-    borderRadius: 9,
+    borderRadius: 11,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
   },
   textContainer: {
     flex: 1,
   },
   title: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#15803d',
-    letterSpacing: -0.2,
+    fontWeight: '900',
+    color: colors.primaryDark,
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 12,
@@ -92,9 +100,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   idBadge: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -102,7 +110,7 @@ const styles = StyleSheet.create({
   idBadgeText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   lockBtn: {
     flexDirection: 'row',
@@ -112,7 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     gap: 4,
   },
   lockBtnText: {

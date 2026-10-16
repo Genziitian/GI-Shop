@@ -4,13 +4,13 @@ import {
   Text,
   Modal,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { X, UserPlus, Contact, Lock, RotateCcw, UserCheck, Search } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import { searchRegisteredCustomer, syncContacts } from '../api/client';
@@ -344,13 +344,13 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                   onPress={handleImportContact}
                   activeOpacity={0.8}
                 >
-                  <Contact size={18} color="#2563eb" />
+                  <Contact size={18} color="#0f7a43" />
                   <Text style={styles.importContactsBtnText}>Import from Device Contacts</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.importedBanner}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                    <Lock size={14} color="#16a34a" />
+                    <Lock size={14} color="#1f9d5a" />
                     <Text style={styles.importedBannerText} numberOfLines={1}>
                       Imported: <Text style={{ fontWeight: '700' }}>{importedContactName}</Text>
                     </Text>
@@ -372,8 +372,8 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                   <Text style={styles.inputLabel}>Phone Number *</Text>
                   {isImported && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Lock size={12} color="#16a34a" />
-                      <Text style={{ fontSize: 11, color: '#16a34a', fontWeight: '700' }}>
+                      <Lock size={12} color="#1f9d5a" />
+                      <Text style={{ fontSize: 11, color: '#1f9d5a', fontWeight: '700' }}>
                         Locked (Imported)
                       </Text>
                     </View>
@@ -394,7 +394,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Text style={styles.inputLabel}>Customer Name *</Text>
                   {isImported && (
-                    <Text style={{ fontSize: 11, color: '#2563eb', fontWeight: '600' }}>
+                    <Text style={{ fontSize: 11, color: '#0f7a43', fontWeight: '600' }}>
                       Editable Name
                     </Text>
                   )}
@@ -450,7 +450,7 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(18, 32, 26, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -484,9 +484,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -495,15 +495,15 @@ const styles = StyleSheet.create({
   importContactsBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#2563eb',
+    color: '#0f7a43',
   },
   importedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   },
   importedBannerText: {
     fontSize: 12,
-    color: '#166534',
+    color: '#0b5e33',
   },
   discardBtn: {
     flexDirection: 'row',
@@ -549,9 +549,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   inputLocked: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#cbd5e1',
-    color: '#334155',
+    backgroundColor: '#f3eee2',
+    borderColor: '#d5ccb6',
+    color: '#343c35',
     fontWeight: '700',
   },
   actions: {
@@ -587,9 +587,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   appSearchBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderRadius: 14,
     padding: 12,
     marginBottom: 14,
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderRadius: 10,
     padding: 10,
     marginBottom: 6,
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   roleCustomer: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   roleCustomerText: {
     color: colors.primary,
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   selectUserBtn: {
-    backgroundColor: '#16a34a',
+    backgroundColor: '#1f9d5a',
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,

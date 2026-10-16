@@ -462,7 +462,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
             ))}
 
             {inlineAppResults.length > 0 && (
-              <div style={{ background: '#f8fafc', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+              <div style={{ background: '#faf7f0', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d5ccb6' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.35rem' }}>
                   🌐 Registered GI SHOP Accounts ({inlineAppResults.length})
                 </div>
@@ -473,7 +473,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                       padding: '0.45rem', 
                       cursor: 'pointer', 
                       borderRadius: '6px', 
-                      border: '1px solid #e2e8f0', 
+                      border: '1px solid #e8e1d0', 
                       marginBottom: '0.35rem', 
                       background: '#ffffff',
                       display: 'flex',
@@ -627,7 +627,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
 
               {/* Registered GI SHOP Accounts matching query (e.g. rajjgd59) */}
               {inlineAppResults.length > 0 && (
-                <div style={{ background: '#f8fafc', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}>
+                <div style={{ background: '#faf7f0', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d5ccb6' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.35rem' }}>
                     🌐 Registered GI SHOP App Accounts ({inlineAppResults.length})
                   </div>
@@ -638,7 +638,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                         padding: '0.5rem', 
                         cursor: 'pointer', 
                         borderRadius: '6px', 
-                        border: '1px solid #e2e8f0', 
+                        border: '1px solid #e8e1d0', 
                         marginBottom: '0.35rem', 
                         background: '#ffffff',
                         display: 'flex',
@@ -650,7 +650,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                       <div>
                         <div style={{ fontWeight: '700', fontSize: '0.88rem' }}>
                           {user.name} 
-                          <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#eff6ff', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.7rem', marginLeft: '6px' }}>
+                          <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#e9f6ee', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.7rem', marginLeft: '6px' }}>
                             {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
                           </span>
                         </div>
@@ -704,7 +704,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
               </thead>
               <tbody>
                 {cart.map((c, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid #f3eee2' }}>
                     <td style={{ padding: '0.4rem 0' }}>{c.item.name}</td>
                     <td style={{ textAlign: 'right', padding: '0.4rem 0' }}>{c.qty}</td>
                     <td style={{ textAlign: 'right', padding: '0.4rem 0' }}>{c.amount.toFixed(2)}</td>
@@ -912,7 +912,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
               </div>
 
               {/* Calculations & Discount */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem', marginBottom: '0.85rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem', marginBottom: '0.85rem' }}>
                 <div className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.35rem' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
                   <span style={{ fontWeight: 700 }}>₹{subtotal.toFixed(2)}</span>
@@ -1042,7 +1042,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                       <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>
                         Quantity
                       </label>
-                      <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '6px', padding: '2px', gap: '2px' }}>
+                      <div style={{ display: 'inline-flex', background: '#e8e1d0', borderRadius: '6px', padding: '2px', gap: '2px' }}>
                         <button
                           type="button"
                           style={{
@@ -1053,7 +1053,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                             borderRadius: '4px',
                             cursor: 'pointer',
                             background: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? 'var(--primary)' : 'transparent',
-                            color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#fff' : '#475569',
+                            color: (subUnitMode === 'Kilo' || subUnitMode === 'Litre') ? '#fff' : '#4a5148',
                             transition: 'all 0.15s ease'
                           }}
                           onClick={() => handleToggleSubUnitMode(selectedProduct.unit === 'Litre' ? 'Litre' : 'Kilo')}
@@ -1070,7 +1070,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                             borderRadius: '4px',
                             cursor: 'pointer',
                             background: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? 'var(--primary)' : 'transparent',
-                            color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#fff' : '#475569',
+                            color: (subUnitMode === 'Gram' || subUnitMode === 'ML') ? '#fff' : '#4a5148',
                             transition: 'all 0.15s ease'
                           }}
                           onClick={() => handleToggleSubUnitMode(selectedProduct.unit === 'Litre' ? 'ML' : 'Gram')}
@@ -1163,13 +1163,13 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    background: '#f8fafc' 
+                    background: '#faf7f0' 
                   }}
                 >
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {user.name} 
-                      <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#eff6ff', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.72rem' }}>
+                      <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#e9f6ee', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.72rem' }}>
                         {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
                       </span>
                       <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem' }}>ID: {user.shortId}</span>

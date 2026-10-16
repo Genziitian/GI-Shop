@@ -9,7 +9,7 @@ export default function TermsConditions() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#f8fafc',
+      backgroundColor: '#faf7f0',
       padding: '2rem 1rem 3rem 1rem',
       display: 'flex',
       flexDirection: 'column',
@@ -26,10 +26,10 @@ export default function TermsConditions() {
             alignItems: 'center',
             gap: '0.4rem',
             background: '#ffffff',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #e8e1d0',
             borderRadius: '8px',
             padding: '0.5rem 0.9rem',
-            color: '#475569',
+            color: '#4a5148',
             fontSize: '0.88rem',
             fontWeight: '600',
             cursor: 'pointer',
@@ -37,7 +37,7 @@ export default function TermsConditions() {
             boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
             transition: 'all 0.15s ease'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#f3eee2'}
           onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
         >
           <ArrowLeft size={16} /> Back to GI Shop
@@ -46,17 +46,17 @@ export default function TermsConditions() {
         {/* Main Document Card */}
         <div style={{
           background: '#ffffff',
-          border: '1px solid #e2e8f0',
+          border: '1px solid #e8e1d0',
           borderRadius: '16px',
           padding: '2.5rem',
           boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-          color: '#334155',
+          color: '#343c35',
           lineHeight: '1.7',
           fontSize: '0.95rem'
         }}>
           
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1.5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '1px solid #f3eee2', paddingBottom: '1.5rem' }}>
             <img 
               src={logoImg} 
               alt="GI SHOP Logo" 
@@ -67,20 +67,20 @@ export default function TermsConditions() {
                 objectFit: 'contain',
                 margin: '0 auto 0.75rem auto',
                 display: 'block',
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.15)'
+                boxShadow: '0 4px 12px rgba(15, 122, 67, 0.15)'
               }} 
             />
-            <h1 style={{ fontSize: '1.85rem', fontWeight: '800', color: '#0f172a', margin: '0 0 0.4rem 0' }}>
+            <h1 style={{ fontSize: '1.85rem', fontWeight: '800', color: '#12201a', margin: '0 0 0.4rem 0' }}>
               TERMS AND CONDITIONS
             </h1>
-            <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: '0.88rem', color: '#666c60', margin: 0 }}>
               Last updated September 01, 2026
             </p>
           </div>
 
           {/* Critical Disclaimer Notice */}
           <div style={{
-            background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+            background: 'linear-gradient(135deg, #fff8e6 0%, #fdf0cf 100%)',
             border: '1px solid #fde68a',
             borderRadius: '12px',
             padding: '1.35rem',
@@ -89,7 +89,7 @@ export default function TermsConditions() {
             gap: '1rem',
             alignItems: 'flex-start'
           }}>
-            <AlertTriangle size={28} color="#b45309" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <AlertTriangle size={28} color="#a8620a" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <div style={{ fontWeight: '800', fontSize: '1rem', color: '#92400e', marginBottom: '0.35rem' }}>
                 IMPORTANT: PLATFORM NATURE &amp; DATA RESPONSIBILITY DISCLAIMER
@@ -102,11 +102,11 @@ export default function TermsConditions() {
 
           {/* Section 1: Agreement */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               1. AGREEMENT TO TERMS
             </h3>
             <p>
-              These Terms and Conditions constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and <strong>GI SHOP</strong> ("we," "us," or "our"), concerning your access to and use of the <a href="https://gi-shop.genziitian.in" style={{ color: '#2563eb' }}>https://gi-shop.genziitian.in</a> website as well as the <strong>GI SHOP: POS &amp; Khata Ledger</strong> mobile application (collectively, the "Platform" or "Services").
+              These Terms and Conditions constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and <strong>GI SHOP</strong> ("we," "us," or "our"), concerning your access to and use of the <a href="https://gi-shop.genziitian.in" style={{ color: '#0f7a43' }}>https://gi-shop.genziitian.in</a> website as well as the <strong>GI SHOP: POS &amp; Khata Ledger</strong> mobile application (collectively, the "Platform" or "Services").
             </p>
             <p>
               By accessing or using the Services, you agree that you have read, understood, and agree to be bound by all of these Terms and Conditions. <strong>If you do not agree with all of these terms, you are expressly prohibited from using the Services and must discontinue use immediately.</strong>
@@ -115,7 +115,7 @@ export default function TermsConditions() {
 
           {/* Section 2: Platform Only Service */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               2. NATURE OF SERVICES (PLATFORM ONLY)
             </h3>
             <p>
@@ -129,7 +129,7 @@ export default function TermsConditions() {
 
           {/* Section 3: Data Loss & Limitation of Liability */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               3. USER DATA RESPONSIBILITY &amp; NO LIABILITY FOR DATA LOSS
             </h3>
             <p>
@@ -144,7 +144,7 @@ export default function TermsConditions() {
 
           {/* Section 4: User Accounts & PIN Security */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               4. USER REGISTRATION &amp; SECURITY PIN
             </h3>
             <p>
@@ -160,7 +160,7 @@ export default function TermsConditions() {
 
           {/* Section 5: Acceptable Use */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               5. ACCEPTABLE USE POLICY
             </h3>
             <p>You agree not to access or use the Platform for any purpose other than that for which we make it available. Prohibited activities include:</p>
@@ -174,7 +174,7 @@ export default function TermsConditions() {
 
           {/* Section 6: Account Deletion & Termination */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               6. ACCOUNT DELETION &amp; TERMINATION
             </h3>
             <p>
@@ -182,11 +182,11 @@ export default function TermsConditions() {
               <a 
                 href="/delete" 
                 onClick={(e) => { e.preventDefault(); navigate('/delete'); }}
-                style={{ color: '#2563eb', fontWeight: '600', textDecoration: 'underline' }}
+                style={{ color: '#0f7a43', fontWeight: '600', textDecoration: 'underline' }}
               >
                 https://gi-shop.genziitian.in/delete
               </a>{' '}
-              or email us directly at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#2563eb' }}>pay.laxmikant@gmail.com</a>. Account deletions are processed within up to 7 days.
+              or email us directly at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#0f7a43' }}>pay.laxmikant@gmail.com</a>. Account deletions are processed within up to 7 days.
             </p>
             <p>
               We reserve the right to suspend, terminate, or restrict access to any account without notice if we believe you have violated these Terms or engaged in unauthorized activity.
@@ -195,7 +195,7 @@ export default function TermsConditions() {
 
           {/* Section 7: Disclaimer of Warranties */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               7. DISCLAIMER OF WARRANTIES
             </h3>
             <p>
@@ -205,7 +205,7 @@ export default function TermsConditions() {
 
           {/* Section 8: Changes to Terms */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               8. MODIFICATIONS TO TERMS
             </h3>
             <p>
@@ -215,23 +215,23 @@ export default function TermsConditions() {
 
           {/* Section 9: Contact Information */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               9. CONTACT INFORMATION
             </h3>
             <p>If you have questions or comments regarding these Terms and Conditions, please contact us at:</p>
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
+            <div style={{ background: '#faf7f0', border: '1px solid #e8e1d0', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
               <strong>GI SHOP</strong><br />
               PATNA, BIHAR 800001, India<br />
-              Email: <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#2563eb', fontWeight: '600' }}>pay.laxmikant@gmail.com</a>
+              Email: <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#0f7a43', fontWeight: '600' }}>pay.laxmikant@gmail.com</a>
             </div>
           </div>
 
           {/* Footer Note */}
-          <div style={{ textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem', marginTop: '2rem' }}>
+          <div style={{ textAlign: 'center', borderTop: '1px solid #e8e1d0', paddingTop: '1.5rem', marginTop: '2rem' }}>
             <button
               onClick={() => navigate('/')}
               style={{
-                background: '#2563eb',
+                background: '#0f7a43',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
@@ -241,8 +241,8 @@ export default function TermsConditions() {
                 cursor: 'pointer',
                 transition: 'background 0.15s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#0b5e33'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#0f7a43'}
             >
               Return to GI Shop
             </button>
@@ -251,7 +251,7 @@ export default function TermsConditions() {
         </div>
 
         {/* Bottom copyright */}
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#a0a294' }}>
           &copy; {new Date().getFullYear()} GI SHOP • All Rights Reserved
         </div>
 

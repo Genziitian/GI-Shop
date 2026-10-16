@@ -22,6 +22,7 @@ import POSBilling from '../components/POSBilling';
 import CustomerLedger from '../components/CustomerLedger';
 import OrderTimelineModal from '../components/OrderTimelineModal';
 import logoImg from '../assets/logo.png';
+import { CountUp } from '../components/Motion';
 
 export default function Shopkeeper() {
   const navigate = useNavigate();
@@ -603,18 +604,18 @@ export default function Shopkeeper() {
       <head>
         <title>${currentShop?.shopName || 'Shop'} - Financial & Operations Report</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
-          .title { font-size: 24px; font-weight: 800; color: #15803d; margin: 0; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1b2a22; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #12201a; padding-bottom: 12px; margin-bottom: 20px; }
+          .title { font-size: 24px; font-weight: 800; color: #0f7a43; margin: 0; }
           .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 12px; }
           .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-          .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #f8fafc; }
-          .card-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-          .card-val { font-size: 20px; font-weight: 800; color: #0f172a; }
+          .card { border: 1px solid #e8e1d0; border-radius: 10px; padding: 12px; background: #faf7f0; }
+          .card-title { font-size: 11px; font-weight: 700; color: #666c60; text-transform: uppercase; margin-bottom: 4px; }
+          .card-val { font-size: 20px; font-weight: 800; color: #12201a; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-          th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
-          th { background: #f1f5f9; font-weight: 700; }
-          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+          th, td { border: 1px solid #d5ccb6; padding: 8px 10px; text-align: left; }
+          th { background: #f3eee2; font-weight: 700; }
+          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e8e1d0; font-size: 11px; color: #a0a294; text-align: center; }
           @media print { body { padding: 0; } }
         </style>
       </head>
@@ -622,21 +623,21 @@ export default function Shopkeeper() {
         <div class="header">
           <div>
             <h1 class="title">${currentShop?.shopName || 'GI Shop'}</h1>
-            <div style="font-size: 13px; color: #475569; margin-top: 2px;">
+            <div style="font-size: 13px; color: #4a5148; margin-top: 2px;">
               Shop ID: <strong>${currentShop?.shortId || 'shp'}</strong> • Owner: ${currentUser?.name || 'Owner'} (${currentUser?.phone || ''})
             </div>
-            <div style="font-size: 12px; color: #64748b;">${currentShop?.shopAddress || ''}, ${currentShop?.city || ''}</div>
+            <div style="font-size: 12px; color: #666c60;">${currentShop?.shopAddress || ''}, ${currentShop?.city || ''}</div>
           </div>
           <div style="text-align: right;">
             <div class="badge">Period: ${exportDateRange}</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
+            <div style="font-size: 11px; color: #a0a294; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
           </div>
         </div>
 
         <div class="grid">
           <div class="card">
             <div class="card-title">Total Revenue</div>
-            <div class="card-val" style="color: #15803d;">₹${(Number(totalRev) || 0).toFixed(2)}</div>
+            <div class="card-val" style="color: #0f7a43;">₹${(Number(totalRev) || 0).toFixed(2)}</div>
           </div>
           <div class="card">
             <div class="card-title">Cash Sales</div>
@@ -1077,7 +1078,7 @@ export default function Shopkeeper() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
-            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#15803d', letterSpacing: '-0.02em' }}>GI SHOP</span>
+            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f7a43', letterSpacing: '-0.02em' }}>GI SHOP</span>
           </div>
 
           <div style={{ height: '24px', width: '1px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
@@ -1093,13 +1094,13 @@ export default function Shopkeeper() {
               borderRadius: '8px', 
               transition: 'all 0.15s ease',
               border: '1px solid transparent',
-              background: '#f8fafc'
+              background: '#faf7f0'
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = 'transparent'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#f3eee2'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#faf7f0'; e.currentTarget.style.borderColor = 'transparent'; }}
             title="Click to view and edit shop details"
           >
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Store size={18} />
             </div>
             <div>
@@ -1118,9 +1119,9 @@ export default function Shopkeeper() {
             style={{
               padding: '0.4rem 0.8rem',
               fontSize: '0.85rem',
-              background: isOpen ? '#dcfce7' : '#fee2e2',
-              color: isOpen ? '#15803d' : '#b91c1c',
-              border: `1px solid ${isOpen ? '#bbf7d0' : '#fecaca'}`
+              background: isOpen ? '#dff3e6' : '#fee2e2',
+              color: isOpen ? '#0f7a43' : '#b91c1c',
+              border: `1px solid ${isOpen ? '#c4e8d1' : '#fecaca'}`
             }}
             onClick={handleToggleStatus}
           >
@@ -1131,9 +1132,9 @@ export default function Shopkeeper() {
           <span 
             className="badge" 
             style={{ 
-              background: '#eff6ff', 
+              background: '#e9f6ee', 
               color: 'var(--primary)', 
-              border: '1px solid #bfdbfe', 
+              border: '1px solid #bfe3cb', 
               padding: '0.4rem 0.75rem', 
               fontSize: '0.85rem', 
               fontWeight: '800', 
@@ -1156,7 +1157,7 @@ export default function Shopkeeper() {
               alignItems: 'center',
               gap: '0.4rem',
               borderColor: 'var(--border)',
-              background: '#f8fafc'
+              background: '#faf7f0'
             }}
             title={language === 'en' ? 'हिंदी में बदलें (Switch to Hindi)' : 'Switch to English'}
           >
@@ -1253,13 +1254,13 @@ export default function Shopkeeper() {
             const isOlderThan24h = (nowMs - new Date(order.createdAt).getTime()) >= twentyFourHoursMs;
 
             return (
-              <div key={order.id} style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '10px', padding: '1.15rem' }}>
+              <div key={order.id} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '10px', padding: '1.15rem' }}>
                 <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <strong style={{ fontSize: '1.05rem' }}>Order #{order.orderNumber}</strong>
                       {isOlderThan24h && (
-                        <span className="badge" style={{ background: '#f1f5f9', color: '#64748b', fontSize: '0.72rem', fontWeight: '700' }}>
+                        <span className="badge" style={{ background: '#f3eee2', color: '#666c60', fontSize: '0.72rem', fontWeight: '700' }}>
                           Past 24h
                         </span>
                       )}
@@ -1279,16 +1280,16 @@ export default function Shopkeeper() {
                       Order Details
                     </button>
                     <span className="badge" style={{
-                      background: order.status === 'PENDING' ? '#eff6ff' 
-                        : (order.status === 'PACKING' ? '#fef3c7' 
+                      background: order.status === 'PENDING' ? '#e9f6ee' 
+                        : (order.status === 'PACKING' ? '#fdf0cf' 
                         : (order.status === 'READY' ? '#e0f2fe' 
-                        : ((order.status === 'COMPLETED' || order.status === 'COLLECTED') ? '#dcfce7' 
-                        : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff')))),
+                        : ((order.status === 'COMPLETED' || order.status === 'COLLECTED') ? '#dff3e6' 
+                        : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#e9f6ee')))),
                       color: order.status === 'PENDING' ? 'var(--primary)' 
-                        : (order.status === 'PACKING' ? '#b45309' 
+                        : (order.status === 'PACKING' ? '#a8620a' 
                         : (order.status === 'READY' ? '#0369a1' 
-                        : ((order.status === 'COMPLETED' || order.status === 'COLLECTED') ? '#15803d' 
-                        : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8')))),
+                        : ((order.status === 'COMPLETED' || order.status === 'COLLECTED') ? '#0f7a43' 
+                        : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#0b5e33')))),
                       borderColor: 'transparent',
                       padding: '0.35rem 0.65rem',
                       fontWeight: '700'
@@ -1312,7 +1313,7 @@ export default function Shopkeeper() {
                   </div>
                 )}
 
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
                     <span>ORDER ITEMS</span>
                     <span>{(['PENDING', 'PACKING'].includes(order.status)) ? 'Click to toggle item availability' : ''}</span>
@@ -1325,9 +1326,9 @@ export default function Shopkeeper() {
                     const isUnavail = !!entry.isUnavailable;
 
                     return (
-                      <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f8fafc', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#94a3b8' : 'inherit' }}>
+                      <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #faf7f0', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#a0a294' : 'inherit' }}>
                         <div>
-                          <strong style={{ color: isUnavail ? '#94a3b8' : 'var(--text)' }}>{itemName}</strong> x {qty} @ ₹{Number(rate).toFixed(2)}
+                          <strong style={{ color: isUnavail ? '#a0a294' : 'var(--text)' }}>{itemName}</strong> x {qty} @ ₹{Number(rate).toFixed(2)}
                           {isUnavail && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', marginLeft: '0.5rem', fontSize: '0.7rem' }}>UNAVAILABLE</span>}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1375,11 +1376,11 @@ export default function Shopkeeper() {
                   )}
 
                   {order.status === 'READY' && (
-                    <div style={{ width: '100%', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginTop: '0.5rem' }}>
+                    <div style={{ width: '100%', background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.75rem', marginTop: '0.5rem' }}>
                       {!order.paymentRequested ? (
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                           <div>
-                            <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Order Ready for Pickup</strong>
+                            <strong style={{ color: '#0b5e33', fontSize: '0.9rem' }}>Order Ready for Pickup</strong>
                             <div style={{ fontSize: '0.8rem', color: '#854d0e', marginTop: '2px' }}>
                               No payment request sent yet. Click "Get Payment" to request payment.
                             </div>
@@ -1391,13 +1392,13 @@ export default function Shopkeeper() {
                       ) : (
                         <div>
                           <div style={{ marginBottom: '0.5rem' }}>
-                            <strong style={{ color: '#166534', fontSize: '0.9rem' }}>Payment Requested</strong>
-                            <div style={{ fontSize: '0.82rem', color: '#15803d', marginTop: '2px' }}>
+                            <strong style={{ color: '#0b5e33', fontSize: '0.9rem' }}>Payment Requested</strong>
+                            <div style={{ fontSize: '0.82rem', color: '#0f7a43', marginTop: '2px' }}>
                               Amount: <strong>₹{(Number(order.requestedAmount) || 0).toFixed(2)}</strong> • Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong>
                             </div>
                           </div>
 
-                          <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '0.65rem', marginTop: '0.5rem' }}>
+                          <div style={{ background: '#ffffff', border: '1px solid #d5ccb6', borderRadius: '6px', padding: '0.65rem', marginTop: '0.5rem' }}>
                             <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text)', marginBottom: '0.4rem' }}>
                               Enter Customer OTP
                             </div>
@@ -1433,8 +1434,8 @@ export default function Shopkeeper() {
                   )}
 
                   {order.status === 'COMPLETED' && (
-                    <div style={{ width: '100%', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.65rem 0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '0.85rem' }}>
-                      <CheckCircle size={16} color="#166534" /> Order Completed &amp; Handed Over
+                    <div style={{ width: '100%', background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.65rem 0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0b5e33', fontWeight: '700', fontSize: '0.85rem' }}>
+                      <CheckCircle size={16} color="#0b5e33" /> Order Completed &amp; Handed Over
                     </div>
                   )}
                 </div>
@@ -1525,7 +1526,7 @@ export default function Shopkeeper() {
               {orderDateFilter !== 'Older (>24h)' && (
                 <div style={{ marginBottom: '1.5rem' }}>
                   <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#0f172a' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#12201a' }}>
                       Active Orders (&lt;24h)
                     </h4>
                     <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: '800' }}>
@@ -1534,7 +1535,7 @@ export default function Shopkeeper() {
                   </div>
 
                   {activeOrders.length === 0 ? (
-                    <div style={{ background: '#f8fafc', border: '1px dashed var(--border)', borderRadius: '8px', padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    <div style={{ background: '#faf7f0', border: '1px dashed var(--border)', borderRadius: '8px', padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                       No active orders under 24 hours.
                     </div>
                   ) : (
@@ -1549,20 +1550,20 @@ export default function Shopkeeper() {
               <div>
                 <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#0f172a' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#12201a' }}>
                       Past Orders (&gt;24h &amp; Finalized)
                     </h4>
                     <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                       Orders older than 24 hours or collected/cancelled
                     </div>
                   </div>
-                  <span className="badge" style={{ background: '#f1f5f9', color: '#64748b', fontWeight: '800' }}>
+                  <span className="badge" style={{ background: '#f3eee2', color: '#666c60', fontWeight: '800' }}>
                     {pastOrders.length} History
                   </span>
                 </div>
 
                 {pastOrders.length === 0 ? (
-                  <div style={{ background: '#f8fafc', border: '1px dashed var(--border)', borderRadius: '8px', padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  <div style={{ background: '#faf7f0', border: '1px dashed var(--border)', borderRadius: '8px', padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                     No past orders matching filters.
                   </div>
                 ) : (
@@ -1589,23 +1590,23 @@ export default function Shopkeeper() {
           <div>
             {/* Analytics Metric Cards */}
             <div className="grid grid-4" style={{ marginBottom: '1.25rem' }}>
-              <div className="panel" style={{ background: '#f8fafc' }}>
+              <div className="panel" style={{ background: '#faf7f0' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Total Revenue</div>
-                <h3 style={{ margin: '0.25rem 0', color: 'var(--primary)', fontSize: '1.4rem' }}>₹{(Number(analytics.totalSales) || 0).toFixed(2)}</h3>
+                <h3 style={{ margin: '0.25rem 0', color: 'var(--primary)', fontSize: '1.4rem' }}>₹<CountUp value={Number(analytics.totalSales) || 0} format={(n) => n.toFixed(2)} /></h3>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{analytics.count || 0} transactions</div>
               </div>
 
-              <div className="panel" style={{ background: '#f8fafc' }}>
+              <div className="panel" style={{ background: '#faf7f0' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Cash Collected</div>
                 <h3 style={{ margin: '0.25rem 0', color: 'var(--success)', fontSize: '1.4rem' }}>₹{(Number(analytics.cashSales) || 0).toFixed(2)}</h3>
               </div>
 
-              <div className="panel" style={{ background: '#f8fafc' }}>
+              <div className="panel" style={{ background: '#faf7f0' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Online / UPI</div>
                 <h3 style={{ margin: '0.25rem 0', color: '#7c3aed', fontSize: '1.4rem' }}>₹{(Number(analytics.onlineSales) || 0).toFixed(2)}</h3>
               </div>
 
-              <div className="panel" style={{ background: '#f8fafc' }}>
+              <div className="panel" style={{ background: '#faf7f0' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Khata (In Book)</div>
                 <h3 style={{ margin: '0.25rem 0', color: 'var(--warning)', fontSize: '1.4rem' }}>₹{(Number(analytics.khataSales) || 0).toFixed(2)}</h3>
               </div>
@@ -1619,7 +1620,7 @@ export default function Shopkeeper() {
                 </div>
 
                 {!isOwner ? (
-                  <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)', alignSelf: 'flex-start' }}>
+                  <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)', alignSelf: 'flex-start' }}>
                     Today Only (Cashier Access)
                   </span>
                 ) : (
@@ -1662,7 +1663,7 @@ export default function Shopkeeper() {
               <div className="table-responsive desktop-only-block">
                 <table style={{ width: '100%', minWidth: '600px', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid var(--border)', background: '#f8fafc' }}>
+                    <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
                       <th style={{ textAlign: 'left', padding: '0.65rem' }}>Bill # & Date</th>
                       <th style={{ textAlign: 'left', padding: '0.65rem' }}>Customer</th>
                       <th style={{ textAlign: 'left', padding: '0.65rem' }}>Items Breakdown</th>
@@ -1741,8 +1742,8 @@ export default function Shopkeeper() {
               <div className="mobile-only-block">
                 {sales.map(sale => {
                   const items = JSON.parse(sale.itemsJSON || '[]');
-                  const methodColor = sale.paymentMethod === 'Cash' ? '#16a34a' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#7c3aed' : '#d97706';
-                  const methodBg = sale.paymentMethod === 'Cash' ? '#dcfce7' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#f5f3ff' : '#fef3c7';
+                  const methodColor = sale.paymentMethod === 'Cash' ? '#1f9d5a' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#7c3aed' : '#d98a0b';
+                  const methodBg = sale.paymentMethod === 'Cash' ? '#dff3e6' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#f5f3ff' : '#fdf0cf';
 
                   return (
                     <div 
@@ -1794,7 +1795,7 @@ export default function Shopkeeper() {
                       </div>
 
                       {/* Customer Info */}
-                      <div style={{ fontSize: '0.8rem', color: '#334155', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#343c35', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                         <span>👤 {sale.customerPhone || 'Walk-in Customer'}</span>
                         {sale.customerShortId && (
                           <span className="badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>
@@ -1804,7 +1805,7 @@ export default function Shopkeeper() {
                       </div>
 
                       {/* Items Summary */}
-                      <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '0.45rem 0.6rem', marginBottom: '0.5rem', fontSize: '0.78rem', color: '#475569' }}>
+                      <div style={{ background: '#faf7f0', borderRadius: '8px', padding: '0.45rem 0.6rem', marginBottom: '0.5rem', fontSize: '0.78rem', color: '#4a5148' }}>
                         {items.slice(0, 3).map((c, i) => (
                           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: i < 2 ? '2px' : 0 }}>
                             <span>{c.item?.name || c.name} ({c.qty} {c.item?.unit || ''})</span>
@@ -1870,7 +1871,7 @@ export default function Shopkeeper() {
             </div>
 
             {addedItemNotice && (
-              <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
+              <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
                 <CheckCircle size={18} /> {addedItemNotice}
               </div>
             )}
@@ -1912,7 +1913,7 @@ export default function Shopkeeper() {
                       {nameSuggestions.map((sug, idx) => (
                         <div 
                           key={idx}
-                          style={{ padding: '0.55rem 0.65rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                          style={{ padding: '0.55rem 0.65rem', cursor: 'pointer', borderBottom: '1px solid #f3eee2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                           onClick={() => handleSelectMasterSuggestion(sug)}
                         >
                           <div>
@@ -1956,7 +1957,7 @@ export default function Shopkeeper() {
 
             {/* Master Grocery Library Drawer / Browser */}
             {showMasterBrowser && (
-              <div className="panel" style={{ marginBottom: '1.5rem', background: '#f8fafc', border: '2px dashed var(--primary)' }}>
+              <div className="panel" style={{ marginBottom: '1.5rem', background: '#faf7f0', border: '2px dashed var(--primary)' }}>
                 <div className="flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div>
                     <h3 className="title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)' }}>
@@ -2027,7 +2028,7 @@ export default function Shopkeeper() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {(items || []).map(item => (
-                  <div key={item.id || item._id} className="list-item" style={{ background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border)', padding: '0.65rem 0.85rem' }}>
+                  <div key={item.id || item._id} className="list-item" style={{ background: '#faf7f0', borderRadius: '8px', border: '1px solid var(--border)', padding: '0.65rem 0.85rem' }}>
                     <div>
                       <strong style={{ fontSize: '0.95rem' }}>{item.name}</strong>
                       <span className="badge" style={{ marginLeft: '0.5rem' }}>₹{(Number(item?.price ?? item?.rate) || 0).toFixed(2)} / {item?.unit || 'unit'}</span>
@@ -2109,7 +2110,7 @@ export default function Shopkeeper() {
             </form>
 
             {staffMsg && (
-              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', borderRadius: '6px', padding: '0.65rem 1rem', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+              <div style={{ background: '#e9f6ee', border: '1px solid #bfe3cb', color: '#0b5e33', borderRadius: '6px', padding: '0.65rem 1rem', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
                 {staffMsg}
               </div>
             )}
@@ -2117,13 +2118,13 @@ export default function Shopkeeper() {
             <h3 className="title" style={{ fontSize: '1.1rem', marginTop: '1.5rem' }}>Current Staff & Invites</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {staffList.map(st => (
-                <div key={st.id} className="list-item" style={{ background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div key={st.id} className="list-item" style={{ background: '#faf7f0', borderRadius: '8px', border: '1px solid var(--border)' }}>
                   <div>
                     <strong style={{ fontSize: '0.95rem' }}>{st.userName}</strong> ({st.userShortId}) • {st.userPhone}
                     <span className="badge" style={{
                       marginLeft: '0.5rem',
-                      background: st.status === 'ACCEPTED' ? '#dcfce7' : '#fef3c7',
-                      color: st.status === 'ACCEPTED' ? '#15803d' : '#b45309'
+                      background: st.status === 'ACCEPTED' ? '#dff3e6' : '#fdf0cf',
+                      color: st.status === 'ACCEPTED' ? '#0f7a43' : '#a8620a'
                     }}>
                       {st.status === 'ACCEPTED' ? 'Active Cashier' : 'Invite Pending'}
                     </span>
@@ -2155,14 +2156,14 @@ export default function Shopkeeper() {
 
             {/* Mobile-only Shop Open/Closed Quick Card */}
             <div className="mobile-only-block" style={{ marginBottom: '0.85rem' }}>
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.75rem 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: isOpen ? '#dcfce7' : '#fee2e2', color: isOpen ? '#15803d' : '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: isOpen ? '#dff3e6' : '#fee2e2', color: isOpen ? '#0f7a43' : '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Store size={18} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>Store Status</div>
-                    <div style={{ fontSize: '0.76rem', color: isOpen ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
+                    <div style={{ fontSize: '0.76rem', color: isOpen ? '#0f7a43' : '#b91c1c', fontWeight: 700 }}>
                       {isOpen ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
                     </div>
                   </div>
@@ -2174,9 +2175,9 @@ export default function Shopkeeper() {
                     padding: '0.35rem 0.75rem',
                     fontSize: '0.78rem',
                     fontWeight: 700,
-                    background: isOpen ? '#fee2e2' : '#dcfce7',
-                    color: isOpen ? '#b91c1c' : '#15803d',
-                    border: `1px solid ${isOpen ? '#fecaca' : '#bbf7d0'}`
+                    background: isOpen ? '#fee2e2' : '#dff3e6',
+                    color: isOpen ? '#b91c1c' : '#0f7a43',
+                    border: `1px solid ${isOpen ? '#fecaca' : '#c4e8d1'}`
                   }}
                   onClick={handleToggleStatus}
                 >
@@ -2187,10 +2188,10 @@ export default function Shopkeeper() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
               {/* Language Selection Card */}
-              <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
+              <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Globe size={20} />
                     </div>
                     <div>
@@ -2204,14 +2205,14 @@ export default function Shopkeeper() {
                   </div>
 
                   {/* Language Selection Buttons */}
-                  <div style={{ display: 'inline-flex', background: '#e2e8f0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                  <div style={{ display: 'inline-flex', background: '#e8e1d0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                     <button
                       type="button"
                       onClick={() => setLanguage('en')}
                       style={{
                         border: 'none',
                         background: language === 'en' ? '#ffffff' : 'transparent',
-                        color: language === 'en' ? 'var(--primary)' : '#475569',
+                        color: language === 'en' ? 'var(--primary)' : '#4a5148',
                         fontWeight: language === 'en' ? 800 : 600,
                         padding: '0.45rem 1rem',
                         borderRadius: '7px',
@@ -2232,7 +2233,7 @@ export default function Shopkeeper() {
                       style={{
                         border: 'none',
                         background: language === 'hi' ? 'var(--primary)' : 'transparent',
-                        color: language === 'hi' ? '#ffffff' : '#475569',
+                        color: language === 'hi' ? '#ffffff' : '#4a5148',
                         fontWeight: language === 'hi' ? 800 : 600,
                         padding: '0.45rem 1rem',
                         borderRadius: '7px',
@@ -2252,10 +2253,10 @@ export default function Shopkeeper() {
               </div>
 
               {/* Store Details Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Store size={18} />
                     </div>
                     <div>
@@ -2272,7 +2273,7 @@ export default function Shopkeeper() {
                     Edit
                   </button>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <div>📞 Phone: <strong>{currentShop?.shopPhone || currentUser?.phone || 'N/A'}</strong></div>
                   <div>📍 City: <strong>{currentShop?.city || 'Delhi'}</strong></div>
                   <div>🕒 Timings: <span>{currentShop?.timings || '08:00 AM - 10:00 PM'}</span></div>
@@ -2281,9 +2282,9 @@ export default function Shopkeeper() {
 
               {/* Management Actions (Owner only) */}
               {isOwner && (
-                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+                <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Plus size={18} />
                     </div>
                     <div>
@@ -2291,7 +2292,7 @@ export default function Shopkeeper() {
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Inventory &amp; staff controls</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <button 
                       type="button" 
                       className="btn btn-outline" 
@@ -2319,35 +2320,35 @@ export default function Shopkeeper() {
               )}
 
               {/* Security & Lock Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eef8f1', color: '#1f9d5a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ShieldCheck size={18} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Security &amp; Lock</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={handleOpenShopDetails} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
-                    <Key size={15} color="#16a34a" /> Change Account Password
+                    <Key size={15} color="#1f9d5a" /> Change Account Password
                   </button>
                 </div>
               </div>
 
               {/* Legal & Privacy Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Shield size={18} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Legal &amp; Policies</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
-                    <ShieldCheck size={15} color="#16a34a" /> Privacy Policy
+                    <ShieldCheck size={15} color="#1f9d5a" /> Privacy Policy
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
                     <FileText size={15} color="#0284c7" /> Terms &amp; Conditions
@@ -2437,7 +2438,7 @@ export default function Shopkeeper() {
             {/* Modal Header */}
             <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Store size={24} />
                 </div>
                 <div>
@@ -2451,7 +2452,7 @@ export default function Shopkeeper() {
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f3eee2', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
               <button
                 type="button"
                 onClick={() => setSettingsTab('store')}
@@ -2549,7 +2550,7 @@ export default function Shopkeeper() {
             {settingsTab === 'store' && (
               <div>
                 {!isOwner && (
-                  <div style={{ background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ background: '#fdf0cf', border: '1px solid #fde68a', color: '#92400e', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Info size={18} />
                     <div>
                       <strong>View-Only Mode:</strong> You are logged in as a <strong>Cashier</strong>. Only the shop owner has permission to change store details, address, or timings.
@@ -2558,7 +2559,7 @@ export default function Shopkeeper() {
                 )}
 
                 {shopSaveNotice && (
-                  <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CheckCircle size={18} />
                     <div>{shopSaveNotice}</div>
                   </div>
@@ -2589,7 +2590,7 @@ export default function Shopkeeper() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>City / Region</label>
-                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#a0a294', display: 'flex', alignItems: 'center', gap: '3px' }}>
                           <Lock size={11} /> Locked (SuperAdmin only)
                         </span>
                       </div>
@@ -2598,9 +2599,9 @@ export default function Shopkeeper() {
                         className="input" 
                         value={shopForm.city || 'Delhi'} 
                         disabled 
-                        style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', marginBottom: '2px' }}
+                        style={{ background: '#faf7f0', color: '#666c60', cursor: 'not-allowed', marginBottom: '2px' }}
                       />
-                      <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#a0a294', display: 'block' }}>
                         Store city is locked to protect records. Contact SuperAdmin to request a transfer.
                       </span>
                     </div>
@@ -2683,9 +2684,9 @@ export default function Shopkeeper() {
                               fontWeight: '600',
                               padding: '0.22rem 0.55rem',
                               borderRadius: '6px',
-                              border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
-                              background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
-                              color: (timeOpen === p.open && timeClose === p.close) ? '#15803d' : '#475569',
+                              border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #1f9d5a' : '1px solid #d5ccb6',
+                              background: (timeOpen === p.open && timeClose === p.close) ? '#dff3e6' : '#ffffff',
+                              color: (timeOpen === p.open && timeClose === p.close) ? '#0f7a43' : '#4a5148',
                               cursor: 'pointer'
                             }}
                           >
@@ -2695,12 +2696,12 @@ export default function Shopkeeper() {
                       </div>
                     )}
 
-                    <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#1f9d5a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                       <Clock size={14} /> {shopForm.timings || formatTimings(timeOpen, timeClose)}
                     </div>
                   </div>
 
-                  <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+                  <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
                     <div>Total Active Inventory: <strong>{detailedShop?.totalItemsCount || items.length} products</strong></div>
                     <div>Active Staff Enrolled: <strong>{detailedShop?.totalStaffCount || staffList.length} cashiers</strong></div>
                   </div>
@@ -2731,13 +2732,13 @@ export default function Shopkeeper() {
             {/* TAB 2: LINKED USER & OWNER PROFILE */}
             {settingsTab === 'owner' && (
               <div>
-                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0' }}>
-                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.35rem' }}>
+                <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem', paddingBottom: '1rem', borderBottom: '1px solid #e8e1d0' }}>
+                    <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#dff3e6', color: '#1f9d5a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.35rem' }}>
                       {(currentUser?.name || detailedShop?.ownerName || 'O')[0].toUpperCase()}
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a' }}>{currentUser?.name || detailedShop?.ownerName}</h4>
+                      <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#12201a' }}>{currentUser?.name || detailedShop?.ownerName}</h4>
                       <span style={{ fontSize: '0.78rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
                         {isOwner ? 'Verified Shop Owner' : 'Enrolled Cashier'}
                       </span>
@@ -2747,10 +2748,10 @@ export default function Shopkeeper() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', fontSize: '0.88rem' }}>
                     <div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>LINKED GOOGLE EMAIL</div>
-                      <div style={{ fontWeight: '700', color: '#0f172a', wordBreak: 'break-all' }}>
+                      <div style={{ fontWeight: '700', color: '#12201a', wordBreak: 'break-all' }}>
                         {currentUser?.email || detailedShop?.ownerEmail || 'Linked via Google'}
                       </div>
-                      <span style={{ fontSize: '0.74rem', color: '#16a34a', fontWeight: '600' }}>Synced with Google Account</span>
+                      <span style={{ fontSize: '0.74rem', color: '#1f9d5a', fontWeight: '600' }}>Synced with Google Account</span>
                     </div>
 
                     <div>
@@ -2763,28 +2764,28 @@ export default function Shopkeeper() {
 
                     <div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>CONTACT PHONE</div>
-                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
+                      <div style={{ fontWeight: '700', color: '#12201a' }}>
                         {currentUser?.phone || detailedShop?.shopPhone || 'Not set'}
                       </div>
                     </div>
 
                     <div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>CITY & REGION</div>
-                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
+                      <div style={{ fontWeight: '700', color: '#12201a' }}>
                         {currentUser?.city || detailedShop?.city || 'Delhi'}
                       </div>
                     </div>
 
                     <div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>ACCOUNT STATUS</div>
-                      <div style={{ fontWeight: '700', color: '#16a34a' }}>
+                      <div style={{ fontWeight: '700', color: '#1f9d5a' }}>
                         Active & Verified
                       </div>
                     </div>
 
                     <div>
                       <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontWeight: '600', marginBottom: '3px' }}>AUTHENTICATION TYPE</div>
-                      <div style={{ fontWeight: '700', color: '#0f172a' }}>
+                      <div style={{ fontWeight: '700', color: '#12201a' }}>
                         Google OAuth + Passkey
                       </div>
                     </div>
@@ -2792,17 +2793,17 @@ export default function Shopkeeper() {
                 </div>
 
                 {/* Form to update Owner Profile & Phone */}
-                <form onSubmit={handleSaveOwnerProfile} style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+                <form onSubmit={handleSaveOwnerProfile} style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <Phone size={18} color="var(--primary)" />
-                    <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a' }}>Update Mobile Number & Profile</h4>
+                    <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#12201a' }}>Update Mobile Number & Profile</h4>
                   </div>
                   <p style={{ margin: '0 0 1rem 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                     Updating your phone number will synchronize across your account login and your shop contact details.
                   </p>
 
                   {ownerNotice && (
-                    <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#15803d', padding: '0.65rem 0.85rem', borderRadius: '8px', fontSize: '0.84rem', fontWeight: '600', marginBottom: '1rem' }}>
+                    <div style={{ background: '#dff3e6', border: '1px solid #86efac', color: '#0f7a43', padding: '0.65rem 0.85rem', borderRadius: '8px', fontSize: '0.84rem', fontWeight: '600', marginBottom: '1rem' }}>
                       {ownerNotice}
                     </div>
                   )}
@@ -2833,7 +2834,7 @@ export default function Shopkeeper() {
                         10-Digit Phone Number
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <span style={{ background: '#f1f5f9', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '8px 0 0 8px', padding: '0.5rem 0.75rem', fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                        <span style={{ background: '#f3eee2', border: '1px solid var(--border)', borderRight: 'none', borderRadius: '8px 0 0 8px', padding: '0.5rem 0.75rem', fontSize: '0.88rem', color: 'var(--text-muted)', fontWeight: '600' }}>
                           +91
                         </span>
                         <input
@@ -2900,7 +2901,7 @@ export default function Shopkeeper() {
                       </p>
 
                       {pinNotice && (
-                        <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <CheckCircle size={15} /> {pinNotice}
                         </div>
                       )}
@@ -2979,18 +2980,18 @@ export default function Shopkeeper() {
                   </form>
 
                   {/* 2. Set / Change Password */}
-                  <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <form onSubmit={handleChangePassword} style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                        <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#1b2a22', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <Key size={18} /> Account Password
                         </div>
                         {currentUser?.hasPasswordSet === 1 ? (
-                          <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                          <span style={{ fontSize: '0.72rem', background: '#dff3e6', color: '#0f7a43', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
                             Password Active
                           </span>
                         ) : (
-                          <span style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                          <span style={{ fontSize: '0.72rem', background: '#fdf0cf', color: '#a8620a', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
                             Not Set Yet
                           </span>
                         )}
@@ -3002,7 +3003,7 @@ export default function Shopkeeper() {
                       </p>
 
                       {passwordNotice && (
-                        <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           <CheckCircle size={15} /> {passwordNotice}
                         </div>
                       )}
@@ -3029,7 +3030,7 @@ export default function Shopkeeper() {
                             <button
                               type="button"
                               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#a0a294', padding: 0 }}
                             >
                               {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -3056,7 +3057,7 @@ export default function Shopkeeper() {
                             <button
                               type="button"
                               onClick={() => setShowNewPassword(!showNewPassword)}
-                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#a0a294', padding: 0 }}
                             >
                               {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -3079,7 +3080,7 @@ export default function Shopkeeper() {
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#a0a294', padding: 0 }}
                             >
                               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -3100,13 +3101,13 @@ export default function Shopkeeper() {
                 </div>
 
                 {/* 3. Passkey Biometric Security */}
-                <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#eef8f1', border: '1.5px solid #c4e8d1', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <div>
-                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f7a43', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
                         <Fingerprint size={18} /> Passkey Biometric Login
                       </div>
-                      <p style={{ margin: 0, fontSize: '0.82rem', color: '#166534' }}>
+                      <p style={{ margin: 0, fontSize: '0.82rem', color: '#0b5e33' }}>
                         Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
                       </p>
                     </div>
@@ -3116,7 +3117,7 @@ export default function Shopkeeper() {
                       onClick={handleRegisterPasskey}
                       disabled={passkeyRegistering}
                       className="btn btn-outline"
-                      style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '9px' }}
+                      style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem', borderColor: '#1f9d5a', color: '#0f7a43', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '9px' }}
                     >
                       <Fingerprint size={16} />
                       {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
@@ -3124,7 +3125,7 @@ export default function Shopkeeper() {
                   </div>
 
                   {passkeyNotice && (
-                    <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <CheckCircle size={15} /> {passkeyNotice}
                     </div>
                   )}
@@ -3155,14 +3156,14 @@ export default function Shopkeeper() {
             {settingsTab === 'export' && (
               <div>
                 {/* Header Information Banner */}
-                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e8e1d0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Download size={22} />
                       </div>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>Export Shop Data & Reports</h4>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#12201a' }}>Export Shop Data & Reports</h4>
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                           Download complete Excel/CSV spreadsheets or Full JSON backups with custom date filtering.
                         </span>
@@ -3174,7 +3175,7 @@ export default function Shopkeeper() {
                         type="button"
                         onClick={handlePrintSummary}
                         className="btn btn-outline"
-                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#cbd5e1', background: '#fff' }}
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#d5ccb6', background: '#fff' }}
                       >
                         <Printer size={15} /> Print Summary
                       </button>
@@ -3183,19 +3184,19 @@ export default function Shopkeeper() {
 
                   {/* Summary Metric Counters */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                    <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Sales Invoices</div>
                       <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--primary)' }}>{sales.length}</div>
                     </div>
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                    <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Products in Catalog</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#16a34a' }}>{items.length}</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1f9d5a' }}>{items.length}</div>
                     </div>
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                    <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Online Orders</div>
                       <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#0284c7' }}>{orders.length}</div>
                     </div>
-                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                    <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Enrolled Staff</div>
                       <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#7c3aed' }}>{staffList.length}</div>
                     </div>
@@ -3204,7 +3205,7 @@ export default function Shopkeeper() {
 
                 {/* Notifications */}
                 {exportNotice && (
-                  <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CheckCircle size={18} />
                     <div>{exportNotice}</div>
                   </div>
@@ -3217,13 +3218,13 @@ export default function Shopkeeper() {
                 )}
 
                 {/* STEP 1: DATE RANGE CONTROL */}
-                <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       <CalendarRange size={18} color="var(--primary)" />
                       <span>Step 1: Choose Date Range & Time Period</span>
                     </div>
-                    <span style={{ fontSize: '0.75rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
+                    <span style={{ fontSize: '0.75rem', background: '#e9f6ee', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
                       Current Selection: {exportDateRange === 'CUSTOM' ? `${exportStartDate} to ${exportEndDate}` : exportDateRange}
                     </span>
                   </div>
@@ -3247,9 +3248,9 @@ export default function Shopkeeper() {
                           fontSize: '0.82rem',
                           fontWeight: '700',
                           borderRadius: '8px',
-                          border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #cbd5e1',
-                          background: exportDateRange === preset.id ? '#eff6ff' : '#ffffff',
-                          color: exportDateRange === preset.id ? 'var(--primary)' : '#475569',
+                          border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #d5ccb6',
+                          background: exportDateRange === preset.id ? '#e9f6ee' : '#ffffff',
+                          color: exportDateRange === preset.id ? 'var(--primary)' : '#4a5148',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease'
                         }}
@@ -3261,7 +3262,7 @@ export default function Shopkeeper() {
 
                   {/* Custom Date Pickers */}
                   {exportDateRange === 'CUSTOM' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#faf7f0', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e8e1d0' }}>
                       <div>
                         <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                           Start Date (From)
@@ -3291,10 +3292,10 @@ export default function Shopkeeper() {
                 </div>
 
                 {/* STEP 2: WHAT TO EXPORT (CHECKBOX SELECTORS) */}
-                <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <FileSpreadsheet size={18} color="#16a34a" />
+                    <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <FileSpreadsheet size={18} color="#1f9d5a" />
                       <span>Step 2: Select What to Export</span>
                     </div>
 
@@ -3306,11 +3307,11 @@ export default function Shopkeeper() {
                       >
                         Select All
                       </button>
-                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <span style={{ color: '#d5ccb6' }}>•</span>
                       <button
                         type="button"
                         onClick={() => setExportCategories({ sales: false, items: false, khata: false, orders: false, staff: false, summary: false })}
-                        style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                        style={{ background: 'none', border: 'none', color: '#666c60', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                       >
                         Deselect All
                       </button>
@@ -3325,8 +3326,8 @@ export default function Shopkeeper() {
                         title: 'Sales & Billing Invoices',
                         desc: 'All invoices, line items, payment mode, cashier, discounts',
                         count: `${filterRecordsByDate(sales, 'date').length} records`,
-                        badgeColor: '#16a34a',
-                        badgeBg: '#dcfce7'
+                        badgeColor: '#1f9d5a',
+                        badgeBg: '#dff3e6'
                       },
                       {
                         key: 'items',
@@ -3365,8 +3366,8 @@ export default function Shopkeeper() {
                         title: 'Financial & Revenue Summary',
                         desc: 'Total revenue, Cash vs UPI vs Khata breakdown, bill stats',
                         count: 'Analytics Report',
-                        badgeColor: '#d97706',
-                        badgeBg: '#fef3c7'
+                        badgeColor: '#d98a0b',
+                        badgeBg: '#fdf0cf'
                       }
                     ].map(cat => {
                       const isChecked = exportCategories[cat.key];
@@ -3380,18 +3381,18 @@ export default function Shopkeeper() {
                             gap: '0.75rem',
                             padding: '0.85rem',
                             borderRadius: '10px',
-                            border: isChecked ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
-                            background: isChecked ? '#f0fdf4' : '#ffffff',
+                            border: isChecked ? '1.5px solid #1f9d5a' : '1px solid #e8e1d0',
+                            background: isChecked ? '#eef8f1' : '#ffffff',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
                         >
-                          <div style={{ marginTop: '2px', color: isChecked ? '#16a34a' : '#94a3b8' }}>
+                          <div style={{ marginTop: '2px', color: isChecked ? '#1f9d5a' : '#a0a294' }}>
                             {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
-                              <strong style={{ fontSize: '0.86rem', color: isChecked ? '#0f172a' : '#64748b' }}>{cat.title}</strong>
+                              <strong style={{ fontSize: '0.86rem', color: isChecked ? '#12201a' : '#666c60' }}>{cat.title}</strong>
                               <span style={{ fontSize: '0.7rem', fontWeight: '700', color: cat.badgeColor, background: cat.badgeBg, padding: '0.15rem 0.45rem', borderRadius: '5px' }}>
                                 {cat.count}
                               </span>
@@ -3416,7 +3417,7 @@ export default function Shopkeeper() {
                     className="btn"
                     style={{
                       padding: '0.85rem 1.25rem',
-                      background: '#16a34a',
+                      background: '#1f9d5a',
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '12px',
@@ -3426,7 +3427,7 @@ export default function Shopkeeper() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.5rem',
-                      boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                      boxShadow: '0 4px 12px rgba(31, 157, 90, 0.25)',
                       cursor: exportLoading || !Object.values(exportCategories).some(Boolean) ? 'not-allowed' : 'pointer'
                     }}
                   >
@@ -3443,8 +3444,8 @@ export default function Shopkeeper() {
                     style={{
                       padding: '0.85rem 1.25rem',
                       background: '#ffffff',
-                      color: '#0f172a',
-                      borderColor: '#0f172a',
+                      color: '#12201a',
+                      borderColor: '#12201a',
                       borderRadius: '12px',
                       fontSize: '0.92rem',
                       fontWeight: '800',
@@ -3516,15 +3517,15 @@ export default function Shopkeeper() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(18, 32, 26, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
           <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
               <LogOut size={26} />
             </div>
-            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#12201a' }}>
               Log Out?
             </h3>
-            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#666c60', lineHeight: '1.45' }}>
               Are you sure you want to log out of your GI SHOP account?
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -3556,7 +3557,7 @@ export default function Shopkeeper() {
             position: 'fixed', 
             inset: 0, 
             zIndex: 99999, 
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+            background: 'linear-gradient(135deg, #12201a 0%, #1b2a22 100%)', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
@@ -3570,10 +3571,10 @@ export default function Shopkeeper() {
               <Lock size={32} />
             </div>
 
-            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#f8fafc' }}>
+            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#faf7f0' }}>
               {currentShop?.shopName || 'Register Locked'}
             </h2>
-            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.85rem', color: '#a0a294', marginBottom: '1.25rem' }}>
               {unlockMode === 'PIN' ? 'Enter 4-digit PIN to resume billing' : 'Enter account password to resume billing'}
             </div>
 
@@ -3680,7 +3681,7 @@ export default function Shopkeeper() {
                       borderRadius: '14px',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       background: 'rgba(255, 255, 255, 0.04)',
-                      color: '#94a3b8',
+                      color: '#a0a294',
                       fontSize: '0.9rem',
                       fontWeight: '700',
                       cursor: 'pointer',
@@ -3756,7 +3757,7 @@ export default function Shopkeeper() {
                   <button
                     type="button"
                     onClick={() => setShowUnlockPassword(!showUnlockPassword)}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#a0a294', padding: 0 }}
                   >
                     {showUnlockPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -3795,7 +3796,7 @@ export default function Shopkeeper() {
                   background: 'rgba(255, 255, 255, 0.08)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: '12px',
-                  color: '#f8fafc',
+                  color: '#faf7f0',
                   fontSize: '0.9rem',
                   fontWeight: '700',
                   cursor: 'pointer',
@@ -3817,7 +3818,7 @@ export default function Shopkeeper() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: '#a0a294',
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -3877,7 +3878,7 @@ export default function Shopkeeper() {
             </div>
 
             {/* Customer Info */}
-            <div style={{ background: '#f8fafc', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+            <div style={{ background: '#faf7f0', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Customer Details</div>
               <div style={{ fontWeight: '700' }}>
                 {selectedReceipt.customerPhone || 'Walk-in Customer'}
@@ -3904,7 +3905,7 @@ export default function Shopkeeper() {
                   const lineTotal = (c.amount || (rate * qty)) || 0;
 
                   return (
-                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #f3eee2' }}>
                       <div>
                         <div style={{ fontWeight: '600' }}>{itemName}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -3998,7 +3999,7 @@ export default function Shopkeeper() {
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowGetPaymentModal(false)} />
             </div>
 
-            <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+            <div style={{ background: '#faf7f0', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
               <div className="flex-between" style={{ marginBottom: '0.3rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Order Total:</span>
                 <strong>₹{(Number(paymentOrder.estimatedTotal) || 0).toFixed(2)}</strong>
@@ -4035,7 +4036,7 @@ export default function Shopkeeper() {
               </label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {['Cash', 'Online / UPI', 'Add to Book'].map(mode => (
-                  <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem', borderRadius: '8px', border: paymentMode === mode ? '2px solid var(--primary)' : '1px solid var(--border)', background: paymentMode === mode ? '#eff6ff' : '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: paymentMode === mode ? '700' : '400' }}>
+                  <label key={mode} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem', borderRadius: '8px', border: paymentMode === mode ? '2px solid var(--primary)' : '1px solid var(--border)', background: paymentMode === mode ? '#e9f6ee' : '#fff', cursor: 'pointer', fontSize: '0.88rem', fontWeight: paymentMode === mode ? '700' : '400' }}>
                     <input 
                       type="radio" 
                       name="paymentModeWeb" 

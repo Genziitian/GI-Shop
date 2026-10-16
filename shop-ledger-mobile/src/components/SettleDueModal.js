@@ -4,13 +4,13 @@ import {
   Text,
   Modal,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { X, Check, DollarSign, FileText } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import { showErrorAlert, validatePrice } from '../utils/errorHandler';
@@ -244,7 +244,7 @@ export default function SettleDueModal({ visible, customer, onClose, onSettleSuc
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(18, 32, 26, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: colors.primary,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     alignSelf: 'flex-start',
     marginBottom: 14,
   },

@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   Modal,
   ScrollView,
   ActivityIndicator,
   Linking,
   RefreshControl,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   BookOpen,
@@ -28,6 +28,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
+import { FadeInView } from '../../components/ui/Motion';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LanguageContext';
 import { getCustomerKhata, getCustomerShopKhata } from '../../api/client';
@@ -180,8 +181,8 @@ export default function CustomerKhataScreen({ navigation }) {
               </TouchableOpacity>
             </View>
           }
-          renderItem={({ item: st }) => (
-            <View
+          renderItem={({ item: st, index }) => (
+            <FadeInView index={index}
               style={[
                 styles.storeCard,
                 { borderLeftColor: st.totalDue > 0 ? '#ef4444' : '#22c55e' },
@@ -205,7 +206,7 @@ export default function CustomerKhataScreen({ navigation }) {
                   <Text
                     style={[
                       styles.dueAmountText,
-                      { color: st.totalDue > 0 ? '#ef4444' : '#15803d' },
+                      { color: st.totalDue > 0 ? '#ef4444' : '#0f7a43' },
                     ]}
                   >
                     {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
@@ -213,7 +214,7 @@ export default function CustomerKhataScreen({ navigation }) {
                   <Text
                     style={[
                       styles.dueSubStatus,
-                      { color: st.totalDue > 0 ? '#ef4444' : '#15803d' },
+                      { color: st.totalDue > 0 ? '#ef4444' : '#0f7a43' },
                     ]}
                   >
                     {st.totalDue > 0 ? t('Due to Pay') : t('No Due ✓')}
@@ -252,7 +253,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       <Phone size={13} color={colors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.circleIconBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+                      style={[styles.circleIconBtn, { backgroundColor: '#eef8f1', borderColor: '#c4e8d1' }]}
                       onPress={() =>
                         Linking.openURL(
                           `https://wa.me/91${st.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
@@ -261,12 +262,12 @@ export default function CustomerKhataScreen({ navigation }) {
                         )
                       }
                     >
-                      <MessageCircle size={13} color="#16a34a" />
+                      <MessageCircle size={13} color="#1f9d5a" />
                     </TouchableOpacity>
                   </View>
                 ) : null}
               </View>
-            </View>
+            </FadeInView>
           )}
         />
       )}
@@ -297,7 +298,7 @@ export default function CustomerKhataScreen({ navigation }) {
                           color:
                             (storeStatement?.totalDue ?? selectedStore.totalDue ?? 0) > 0
                               ? '#ef4444'
-                              : '#15803d',
+                              : '#0f7a43',
                         },
                       ]}
                     >
@@ -329,7 +330,7 @@ export default function CustomerKhataScreen({ navigation }) {
 
                   {selectedStore.shopPhone ? (
                     <TouchableOpacity
-                      style={[styles.statementActionBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+                      style={[styles.statementActionBtn, { backgroundColor: '#eef8f1', borderColor: '#c4e8d1' }]}
                       onPress={() =>
                         Linking.openURL(
                           `https://wa.me/91${selectedStore.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
@@ -338,8 +339,8 @@ export default function CustomerKhataScreen({ navigation }) {
                         )
                       }
                     >
-                      <MessageCircle size={13} color="#16a34a" />
-                      <Text style={[styles.statementActionText, { color: '#16a34a' }]}>{t('WhatsApp')}</Text>
+                      <MessageCircle size={13} color="#1f9d5a" />
+                      <Text style={[styles.statementActionText, { color: '#1f9d5a' }]}>{t('WhatsApp')}</Text>
                     </TouchableOpacity>
                   ) : null}
                 </View>
@@ -521,8 +522,8 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   editProfileBadge: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -539,7 +540,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   totalDueCard: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#12201a',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
   },
   totalDueLabel: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#a0a294',
     fontWeight: '600',
   },
   totalDueValue: {
@@ -562,7 +563,7 @@ const styles = StyleSheet.create({
   },
   totalDueSub: {
     fontSize: 11,
-    color: '#cbd5e1',
+    color: '#d5ccb6',
   },
   totalDueIconBox: {
     backgroundColor: 'rgba(255,255,255,0.08)',
@@ -581,7 +582,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   countBadge: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -589,7 +590,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: '#4a5148',
   },
   storeCard: {
     backgroundColor: colors.surface,
@@ -615,7 +616,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   shortIdBadge: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4,
@@ -644,7 +645,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#f3eee2',
     marginTop: 10,
     paddingTop: 8,
   },
@@ -663,8 +664,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   viewHistoryBtn: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -682,8 +683,8 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 6,
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -764,8 +765,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   statementActionBtn: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -783,7 +784,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderColor: colors.border,
     borderWidth: 1,
   },
@@ -817,7 +818,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Alert,
@@ -13,6 +12,7 @@ import {
   Linking,
   BackHandler,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   MoreHorizontal,
@@ -514,7 +514,7 @@ export default function MoreScreen({ navigation }) {
             {/* APP LANGUAGE SELECTION CARD */}
             <View style={[styles.shopStatusCard, { padding: 14, marginBottom: 12 }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <View style={[styles.storeIconBox, { width: 38, height: 38, backgroundColor: '#eff6ff' }]}>
+                <View style={[styles.storeIconBox, { width: 38, height: 38, backgroundColor: '#e9f6ee' }]}>
                   <Globe size={20} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -538,7 +538,7 @@ export default function MoreScreen({ navigation }) {
                     borderRadius: 10,
                     borderWidth: 1.5,
                     borderColor: language === 'en' ? colors.primary : colors.border,
-                    backgroundColor: language === 'en' ? '#eff6ff' : '#f8fafc',
+                    backgroundColor: language === 'en' ? '#e9f6ee' : '#faf7f0',
                     alignItems: 'center',
                     flexDirection: 'row',
                     justifyContent: 'center',
@@ -567,7 +567,7 @@ export default function MoreScreen({ navigation }) {
                     borderRadius: 10,
                     borderWidth: 1.5,
                     borderColor: language === 'hi' ? colors.primary : colors.border,
-                    backgroundColor: language === 'hi' ? '#eff6ff' : '#f8fafc',
+                    backgroundColor: language === 'hi' ? '#e9f6ee' : '#faf7f0',
                     alignItems: 'center',
                     flexDirection: 'row',
                     justifyContent: 'center',
@@ -596,8 +596,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => navigateToSubView('items')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
-                  <Package size={22} color="#2563eb" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#e9f6ee' }]}>
+                  <Package size={22} color="#0f7a43" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -616,8 +616,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => navigateToSubView('staff')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
-                  <Users size={22} color="#16a34a" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#eef8f1' }]}>
+                  <Users size={22} color="#1f9d5a" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Staff Management')}</Text>
@@ -661,11 +661,11 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => Linking.openURL('tel:7323809242')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#dcfce7' }]}>
-                  <Phone size={22} color="#15803d" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#dff3e6' }]}>
+                  <Phone size={22} color="#0f7a43" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuItemTitle, { color: '#15803d', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
+                  <Text style={[styles.menuItemTitle, { color: '#0f7a43', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
                   <Text style={{ fontSize: 11, color: colors.textMuted }}>{t('Call 7323809242 for instant help')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
@@ -677,8 +677,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => Linking.openURL('https://gi-shop.genziitian.in/privacy')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
-                  <Shield size={22} color="#16a34a" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#eef8f1' }]}>
+                  <Shield size={22} color="#1f9d5a" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Privacy Policy')}</Text>
@@ -692,7 +692,7 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => Linking.openURL('https://gi-shop.genziitian.in/terms')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
+                <View style={[styles.menuIconBox, { backgroundColor: '#e9f6ee' }]}>
                   <FileText size={22} color="#0284c7" />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -945,7 +945,7 @@ export default function MoreScreen({ navigation }) {
               </View>
             ) : (
               <View style={styles.viewOnlyCard}>
-                <Lock size={18} color="#2563eb" />
+                <Lock size={18} color="#0f7a43" />
                 <Text style={styles.viewOnlyText}>
                   {t('You are logged in as Cashier. Only the shop owner can invite or remove staff.')}
                 </Text>
@@ -1019,7 +1019,7 @@ export default function MoreScreen({ navigation }) {
 
             {!isOwner && (
               <View style={styles.viewOnlyCard}>
-                <Lock size={18} color="#2563eb" />
+                <Lock size={18} color="#0f7a43" />
                 <Text style={styles.viewOnlyText}>
                   {t('View-Only Mode: You are logged in as Cashier. Only the shop owner can modify store details.')}
                 </Text>
@@ -1058,16 +1058,16 @@ export default function MoreScreen({ navigation }) {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                   <Text style={styles.formLabel}>{t('Shop City / Region')}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Lock size={12} color="#94a3b8" />
-                    <Text style={{ fontSize: 11, color: '#94a3b8', fontWeight: '600' }}>{t('Locked (SuperAdmin only)')}</Text>
+                    <Lock size={12} color="#a0a294" />
+                    <Text style={{ fontSize: 11, color: '#a0a294', fontWeight: '600' }}>{t('Locked (SuperAdmin only)')}</Text>
                   </View>
                 </View>
-                <View style={[styles.formInput, { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', justifyContent: 'center' }]}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#475569' }}>
+                <View style={[styles.formInput, { backgroundColor: '#f3eee2', borderColor: '#e8e1d0', justifyContent: 'center' }]}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#4a5148' }}>
                     📍 {shopForm.city || 'Delhi'}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>
+                <Text style={{ fontSize: 11, color: '#666c60', marginTop: 4 }}>
                   {t('Store city is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.')}
                 </Text>
               </View>
@@ -1245,7 +1245,7 @@ const styles = StyleSheet.create({
     borderColor: '#fca5a5',
   },
   statusToggleBtnClosed: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
     borderColor: '#86efac',
   },
   statusToggleBtnText: {
@@ -1470,16 +1470,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   noticeBox: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     borderRadius: 8,
     padding: 8,
     marginTop: 8,
   },
   noticeText: {
     fontSize: 12,
-    color: '#1d4ed8',
+    color: '#0b5e33',
     fontWeight: '600',
   },
   errorBox: {
@@ -1499,15 +1499,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
   },
   viewOnlyText: {
     fontSize: 12,
-    color: '#1e40af',
+    color: '#0b5e33',
     flex: 1,
   },
   sectionHeading: {
@@ -1544,20 +1544,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   staffBadgeActive: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
   },
   staffBadgePending: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#fdf0cf',
   },
   staffBadgeText: {
     fontSize: 10,
     fontWeight: '700',
   },
   staffBadgeTextActive: {
-    color: '#15803d',
+    color: '#0f7a43',
   },
   staffBadgeTextPending: {
-    color: '#b45309',
+    color: '#a8620a',
   },
   removeStaffBtn: {
     padding: 8,
@@ -1649,7 +1649,7 @@ const legalStyles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderRadius: 20,
   },
   bodyText: {

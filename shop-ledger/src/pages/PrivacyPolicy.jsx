@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#f8fafc',
+      backgroundColor: '#faf7f0',
       padding: '2rem 1rem 3rem 1rem',
       display: 'flex',
       flexDirection: 'column',
@@ -26,10 +26,10 @@ export default function PrivacyPolicy() {
             alignItems: 'center',
             gap: '0.4rem',
             background: '#ffffff',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #e8e1d0',
             borderRadius: '8px',
             padding: '0.5rem 0.9rem',
-            color: '#475569',
+            color: '#4a5148',
             fontSize: '0.88rem',
             fontWeight: '600',
             cursor: 'pointer',
@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
             boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
             transition: 'all 0.15s ease'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#f3eee2'}
           onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
         >
           <ArrowLeft size={16} /> Back to GI Shop
@@ -46,17 +46,17 @@ export default function PrivacyPolicy() {
         {/* Main Document Card */}
         <div style={{
           background: '#ffffff',
-          border: '1px solid #e2e8f0',
+          border: '1px solid #e8e1d0',
           borderRadius: '16px',
           padding: '2.5rem',
           boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-          color: '#334155',
+          color: '#343c35',
           lineHeight: '1.7',
           fontSize: '0.95rem'
         }}>
           
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '1.5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '1px solid #f3eee2', paddingBottom: '1.5rem' }}>
             <img 
               src={logoImg} 
               alt="GI SHOP Logo" 
@@ -67,13 +67,13 @@ export default function PrivacyPolicy() {
                 objectFit: 'contain',
                 margin: '0 auto 0.75rem auto',
                 display: 'block',
-                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.15)'
+                boxShadow: '0 4px 12px rgba(15, 122, 67, 0.15)'
               }} 
             />
-            <h1 style={{ fontSize: '1.85rem', fontWeight: '800', color: '#0f172a', margin: '0 0 0.4rem 0' }}>
+            <h1 style={{ fontSize: '1.85rem', fontWeight: '800', color: '#12201a', margin: '0 0 0.4rem 0' }}>
               PRIVACY POLICY
             </h1>
-            <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: '0.88rem', color: '#666c60', margin: 0 }}>
               Last updated September 01, 2026
             </p>
           </div>
@@ -84,13 +84,13 @@ export default function PrivacyPolicy() {
               This Privacy Notice for <strong>GI SHOP</strong> ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:
             </p>
             <ul style={{ paddingLeft: '1.25rem', marginTop: '0.5rem' }}>
-              <li>Visit our website at <a href="https://gi-shop.genziitian.in/" style={{ color: '#2563eb', textDecoration: 'underline' }}>https://gi-shop.genziitian.in/</a> or any website of ours that links to this Privacy Notice</li>
+              <li>Visit our website at <a href="https://gi-shop.genziitian.in/" style={{ color: '#0f7a43', textDecoration: 'underline' }}>https://gi-shop.genziitian.in/</a> or any website of ours that links to this Privacy Notice</li>
               <li>Download and use our mobile application (GI SHOP: POS &amp; Khata Ledger), or any other application of ours that links to this Privacy Notice</li>
               <li>
                 Use fast POS billing, customer Khata credit ledger &amp; inventory management for retail shops. GI SHOP is a modern Point of Sale (POS) billing, inventory management, and digital Khata (customer credit/debit ledger) service designed for grocery stores, kirana shops, retail outlets, and small businesses.
                 
-                <div style={{ margin: '1rem 0', padding: '1rem 1.25rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                <div style={{ margin: '1rem 0', padding: '1rem 1.25rem', background: '#faf7f0', borderRadius: '10px', border: '1px solid #e8e1d0' }}>
+                  <div style={{ fontWeight: '700', color: '#12201a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     Key Features for Shopkeepers
                   </div>
                   <ul style={{ paddingLeft: '1.25rem', margin: '0 0 1rem 0', display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.9rem' }}>
@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
                     <li><strong>Printable Digital Receipts:</strong> Professional itemized invoices with shop name, timestamp, and payment method breakdown.</li>
                   </ul>
 
-                  <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  <div style={{ fontWeight: '700', color: '#12201a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     Features for Customers
                   </div>
                   <ul style={{ paddingLeft: '1.25rem', margin: '0 0 1rem 0', display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.9rem' }}>
@@ -108,7 +108,7 @@ export default function PrivacyPolicy() {
                     <li><strong>Khata Transparency:</strong> Check outstanding balance and repayment history anytime.</li>
                   </ul>
 
-                  <div style={{ fontWeight: '700', color: '#0f172a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  <div style={{ fontWeight: '700', color: '#12201a', marginBottom: '0.5rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     Security &amp; Data Privacy
                   </div>
                   <ul style={{ paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.9rem' }}>
@@ -120,13 +120,13 @@ export default function PrivacyPolicy() {
               <li>Engage with us in other related ways, including any marketing or events</li>
             </ul>
             <p>
-              <strong>Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#2563eb', fontWeight: '600' }}>pay.laxmikant@gmail.com</a>.
+              <strong>Questions or concerns?</strong> Reading this Privacy Notice will help you understand your privacy rights and choices. We are responsible for making decisions about how your personal information is processed. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#0f7a43', fontWeight: '600' }}>pay.laxmikant@gmail.com</a>.
             </p>
           </div>
 
           {/* SUMMARY OF KEY POINTS */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.35rem', marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', margin: '0 0 0.85rem 0' }}>
+          <div style={{ background: '#faf7f0', border: '1px solid #e8e1d0', borderRadius: '12px', padding: '1.35rem', marginBottom: '2rem' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', margin: '0 0 0.85rem 0' }}>
               SUMMARY OF KEY POINTS
             </h2>
             <p style={{ fontSize: '0.9rem', marginBottom: '0.75rem' }}>
@@ -140,36 +140,36 @@ export default function PrivacyPolicy() {
               <li><strong>In what situations and with which parties do we share personal information?</strong> We may share information in specific situations and with specific third parties.</li>
               <li><strong>How do we keep your information safe?</strong> We have adequate organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information.</li>
               <li><strong>What are your rights?</strong> Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information.</li>
-              <li><strong>How do you exercise your rights?</strong> The easiest way to exercise your rights is by visiting <a href="/delete" onClick={(e) => { e.preventDefault(); navigate('/delete'); }} style={{ color: '#2563eb', textDecoration: 'underline' }}>https://gi-shop.genziitian.in/delete</a>, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.</li>
+              <li><strong>How do you exercise your rights?</strong> The easiest way to exercise your rights is by visiting <a href="/delete" onClick={(e) => { e.preventDefault(); navigate('/delete'); }} style={{ color: '#0f7a43', textDecoration: 'underline' }}>https://gi-shop.genziitian.in/delete</a>, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.</li>
               <li><strong>Want to learn more about what we do with any information we collect?</strong> Review the Privacy Notice in full below.</li>
             </ul>
           </div>
 
           {/* TABLE OF CONTENTS */}
-          <div style={{ marginBottom: '2rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#0f172a', margin: '0 0 0.75rem 0' }}>
+          <div style={{ marginBottom: '2rem', background: '#ffffff', border: '1px solid #e8e1d0', borderRadius: '12px', padding: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#12201a', margin: '0 0 0.75rem 0' }}>
               TABLE OF CONTENTS
             </h3>
-            <ol style={{ paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.9rem', color: '#2563eb' }}>
-              <li><a href="#section-1" style={{ color: '#2563eb', textDecoration: 'none' }}>1. WHAT INFORMATION DO WE COLLECT?</a></li>
-              <li><a href="#section-2" style={{ color: '#2563eb', textDecoration: 'none' }}>2. HOW DO WE PROCESS YOUR INFORMATION?</a></li>
-              <li><a href="#section-3" style={{ color: '#2563eb', textDecoration: 'none' }}>3. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</a></li>
-              <li><a href="#section-4" style={{ color: '#2563eb', textDecoration: 'none' }}>4. HOW DO WE HANDLE YOUR SOCIAL LOGINS?</a></li>
-              <li><a href="#section-5" style={{ color: '#2563eb', textDecoration: 'none' }}>5. HOW LONG DO WE KEEP YOUR INFORMATION?</a></li>
-              <li><a href="#section-6" style={{ color: '#2563eb', textDecoration: 'none' }}>6. HOW DO WE KEEP YOUR INFORMATION SAFE?</a></li>
-              <li><a href="#section-7" style={{ color: '#2563eb', textDecoration: 'none' }}>7. DO WE COLLECT INFORMATION FROM MINORS?</a></li>
-              <li><a href="#section-8" style={{ color: '#2563eb', textDecoration: 'none' }}>8. WHAT ARE YOUR PRIVACY RIGHTS?</a></li>
-              <li><a href="#section-9" style={{ color: '#2563eb', textDecoration: 'none' }}>9. CONTROLS FOR DO-NOT-TRACK FEATURES</a></li>
-              <li><a href="#section-10" style={{ color: '#2563eb', textDecoration: 'none' }}>10. WE ARE NOT RESPONSIBLE FOR ANY DATA LOSSES</a></li>
-              <li><a href="#section-11" style={{ color: '#2563eb', textDecoration: 'none' }}>11. DO WE MAKE UPDATES TO THIS NOTICE?</a></li>
-              <li><a href="#section-12" style={{ color: '#2563eb', textDecoration: 'none' }}>12. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</a></li>
-              <li><a href="#section-13" style={{ color: '#2563eb', textDecoration: 'none' }}>13. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</a></li>
+            <ol style={{ paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.9rem', color: '#0f7a43' }}>
+              <li><a href="#section-1" style={{ color: '#0f7a43', textDecoration: 'none' }}>1. WHAT INFORMATION DO WE COLLECT?</a></li>
+              <li><a href="#section-2" style={{ color: '#0f7a43', textDecoration: 'none' }}>2. HOW DO WE PROCESS YOUR INFORMATION?</a></li>
+              <li><a href="#section-3" style={{ color: '#0f7a43', textDecoration: 'none' }}>3. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?</a></li>
+              <li><a href="#section-4" style={{ color: '#0f7a43', textDecoration: 'none' }}>4. HOW DO WE HANDLE YOUR SOCIAL LOGINS?</a></li>
+              <li><a href="#section-5" style={{ color: '#0f7a43', textDecoration: 'none' }}>5. HOW LONG DO WE KEEP YOUR INFORMATION?</a></li>
+              <li><a href="#section-6" style={{ color: '#0f7a43', textDecoration: 'none' }}>6. HOW DO WE KEEP YOUR INFORMATION SAFE?</a></li>
+              <li><a href="#section-7" style={{ color: '#0f7a43', textDecoration: 'none' }}>7. DO WE COLLECT INFORMATION FROM MINORS?</a></li>
+              <li><a href="#section-8" style={{ color: '#0f7a43', textDecoration: 'none' }}>8. WHAT ARE YOUR PRIVACY RIGHTS?</a></li>
+              <li><a href="#section-9" style={{ color: '#0f7a43', textDecoration: 'none' }}>9. CONTROLS FOR DO-NOT-TRACK FEATURES</a></li>
+              <li><a href="#section-10" style={{ color: '#0f7a43', textDecoration: 'none' }}>10. WE ARE NOT RESPONSIBLE FOR ANY DATA LOSSES</a></li>
+              <li><a href="#section-11" style={{ color: '#0f7a43', textDecoration: 'none' }}>11. DO WE MAKE UPDATES TO THIS NOTICE?</a></li>
+              <li><a href="#section-12" style={{ color: '#0f7a43', textDecoration: 'none' }}>12. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</a></li>
+              <li><a href="#section-13" style={{ color: '#0f7a43', textDecoration: 'none' }}>13. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?</a></li>
             </ol>
           </div>
 
           {/* SECTION 1 */}
           <div id="section-1" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               1. WHAT INFORMATION DO WE COLLECT?
             </h3>
             <p><strong>Personal information you disclose to us</strong></p>
@@ -215,7 +215,7 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 2 */}
           <div id="section-2" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               2. HOW DO WE PROCESS YOUR INFORMATION?
             </h3>
             <p><em><strong>In Short:</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent.</em></p>
@@ -230,7 +230,7 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 3 */}
           <div id="section-3" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               3. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
             </h3>
             <p><em><strong>In Short:</strong> We may share information in specific situations described in this section and/or with the following third parties.</em></p>
@@ -242,7 +242,7 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 4 */}
           <div id="section-4" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               4. HOW DO WE HANDLE YOUR SOCIAL LOGINS?
             </h3>
             <p><em><strong>In Short:</strong> If you choose to register or log in to our Services using a social media account, we may have access to certain information about you.</em></p>
@@ -256,7 +256,7 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 5 */}
           <div id="section-5" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               5. HOW LONG DO WE KEEP YOUR INFORMATION?
             </h3>
             <p><em><strong>In Short:</strong> We keep your information for as long as necessary to fulfill the purposes outlined in this Privacy Notice unless otherwise required by law.</em></p>
@@ -270,7 +270,7 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 6 */}
           <div id="section-6" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               6. HOW DO WE KEEP YOUR INFORMATION SAFE?
             </h3>
             <p><em><strong>In Short:</strong> We aim to protect your personal information through a system of organizational and technical security measures.</em></p>
@@ -281,18 +281,18 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 7 */}
           <div id="section-7" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               7. DO WE COLLECT INFORMATION FROM MINORS?
             </h3>
             <p><em><strong>In Short:</strong> We do not knowingly collect data from or market to children under 18 years of age.</em></p>
             <p>
-              We do not knowingly collect, solicit data from, or market to children under 18 years of age, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or that you are the parent or guardian of such a minor and consent to such minor dependent’s use of the Services. If we learn that personal information from users less than 18 years of age has been collected, we will deactivate the account and take reasonable measures to promptly delete such data from our records. If you become aware of any data we may have collected from children under age 18, please contact us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#2563eb' }}>pay.laxmikant@gmail.com</a>.
+              We do not knowingly collect, solicit data from, or market to children under 18 years of age, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or that you are the parent or guardian of such a minor and consent to such minor dependent’s use of the Services. If we learn that personal information from users less than 18 years of age has been collected, we will deactivate the account and take reasonable measures to promptly delete such data from our records. If you become aware of any data we may have collected from children under age 18, please contact us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#0f7a43' }}>pay.laxmikant@gmail.com</a>.
             </p>
           </div>
 
           {/* SECTION 8 */}
           <div id="section-8" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               8. WHAT ARE YOUR PRIVACY RIGHTS?
             </h3>
             <p><em><strong>In Short:</strong> You may review, change, or terminate your account at any time, depending on your country, province, or state of residence.</em></p>
@@ -312,13 +312,13 @@ export default function PrivacyPolicy() {
               Upon your request to terminate your account, we will deactivate or delete your account and information from our active databases. However, we may retain some information in our files to prevent fraud, troubleshoot problems, assist with any investigations, enforce our legal terms and/or comply with applicable legal requirements.
             </p>
             <p>
-              If you have questions or comments about your privacy rights, you may email us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#2563eb' }}>pay.laxmikant@gmail.com</a>.
+              If you have questions or comments about your privacy rights, you may email us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#0f7a43' }}>pay.laxmikant@gmail.com</a>.
             </p>
           </div>
 
           {/* SECTION 9 */}
           <div id="section-9" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               9. CONTROLS FOR DO-NOT-TRACK FEATURES
             </h3>
             <p>
@@ -328,17 +328,17 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 10 */}
           <div id="section-10" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               10. WE ARE NOT RESPONSIBLE FOR ANY DATA LOSSES
             </h3>
-            <div style={{ background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', padding: '1rem', color: '#78350f', fontWeight: '500' }}>
+            <div style={{ background: '#fff8e6', border: '1px solid #fdf0cf', borderRadius: '8px', padding: '1rem', color: '#78350f', fontWeight: '500' }}>
               Hey , we provide the service but we are not responsible for data losses anyhow
             </div>
           </div>
 
           {/* SECTION 11 */}
           <div id="section-11" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               11. DO WE MAKE UPDATES TO THIS NOTICE?
             </h3>
             <p><em><strong>In Short:</strong> Yes, we will update this notice as necessary to stay compliant with relevant laws.</em></p>
@@ -349,11 +349,11 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 12 */}
           <div id="section-12" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               12. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
             </h3>
-            <p>If you have questions or comments about this notice, you may email us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#2563eb', fontWeight: '600' }}>pay.laxmikant@gmail.com</a> or contact us by post at:</p>
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
+            <p>If you have questions or comments about this notice, you may email us at <a href="mailto:pay.laxmikant@gmail.com" style={{ color: '#0f7a43', fontWeight: '600' }}>pay.laxmikant@gmail.com</a> or contact us by post at:</p>
+            <div style={{ background: '#faf7f0', border: '1px solid #e8e1d0', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
               <strong>GI SHOP</strong><br />
               PATNA<br />
               PATNA, BIHAR 800001<br />
@@ -363,7 +363,7 @@ export default function PrivacyPolicy() {
 
           {/* SECTION 13 */}
           <div id="section-13" style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#12201a', borderBottom: '1px solid #e8e1d0', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
               13. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
             </h3>
             <p>
@@ -371,7 +371,7 @@ export default function PrivacyPolicy() {
               <a 
                 href="/delete" 
                 onClick={(e) => { e.preventDefault(); navigate('/delete'); }}
-                style={{ color: '#2563eb', fontWeight: '600', textDecoration: 'underline' }}
+                style={{ color: '#0f7a43', fontWeight: '600', textDecoration: 'underline' }}
               >
                 https://gi-shop.genziitian.in/delete
               </a>.
@@ -379,11 +379,11 @@ export default function PrivacyPolicy() {
           </div>
 
           {/* Footer Note */}
-          <div style={{ textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem', marginTop: '2rem' }}>
+          <div style={{ textAlign: 'center', borderTop: '1px solid #e8e1d0', paddingTop: '1.5rem', marginTop: '2rem' }}>
             <button
               onClick={() => navigate('/')}
               style={{
-                background: '#2563eb',
+                background: '#0f7a43',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
@@ -393,8 +393,8 @@ export default function PrivacyPolicy() {
                 cursor: 'pointer',
                 transition: 'background 0.15s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#0b5e33'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#0f7a43'}
             >
               Return to GI Shop
             </button>
@@ -403,7 +403,7 @@ export default function PrivacyPolicy() {
         </div>
 
         {/* Bottom copyright */}
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.78rem', color: '#a0a294' }}>
           &copy; {new Date().getFullYear()} GI SHOP • All Rights Reserved
         </div>
 

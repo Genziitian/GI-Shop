@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, Image, StyleSheet } from 'react-native';
+import { FadeInView, Pulse } from '../components/ui/Motion';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import AuthScreen from '../screens/AuthScreen';
@@ -16,10 +17,11 @@ export default function RootNavigator() {
     return (
       <View style={styles.loadingContainer}>
         <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color="#16a34a" />
+          <ActivityIndicator size="large" color="#1f9d5a" />
           <Text style={styles.loadingTitle}>Opening GI SHOP</Text>
           <Text style={styles.loadingSubtitle}>Getting your account ready...</Text>
-        </View>
+          <ActivityIndicator size="small" color="#0f7a43" style={{ marginTop: 14 }} />
+        </FadeInView>
       </View>
     );
   }
@@ -30,7 +32,7 @@ export default function RootNavigator() {
   // }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#faf7f0' } }}>
       {!token || !user ? (
         <Stack.Screen name="Auth" component={AuthScreen} />
       ) : user.role === 'Shopkeeper' ? (
@@ -45,7 +47,7 @@ export default function RootNavigator() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -59,8 +61,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#0f172a',
+    borderColor: '#e8e1d0',
+    shadowColor: '#12201a',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 18,
@@ -69,12 +71,12 @@ const styles = StyleSheet.create({
   loadingTitle: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#0f172a',
+    color: '#12201a',
     marginTop: 14,
   },
   loadingSubtitle: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666c60',
     marginTop: 6,
     fontWeight: '600',
   },

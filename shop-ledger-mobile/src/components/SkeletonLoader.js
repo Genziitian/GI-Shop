@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderWidth: 1,
     borderRadius: 12,
     padding: 14,
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   pulseBlock: {
-    backgroundColor: '#cbd5e1',
+    backgroundColor: '#d5ccb6',
   },
   gridContainer: {
     flexDirection: 'row',
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   gridItem: {
     width: '48%',
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,

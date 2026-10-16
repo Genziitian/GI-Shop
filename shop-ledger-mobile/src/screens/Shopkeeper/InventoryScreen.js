@@ -3,13 +3,13 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
   StyleSheet,
   Alert,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Package,
@@ -22,6 +22,7 @@ import {
   RefreshCw,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
+import { FadeInView } from '../../components/ui/Motion';
 import { getItems, saveItem, editItem, deleteItem } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
@@ -215,8 +216,8 @@ export default function InventoryScreen() {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={styles.productCard}>
+            renderItem={({ item, index }) => (
+              <FadeInView index={index} style={styles.productCard}>
                 <View style={styles.productIconBox}>
                   <Package size={20} color={colors.primary} />
                 </View>
@@ -249,7 +250,7 @@ export default function InventoryScreen() {
                     <Trash2 size={16} color={colors.danger} />
                   </TouchableOpacity>
                 </View>
-              </View>
+              </FadeInView>
             )}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>

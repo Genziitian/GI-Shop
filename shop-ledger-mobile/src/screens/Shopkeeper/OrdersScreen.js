@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Alert,
@@ -11,6 +10,7 @@ import {
   RefreshControl,
   Modal,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ShoppingBag,
@@ -33,6 +33,7 @@ import {
   Package,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
+import { FadeInView } from '../../components/ui/Motion';
 import {
   getShopOrders,
   acceptShopOrder,
@@ -339,7 +340,7 @@ export default function OrdersScreen({ navigation }) {
               )}
               {isOlderThan24h && (
                 <View style={styles.historyBadge}>
-                  <Clock size={10} color="#64748b" />
+                  <Clock size={10} color="#666c60" />
                   <Text style={styles.historyBadgeText}>{t('Past 24h')}</Text>
                 </View>
               )}
@@ -359,7 +360,7 @@ export default function OrdersScreen({ navigation }) {
 
             {autoCancelCountdown && autoCancelCountdown !== 'Expired' && (
               <View style={styles.autoCancelPill}>
-                <Clock size={10} color="#b45309" />
+                <Clock size={10} color="#a8620a" />
                 <Text style={styles.autoCancelPillText}>Auto-cancels in: {autoCancelCountdown}</Text>
               </View>
             )}
@@ -382,9 +383,9 @@ export default function OrdersScreen({ navigation }) {
             <Text
               style={[
                 styles.orderStatusPillText,
-                ord.status === 'PENDING' && { color: '#b45309' },
+                ord.status === 'PENDING' && { color: '#a8620a' },
                 ord.status === 'READY' && { color: '#0369a1' },
-                (ord.status === 'COMPLETED' || ord.status === 'COLLECTED') && { color: '#15803d' },
+                (ord.status === 'COMPLETED' || ord.status === 'COLLECTED') && { color: '#0f7a43' },
                 (ord.status === 'NOT_COLLECTED' || ord.status === 'CANCELLED_BY_CUSTOMER' || ord.status === 'AUTO_CANCELLED_EXPIRED' || ord.status === 'DECLINED') && { color: '#b91c1c' },
               ]}
             >
@@ -434,17 +435,17 @@ export default function OrdersScreen({ navigation }) {
 
         {/* Finalized Status Indicators if applicable */}
         {ord.status === 'COMPLETED' && (
-          <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, padding: 8, borderRadius: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <CheckCircle2 size={16} color="#15803d" />
-            <Text style={{ fontSize: 12, color: '#15803d', fontWeight: '700' }}>
+          <View style={{ backgroundColor: '#eef8f1', borderColor: '#c4e8d1', borderWidth: 1, padding: 8, borderRadius: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <CheckCircle2 size={16} color="#0f7a43" />
+            <Text style={{ fontSize: 12, color: '#0f7a43', fontWeight: '700' }}>
               {t('✓ Order Completed & Handed Over')}
             </Text>
           </View>
         )}
 
         {ord.status === 'COLLECTED' && (
-          <View style={{ backgroundColor: '#f0fdf4', padding: 7, borderRadius: 8, marginBottom: 8, alignItems: 'center' }}>
-            <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '700' }}>
+          <View style={{ backgroundColor: '#eef8f1', padding: 7, borderRadius: 8, marginBottom: 8, alignItems: 'center' }}>
+            <Text style={{ fontSize: 11, color: '#0f7a43', fontWeight: '700' }}>
               {t('Order finalized and collected by customer. (Locked)')}
             </Text>
           </View>
@@ -697,7 +698,9 @@ export default function OrdersScreen({ navigation }) {
                   </View>
                 ) : (
                   <View style={{ gap: 8 }}>
-                    {recentOrders.map((ord) => renderOrderCard(ord, false))}
+                    {recentOrders.map((ord, i) => (
+                      <FadeInView key={ord.id ?? i} index={i}>{renderOrderCard(ord, false)}</FadeInView>
+                    ))}
                   </View>
                 )}
               </View>
@@ -745,7 +748,9 @@ export default function OrdersScreen({ navigation }) {
                     </View>
                   ) : (
                     <View style={{ gap: 8 }}>
-                      {pastOrders.map((ord) => renderOrderCard(ord, true))}
+                      {pastOrders.map((ord, i) => (
+                        <FadeInView key={ord.id ?? i} index={i}>{renderOrderCard(ord, true)}</FadeInView>
+                      ))}
                     </View>
                   )}
                 </View>
@@ -867,7 +872,7 @@ export default function OrdersScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 12 }}>
+            <View style={{ backgroundColor: '#faf7f0', padding: 12, borderRadius: 8, marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                 <Text style={{ fontSize: 13, color: colors.textMuted }}>Order Total:</Text>
                 <Text style={{ fontSize: 13, fontWeight: '700' }}>₹{(Number(paymentOrder?.estimatedTotal) || 0).toFixed(2)}</Text>
@@ -903,7 +908,7 @@ export default function OrdersScreen({ navigation }) {
                     borderRadius: 8,
                     borderWidth: paymentMode === mode ? 2 : 1,
                     borderColor: paymentMode === mode ? colors.primary : colors.border,
-                    backgroundColor: paymentMode === mode ? '#eff6ff' : '#fff',
+                    backgroundColor: paymentMode === mode ? '#e9f6ee' : '#fff',
                   }}
                   onPress={() => setPaymentMode(mode)}
                 >
@@ -1027,7 +1032,7 @@ const styles = StyleSheet.create({
   },
   dropdownTriggerActive: {
     borderColor: colors.primary,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   dropdownTriggerText: {
     fontSize: 12,
@@ -1058,7 +1063,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   dropdownMenuItemActive: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   dropdownMenuItemText: {
     fontSize: 12,
@@ -1103,7 +1108,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
@@ -1119,7 +1124,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   countBadge: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 9999,
@@ -1145,7 +1150,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1155,7 +1160,7 @@ const styles = StyleSheet.create({
   historyBadgeText: {
     fontSize: 9.5,
     fontWeight: '700',
-    color: '#64748b',
+    color: '#666c60',
   },
   orderCard: {
     backgroundColor: colors.surface,
@@ -1204,15 +1209,15 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusPillPending: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#fdf0cf',
     borderWidth: 1,
     borderColor: '#fde68a',
   },
   statusPillAccepted: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   statusPillCompleted: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
   },
   statusPillDeclined: {
     backgroundColor: '#fee2e2',
@@ -1251,7 +1256,7 @@ const styles = StyleSheet.create({
   autoCancelWarningBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#fff8e6',
     borderColor: '#fef08a',
     borderWidth: 1,
     borderRadius: 8,
@@ -1287,7 +1292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#fff8e6',
     borderColor: '#fde68a',
     borderWidth: 1,
     paddingHorizontal: 6,
@@ -1299,7 +1304,7 @@ const styles = StyleSheet.create({
   autoCancelPillText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#b45309',
+    color: '#a8620a',
   },
   viewOrderFullBtn: {
     flexDirection: 'row',
@@ -1326,13 +1331,13 @@ const styles = StyleSheet.create({
     height: 38,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#93c5fd',
-    backgroundColor: '#eff6ff',
+    borderColor: '#8fd0aa',
+    backgroundColor: '#e9f6ee',
     alignItems: 'center',
     justifyContent: 'center',
   },
   detailsBtnText: {
-    color: '#1d4ed8',
+    color: '#0b5e33',
     fontSize: 12,
     fontWeight: '700',
   },

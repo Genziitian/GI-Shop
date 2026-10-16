@@ -4,11 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
   Linking,
   RefreshControl,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
@@ -145,7 +145,7 @@ export default function CustomerMoreScreen({ navigation }) {
         {/* APP LANGUAGE SELECTION CARD */}
         <View style={styles.sectionCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
+            <View style={[styles.menuIconBox, { backgroundColor: '#e9f6ee' }]}>
               <Globe size={18} color={colors.primary} />
             </View>
             <View style={{ flex: 1 }}>
@@ -167,7 +167,7 @@ export default function CustomerMoreScreen({ navigation }) {
                 borderRadius: 10,
                 borderWidth: 1.5,
                 borderColor: language === 'en' ? colors.primary : colors.border,
-                backgroundColor: language === 'en' ? '#eff6ff' : '#f8fafc',
+                backgroundColor: language === 'en' ? '#e9f6ee' : '#faf7f0',
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
@@ -196,7 +196,7 @@ export default function CustomerMoreScreen({ navigation }) {
                 borderRadius: 10,
                 borderWidth: 1.5,
                 borderColor: language === 'hi' ? colors.primary : colors.border,
-                backgroundColor: language === 'hi' ? '#eff6ff' : '#f8fafc',
+                backgroundColor: language === 'hi' ? '#e9f6ee' : '#faf7f0',
                 alignItems: 'center',
                 flexDirection: 'row',
                 justifyContent: 'center',
@@ -226,8 +226,8 @@ export default function CustomerMoreScreen({ navigation }) {
             onPress={() => setShowPasswordModal(true)}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
-              <Key size={18} color="#16a34a" />
+            <View style={[styles.menuIconBox, { backgroundColor: '#eef8f1' }]}>
+              <Key size={18} color="#1f9d5a" />
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>{t('Account Password')}</Text>
@@ -240,11 +240,11 @@ export default function CustomerMoreScreen({ navigation }) {
             onPress={() => Linking.openURL('tel:7323809242')}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: '#dcfce7' }]}>
-              <Phone size={18} color="#15803d" />
+            <View style={[styles.menuIconBox, { backgroundColor: '#dff3e6' }]}>
+              <Phone size={18} color="#0f7a43" />
             </View>
             <View style={styles.menuTextBox}>
-              <Text style={[styles.menuText, { color: '#15803d', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
+              <Text style={[styles.menuText, { color: '#0f7a43', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
               <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>{t('Call 7323809242 for instant help')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
@@ -260,8 +260,8 @@ export default function CustomerMoreScreen({ navigation }) {
             onPress={() => Linking.openURL('https://gi-shop.genziitian.in/privacy')}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: '#f0fdf4' }]}>
-              <Shield size={18} color="#16a34a" />
+            <View style={[styles.menuIconBox, { backgroundColor: '#eef8f1' }]}>
+              <Shield size={18} color="#1f9d5a" />
             </View>
             <View style={styles.menuTextBox}>
               <Text style={styles.menuText}>{t('Privacy Policy')}</Text>
@@ -274,7 +274,7 @@ export default function CustomerMoreScreen({ navigation }) {
             onPress={() => Linking.openURL('https://gi-shop.genziitian.in/terms')}
             activeOpacity={0.7}
           >
-            <View style={[styles.menuIconBox, { backgroundColor: '#eff6ff' }]}>
+            <View style={[styles.menuIconBox, { backgroundColor: '#e9f6ee' }]}>
               <FileText size={18} color="#0284c7" />
             </View>
             <View style={styles.menuTextBox}>
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
   },
   editBadgeText: {
     fontSize: 10,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f3eee2',
   },
   menuIconBox: {
     width: 36,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   },
   copyrightText: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: '#a0a294',
     marginTop: 2,
   },
 });
@@ -532,7 +532,7 @@ const legalStyles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderRadius: 20,
   },
   bodyText: {

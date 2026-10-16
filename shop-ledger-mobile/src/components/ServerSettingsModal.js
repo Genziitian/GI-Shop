@@ -4,13 +4,13 @@ import {
   Text,
   Modal,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { Server, X, RotateCcw, Check } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
@@ -135,7 +135,7 @@ export default function ServerSettingsModal({ visible, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(18, 32, 26, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,

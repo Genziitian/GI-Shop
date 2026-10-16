@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Clock,
@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
+import { FadeInView } from '../../components/ui/Motion';
 import { useAuth } from '../../context/AuthContext';
 import {
   getCustomerOrders,
@@ -398,32 +399,32 @@ export default function CustomerOrdersScreen({ navigation }) {
                         style={[
                           styles.statusBadge,
                           order.status === 'PENDING'
-                            ? { backgroundColor: '#fef3c7' }
+                            ? { backgroundColor: '#fdf0cf' }
                             : order.status === 'PACKING'
                             ? { backgroundColor: '#ffedd5' }
                             : order.status === 'READY'
                             ? { backgroundColor: '#e0f2fe' }
                             : (order.status === 'COMPLETED' || order.status === 'COLLECTED')
-                            ? { backgroundColor: '#dcfce7' }
+                            ? { backgroundColor: '#dff3e6' }
                             : order.status === 'AUTO_CANCELLED_EXPIRED'
                             ? { backgroundColor: '#fee2e2' }
-                            : { backgroundColor: '#f1f5f9' },
+                            : { backgroundColor: '#f3eee2' },
                         ]}
                       >
                         <Text
                           style={[
                             styles.statusBadgeText,
                             order.status === 'PENDING'
-                              ? { color: '#b45309' }
+                              ? { color: '#a8620a' }
                               : order.status === 'PACKING'
                               ? { color: '#c2410c' }
                               : order.status === 'READY'
                               ? { color: '#0369a1' }
                               : (order.status === 'COMPLETED' || order.status === 'COLLECTED')
-                              ? { color: '#15803d' }
+                              ? { color: '#0f7a43' }
                               : order.status === 'AUTO_CANCELLED_EXPIRED'
                               ? { color: '#b91c1c' }
-                              : { color: '#475569' },
+                              : { color: '#4a5148' },
                           ]}
                         >
                           {order.status === 'PENDING' && `⏳ ${t('PENDING')} (${getAutoCancelCountdown(order.createdAt)})`}
@@ -442,7 +443,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                     {/* Auto-cancel 45-min live timer banner */}
                     {order.status === 'PENDING' && (
                       <View style={styles.autoCancelBox}>
-                        <Clock size={13} color="#b45309" />
+                        <Clock size={13} color="#a8620a" />
                         <Text style={styles.autoCancelText}>
                           {t('Acceptance Window:')} <Text style={{ fontWeight: '700' }}>Auto-cancels in {getAutoCancelCountdown(order.createdAt)}</Text>
                         </Text>
@@ -465,10 +466,10 @@ export default function CustomerOrdersScreen({ navigation }) {
                         const isUnavail = !!it.isUnavailable;
                         return (
                           <View key={idx} style={styles.itemLine}>
-                            <Text style={[styles.itemName, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                            <Text style={[styles.itemName, isUnavail && { textDecorationLine: 'line-through', color: '#a0a294' }]}>
                               {it.item?.name || it.name} x {it.qty} {it.item?.unit || ''} {isUnavail ? '(Unavailable)' : ''}
                             </Text>
-                            <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                            <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#a0a294' }]}>
                               ₹{(it.amount || (it.rate * it.qty) || 0).toFixed(2)}
                             </Text>
                           </View>
@@ -482,11 +483,11 @@ export default function CustomerOrdersScreen({ navigation }) {
 
                     {/* Customer 4-Digit OTP Box when Ready */}
                     {order.status === 'READY' && (
-                      <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#166534', marginBottom: 2 }}>
+                      <View style={{ backgroundColor: '#eef8f1', borderColor: '#c4e8d1', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#0b5e33', marginBottom: 2 }}>
                           {t('🎉 Your Order is Ready for Pickup!')}
                         </Text>
-                        <Text style={{ fontSize: 11, color: '#15803d', marginBottom: 6 }}>
+                        <Text style={{ fontSize: 11, color: '#0f7a43', marginBottom: 6 }}>
                           {t('Payment Mode:')} <Text style={{ fontWeight: '700' }}>{t(order.paymentMethod || 'Cash')}</Text> • {t('Amount:')} <Text style={{ fontWeight: '700' }}>₹{(Number(order.requestedAmount || computedTotal) || 0).toFixed(2)}</Text>
                         </Text>
 
@@ -494,7 +495,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                         <View style={{ backgroundColor: '#ffffff', borderColor: '#22c55e', borderWidth: 2, borderRadius: 8, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <View>
                             <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase' }}>{t('Handover 4-Digit OTP')}</Text>
-                            <Text style={{ fontSize: 22, fontWeight: '900', color: '#15803d', letterSpacing: 4 }}>
+                            <Text style={{ fontSize: 22, fontWeight: '900', color: '#0f7a43', letterSpacing: 4 }}>
                               {order.otpCode || '----'}
                             </Text>
                           </View>
@@ -507,13 +508,13 @@ export default function CustomerOrdersScreen({ navigation }) {
 
                     {/* Completed Order Confirmation Banner */}
                     {order.status === 'COMPLETED' && (
-                      <View style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <CheckCircle size={18} color="#15803d" />
+                      <View style={{ backgroundColor: '#eef8f1', borderColor: '#c4e8d1', borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <CheckCircle size={18} color="#0f7a43" />
                         <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontWeight: '800', color: '#15803d' }}>
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: '#0f7a43' }}>
                             {t('✓ Order Picked Up & Completed')}
                           </Text>
-                          <Text style={{ fontSize: 11, color: '#166534', marginTop: 1 }}>
+                          <Text style={{ fontSize: 11, color: '#0b5e33', marginTop: 1 }}>
                             {t('OTP verified. Items collected from shop.')}
                           </Text>
                         </View>
@@ -524,8 +525,8 @@ export default function CustomerOrdersScreen({ navigation }) {
                     <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                       <TouchableOpacity
                         style={{
-                          backgroundColor: '#eff6ff',
-                          borderColor: '#bfdbfe',
+                          backgroundColor: '#e9f6ee',
+                          borderColor: '#bfe3cb',
                           borderWidth: 1,
                           paddingHorizontal: 10,
                           paddingVertical: 6,
@@ -534,7 +535,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                         onPress={() => setSelectedDetailOrder(order)}
                         activeOpacity={0.7}
                       >
-                        <Text style={{ color: '#1d4ed8', fontSize: 12, fontWeight: '700' }}>
+                        <Text style={{ color: '#0b5e33', fontSize: 12, fontWeight: '700' }}>
                           {t('Order Details')}
                         </Text>
                       </TouchableOpacity>
@@ -571,8 +572,8 @@ export default function CustomerOrdersScreen({ navigation }) {
             ) : (
               <>
                 {/* Past Sales Receipts */}
-                {filteredSales.map((sale) => (
-                  <View key={`sale-${sale.id}`} style={styles.receiptCard}>
+                {filteredSales.map((sale, idx) => (
+                  <FadeInView index={idx} key={`sale-${sale.id}`} style={styles.receiptCard}>
                     <View style={styles.receiptHeader}>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.receiptShopName}>{sale.shopName}</Text>
@@ -593,7 +594,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                       <FileText size={13} color={colors.primary} />
                       <Text style={styles.viewReceiptBtnText}>{t('View Digital Receipt')}</Text>
                     </TouchableOpacity>
-                  </View>
+                  </FadeInView>
                 ))}
 
                 {/* Past Orders */}
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderColor: colors.border,
     borderWidth: 1,
   },
@@ -720,7 +721,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   countBadge: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -728,7 +729,7 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#475569',
+    color: '#4a5148',
   },
   orderCard: {
     backgroundColor: colors.surface,
@@ -765,7 +766,7 @@ const styles = StyleSheet.create({
   autoCancelBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#fff8e6',
     borderColor: '#fef08a',
     borderWidth: 1,
     borderRadius: 6,
@@ -798,12 +799,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemsBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderRadius: 6,
     padding: 8,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: '#f3eee2',
   },
   itemLine: {
     flexDirection: 'row',
@@ -838,8 +839,8 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   confirmCollectBox: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#bbf7d0',
+    backgroundColor: '#eef8f1',
+    borderColor: '#c4e8d1',
     borderWidth: 1,
     borderRadius: 8,
     padding: 10,
@@ -848,7 +849,7 @@ const styles = StyleSheet.create({
   confirmCollectTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#166534',
+    color: '#0b5e33',
   },
   confirmBtn: {
     flexDirection: 'row',
@@ -915,7 +916,7 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#f3eee2',
     paddingTop: 6,
   },
   viewReceiptBtnText: {
@@ -924,7 +925,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   emptyCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderColor: colors.border,
     borderWidth: 1,
     borderStyle: 'dashed',

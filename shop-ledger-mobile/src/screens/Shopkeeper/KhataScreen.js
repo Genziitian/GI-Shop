@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   FlatList,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
   Modal,
   BackHandler,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Users,
@@ -42,6 +42,7 @@ import {
   ShieldCheck,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
+import { FadeInView } from '../../components/ui/Motion';
 import {
   getCustomers,
   getCustomerLedger,
@@ -70,8 +71,8 @@ const FILTERS = ['All', 'Highest', 'Lowest', 'No Due'];
 
 const AVATAR_THEMES = [
   { bg: '#e0f2fe', text: '#0284c7' }, // Blue
-  { bg: '#fef3c7', text: '#d97706' }, // Amber
-  { bg: '#dcfce7', text: '#16a34a' }, // Emerald
+  { bg: '#fdf0cf', text: '#d98a0b' }, // Amber
+  { bg: '#dff3e6', text: '#1f9d5a' }, // Emerald
   { bg: '#f3e8ff', text: '#9333ea' }, // Purple
   { bg: '#ffe4e6', text: '#e11d48' }, // Rose
   { bg: '#ffedd5', text: '#ea580c' }, // Orange
@@ -688,7 +689,7 @@ export default function KhataScreen() {
                 onPress={() => handleCallCustomer(selectedCustomer)}
                 activeOpacity={0.8}
               >
-                <Phone size={14} color="#334155" />
+                <Phone size={14} color="#343c35" />
                 <Text style={styles.profileCallBtnText}>{t('Call')}</Text>
               </TouchableOpacity>
 
@@ -698,7 +699,7 @@ export default function KhataScreen() {
                   onPress={() => handleRemindCustomer(selectedCustomer)}
                   activeOpacity={0.8}
                 >
-                  <MessageCircle size={14} color="#15803d" />
+                  <MessageCircle size={14} color="#0f7a43" />
                   <Text style={styles.profileRemindBtnText}>{t('Remind')}</Text>
                 </TouchableOpacity>
               )}
@@ -1022,7 +1023,7 @@ export default function KhataScreen() {
             }
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
               const shortId = item.shortId || item.customerShortId;
               const displayName = cleanCustomerDisplayName(item.name, shortId) || t('Customer');
               const avatarTheme = getAvatarTheme(displayName || item.phone || '');
@@ -1031,6 +1032,7 @@ export default function KhataScreen() {
               const hasRealPhone = item.phone && /\d{5,}/.test(item.phone) && item.phone !== shortId;
 
               return (
+                <FadeInView index={index}>
                 <TouchableOpacity
                   style={styles.customerCard}
                   onPress={() => handleOpenLedger(item)}
@@ -1150,6 +1152,7 @@ export default function KhataScreen() {
                     )}
                   </View>
                 </TouchableOpacity>
+                </FadeInView>
               );
             }}
             ListEmptyComponent={
@@ -1261,7 +1264,7 @@ const styles = StyleSheet.create({
   },
   heroLabel: {
     fontSize: 12,
-    color: '#dbeafe',
+    color: '#d3eddc',
     fontWeight: '600',
     textTransform: 'uppercase',
   },
@@ -1273,7 +1276,7 @@ const styles = StyleSheet.create({
   },
   heroSub: {
     fontSize: 11,
-    color: '#bfdbfe',
+    color: '#bfe3cb',
   },
   addCustomerHeroBtn: {
     flexDirection: 'row',
@@ -1327,7 +1330,7 @@ const styles = StyleSheet.create({
   },
   filterDropdownBtnActive: {
     borderColor: colors.primary,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   filterDropdownText: {
     fontSize: 12,
@@ -1380,7 +1383,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   dropdownMenuItemActive: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   dropdownMenuItemText: {
     fontSize: 14,
@@ -1401,7 +1404,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     ...shadowStyle,
   },
   cardHeaderRow: {
@@ -1439,12 +1442,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
   },
   shortIdText: {
     fontSize: 10,
@@ -1531,7 +1534,7 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     marginVertical: 10,
   },
   cardActionStrip: {
@@ -1558,9 +1561,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 7,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1568,9 +1571,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -1578,13 +1581,13 @@ const styles = StyleSheet.create({
   callBtnCleanText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#334155',
+    color: '#343c35',
   },
   remindBtnClean: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
     borderColor: '#86efac',
     paddingHorizontal: 10,
@@ -1594,7 +1597,7 @@ const styles = StyleSheet.create({
   remindBtnCleanText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   settleBtnClean: {
     flexDirection: 'row',
@@ -1667,9 +1670,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 8,
@@ -1683,9 +1686,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1695,7 +1698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f3eee2',
   },
   profileName: {
     fontSize: 18,
@@ -1727,7 +1730,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fef2f2',
   },
   profileDueBoxGreen: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
   },
   profileDueLabel: {
     fontSize: 10,
@@ -1753,15 +1756,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     borderRadius: 10,
   },
   profileCallBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
+    color: '#343c35',
   },
   profileRemindBtn: {
     flex: 1,
@@ -1770,7 +1773,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
     borderColor: '#86efac',
     borderRadius: 10,
@@ -1778,7 +1781,7 @@ const styles = StyleSheet.create({
   profileRemindBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   profileSettleBtn: {
     flex: 1.2,
@@ -1802,9 +1805,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 10,
   },
   profileAllClearText: {
@@ -1818,7 +1821,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     alignItems: 'center',
     justifyContent: 'center',
     ...shadowStyle,
@@ -1830,7 +1833,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: '#4a5148',
   },
   filterChipTextActive: {
     color: '#ffffff',
@@ -1937,7 +1940,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#f3eee2',
   },
   timelineNoteText: {
     fontSize: 11,

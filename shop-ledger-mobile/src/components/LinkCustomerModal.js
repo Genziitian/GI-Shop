@@ -4,7 +4,6 @@ import {
   Text,
   Modal,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
@@ -12,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { X, Link2, ShieldCheck, AlertCircle, Lock, User, Mail, Hash, Phone } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
 import { linkCustomerAccount } from '../api/client';
@@ -271,11 +271,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     marginBottom: 12,
   },
   customerInfoLeft: {

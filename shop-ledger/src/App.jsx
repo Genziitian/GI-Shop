@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Shopkeeper from './pages/Shopkeeper';
 import Customer from './pages/Customer';
@@ -21,6 +21,21 @@ const getStoredUserRole = () => {
     } catch (e) {}
   }
   return role;
+};
+
+// Tags <html> with the current role so CSS can apply that role's accent.
+const RoleTheme = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const role = getStoredUserRole();
+    let theme = '';
+    if (pathname.startsWith('/admin')) theme = 'admin';
+    else if (pathname.startsWith('/customer') || role === 'Customer') theme = 'customer';
+    else if (pathname.startsWith('/shop') || role === 'Shopkeeper') theme = 'shopkeeper';
+    if (theme) document.documentElement.dataset.role = theme;
+    else delete document.documentElement.dataset.role;
+  }, [pathname]);
+  return null;
 };
 
 const RootRedirect = () => {
@@ -95,6 +110,7 @@ function App() {
   return (
     <LanguageProvider>
       <BrowserRouter>
+      <RoleTheme />
       {/* Floating Push Notification Toast */}
       {notification && (
         <div style={{
@@ -102,7 +118,7 @@ function App() {
           top: '1.25rem',
           right: '1.25rem',
           zIndex: 9999,
-          background: '#1e293b',
+          background: '#1b2a22',
           color: '#ffffff',
           padding: '0.85rem 1.15rem',
           borderRadius: '10px',
@@ -114,7 +130,7 @@ function App() {
           animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
           <div style={{
-            background: '#3b82f6',
+            background: '#1f9d5a',
             width: '36px',
             height: '36px',
             borderRadius: '50%',
@@ -127,14 +143,14 @@ function App() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: '600', fontSize: '0.92rem', marginBottom: '0.15rem' }}>{notification.title}</div>
-            <div style={{ fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.3' }}>{notification.body}</div>
+            <div style={{ fontSize: '0.82rem', color: '#d5ccb6', lineHeight: '1.3' }}>{notification.body}</div>
           </div>
           <button 
             onClick={() => setNotification(null)}
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#94a3b8',
+              color: '#a0a294',
               cursor: 'pointer',
               padding: '4px',
               display: 'flex',

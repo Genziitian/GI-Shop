@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Vibration,
   Platform,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lock, Delete, Store, User, ShieldCheck, LogOut } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../theme/colors';

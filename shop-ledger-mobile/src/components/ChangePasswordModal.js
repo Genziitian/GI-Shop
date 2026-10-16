@@ -5,11 +5,11 @@ import {
   Modal,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { X, Key, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react-native';
 import { colors } from '../theme/colors';
@@ -66,12 +66,12 @@ export default function ChangePasswordModal({ visible, onClose }) {
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#faf7f0' }}>
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={styles.headerIconBadge}>
-              <Key size={18} color="#16a34a" />
+              <Key size={18} color="#1f9d5a" />
             </View>
             <View>
               <Text style={styles.headerTitle}>Account Password</Text>
@@ -100,7 +100,7 @@ export default function ChangePasswordModal({ visible, onClose }) {
 
           {successMsg ? (
             <View style={styles.successBanner}>
-              <CheckCircle size={16} color="#15803d" />
+              <CheckCircle size={16} color="#0f7a43" />
               <Text style={styles.successBannerText}>{successMsg}</Text>
             </View>
           ) : null}
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 6,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderRadius: 16,
   },
   sectionCard: {
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: '#4a5148',
     marginBottom: 6,
   },
   passwordInputContainer: {
@@ -301,15 +301,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     padding: 12,
     borderRadius: 10,
     marginBottom: 12,
   },
   successBannerText: {
-    color: '#15803d',
+    color: '#0f7a43',
     fontSize: 12,
     fontWeight: '600',
     flex: 1,

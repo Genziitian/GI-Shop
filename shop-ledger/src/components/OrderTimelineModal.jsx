@@ -111,18 +111,18 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
   const getStatusBadge = (st) => {
     switch (st) {
       case 'COMPLETED':
-        return <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontWeight: '700' }}>✓ COMPLETED</span>;
+        return <span className="badge" style={{ background: '#dff3e6', color: '#0f7a43', fontWeight: '700' }}>✓ COMPLETED</span>;
       case 'READY':
         return <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: '700' }}>📦 READY FOR PICKUP</span>;
       case 'PACKING':
       case 'ACCEPTED':
-        return <span className="badge" style={{ background: '#fef3c7', color: '#b45309', fontWeight: '700' }}>⏳ PREPARING</span>;
+        return <span className="badge" style={{ background: '#fdf0cf', color: '#a8620a', fontWeight: '700' }}>⏳ PREPARING</span>;
       case 'DECLINED':
         return <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', fontWeight: '700' }}>❌ DECLINED</span>;
       case 'CANCELLED_BY_CUSTOMER':
         return <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c', fontWeight: '700' }}>🚫 CANCELLED</span>;
       default:
-        return <span className="badge" style={{ background: '#f1f5f9', color: '#475569', fontWeight: '700' }}>⌛ PENDING</span>;
+        return <span className="badge" style={{ background: '#f3eee2', color: '#4a5148', fontWeight: '700' }}>⌛ PENDING</span>;
     }
   };
 
@@ -133,22 +133,22 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
       case 'RECEIVED':
         return <Clock size={16} color="#0284c7" />;
       case 'ACCEPTED':
-        return <PackageCheck size={16} color="#d97706" />;
+        return <PackageCheck size={16} color="#d98a0b" />;
       case 'ITEMS_UPDATED':
-        return <AlertCircle size={16} color="#d97706" />;
+        return <AlertCircle size={16} color="#d98a0b" />;
       case 'READY':
         return <CheckCircle2 size={16} color="#0284c7" />;
       case 'PAYMENT_REQUESTED':
-        return <CreditCard size={16} color="#2563eb" />;
+        return <CreditCard size={16} color="#0f7a43" />;
       case 'VERIFIED':
-        return <ShieldCheck size={16} color="#16a34a" />;
+        return <ShieldCheck size={16} color="#1f9d5a" />;
       case 'COMPLETED':
-        return <Check size={16} color="#16a34a" />;
+        return <Check size={16} color="#1f9d5a" />;
       case 'DECLINED':
       case 'CANCELLED_BY_CUSTOMER':
         return <AlertCircle size={16} color="#dc2626" />;
       default:
-        return <Clock size={16} color="#64748b" />;
+        return <Clock size={16} color="#666c60" />;
     }
   };
 
@@ -190,8 +190,8 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
 
     const discountRowHtml = Number(discountAmt) > 0 ? `
       <tr>
-        <td style="padding: 2px 0; text-align: left; color: #15803d; font-weight: 700;">DISCOUNT APPLIED:</td>
-        <td style="padding: 2px 0; text-align: right; color: #15803d; font-weight: 700;">-&#8377;${Number(discountAmt).toFixed(2)}</td>
+        <td style="padding: 2px 0; text-align: left; color: #0f7a43; font-weight: 700;">DISCOUNT APPLIED:</td>
+        <td style="padding: 2px 0; text-align: right; color: #0f7a43; font-weight: 700;">-&#8377;${Number(discountAmt).toFixed(2)}</td>
       </tr>
     ` : '';
 
@@ -225,7 +225,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           }
           body {
             font-family: 'Courier New', Courier, Consolas, Monaco, monospace;
-            background-color: #f8fafc;
+            background-color: #faf7f0;
             color: #111827;
             margin: 0;
             padding: 14px;
@@ -320,8 +320,8 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           }
           .pickup-box {
             margin-top: 12px;
-            background: #f0fdf4;
-            border: 1px dashed #16a34a;
+            background: #eef8f1;
+            border: 1px dashed #1f9d5a;
             border-radius: 4px;
             padding: 8px 10px;
           }
@@ -347,13 +347,13 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
             font-size: 9.5px;
             letter-spacing: 2px;
             margin-top: 2px;
-            color: #334155;
+            color: #343c35;
           }
           .receipt-footer {
             margin-top: 14px;
             text-align: center;
             font-size: 10px;
-            color: #475569;
+            color: #4a5148;
             line-height: 1.4;
           }
         </style>
@@ -419,14 +419,14 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
 
           <!-- Pickup Customer Card at Last -->
           <div class="pickup-box">
-            <div style="font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #15803d; margin-bottom: 2px;">
+            <div style="font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #0f7a43; margin-bottom: 2px;">
               &#10003; PICKUP CUSTOMER DETAILS
             </div>
-            <div style="font-size: 11.5px; font-weight: 800; color: #0f172a;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #12201a;">
               ${customerName} ${customerShortId ? `(${customerShortId})` : ''}
             </div>
-            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #334155;">Phone: ${customerPhone}</div>` : ''}
-            <div style="margin-top: 4px; font-size: 10.5px; font-weight: 800; color: #166534;">
+            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #343c35;">Phone: ${customerPhone}</div>` : ''}
+            <div style="margin-top: 4px; font-size: 10.5px; font-weight: 800; color: #0b5e33;">
               (Customer will pick up the order)
             </div>
           </div>
@@ -441,7 +441,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           <div class="receipt-footer">
             <div class="bold">&#9733; THANK YOU FOR SHOPPING WITH US &#9733;</div>
             <div>PLEASE VISIT AGAIN!</div>
-            <div style="font-size: 9px; color: #64748b; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
+            <div style="font-size: 9px; color: #666c60; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
           </div>
         </div>
         <script>
@@ -489,13 +489,13 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
         </div>
 
         {/* Shop Details Card with Contact Number */}
-        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
+        <div style={{ background: '#faf7f0', border: '1px solid #e8e1d0', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '220px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '800' }}>
                 <Store size={14} color="var(--primary)" /> SHOP / STORE DETAILS
               </div>
-              <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '1.05rem', marginTop: '2px' }}>
+              <div style={{ fontWeight: '800', color: '#12201a', fontSize: '1.05rem', marginTop: '2px' }}>
                 {shopName}
               </div>
               {shopAddress && (
@@ -506,11 +506,11 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
             </div>
 
             {shopPhone && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '0.4rem 0.75rem' }}>
-                <Phone size={14} color="#1d4ed8" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#e9f6ee', border: '1px solid #bfe3cb', borderRadius: '8px', padding: '0.4rem 0.75rem' }}>
+                <Phone size={14} color="#0b5e33" />
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: '#1e40af', fontWeight: '700' }}>Shop Contact</div>
-                  <a href={`tel:${shopPhone}`} style={{ fontSize: '0.84rem', fontWeight: '800', color: '#1d4ed8', textDecoration: 'none' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#0b5e33', fontWeight: '700' }}>Shop Contact</div>
+                  <a href={`tel:${shopPhone}`} style={{ fontSize: '0.84rem', fontWeight: '800', color: '#0b5e33', textDecoration: 'none' }}>
                     {shopPhone}
                   </a>
                 </div>
@@ -522,7 +522,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
         {/* SECTION 1: ORDERED ITEMS BREAKDOWN */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div className="flex-between" style={{ marginBottom: '0.65rem' }}>
-            <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#0f172a', fontWeight: '800' }}>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#12201a', fontWeight: '800' }}>
               Ordered Items &amp; Billing
             </h4>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
@@ -533,7 +533,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
           <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
               <thead>
-                <tr style={{ background: '#f1f5f9', textTransform: 'uppercase', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <tr style={{ background: '#f3eee2', textTransform: 'uppercase', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                   <th style={{ padding: '0.6rem 0.85rem', textAlign: 'left' }}>Item</th>
                   <th style={{ padding: '0.6rem 0.85rem', textAlign: 'center' }}>Qty</th>
                   <th style={{ padding: '0.6rem 0.85rem', textAlign: 'right' }}>Amount</th>
@@ -551,17 +551,17 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
                   return (
                     <tr key={idx} style={{ borderBottom: '1px solid var(--border)', background: isUnavail ? '#fef2f2' : '#ffffff' }}>
                       <td style={{ padding: '0.6rem 0.85rem' }}>
-                        <div style={{ fontWeight: '700', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#991b1b' : '#0f172a' }}>
+                        <div style={{ fontWeight: '700', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#991b1b' : '#12201a' }}>
                           {name}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           @{rate}/{unit} {isUnavail && <span style={{ color: '#dc2626', fontWeight: '800', marginLeft: '6px' }}>(Marked Unavailable)</span>}
                         </div>
                       </td>
-                      <td style={{ padding: '0.6rem 0.85rem', textAlign: 'center', fontWeight: '700', color: isUnavail ? '#991b1b' : '#0f172a' }}>
+                      <td style={{ padding: '0.6rem 0.85rem', textAlign: 'center', fontWeight: '700', color: isUnavail ? '#991b1b' : '#12201a' }}>
                         {qty} {unit}
                       </td>
-                      <td style={{ padding: '0.6rem 0.85rem', textAlign: 'right', fontWeight: '800', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#991b1b' : '#0f172a' }}>
+                      <td style={{ padding: '0.6rem 0.85rem', textAlign: 'right', fontWeight: '800', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#991b1b' : '#12201a' }}>
                         ₹{(Number(amt) || 0).toFixed(2)}
                       </td>
                     </tr>
@@ -571,20 +571,20 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
             </table>
 
             {/* Subtotal & Final Summary */}
-            <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderTop: '1px solid var(--border)', fontSize: '0.86rem' }}>
+            <div style={{ background: '#faf7f0', padding: '0.85rem 1rem', borderTop: '1px solid var(--border)', fontSize: '0.86rem' }}>
               <div className="flex-between" style={{ marginBottom: '4px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Estimated Subtotal:</span>
                 <span style={{ fontWeight: '700' }}>₹{subtotalAmt}</span>
               </div>
 
               {Number(discountAmt) > 0 && (
-                <div className="flex-between" style={{ color: '#16a34a', marginBottom: '4px' }}>
+                <div className="flex-between" style={{ color: '#1f9d5a', marginBottom: '4px' }}>
                   <span>Discount Applied:</span>
                   <span style={{ fontWeight: '700' }}>-₹{discountAmt}</span>
                 </div>
               )}
 
-              <div className="flex-between" style={{ paddingTop: '0.5rem', borderTop: '1px dashed #cbd5e1', fontSize: '1rem', fontWeight: '800', color: '#0f172a' }}>
+              <div className="flex-between" style={{ paddingTop: '0.5rem', borderTop: '1px dashed #d5ccb6', fontSize: '1rem', fontWeight: '800', color: '#12201a' }}>
                 <span>Final Payable Amount:</span>
                 <span style={{ color: 'var(--primary)' }}>
                   ₹{finalPayableAmt}
@@ -594,7 +594,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
               {order.paymentMethod && (
                 <div className="flex-between" style={{ marginTop: '0.4rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                   <span>Payment Mode:</span>
-                  <span style={{ fontWeight: '700', color: '#0f172a' }}>{order.paymentMethod}</span>
+                  <span style={{ fontWeight: '700', color: '#12201a' }}>{order.paymentMethod}</span>
                 </div>
               )}
             </div>
@@ -603,7 +603,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
 
         {/* SECTION 2: COMPLETE ORDER JOURNEY TIMELINE */}
         <div>
-          <h4 style={{ margin: '0 0 0.85rem 0', fontSize: '0.95rem', color: '#0f172a', fontWeight: '800' }}>
+          <h4 style={{ margin: '0 0 0.85rem 0', fontSize: '0.95rem', color: '#12201a', fontWeight: '800' }}>
             Complete Order Journey
           </h4>
 
@@ -626,22 +626,22 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
                 <div key={index} style={{ display: 'flex', gap: '0.85rem', position: 'relative', paddingBottom: isLast ? 0 : '1.25rem' }}>
                   {/* Vertical Line Connector */}
                   {!isLast && (
-                    <div style={{ position: 'absolute', left: '15px', top: '32px', bottom: '0', width: '2px', background: '#cbd5e1', zIndex: 1 }} />
+                    <div style={{ position: 'absolute', left: '15px', top: '32px', bottom: '0', width: '2px', background: '#d5ccb6', zIndex: 1 }} />
                   )}
 
                   {/* Icon Circle */}
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isLast ? '#dcfce7' : '#f1f5f9', border: `2px solid ${isLast ? '#16a34a' : '#94a3b8'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, flexShrink: 0 }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isLast ? '#dff3e6' : '#f3eee2', border: `2px solid ${isLast ? '#1f9d5a' : '#a0a294'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, flexShrink: 0 }}>
                     {getStepIcon(step.status)}
                   </div>
 
                   {/* Event Details */}
-                  <div style={{ flex: 1, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.65rem 0.85rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <div style={{ flex: 1, background: '#ffffff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.65rem 0.85rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                     <div className="flex-between" style={{ marginBottom: '2px' }}>
-                      <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>{step.title}</strong>
+                      <strong style={{ fontSize: '0.88rem', color: '#12201a' }}>{step.title}</strong>
                       <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: '600' }}>{formattedTime}</span>
                     </div>
                     {step.description && (
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: '1.35' }}>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#4a5148', lineHeight: '1.35' }}>
                         {step.description}
                       </p>
                     )}
@@ -653,13 +653,13 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
         </div>
 
         {/* Customer Pickup Details Card at the Very End */}
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '0.85rem 1rem', marginTop: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#15803d', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.5rem' }}>
+        <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '12px', padding: '0.85rem 1rem', marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0f7a43', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.5rem' }}>
             <User size={15} /> PICKUP CUSTOMER DETAILS
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
-              <div style={{ fontWeight: '800', color: '#0f172a', fontSize: '0.92rem' }}>
+              <div style={{ fontWeight: '800', color: '#12201a', fontSize: '0.92rem' }}>
                 {customerName} {customerShortId ? `(${customerShortId})` : ''}
               </div>
               {customerPhone && (
@@ -668,7 +668,7 @@ export default function OrderTimelineModal({ visible, order, onClose }) {
                 </div>
               )}
             </div>
-            <div style={{ background: '#dcfce7', color: '#166534', fontWeight: '800', fontSize: '0.82rem', padding: '0.4rem 0.85rem', borderRadius: '6px' }}>
+            <div style={{ background: '#dff3e6', color: '#0b5e33', fontWeight: '800', fontSize: '0.82rem', padding: '0.4rem 0.85rem', borderRadius: '6px' }}>
               (Customer will pick up the order)
             </div>
           </div>

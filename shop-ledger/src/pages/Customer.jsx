@@ -711,18 +711,18 @@ export default function Customer() {
       <head>
         <title>${currentUser?.name || 'Customer'} - Account Statement</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; line-height: 1.5; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1b2a22; line-height: 1.5; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #12201a; padding-bottom: 12px; margin-bottom: 20px; }
           .title { font-size: 24px; font-weight: 800; color: #0284c7; margin: 0; }
           .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 12px; }
           .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-          .card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; background: #f8fafc; }
-          .card-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-          .card-val { font-size: 20px; font-weight: 800; color: #0f172a; }
+          .card { border: 1px solid #e8e1d0; border-radius: 10px; padding: 12px; background: #faf7f0; }
+          .card-title { font-size: 11px; font-weight: 700; color: #666c60; text-transform: uppercase; margin-bottom: 4px; }
+          .card-val { font-size: 20px; font-weight: 800; color: #12201a; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-          th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; }
-          th { background: #f1f5f9; font-weight: 700; }
-          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+          th, td { border: 1px solid #d5ccb6; padding: 8px 10px; text-align: left; }
+          th { background: #f3eee2; font-weight: 700; }
+          .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #e8e1d0; font-size: 11px; color: #a0a294; text-align: center; }
           @media print { body { padding: 0; } }
         </style>
       </head>
@@ -730,14 +730,14 @@ export default function Customer() {
         <div class="header">
           <div>
             <h1 class="title">${currentUser?.name || 'Customer Statement'}</h1>
-            <div style="font-size: 13px; color: #475569; margin-top: 2px;">
+            <div style="font-size: 13px; color: #4a5148; margin-top: 2px;">
               Customer ID: <strong>${currentUser?.shortId || ''}</strong> • Phone: ${currentUser?.phone || ''}
             </div>
-            <div style="font-size: 12px; color: #64748b;">${currentUser?.address || ''}, ${currentUser?.city || ''}</div>
+            <div style="font-size: 12px; color: #666c60;">${currentUser?.address || ''}, ${currentUser?.city || ''}</div>
           </div>
           <div style="text-align: right;">
             <div class="badge">Period: ${exportDateRange}</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
+            <div style="font-size: 11px; color: #a0a294; margin-top: 4px;">Generated: ${new Date().toLocaleString()}</div>
           </div>
         </div>
 
@@ -748,7 +748,7 @@ export default function Customer() {
           </div>
           <div class="card">
             <div class="card-title">Active Khata Dues</div>
-            <div class="card-val" style="color: ${(khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#16a34a'};">₹${(khataOverview.overallDue || 0).toFixed(2)}</div>
+            <div class="card-val" style="color: ${(khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#1f9d5a'};">₹${(khataOverview.overallDue || 0).toFixed(2)}</div>
           </div>
           <div class="card">
             <div class="card-title">Active Linked Stores</div>
@@ -1008,7 +1008,7 @@ export default function Customer() {
       <div className="nav-bar" style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }} />
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#15803d', letterSpacing: '-0.02em' }}>GI SHOP</span>
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f7a43', letterSpacing: '-0.02em' }}>GI SHOP</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -1038,9 +1038,9 @@ export default function Customer() {
             <span 
               className="badge" 
               style={{ 
-                background: '#eff6ff', 
+                background: '#e9f6ee', 
                 color: 'var(--primary)', 
-                border: '1px solid #bfdbfe', 
+                border: '1px solid #bfe3cb', 
                 padding: '0.35rem 0.65rem', 
                 fontSize: '0.82rem', 
                 fontWeight: '800', 
@@ -1064,7 +1064,7 @@ export default function Customer() {
               alignItems: 'center',
               gap: '0.4rem',
               borderColor: 'var(--border)',
-              background: '#f8fafc'
+              background: '#faf7f0'
             }}
             title={language === 'en' ? 'हिंदी में बदलें (Switch to Hindi)' : 'Switch to English'}
           >
@@ -1107,7 +1107,7 @@ export default function Customer() {
           <div>
             {/* Filter Row: City Selector & Search Bar in 1 Single Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.35rem 0.65rem', borderRadius: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#e9f6ee', border: '1px solid #bfe3cb', padding: '0.35rem 0.65rem', borderRadius: '10px' }}>
                 <MapPin size={16} color="var(--primary)" />
                 <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)' }}>City:</span>
                 <select 
@@ -1147,9 +1147,9 @@ export default function Customer() {
                   <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
                     <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>{shop.shopName}</div>
                     <span className="badge" style={{
-                      background: shop.isOpen ? '#dcfce7' : '#fee2e2',
-                      color: shop.isOpen ? '#15803d' : '#b91c1c',
-                      borderColor: shop.isOpen ? '#bbf7d0' : '#fecaca'
+                      background: shop.isOpen ? '#dff3e6' : '#fee2e2',
+                      color: shop.isOpen ? '#0f7a43' : '#b91c1c',
+                      borderColor: shop.isOpen ? '#c4e8d1' : '#fecaca'
                     }}>
                       {shop.isOpen ? 'OPEN' : 'CLOSED'}
                     </span>
@@ -1257,13 +1257,13 @@ export default function Customer() {
                                   <strong style={{ fontSize: '0.95rem', color: 'var(--text)' }}>{offer.shopName}</strong>
                                   <span className="badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>{offer.shopShortId}</span>
                                   {isBestPrice && (
-                                    <span className="badge" style={{ background: '#dcfce7', color: '#15803d', borderColor: '#bbf7d0', fontSize: '0.68rem', padding: '1px 5px' }}>
+                                    <span className="badge" style={{ background: '#dff3e6', color: '#0f7a43', borderColor: '#c4e8d1', fontSize: '0.68rem', padding: '1px 5px' }}>
                                       🏆 Lowest Price
                                     </span>
                                   )}
                                   <span className="badge" style={{
-                                    background: offer.isOpen ? '#dcfce7' : '#fee2e2',
-                                    color: offer.isOpen ? '#15803d' : '#b91c1c',
+                                    background: offer.isOpen ? '#dff3e6' : '#fee2e2',
+                                    color: offer.isOpen ? '#0f7a43' : '#b91c1c',
                                     fontSize: '0.68rem',
                                     padding: '1px 5px'
                                   }}>
@@ -1284,7 +1284,7 @@ export default function Customer() {
                             </div>
 
                             {/* Actions Row */}
-                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px dashed #f1f5f9', paddingTop: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center', borderTop: '1px dashed #f3eee2', paddingTop: '0.5rem' }}>
                               <button 
                                 type="button" 
                                 className="btn btn-outline" 
@@ -1298,7 +1298,7 @@ export default function Customer() {
                                 <button 
                                   type="button" 
                                   className="btn" 
-                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', background: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem', background: '#1f9d5a', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                                   onClick={() => setShowCartModal(true)}
                                 >
                                   <ShoppingCart size={13} /> In Cart ({inCartQty})
@@ -1342,8 +1342,8 @@ export default function Customer() {
                   ← Back to All Shops
                 </button>
                 <span className="badge" style={{
-                  background: activeShop.isOpen ? '#dcfce7' : '#fee2e2',
-                  color: activeShop.isOpen ? '#15803d' : '#b91c1c'
+                  background: activeShop.isOpen ? '#dff3e6' : '#fee2e2',
+                  color: activeShop.isOpen ? '#0f7a43' : '#b91c1c'
                 }}>
                   {activeShop.isOpen ? 'OPEN' : 'CLOSED'}
                 </span>
@@ -1366,7 +1366,7 @@ export default function Customer() {
                     href={`tel:${activeShop.shopPhone}`}
                     className="btn" 
                     style={{ 
-                      background: '#2563eb', 
+                      background: '#0f7a43', 
                       color: '#fff', 
                       padding: '0.45rem 1rem', 
                       fontSize: '0.85rem', 
@@ -1387,7 +1387,7 @@ export default function Customer() {
                     rel="noopener noreferrer"
                     className="btn" 
                     style={{ 
-                      background: '#16a34a', 
+                      background: '#1f9d5a', 
                       color: '#fff', 
                       padding: '0.45rem 1rem', 
                       fontSize: '0.85rem', 
@@ -1412,7 +1412,7 @@ export default function Customer() {
             )}
 
             {orderSuccessMsg && (
-              <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <CheckCircle size={18} /> {orderSuccessMsg}
               </div>
             )}
@@ -1444,7 +1444,7 @@ export default function Customer() {
                         key={item.id} 
                         className="list-item" 
                         style={{ 
-                          background: isAdded ? '#f0fdf4' : '#f8fafc', 
+                          background: isAdded ? '#eef8f1' : '#faf7f0', 
                           border: isAdded ? '1px solid #86efac' : '1px solid var(--border)',
                           borderRadius: '10px', 
                           padding: '0.85rem 1rem',
@@ -1461,7 +1461,7 @@ export default function Customer() {
                           </div>
 
                           {isAdded && (
-                            <div style={{ marginTop: '0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
+                            <div style={{ marginTop: '0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', background: '#dff3e6', color: '#0f7a43', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '700' }}>
                               <CheckCircle size={12} /> In List: {currentQty} {item.unit} (₹{(Number(currentEntry?.amount) || 0).toFixed(2)})
                             </div>
                           )}
@@ -1472,7 +1472,7 @@ export default function Customer() {
                             <button 
                               type="button" 
                               className="btn" 
-                              style={{ background: '#16a34a', color: '#fff', padding: '0.4rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '700' }}
+                              style={{ background: '#1f9d5a', color: '#fff', padding: '0.4rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', borderRadius: '6px', fontWeight: '700' }}
                               onClick={() => openItemModal(item, activeShop)}
                             >
                               {currentQty} {item.unit}
@@ -1503,7 +1503,7 @@ export default function Customer() {
                     <ShoppingCart size={18} /> Cart / Order List
                   </h3>
                   {activeCartShop && (
-                    <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)' }}>
+                    <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)' }}>
                       {activeCartShop.name}
                     </span>
                   )}
@@ -1517,7 +1517,7 @@ export default function Customer() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {Object.values(orderList).map(entry => (
-                        <div key={entry.item.id} className="flex-between" style={{ fontSize: '0.85rem', paddingBottom: '0.35rem', borderBottom: '1px solid #f1f5f9' }}>
+                        <div key={entry.item.id} className="flex-between" style={{ fontSize: '0.85rem', paddingBottom: '0.35rem', borderBottom: '1px solid #f3eee2' }}>
                           <div>
                             <div>{entry.item.name}</div>
                             <small style={{ color: 'var(--text-muted)' }}>{entry.qty} x ₹{entry.rate}</small>
@@ -1558,20 +1558,20 @@ export default function Customer() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
                 {/* Overall Outstanding Due Banner */}
-                <div className="panel" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: '#fff', padding: '1.25rem', borderRadius: '14px' }}>
+                <div className="panel" style={{ background: 'linear-gradient(135deg, #1b2a22, #12201a)', color: '#fff', padding: '1.25rem', borderRadius: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
                         <BookOpen size={20} color="#38bdf8" />
                         <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800' }}>My Khata Ledger</h2>
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#a0a294' }}>
                         Live synchronized credit ledger across all your local shops
                       </div>
                     </div>
 
                     <div style={{ background: 'rgba(255,255,255,0.07)', padding: '0.65rem 1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                      <div style={{ fontSize: '0.72rem', color: '#cbd5e1', fontWeight: '600' }}>Total Amount Due to Pay</div>
+                      <div style={{ fontSize: '0.72rem', color: '#d5ccb6', fontWeight: '600' }}>Total Amount Due to Pay</div>
                       <h2 style={{ margin: '0.15rem 0 0 0', fontSize: '1.5rem', color: khataOverview.overallDue > 0 ? '#f87171' : '#4ade80', fontWeight: '900' }}>
                         ₹{(Number(khataOverview?.overallDue) || 0).toFixed(2)}
                       </h2>
@@ -1588,7 +1588,7 @@ export default function Customer() {
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#a0a294', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                       <ShieldCheck size={13} color="#38bdf8" /> Official Store Records (Read-Only)
                     </div>
                   </div>
@@ -1617,10 +1617,10 @@ export default function Customer() {
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                             <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text)', fontWeight: 800 }}>{st.shopName}</h3>
-                            <span className="badge" style={{ fontSize: '0.68rem', background: '#eff6ff', color: 'var(--primary)', fontWeight: '700', padding: '1px 6px' }}>
+                            <span className="badge" style={{ fontSize: '0.68rem', background: '#e9f6ee', color: 'var(--primary)', fontWeight: '700', padding: '1px 6px' }}>
                               ID: {st.shortId || `shp${st.shopId}`}
                             </span>
-                            <span className="badge" style={{ fontSize: '0.68rem', background: st.isOpen ? '#dcfce7' : '#fee2e2', color: st.isOpen ? '#15803d' : '#b91c1c', padding: '1px 6px' }}>
+                            <span className="badge" style={{ fontSize: '0.68rem', background: st.isOpen ? '#dff3e6' : '#fee2e2', color: st.isOpen ? '#0f7a43' : '#b91c1c', padding: '1px 6px' }}>
                               {st.isOpen ? 'Open' : 'Closed'}
                             </span>
                           </div>
@@ -1646,7 +1646,7 @@ export default function Customer() {
                             target="_blank"
                             rel="noreferrer"
                             className="btn btn-outline"
-                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none', color: '#16a34a', borderColor: '#bbf7d0', background: '#f0fdf4' }}
+                            style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none', color: '#1f9d5a', borderColor: '#c4e8d1', background: '#eef8f1' }}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <MessageCircle size={12} /> WhatsApp
@@ -1656,8 +1656,8 @@ export default function Customer() {
 
                       {/* Highlighted Due Amount Box */}
                       <div style={{ 
-                        background: st.totalDue > 0 ? '#fff5f5' : '#f0fdf4', 
-                        border: `1px solid ${st.totalDue > 0 ? '#fed7d7' : '#bbf7d0'}`, 
+                        background: st.totalDue > 0 ? '#fff5f5' : '#eef8f1', 
+                        border: `1px solid ${st.totalDue > 0 ? '#fed7d7' : '#c4e8d1'}`, 
                         borderRadius: '8px', 
                         padding: '0.65rem 0.85rem', 
                         display: 'flex', 
@@ -1666,17 +1666,17 @@ export default function Customer() {
                         marginBottom: '0.75rem'
                       }}>
                         <div>
-                          <div style={{ fontSize: '0.7rem', fontWeight: '800', color: st.totalDue > 0 ? '#dc2626' : '#15803d', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          <div style={{ fontSize: '0.7rem', fontWeight: '800', color: st.totalDue > 0 ? '#dc2626' : '#0f7a43', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             {st.totalDue > 0 ? 'Amount Due to Pay' : 'Account Status'}
                           </div>
-                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: st.totalDue > 0 ? '#dc2626' : '#15803d', lineHeight: 1.1, marginTop: '2px' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: st.totalDue > 0 ? '#dc2626' : '#0f7a43', lineHeight: 1.1, marginTop: '2px' }}>
                             {(Number(st?.totalDue) || 0) > 0 ? `₹${(Number(st.totalDue) || 0).toFixed(2)}` : '₹0.00'}
                           </div>
                         </div>
 
                         <div>
                           {st.totalDue === 0 ? (
-                            <span className="badge" style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.72rem', fontWeight: '700' }}>
+                            <span className="badge" style={{ background: '#dff3e6', color: '#0f7a43', fontSize: '0.72rem', fontWeight: '700' }}>
                               ✓ No Due Clear
                             </span>
                           ) : (
@@ -1717,7 +1717,7 @@ export default function Customer() {
                   ))}
 
                   {khataOverview.stores.length === 0 && !khataLoading && (
-                    <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px dashed var(--border)' }}>
+                    <div style={{ textAlign: 'center', padding: '3rem 1.5rem', background: '#faf7f0', borderRadius: '12px', border: '1px dashed var(--border)' }}>
                       <BookOpen size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem auto' }} />
                       <h3 style={{ margin: '0 0 0.5rem 0' }}>No Khata Records Found</h3>
                       <p className="subtitle" style={{ maxWidth: '450px', margin: '0 auto 1.5rem auto' }}>
@@ -1755,10 +1755,10 @@ export default function Customer() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
                         <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{selectedKhataStore.shopName}</h2>
-                        <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)', fontWeight: '700' }}>
+                        <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)', fontWeight: '700' }}>
                           ID: {selectedKhataStore.shortId || `shp${selectedKhataStore.shopId || selectedKhataStore.id}`}
                         </span>
-                        <span className="badge" style={{ background: selectedKhataStore.isOpen ? '#dcfce7' : '#fee2e2', color: selectedKhataStore.isOpen ? '#15803d' : '#b91c1c' }}>
+                        <span className="badge" style={{ background: selectedKhataStore.isOpen ? '#dff3e6' : '#fee2e2', color: selectedKhataStore.isOpen ? '#0f7a43' : '#b91c1c' }}>
                           {selectedKhataStore.isOpen ? 'Open' : 'Closed'}
                         </span>
                       </div>
@@ -1790,7 +1790,7 @@ export default function Customer() {
                             target="_blank"
                             rel="noreferrer"
                             className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none', color: '#16a34a', borderColor: '#bbf7d0', background: '#f0fdf4', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                            style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none', color: '#1f9d5a', borderColor: '#c4e8d1', background: '#eef8f1', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                           >
                             <MessageCircle size={15} /> WhatsApp
                           </a>
@@ -1799,7 +1799,7 @@ export default function Customer() {
                     </div>
 
                     {/* Due metric */}
-                    <div style={{ background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border)', textAlign: 'right' }}>
+                    <div style={{ background: '#faf7f0', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid var(--border)', textAlign: 'right' }}>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Amount Due to Pay</div>
                       <h2 style={{ margin: '0.25rem 0', fontSize: '1.75rem', color: (storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: '900' }}>
                         ₹{(Number(storeKhataDetails?.totalDue ?? selectedKhataStore?.totalDue) || 0).toFixed(2)}
@@ -1810,7 +1810,7 @@ export default function Customer() {
                     </div>
                   </div>
 
-                  <div style={{ background: '#f1f5f9', borderRadius: '6px', padding: '0.5rem 0.75rem', marginTop: '1rem', fontSize: '0.8rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <div style={{ background: '#f3eee2', borderRadius: '6px', padding: '0.5rem 0.75rem', marginTop: '1rem', fontSize: '0.8rem', color: '#4a5148', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <ShieldCheck size={16} color="var(--primary)" />
                     <span><strong>Synchronized Store Khata:</strong> All entries are certified by the store. Customer cannot edit ledger records.</span>
                   </div>
@@ -1847,7 +1847,7 @@ export default function Customer() {
 
                   {/* Custom Date Range Picker */}
                   {storeKhataFilter === 'Custom' && (
-                    <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#faf7f0', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
                         <input 
@@ -1925,12 +1925,12 @@ export default function Customer() {
                             const items = JSON.parse(entry.itemsJSON || '[]');
                             const isKhataMethod = entry.paymentMethod === 'Add to Book';
                             return (
-                              <div key={`timeline-purch-${entry.id}-${idx}`} style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
+                              <div key={`timeline-purch-${entry.id}-${idx}`} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
                                 <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                                   <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                       <strong style={{ fontSize: '0.95rem' }}>In-Store Purchase #{entry.id}</strong>
-                                      <span className="badge" style={{ fontSize: '0.75rem', background: isKhataMethod ? '#fee2e2' : '#dcfce7', color: isKhataMethod ? '#b91c1c' : '#15803d', fontWeight: '700' }}>
+                                      <span className="badge" style={{ fontSize: '0.75rem', background: isKhataMethod ? '#fee2e2' : '#dff3e6', color: isKhataMethod ? '#b91c1c' : '#0f7a43', fontWeight: '700' }}>
                                         {isKhataMethod ? 'Added to Khata (Due)' : `Paid (${entry.paymentMethod})`}
                                       </span>
                                     </div>
@@ -1946,7 +1946,7 @@ export default function Customer() {
                                   </div>
                                 </div>
 
-                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
                                   {items.map((c, i) => (
                                     <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                                       <span>{c.item?.name || c.name} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>x {c.qty} {c.item?.unit}</span></span>
@@ -1978,29 +1978,29 @@ export default function Customer() {
 
                           if (entry.type === 'SETTLEMENT') {
                             return (
-                              <div key={`timeline-settle-${entry.id}-${idx}`} style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '1rem' }}>
+                              <div key={`timeline-settle-${entry.id}-${idx}`} style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '1rem' }}>
                                 <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
                                   <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                      <CheckCircle size={16} color="#16a34a" />
-                                      <strong style={{ fontSize: '0.95rem', color: '#15803d' }}>Payment Settlement Received</strong>
-                                      <span className="badge" style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', fontWeight: '700' }}>
+                                      <CheckCircle size={16} color="#1f9d5a" />
+                                      <strong style={{ fontSize: '0.95rem', color: '#0f7a43' }}>Payment Settlement Received</strong>
+                                      <span className="badge" style={{ fontSize: '0.75rem', background: '#dff3e6', color: '#0f7a43', fontWeight: '700' }}>
                                         {entry.method}
                                       </span>
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#166534' }}>
+                                    <div style={{ fontSize: '0.8rem', color: '#0b5e33' }}>
                                       {new Date(entry.date).toLocaleDateString()} at {new Date(entry.date).toLocaleTimeString()}
                                     </div>
                                   </div>
 
                                   <div style={{ textAlign: 'right' }}>
-                                    <h3 style={{ margin: 0, color: '#15803d', fontWeight: '800' }}>-₹{(Number(entry?.amount) || 0).toFixed(2)}</h3>
-                                    <span style={{ fontSize: '0.75rem', color: '#166534' }}>Paid / Cleared</span>
+                                    <h3 style={{ margin: 0, color: '#0f7a43', fontWeight: '800' }}>-₹{(Number(entry?.amount) || 0).toFixed(2)}</h3>
+                                    <span style={{ fontSize: '0.75rem', color: '#0b5e33' }}>Paid / Cleared</span>
                                   </div>
                                 </div>
 
                                 {entry.note && (
-                                  <div style={{ fontSize: '0.8rem', color: '#15803d', marginTop: '0.4rem' }}>
+                                  <div style={{ fontSize: '0.8rem', color: '#0f7a43', marginTop: '0.4rem' }}>
                                     📝 Note: "{entry.note}"
                                   </div>
                                 )}
@@ -2011,7 +2011,7 @@ export default function Customer() {
                           if (entry.type === 'ORDER') {
                             const items = JSON.parse(entry.itemsJSON || '[]');
                             return (
-                              <div key={`timeline-order-${entry.id}-${idx}`} style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
+                              <div key={`timeline-order-${entry.id}-${idx}`} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '1rem' }}>
                                 <div className="flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                                   <div>
                                     <strong style={{ fontSize: '0.95rem' }}>Online Order #{entry.orderNumber}</strong>
@@ -2028,13 +2028,13 @@ export default function Customer() {
                                           : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)
                                       ) || 0).toFixed(2)}
                                     </h3>
-                                    <span className="badge" style={{ fontSize: '0.75rem', background: '#eff6ff', color: 'var(--primary)' }}>
+                                    <span className="badge" style={{ fontSize: '0.75rem', background: '#e9f6ee', color: 'var(--primary)' }}>
                                       {entry.status}
                                     </span>
                                   </div>
                                 </div>
 
-                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                                <div style={{ background: '#fff', borderRadius: '6px', padding: '0.65rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
                                   {items.map((it, i) => (
                                     <div key={i} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.2rem' }}>
                                       <span>{it.item?.name || it.name} x {it.qty}</span>
@@ -2062,7 +2062,7 @@ export default function Customer() {
                         })}
 
                         {timeline.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: '2rem', background: '#f8fafc', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                          <div style={{ textAlign: 'center', padding: '2rem', background: '#faf7f0', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                             <Receipt size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem auto' }} />
                             <p className="subtitle" style={{ margin: 0 }}>
                               {storeKhataFilter === 'All' 
@@ -2142,7 +2142,7 @@ export default function Customer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               
               {/* Grand Total Spending Banner */}
-              <div className="panel" style={{ background: '#f8fafc', padding: '1rem 1.25rem' }}>
+              <div className="panel" style={{ background: '#faf7f0', padding: '1rem 1.25rem' }}>
                 <div className="flex-between" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Purchases &amp; Orders Value</div>
@@ -2155,7 +2155,7 @@ export default function Customer() {
                     </div>
                     <div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>All Orders &amp; Receipts</div>
-                      <strong style={{ fontSize: '1.1rem', color: '#0f172a' }}>{pastOrders.length + purchases.length}</strong>
+                      <strong style={{ fontSize: '1.1rem', color: '#12201a' }}>{pastOrders.length + purchases.length}</strong>
                     </div>
                   </div>
                 </div>
@@ -2169,7 +2169,7 @@ export default function Customer() {
                       <Clock size={20} color="var(--primary)" /> My Order Requests
                     </h3>
                   </div>
-                  <span className="badge" style={{ background: '#eff6ff', color: 'var(--primary)', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
+                  <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
                     {recentOrders.length} Active
                   </span>
                 </div>
@@ -2182,7 +2182,7 @@ export default function Customer() {
                         <div 
                           key={order.id} 
                           style={{ 
-                            background: '#f8fafc', 
+                            background: '#faf7f0', 
                             border: '1px solid var(--border)', 
                             borderRadius: '8px', 
                             padding: '1rem',
@@ -2200,14 +2200,14 @@ export default function Customer() {
                             </div>
 
                             <span className="badge" style={{
-                              background: order.status === 'PACKING' ? '#fef3c7' 
+                              background: order.status === 'PACKING' ? '#fdf0cf' 
                                 : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#e0f2fe' 
-                                : (order.status === 'COLLECTED' ? '#dcfce7' 
-                                : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#eff6ff'))),
-                              color: order.status === 'PACKING' ? '#b45309' 
+                                : (order.status === 'COLLECTED' ? '#dff3e6' 
+                                : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#fee2e2' : '#e9f6ee'))),
+                              color: order.status === 'PACKING' ? '#a8620a' 
                                 : ((order.status === 'COMPLETED' || order.status === 'READY') ? '#0369a1' 
-                                : (order.status === 'COLLECTED' ? '#15803d' 
-                                : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8'))),
+                                : (order.status === 'COLLECTED' ? '#0f7a43' 
+                                : ((order.status === 'NOT_COLLECTED' || order.status === 'CANCELLED_BY_CUSTOMER' || order.status === 'AUTO_CANCELLED_EXPIRED' || order.status === 'DECLINED') ? '#b91c1c' : '#0b5e33'))),
                               borderColor: 'transparent',
                               padding: '0.4rem 0.75rem',
                               fontWeight: '700'
@@ -2230,16 +2230,16 @@ export default function Customer() {
                           )}
 
                           {order.status === 'PENDING' && (
-                            <div style={{ background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.5rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
+                            <div style={{ background: '#fff8e6', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.5rem 0.75rem', margin: '0.4rem 0', fontSize: '0.8rem', color: '#92400e' }}>
                               Shopkeeper must accept within 45 minutes of order placement or it will be cancelled automatically.
                             </div>
                           )}
 
-                          <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                          <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
                             {items.map((entry, idx) => {
                               const isUnavail = !!entry.isUnavailable;
                               return (
-                                <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#94a3b8' : 'inherit' }}>
+                                <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', textDecoration: isUnavail ? 'line-through' : 'none', color: isUnavail ? '#a0a294' : 'inherit' }}>
                                   <span>{entry.item?.name || entry.name} x {entry.qty} {isUnavail ? '(Unavailable)' : ''}</span>
                                   <span>₹{(entry.amount || (entry.rate * entry.qty) || 0).toFixed(2)}</span>
                                 </div>
@@ -2255,11 +2255,11 @@ export default function Customer() {
 
                           {/* Customer Confirmation & 4-Digit OTP Box when Ready */}
                           {order.status === 'READY' && (
-                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0' }}>
-                              <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.9rem', marginBottom: '0.35rem' }}>
+                            <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.75rem', margin: '0.5rem 0' }}>
+                              <div style={{ fontWeight: '700', color: '#0b5e33', fontSize: '0.9rem', marginBottom: '0.35rem' }}>
                                 🎉 Your Order is Packed &amp; Ready for Pickup!
                               </div>
-                              <div style={{ fontSize: '0.82rem', color: '#15803d', marginBottom: '0.5rem' }}>
+                              <div style={{ fontSize: '0.82rem', color: '#0f7a43', marginBottom: '0.5rem' }}>
                                 Payment Mode: <strong>{order.paymentMethod || 'Cash'}</strong> • Amount: <strong>₹{(Number(order.requestedAmount || order.estimatedTotal) || 0).toFixed(2)}</strong>
                               </div>
                               
@@ -2267,7 +2267,7 @@ export default function Customer() {
                               <div style={{ background: '#ffffff', border: '2px dashed #22c55e', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                                 <div>
                                   <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Handover 4-Digit OTP</div>
-                                  <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#15803d', letterSpacing: '4px' }}>
+                                  <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0f7a43', letterSpacing: '4px' }}>
                                     {order.otpCode || '----'}
                                   </div>
                                 </div>
@@ -2277,8 +2277,8 @@ export default function Customer() {
                           )}
 
                           {order.status === 'COMPLETED' && (
-                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.65rem 0.85rem', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '0.85rem' }}>
-                              <CheckCircle size={16} color="#166534" /> Order Picked Up &amp; Completed
+                            <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.65rem 0.85rem', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0b5e33', fontWeight: '700', fontSize: '0.85rem' }}>
+                              <CheckCircle size={16} color="#0b5e33" /> Order Picked Up &amp; Completed
                             </div>
                           )}
 
@@ -2314,7 +2314,7 @@ export default function Customer() {
                     })}
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                  <div style={{ textAlign: 'center', padding: '1.5rem', background: '#faf7f0', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                     <p className="subtitle" style={{ margin: 0 }}>No active order requests in the last 24 hours. Older requests have been archived into "All Orders" below.</p>
                   </div>
                 )}
@@ -2328,7 +2328,7 @@ export default function Customer() {
                       <Receipt size={20} color="var(--success)" /> All Orders &amp; Receipts
                     </h3>
                   </div>
-                  <span className="badge" style={{ background: '#f1f5f9', color: '#475569', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
+                  <span className="badge" style={{ background: '#f3eee2', color: '#4a5148', fontWeight: '700', padding: '0.35rem 0.65rem' }}>
                     {totalFilteredAllOrdersCount} {ordersDateFilter !== 'All' ? `(${ordersDateFilter})` : 'Total'}
                   </span>
                 </div>
@@ -2356,7 +2356,7 @@ export default function Customer() {
 
                 {/* Custom Date Range Picker */}
                 {ordersDateFilter === 'Custom' && (
-                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap', background: '#faf7f0', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>From:</span>
                       <input 
@@ -2398,7 +2398,7 @@ export default function Customer() {
                       <div 
                         key={`past-ord-${order.id}`} 
                         style={{ 
-                          background: '#f8fafc', 
+                          background: '#faf7f0', 
                           border: '1px solid var(--border)', 
                           borderRadius: '8px', 
                           padding: '1rem',
@@ -2418,13 +2418,13 @@ export default function Customer() {
                             <h3 style={{ margin: 0, color: 'var(--success)' }}>
                               ₹{((order.estimatedTotal && order.estimatedTotal > 0) ? order.estimatedTotal : items.reduce((s, it) => s + (it.amount || (it.rate * it.qty) || 0), 0)).toFixed(2)}
                             </h3>
-                            <span className="badge" style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d' }}>
+                            <span className="badge" style={{ fontSize: '0.75rem', background: '#dff3e6', color: '#0f7a43' }}>
                               {order.status}
                             </span>
                           </div>
                         </div>
 
-                        <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f1f5f9' }}>
+                        <div style={{ background: '#fff', borderRadius: '6px', padding: '0.75rem', margin: '0.5rem 0', border: '1px solid #f3eee2' }}>
                           {items.map((entry, idx) => (
                             <div key={idx} className="flex-between" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                               <span>{entry.item?.name || entry.name} x {entry.qty}</span>
@@ -2452,7 +2452,7 @@ export default function Customer() {
                   {filteredPurchases.map(purchase => {
                     const items = JSON.parse(purchase.itemsJSON || '[]');
                     return (
-                      <div key={`purch-${purchase.id}`} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border)', padding: '1rem' }}>
+                      <div key={`purch-${purchase.id}`} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start', background: '#faf7f0', borderRadius: '8px', border: '1px solid var(--border)', padding: '1rem' }}>
                         <div className="flex-between" style={{ width: '100%', marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                           <div>
                             <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>{purchase.shopName}</strong>
@@ -2497,7 +2497,7 @@ export default function Customer() {
                   })}
 
                   {totalFilteredAllOrdersCount === 0 && (
-                    <div style={{ textAlign: 'center', padding: '2rem', background: '#f8fafc', borderRadius: '8px', border: '1px dashed var(--border)' }}>
+                    <div style={{ textAlign: 'center', padding: '2rem', background: '#faf7f0', borderRadius: '8px', border: '1px dashed var(--border)' }}>
                       <Receipt size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem auto' }} />
                       <p className="subtitle" style={{ margin: 0 }}>
                         {ordersDateFilter === 'All' 
@@ -2529,7 +2529,7 @@ export default function Customer() {
               </div>
 
               {/* Shop Details Block */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.85rem', marginBottom: '1rem' }}>
                 <div className="flex-between" style={{ marginBottom: '0.4rem' }}>
                   <strong style={{ fontSize: '1rem', color: 'var(--primary)' }}>
                     {selectedOrderForDetails.shopName}
@@ -2550,7 +2550,7 @@ export default function Customer() {
                       href={`tel:${selectedOrderForDetails.shopPhone}`}
                       className="btn"
                       style={{ 
-                        background: '#2563eb', 
+                        background: '#0f7a43', 
                         color: '#fff', 
                         padding: '0.35rem 0.75rem', 
                         fontSize: '0.75rem', 
@@ -2571,7 +2571,7 @@ export default function Customer() {
                       rel="noopener noreferrer"
                       className="btn"
                       style={{ 
-                        background: '#16a34a', 
+                        background: '#1f9d5a', 
                         color: '#fff', 
                         padding: '0.35rem 0.75rem', 
                         fontSize: '0.75rem', 
@@ -2590,20 +2590,20 @@ export default function Customer() {
               </div>
 
               {/* Status Box */}
-              <div style={{ background: '#f1f5f9', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ background: '#f3eee2', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Placed on</div>
                   <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{new Date(selectedOrderForDetails.createdAt).toLocaleString()}</div>
                 </div>
                 <span className="badge" style={{
-                  background: selectedOrderForDetails.status === 'PACKING' ? '#fef3c7' 
+                  background: selectedOrderForDetails.status === 'PACKING' ? '#fdf0cf' 
                     : ((selectedOrderForDetails.status === 'COMPLETED' || selectedOrderForDetails.status === 'READY') ? '#e0f2fe' 
-                    : (selectedOrderForDetails.status === 'COLLECTED' ? '#dcfce7' 
-                    : ((selectedOrderForDetails.status === 'NOT_COLLECTED' || selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' || selectedOrderForDetails.status === 'DECLINED') ? '#fee2e2' : '#eff6ff'))),
-                  color: selectedOrderForDetails.status === 'PACKING' ? '#b45309' 
+                    : (selectedOrderForDetails.status === 'COLLECTED' ? '#dff3e6' 
+                    : ((selectedOrderForDetails.status === 'NOT_COLLECTED' || selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' || selectedOrderForDetails.status === 'DECLINED') ? '#fee2e2' : '#e9f6ee'))),
+                  color: selectedOrderForDetails.status === 'PACKING' ? '#a8620a' 
                     : ((selectedOrderForDetails.status === 'COMPLETED' || selectedOrderForDetails.status === 'READY') ? '#0369a1' 
-                    : (selectedOrderForDetails.status === 'COLLECTED' ? '#15803d' 
-                    : ((selectedOrderForDetails.status === 'NOT_COLLECTED' || selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' || selectedOrderForDetails.status === 'DECLINED') ? '#b91c1c' : '#1d4ed8'))),
+                    : (selectedOrderForDetails.status === 'COLLECTED' ? '#0f7a43' 
+                    : ((selectedOrderForDetails.status === 'NOT_COLLECTED' || selectedOrderForDetails.status === 'CANCELLED_BY_CUSTOMER' || selectedOrderForDetails.status === 'DECLINED') ? '#b91c1c' : '#0b5e33'))),
                   padding: '0.35rem 0.65rem',
                   fontWeight: '700'
                 }}>
@@ -2620,8 +2620,8 @@ export default function Customer() {
 
               {/* Ready Confirmation Banner inside Details Modal */}
               {selectedOrderForDetails.status === 'READY' && (
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem' }}>
-                  <div style={{ fontWeight: '700', color: '#166534', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem' }}>
+                  <div style={{ fontWeight: '700', color: '#0b5e33', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <CheckCircle size={15} /> Shopkeeper marked this order ready! Did you collect it?
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -2646,7 +2646,7 @@ export default function Customer() {
               )}
 
               {selectedOrderForDetails.status === 'COMPLETED' && (
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontWeight: '700', fontSize: '0.85rem' }}>
+                <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0b5e33', fontWeight: '700', fontSize: '0.85rem' }}>
                   <CheckCircle size={16} /> Order Picked Up &amp; Completed
                 </div>
               )}
@@ -2659,7 +2659,7 @@ export default function Customer() {
                 <div style={{ border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
                   <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                      <tr style={{ background: '#faf7f0', borderBottom: '1px solid var(--border)' }}>
                         <th style={{ textAlign: 'left', padding: '0.5rem' }}>Item</th>
                         <th style={{ textAlign: 'center', padding: '0.5rem' }}>Qty</th>
                         <th style={{ textAlign: 'right', padding: '0.5rem' }}>Rate</th>
@@ -2668,7 +2668,7 @@ export default function Customer() {
                     </thead>
                     <tbody>
                       {JSON.parse(selectedOrderForDetails.itemsJSON || '[]').map((entry, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <tr key={idx} style={{ borderBottom: '1px solid #f3eee2' }}>
                           <td style={{ padding: '0.5rem' }}>{entry.item?.name || entry.name}</td>
                           <td style={{ textAlign: 'center', padding: '0.5rem' }}>{entry.qty} {entry.item?.unit || ''}</td>
                           <td style={{ textAlign: 'right', padding: '0.5rem' }}>₹{entry.rate || entry.item?.price || 0}</td>
@@ -2694,7 +2694,7 @@ export default function Customer() {
               </div>
 
               {/* Customer Delivery Info */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 <div>Customer: <strong>{selectedOrderForDetails.customerName || currentUser?.name}</strong> ({selectedOrderForDetails.customerShortId || currentUser?.shortId})</div>
                 <div>Contact: {selectedOrderForDetails.customerPhone || currentUser?.phone}</div>
                 {selectedOrderForDetails.customerAddress && <div>Address: {selectedOrderForDetails.customerAddress}</div>}
@@ -2750,14 +2750,14 @@ export default function Customer() {
               )}
 
               {orderSuccessMsg && (
-                <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+                <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', borderRadius: '6px', padding: '0.65rem 0.85rem', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
                   {orderSuccessMsg}
                 </div>
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
                 {Object.values(orderList).map(entry => (
-                  <div key={entry.item.id} style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={entry.item.id} style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{entry.item.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>₹{entry.rate} / {entry.item.unit}</div>
@@ -2893,7 +2893,7 @@ export default function Customer() {
               {/* Modal Header */}
               <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <User size={24} />
                   </div>
                   <div>
@@ -2907,7 +2907,7 @@ export default function Customer() {
               </div>
 
               {/* Tab Navigation */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f1f5f9', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.4rem', background: '#f3eee2', padding: '0.35rem', borderRadius: '12px', marginBottom: '1.5rem' }}>
                 <button
                   type="button"
                   onClick={() => setCustomerSettingsTab('profile')}
@@ -2981,13 +2981,13 @@ export default function Customer() {
               {/* TAB 1: PROFILE DETAILS */}
               {customerSettingsTab === 'profile' && (
                 <div>
-                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.3rem' }}>
+                  <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e8e1d0' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.3rem' }}>
                         {(currentUser?.name || 'C')[0].toUpperCase()}
                       </div>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a' }}>{currentUser?.name}</h4>
+                        <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#12201a' }}>{currentUser?.name}</h4>
                         <span style={{ fontSize: '0.76rem', background: '#e0f2fe', color: '#0369a1', padding: '0.15rem 0.5rem', borderRadius: '5px', fontWeight: '700' }}>
                           Verified Customer Account
                         </span>
@@ -2997,7 +2997,7 @@ export default function Customer() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', fontSize: '0.86rem' }}>
                       <div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>GOOGLE EMAIL</div>
-                        <div style={{ fontWeight: '700', color: '#0f172a', wordBreak: 'break-all' }}>{currentUser?.email}</div>
+                        <div style={{ fontWeight: '700', color: '#12201a', wordBreak: 'break-all' }}>{currentUser?.email}</div>
                       </div>
                       <div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>CUSTOMER SHORT ID</div>
@@ -3005,13 +3005,13 @@ export default function Customer() {
                       </div>
                       <div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '600', marginBottom: '2px' }}>CONTACT PHONE</div>
-                        <div style={{ fontWeight: '700', color: '#0f172a' }}>{currentUser?.phone || 'Not set'}</div>
+                        <div style={{ fontWeight: '700', color: '#12201a' }}>{currentUser?.phone || 'Not set'}</div>
                       </div>
                     </div>
                   </div>
 
                   {profileNotice && (
-                    <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <CheckCircle size={18} />
                       <div>{profileNotice}</div>
                     </div>
@@ -3074,7 +3074,7 @@ export default function Customer() {
                     <div className="flex-between" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                       <a 
                         href="tel:7323809242" 
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#15803d', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0f7a43', background: '#dff3e6', border: '1px solid #c4e8d1', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                       >
                         <Phone size={15} /> Contact Customer Care (7323809242)
                       </a>
@@ -3112,7 +3112,7 @@ export default function Customer() {
                         </p>
 
                         {pinNotice && (
-                          <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <CheckCircle size={15} /> {pinNotice}
                           </div>
                         )}
@@ -3191,18 +3191,18 @@ export default function Customer() {
                     </form>
 
                     {/* 2. Set / Change Password */}
-                    <form onSubmit={handleChangePassword} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <form onSubmit={handleChangePassword} style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <h4 style={{ margin: 0, fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <Key size={17} /> Account Password
                           </h4>
                           {currentUser?.hasPasswordSet === 1 ? (
-                            <span style={{ fontSize: '0.74rem', background: '#dcfce7', color: '#15803d', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                            <span style={{ fontSize: '0.74rem', background: '#dff3e6', color: '#0f7a43', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
                               Password Active
                             </span>
                           ) : (
-                            <span style={{ fontSize: '0.74rem', background: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
+                            <span style={{ fontSize: '0.74rem', background: '#fdf0cf', color: '#a8620a', padding: '0.15rem 0.5rem', borderRadius: '6px', fontWeight: '700' }}>
                               Not Set Yet
                             </span>
                           )}
@@ -3212,7 +3212,7 @@ export default function Customer() {
                         </p>
 
                         {passwordNotice && (
-                          <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <CheckCircle size={15} /> {passwordNotice}
                           </div>
                         )}
@@ -3292,13 +3292,13 @@ export default function Customer() {
                   </div>
 
                   {/* 3. Passkey Biometric Login */}
-                  <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ background: '#eef8f1', border: '1.5px solid #c4e8d1', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                       <div>
-                        <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                        <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f7a43', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
                           <Fingerprint size={18} /> Passkey Biometric Login
                         </div>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#166534' }}>
+                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#0b5e33' }}>
                           Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
                         </p>
                       </div>
@@ -3308,7 +3308,7 @@ export default function Customer() {
                         onClick={handleRegisterPasskey}
                         disabled={passkeyRegistering}
                         className="btn btn-outline"
-                        style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem', borderColor: '#16a34a', color: '#15803d', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '9px' }}
+                        style={{ padding: '0.65rem 1.25rem', fontSize: '0.86rem', borderColor: '#1f9d5a', color: '#0f7a43', background: '#fff', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '9px' }}
                       >
                         <Fingerprint size={16} />
                         {passkeyRegistering ? 'Registering Device Passkey...' : 'Set Up Passkey on this Device'}
@@ -3316,7 +3316,7 @@ export default function Customer() {
                     </div>
 
                     {passkeyNotice && (
-                      <div style={{ background: '#dcfce7', color: '#15803d', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <CheckCircle size={15} /> {passkeyNotice}
                       </div>
                     )}
@@ -3347,14 +3347,14 @@ export default function Customer() {
               {customerSettingsTab === 'export' && (
                 <div>
                   {/* Summary Banner */}
-                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e2e8f0' }}>
+                  <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.85rem', borderBottom: '1px solid #e8e1d0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Download size={22} />
                         </div>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#0f172a' }}>Export Your Orders & Khata Data</h4>
+                          <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#12201a' }}>Export Your Orders & Khata Data</h4>
                           <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                             Download complete personal spreadsheets, ledger statements, and account backups.
                           </span>
@@ -3365,24 +3365,24 @@ export default function Customer() {
                         type="button"
                         onClick={handlePrintSummary}
                         className="btn btn-outline"
-                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#cbd5e1', background: '#fff' }}
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#d5ccb6', background: '#fff' }}
                       >
                         <Printer size={15} /> Print Statement
                       </button>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
-                      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Orders Placed</div>
                         <div style={{ fontSize: '1.3rem', fontWeight: '800', color: 'var(--primary)' }}>{orders.length}</div>
                       </div>
-                      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Active Dues</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '800', color: (khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#16a34a' }}>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '800', color: (khataOverview.overallDue || 0) > 0 ? '#c2410c' : '#1f9d5a' }}>
                           ₹{(khataOverview.overallDue || 0).toFixed(2)}
                         </div>
                       </div>
-                      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
+                      <div style={{ background: '#fff', border: '1px solid #e8e1d0', borderRadius: '10px', padding: '0.75rem', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase' }}>Linked Stores</div>
                         <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#7c3aed' }}>{(khataOverview.stores || []).length}</div>
                       </div>
@@ -3390,7 +3390,7 @@ export default function Customer() {
                   </div>
 
                   {exportNotice && (
-                    <div style={{ background: '#dcfce7', border: '1px solid #bbf7d0', color: '#15803d', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.85rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <CheckCircle size={18} />
                       <div>{exportNotice}</div>
                     </div>
@@ -3403,13 +3403,13 @@ export default function Customer() {
                   )}
 
                   {/* STEP 1: DATE RANGE */}
-                  <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         <CalendarRange size={18} color="var(--primary)" />
                         <span>Step 1: Choose Date Range & Time Period</span>
                       </div>
-                      <span style={{ fontSize: '0.75rem', background: '#eff6ff', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
+                      <span style={{ fontSize: '0.75rem', background: '#e9f6ee', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '700' }}>
                         Selection: {exportDateRange === 'CUSTOM' ? `${exportStartDate} to ${exportEndDate}` : exportDateRange}
                       </span>
                     </div>
@@ -3432,9 +3432,9 @@ export default function Customer() {
                             fontSize: '0.82rem',
                             fontWeight: '700',
                             borderRadius: '8px',
-                            border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #cbd5e1',
-                            background: exportDateRange === preset.id ? '#eff6ff' : '#ffffff',
-                            color: exportDateRange === preset.id ? 'var(--primary)' : '#475569',
+                            border: exportDateRange === preset.id ? '1.5px solid var(--primary)' : '1px solid #d5ccb6',
+                            background: exportDateRange === preset.id ? '#e9f6ee' : '#ffffff',
+                            color: exportDateRange === preset.id ? 'var(--primary)' : '#4a5148',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease'
                           }}
@@ -3445,7 +3445,7 @@ export default function Customer() {
                     </div>
 
                     {exportDateRange === 'CUSTOM' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#f8fafc', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: '#faf7f0', padding: '0.85rem', borderRadius: '10px', border: '1px solid #e8e1d0' }}>
                         <div>
                           <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                             Start Date (From)
@@ -3475,10 +3475,10 @@ export default function Customer() {
                   </div>
 
                   {/* STEP 2: WHAT TO EXPORT */}
-                  <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ background: '#ffffff', border: '1.5px solid #e8e1d0', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                        <FileSpreadsheet size={18} color="#16a34a" />
+                      <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#12201a', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <FileSpreadsheet size={18} color="#1f9d5a" />
                         <span>Step 2: Select What to Export</span>
                       </div>
 
@@ -3490,11 +3490,11 @@ export default function Customer() {
                         >
                           Select All
                         </button>
-                        <span style={{ color: '#cbd5e1' }}>•</span>
+                        <span style={{ color: '#d5ccb6' }}>•</span>
                         <button
                           type="button"
                           onClick={() => setExportCategories({ orders: false, khata: false, profile: false, summary: false })}
-                          style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
+                          style={{ background: 'none', border: 'none', color: '#666c60', fontSize: '0.78rem', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                         >
                           Deselect All
                         </button>
@@ -3532,8 +3532,8 @@ export default function Customer() {
                           title: 'Expense & Account Statement',
                           desc: 'Summary statement of total orders and outstanding dues',
                           count: 'Statement',
-                          badgeColor: '#16a34a',
-                          badgeBg: '#dcfce7'
+                          badgeColor: '#1f9d5a',
+                          badgeBg: '#dff3e6'
                         }
                       ].map(cat => {
                         const isChecked = exportCategories[cat.key];
@@ -3547,18 +3547,18 @@ export default function Customer() {
                               gap: '0.75rem',
                               padding: '0.85rem',
                               borderRadius: '10px',
-                              border: isChecked ? '1.5px solid #16a34a' : '1px solid #e2e8f0',
-                              background: isChecked ? '#f0fdf4' : '#ffffff',
+                              border: isChecked ? '1.5px solid #1f9d5a' : '1px solid #e8e1d0',
+                              background: isChecked ? '#eef8f1' : '#ffffff',
                               cursor: 'pointer',
                               transition: 'all 0.15s ease'
                             }}
                           >
-                            <div style={{ marginTop: '2px', color: isChecked ? '#16a34a' : '#94a3b8' }}>
+                            <div style={{ marginTop: '2px', color: isChecked ? '#1f9d5a' : '#a0a294' }}>
                               {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.35rem' }}>
-                                <strong style={{ fontSize: '0.86rem', color: isChecked ? '#0f172a' : '#64748b' }}>{cat.title}</strong>
+                                <strong style={{ fontSize: '0.86rem', color: isChecked ? '#12201a' : '#666c60' }}>{cat.title}</strong>
                                 <span style={{ fontSize: '0.7rem', fontWeight: '700', color: cat.badgeColor, background: cat.badgeBg, padding: '0.15rem 0.45rem', borderRadius: '5px' }}>
                                   {cat.count}
                                 </span>
@@ -3582,7 +3582,7 @@ export default function Customer() {
                       className="btn"
                       style={{
                         padding: '0.85rem 1.25rem',
-                        background: '#16a34a',
+                        background: '#1f9d5a',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '12px',
@@ -3592,7 +3592,7 @@ export default function Customer() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.5rem',
-                        boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                        boxShadow: '0 4px 12px rgba(31, 157, 90, 0.25)',
                         cursor: exportLoading || !Object.values(exportCategories).some(Boolean) ? 'not-allowed' : 'pointer'
                       }}
                     >
@@ -3608,8 +3608,8 @@ export default function Customer() {
                       style={{
                         padding: '0.85rem 1.25rem',
                         background: '#ffffff',
-                        color: '#0f172a',
-                        borderColor: '#0f172a',
+                        color: '#12201a',
+                        borderColor: '#12201a',
                         borderRadius: '12px',
                         fontSize: '0.92rem',
                         fontWeight: '800',
@@ -3661,10 +3661,10 @@ export default function Customer() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
               {/* Language Selection Card */}
-              <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
+              <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '12px', padding: '1rem', gridColumn: '1 / -1' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Globe size={20} />
                     </div>
                     <div>
@@ -3678,14 +3678,14 @@ export default function Customer() {
                   </div>
 
                   {/* Language Selection Buttons */}
-                  <div style={{ display: 'inline-flex', background: '#e2e8f0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                  <div style={{ display: 'inline-flex', background: '#e8e1d0', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                     <button
                       type="button"
                       onClick={() => setLanguage('en')}
                       style={{
                         border: 'none',
                         background: language === 'en' ? '#ffffff' : 'transparent',
-                        color: language === 'en' ? 'var(--primary)' : '#475569',
+                        color: language === 'en' ? 'var(--primary)' : '#4a5148',
                         fontWeight: language === 'en' ? 800 : 600,
                         padding: '0.45rem 1rem',
                         borderRadius: '7px',
@@ -3706,7 +3706,7 @@ export default function Customer() {
                       style={{
                         border: 'none',
                         background: language === 'hi' ? 'var(--primary)' : 'transparent',
-                        color: language === 'hi' ? '#ffffff' : '#475569',
+                        color: language === 'hi' ? '#ffffff' : '#4a5148',
                         fontWeight: language === 'hi' ? 800 : 600,
                         padding: '0.45rem 1rem',
                         borderRadius: '7px',
@@ -3726,10 +3726,10 @@ export default function Customer() {
               </div>
 
               {/* Profile Overview Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <User size={18} />
                     </div>
                     <div>
@@ -3746,7 +3746,7 @@ export default function Customer() {
                     Edit
                   </button>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <div>📞 Phone: <strong>{currentUser?.phone || 'N/A'}</strong></div>
                   <div>📍 City: <strong>{currentUser?.city || 'Delhi'}</strong></div>
                   <div>🏠 Address: <span>{currentUser?.address || 'Not specified'}</span></div>
@@ -3754,35 +3754,35 @@ export default function Customer() {
               </div>
 
               {/* Security & PIN Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eef8f1', color: '#1f9d5a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ShieldCheck size={18} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Security &amp; Lock</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
-                    <Key size={15} color="#16a34a" /> Change Account Password
+                    <Key size={15} color="#1f9d5a" /> Change Account Password
                   </button>
                 </div>
               </div>
 
               {/* Legal & Privacy Card */}
-              <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+              <div style={{ background: '#faf7f0', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#eff6ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#e9f6ee', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Shield size={18} />
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Legal &amp; Privacy</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/privacy')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
-                    <ShieldCheck size={15} color="#16a34a" /> Privacy Policy
+                    <ShieldCheck size={15} color="#1f9d5a" /> Privacy Policy
                   </button>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/terms')} style={{ width: '100%', justifyContent: 'flex-start', gap: '0.45rem', fontSize: '0.82rem', background: '#fff' }}>
                     <FileText size={15} color="#0284c7" /> Terms &amp; Conditions
@@ -3920,7 +3920,7 @@ export default function Customer() {
                           Quantity
                         </label>
                         {/* Compact Unit Toggle Buttons (No Emoji) */}
-                        <div style={{ display: 'inline-flex', background: '#e2e8f0', borderRadius: '6px', padding: '2px', gap: '2px' }}>
+                        <div style={{ display: 'inline-flex', background: '#e8e1d0', borderRadius: '6px', padding: '2px', gap: '2px' }}>
                           <button
                             type="button"
                             style={{
@@ -3931,7 +3931,7 @@ export default function Customer() {
                               borderRadius: '4px',
                               cursor: 'pointer',
                               background: (modalSubUnitMode === 'Kilo' || modalSubUnitMode === 'Litre') ? 'var(--primary)' : 'transparent',
-                              color: (modalSubUnitMode === 'Kilo' || modalSubUnitMode === 'Litre') ? '#fff' : '#475569',
+                              color: (modalSubUnitMode === 'Kilo' || modalSubUnitMode === 'Litre') ? '#fff' : '#4a5148',
                               transition: 'all 0.15s ease'
                             }}
                             onClick={() => handleToggleModalSubUnitMode(selectedModalProduct.unit === 'Litre' ? 'Litre' : 'Kilo')}
@@ -3948,7 +3948,7 @@ export default function Customer() {
                               borderRadius: '4px',
                               cursor: 'pointer',
                               background: (modalSubUnitMode === 'Gram' || modalSubUnitMode === 'ML') ? 'var(--primary)' : 'transparent',
-                              color: (modalSubUnitMode === 'Gram' || modalSubUnitMode === 'ML') ? '#fff' : '#475569',
+                              color: (modalSubUnitMode === 'Gram' || modalSubUnitMode === 'ML') ? '#fff' : '#4a5148',
                               transition: 'all 0.15s ease'
                             }}
                             onClick={() => handleToggleModalSubUnitMode(selectedModalProduct.unit === 'Litre' ? 'ML' : 'Gram')}
@@ -4047,14 +4047,14 @@ export default function Customer() {
             className="btn"
             style={{
               width: '100%',
-              background: '#16a34a',
+              background: '#1f9d5a',
               color: '#fff',
               padding: '0.75rem 1rem',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              boxShadow: '0 8px 20px -4px rgba(22, 163, 74, 0.45)',
+              boxShadow: '0 8px 20px -4px rgba(31, 157, 90, 0.45)',
               fontWeight: 700,
               fontSize: '0.9rem'
             }}
@@ -4074,15 +4074,15 @@ export default function Customer() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
+        <div className="modal-overlay" style={{ zIndex: 9999, position: 'fixed', inset: 0, background: 'rgba(18, 32, 26, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowLogoutConfirm(false)}>
           <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', background: '#fff', borderRadius: '18px', padding: '1.75rem', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.15rem auto' }}>
               <LogOut size={26} />
             </div>
-            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#12201a' }}>
               Log Out?
             </h3>
-            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem', color: '#666c60', lineHeight: '1.45' }}>
               Are you sure you want to log out of your GI SHOP account?
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -4114,7 +4114,7 @@ export default function Customer() {
             position: 'fixed', 
             inset: 0, 
             zIndex: 99999, 
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
+            background: 'linear-gradient(135deg, #12201a 0%, #1b2a22 100%)', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center', 
@@ -4128,10 +4128,10 @@ export default function Customer() {
               <Lock size={32} />
             </div>
 
-            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#f8fafc' }}>
+            <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0 0 0.3rem 0', letterSpacing: '-0.02em', color: '#faf7f0' }}>
               {currentUser?.name || 'Account Locked'}
             </h2>
-            <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.85rem', color: '#a0a294', marginBottom: '1.25rem' }}>
               {unlockMode === 'PIN' ? 'Enter 4-digit PIN to unlock account' : 'Enter account password to unlock'}
             </div>
 
@@ -4238,7 +4238,7 @@ export default function Customer() {
                       borderRadius: '14px',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       background: 'rgba(255, 255, 255, 0.04)',
-                      color: '#94a3b8',
+                      color: '#a0a294',
                       fontSize: '0.9rem',
                       fontWeight: '700',
                       cursor: 'pointer',
@@ -4314,7 +4314,7 @@ export default function Customer() {
                   <button
                     type="button"
                     onClick={() => setShowUnlockPassword(!showUnlockPassword)}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0 }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#a0a294', padding: 0 }}
                   >
                     {showUnlockPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -4353,7 +4353,7 @@ export default function Customer() {
                   background: 'rgba(255, 255, 255, 0.08)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
                   borderRadius: '12px',
-                  color: '#f8fafc',
+                  color: '#faf7f0',
                   fontSize: '0.9rem',
                   fontWeight: '700',
                   cursor: 'pointer',
@@ -4375,7 +4375,7 @@ export default function Customer() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: '#a0a294',
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   cursor: 'pointer',
@@ -4386,7 +4386,7 @@ export default function Customer() {
                 Switch Account / Log Out
               </button>
 
-              <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#64748b' }}>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#666c60' }}>
                 Forgot PIN or Password?{' '}
                 <a 
                   href="tel:7323809242" 

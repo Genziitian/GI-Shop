@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   TextInput,
   Modal,
   ScrollView,
@@ -13,6 +12,7 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Store,
@@ -39,6 +39,7 @@ import {
   ChevronLeft,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
+import { FadeInView } from '../../components/ui/Motion';
 import { useAuth } from '../../context/AuthContext';
 import {
   getCities,
@@ -353,7 +354,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
             </View>
           }
           renderItem={({ item }) => (
-            <View style={styles.shopCard}>
+            <FadeInView index={index} style={styles.shopCard}>
               <View style={styles.shopHeaderRow}>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -365,8 +366,8 @@ export default function CustomerExploreScreen({ navigation, route }) {
                   <Text style={styles.shopCity}>{item.city}</Text>
                 </View>
 
-                <View style={[styles.openStatusBadge, { backgroundColor: item.isOpen ? '#dcfce7' : '#fee2e2' }]}>
-                  <Text style={[styles.openStatusText, { color: item.isOpen ? '#15803d' : '#b91c1c' }]}>
+                <View style={[styles.openStatusBadge, { backgroundColor: item.isOpen ? '#dff3e6' : '#fee2e2' }]}>
+                  <Text style={[styles.openStatusText, { color: item.isOpen ? '#0f7a43' : '#b91c1c' }]}>
                     {item.isOpen ? `🟢 ${t('OPEN')}` : `🔴 ${t('CLOSED')}`}
                   </Text>
                 </View>
@@ -387,7 +388,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
               <View style={styles.shopActionsRow}>
                 <TouchableOpacity
-                  style={[styles.primaryActionBtn, !item.isOpen && { backgroundColor: '#64748b' }]}
+                  style={[styles.primaryActionBtn, !item.isOpen && { backgroundColor: '#666c60' }]}
                   onPress={() => handleOpenShop(item)}
                   activeOpacity={0.8}
                 >
@@ -404,7 +405,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                       <Phone size={14} color={colors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.iconBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+                      style={[styles.iconBtn, { backgroundColor: '#eef8f1', borderColor: '#c4e8d1' }]}
                       onPress={() =>
                         Linking.openURL(
                           `https://wa.me/91${item.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
@@ -413,19 +414,19 @@ export default function CustomerExploreScreen({ navigation, route }) {
                         )
                       }
                     >
-                      <MessageCircle size={14} color="#16a34a" />
+                      <MessageCircle size={14} color="#1f9d5a" />
                     </TouchableOpacity>
                   </View>
                 ) : null}
               </View>
-            </View>
+            </FadeInView>
           )}
         />
       )}
 
       {/* CATALOG LOADING SPINNER */}
       <Modal visible={catalogLoading} transparent animationType="fade" onRequestClose={() => setCatalogLoading(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(18, 32, 26, 0.5)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: '#ffffff', padding: 24, borderRadius: 16, alignItems: 'center', gap: 12 }}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Loading Shop Catalog...</Text>
@@ -440,7 +441,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
         transparent={false}
         onRequestClose={() => setActiveShop(null)}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#faf7f0' }}>
           {activeShop && (
             <View style={{ flex: 1 }}>
               {/* Top Navigation Bar */}
@@ -461,8 +462,8 @@ export default function CustomerExploreScreen({ navigation, route }) {
                   </Text>
                 </View>
 
-                <View style={[styles.openStatusBadge, { backgroundColor: activeShop.isOpen ? '#dcfce7' : '#fee2e2' }]}>
-                  <Text style={[styles.openStatusText, { color: activeShop.isOpen ? '#15803d' : '#b91c1c' }]}>
+                <View style={[styles.openStatusBadge, { backgroundColor: activeShop.isOpen ? '#dff3e6' : '#fee2e2' }]}>
+                  <Text style={[styles.openStatusText, { color: activeShop.isOpen ? '#0f7a43' : '#b91c1c' }]}>
                     {activeShop.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
                   </Text>
                 </View>
@@ -556,7 +557,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                         style={[
                           styles.addBtn,
                           isInCart ? styles.addBtnActive : {},
-                          !activeShop.isOpen ? { backgroundColor: '#cbd5e1' } : {},
+                          !activeShop.isOpen ? { backgroundColor: '#d5ccb6' } : {},
                         ]}
                         disabled={!activeShop.isOpen}
                         onPress={() => openItemModal(item, activeShop)}
@@ -687,7 +688,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.conflictCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <AlertTriangle size={24} color="#f59e0b" />
+              <AlertTriangle size={24} color="#f2a516" />
               <Text style={styles.conflictTitle}>Clear Current Cart?</Text>
             </View>
             <Text style={styles.conflictDesc}>
@@ -699,10 +700,10 @@ export default function CustomerExploreScreen({ navigation, route }) {
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <TouchableOpacity
-                style={[styles.conflictBtn, { backgroundColor: '#f1f5f9' }]}
+                style={[styles.conflictBtn, { backgroundColor: '#f3eee2' }]}
                 onPress={() => setCartConflict(null)}
               >
-                <Text style={[styles.conflictBtnText, { color: '#475569' }]}>Keep Cart</Text>
+                <Text style={[styles.conflictBtnText, { color: '#4a5148' }]}>Keep Cart</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.conflictBtn, { backgroundColor: colors.danger }]}
@@ -797,9 +798,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     gap: 4,
   },
   profileAvatar: {
@@ -826,8 +827,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     paddingHorizontal: 10,
     height: 38,
@@ -865,8 +866,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+    backgroundColor: '#faf7f0',
+    borderColor: '#d5ccb6',
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -904,7 +905,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     gap: 4,
   },
   lockBtnText: {
@@ -954,13 +955,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
     borderColor: 'transparent',
   },
   cityModalItemActive: {
     backgroundColor: colors.primaryLight,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
   },
   cityModalItemText: {
     fontSize: 14,
@@ -1035,7 +1036,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderColor: colors.border,
     borderWidth: 1,
   },
@@ -1095,8 +1096,8 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   shortIdBadge: {
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -1140,7 +1141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#f3eee2',
     paddingTop: 10,
   },
   primaryActionBtn: {
@@ -1162,8 +1163,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 6,
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1224,10 +1225,10 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 10,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
   },
   catalogShortIdText: {
@@ -1311,7 +1312,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   inCartChip: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -1321,7 +1322,7 @@ const styles = StyleSheet.create({
   inCartChipText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   addBtn: {
     backgroundColor: colors.primary,
@@ -1333,7 +1334,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   addBtnActive: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderColor: colors.primary,
     borderWidth: 1,
   },
@@ -1392,7 +1393,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f3eee2',
     gap: 8,
   },
   cartItemName: {

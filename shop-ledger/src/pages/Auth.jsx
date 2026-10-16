@@ -493,7 +493,7 @@ export default function Auth() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: '#f8fafc',
+        background: '#faf7f0',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         display: 'flex',
         flexDirection: 'column'
@@ -501,7 +501,7 @@ export default function Auth() {
         {/* Full-Page Top Header */}
         <header style={{
           background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          borderBottom: '1px solid #e8e1d0',
           padding: '1rem 2rem',
           display: 'flex',
           alignItems: 'center',
@@ -515,12 +515,12 @@ export default function Auth() {
             <img 
               src={logoImg} 
               alt="GI SHOP" 
-              style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'contain', border: '1px solid #e2e8f0' }} 
+              style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'contain', border: '1px solid #e8e1d0' }} 
             />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', lineHeight: '1' }}>
-                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#16a34a' }}>GI</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#0f172a' }}>SHOP</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#1f9d5a' }}>GI</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#12201a' }}>SHOP</span>
               </div>
             </div>
           </div>
@@ -530,19 +530,19 @@ export default function Auth() {
             display: 'flex',
             alignItems: 'center',
             gap: '0.4rem',
-            background: '#f1f5f9',
-            border: '1px solid #e2e8f0',
+            background: '#f3eee2',
+            border: '1px solid #e8e1d0',
             borderRadius: '8px',
             padding: '0.35rem 0.75rem',
             fontSize: '0.82rem',
-            color: '#334155',
+            color: '#343c35',
             fontWeight: '600'
           }}>
-            <Globe size={14} color="#64748b" />
+            <Globe size={14} color="#666c60" />
             <select 
               value={language} 
               onChange={e => setLanguage(e.target.value)}
-              style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontWeight: '600', color: '#334155' }}
+              style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontWeight: '600', color: '#343c35' }}
             >
               <option value="en">English</option>
               <option value="hi">हिन्दी (Hindi)</option>
@@ -581,13 +581,13 @@ export default function Auth() {
             {onboarding.step === 'ROLE_SELECT' && (
               <div>
                 <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                  <span style={{ display: 'inline-block', background: '#dcfce7', color: '#16a34a', padding: '0.35rem 0.95rem', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '800', marginBottom: '0.75rem' }}>
+                  <span style={{ display: 'inline-block', background: '#dff3e6', color: '#1f9d5a', padding: '0.35rem 0.95rem', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '800', marginBottom: '0.75rem' }}>
                     {t.welcomeUser(onboarding.googleUser.name)}
                   </span>
-                  <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
+                  <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#12201a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
                     {t.chooseRole}
                   </h2>
-                  <p style={{ fontSize: '0.98rem', color: '#64748b', margin: 0 }}>
+                  <p style={{ fontSize: '0.98rem', color: '#666c60', margin: 0 }}>
                     {t.howToUse}
                   </p>
                 </div>
@@ -597,7 +597,7 @@ export default function Auth() {
                   <div
                     onClick={() => setOnboarding({ ...onboarding, role: 'Customer', step: 'DETAILS_FORM' })}
                     style={{
-                      border: '2px solid #e2e8f0',
+                      border: '2px solid #e8e1d0',
                       borderRadius: '18px',
                       padding: '1.75rem',
                       cursor: 'pointer',
@@ -608,22 +608,22 @@ export default function Auth() {
                       justifyContent: 'space-between',
                       gap: '1rem'
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#1f9d5a'; e.currentTarget.style.background = '#eef8f1'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e1d0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                        <div style={{ width: '54px', height: '54px', borderRadius: '14px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '54px', height: '54px', borderRadius: '14px', background: '#dff3e6', color: '#1f9d5a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <User size={28} />
                         </div>
                         <span style={{ fontSize: '0.74rem', background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{t.shopperBadge}</span>
                       </div>
-                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmCustomer}</h4>
-                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: '1.45' }}>
+                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#12201a' }}>{t.iAmCustomer}</h4>
+                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#666c60', lineHeight: '1.45' }}>
                         {t.customerDesc}
                       </p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#16a34a', fontWeight: '800', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#1f9d5a', fontWeight: '800', fontSize: '0.9rem', marginTop: '0.5rem' }}>
                       Select Customer <ArrowRight size={18} />
                     </div>
                   </div>
@@ -632,7 +632,7 @@ export default function Auth() {
                   <div
                     onClick={() => setOnboarding({ ...onboarding, role: 'Shopkeeper', step: 'DETAILS_FORM' })}
                     style={{
-                      border: '2px solid #e2e8f0',
+                      border: '2px solid #e8e1d0',
                       borderRadius: '18px',
                       padding: '1.75rem',
                       cursor: 'pointer',
@@ -643,8 +643,8 @@ export default function Auth() {
                       justifyContent: 'space-between',
                       gap: '1rem'
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#1f9d5a'; e.currentTarget.style.background = '#eef8f1'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#e8e1d0'; e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.transform = 'translateY(0)'; }}
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -653,12 +653,12 @@ export default function Auth() {
                         </div>
                         <span style={{ fontSize: '0.74rem', background: '#ede9fe', color: '#6d28d9', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{t.ownerBadge}</span>
                       </div>
-                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>{t.iAmShopkeeper}</h4>
-                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b', lineHeight: '1.45' }}>
+                      <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: '800', color: '#12201a' }}>{t.iAmShopkeeper}</h4>
+                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#666c60', lineHeight: '1.45' }}>
                         {t.shopkeeperDesc}
                       </p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#16a34a', fontWeight: '800', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#1f9d5a', fontWeight: '800', fontSize: '0.9rem', marginTop: '0.5rem' }}>
                       Select Shopkeeper <ArrowRight size={18} />
                     </div>
                   </div>
@@ -668,7 +668,7 @@ export default function Auth() {
                   <button 
                     type="button" 
                     onClick={() => { setOnboarding(null); setError(''); }}
-                    style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+                    style={{ background: 'transparent', border: 'none', color: '#666c60', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
                   >
                     {t.cancelAndBack}
                   </button>
@@ -680,11 +680,11 @@ export default function Auth() {
             {onboarding.step === 'DETAILS_FORM' && (
               <div>
                 {/* Header Navigation */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1.5px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1.5px solid #f3eee2' }}>
                   <button 
                     type="button" 
                     onClick={() => setOnboarding({ ...onboarding, step: 'ROLE_SELECT' })}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#64748b', fontSize: '0.92rem', fontWeight: '700', padding: 0 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#666c60', fontSize: '0.92rem', fontWeight: '700', padding: 0 }}
                   >
                     <ArrowLeft size={18} /> {language === 'hi' ? 'भूमिका बदलें' : 'Switch Role'}
                   </button>
@@ -693,18 +693,18 @@ export default function Auth() {
                     fontWeight: '800', 
                     padding: '0.35rem 0.95rem', 
                     borderRadius: '8px',
-                    background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dcfce7',
-                    color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#16a34a'
+                    background: onboarding.role === 'Shopkeeper' ? '#ede9fe' : '#dff3e6',
+                    color: onboarding.role === 'Shopkeeper' ? '#6d28d9' : '#1f9d5a'
                   }}>
                     {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकानदार सेटअप' : 'Shopkeeper Setup') : (language === 'hi' ? 'ग्राहक सेटअप' : 'Customer Setup')}
                   </span>
                 </div>
 
                 <div style={{ marginBottom: '1.75rem' }}>
-                  <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.75rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>
+                  <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.75rem', fontWeight: '900', color: '#12201a', letterSpacing: '-0.02em' }}>
                     {onboarding.role === 'Shopkeeper' ? (language === 'hi' ? 'दुकान की जानकारी भरें' : 'Configure Your Store') : (language === 'hi' ? 'अपनी प्रोफ़ाइल पूरी करें' : 'Complete Your Profile')}
                   </h3>
-                  <p style={{ margin: 0, fontSize: '0.92rem', color: '#64748b' }}>
+                  <p style={{ margin: 0, fontSize: '0.92rem', color: '#666c60' }}>
                     {language === 'hi' ? 'खाता सक्रिय करने के लिए कुछ आवश्यक विवरण भरें।' : `A few details are needed to activate your ${onboarding.role.toLowerCase()} account.`}
                   </p>
                 </div>
@@ -712,23 +712,23 @@ export default function Auth() {
                 <form onSubmit={handleCompleteOnboarding} style={{ maxWidth: '580px', margin: '0 auto' }}>
                   {/* Google Account (Read Only) */}
                   <div style={{ marginBottom: '1.25rem' }}>
-                    <label style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
-                      {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#94a3b8" />
+                    <label style={{ fontSize: '0.85rem', color: '#4a5148', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
+                      {language === 'hi' ? 'गूगल खाता' : 'Google Account'} <Lock size={13} color="#a0a294" />
                     </label>
                     <input 
                       type="text" 
                       className="input" 
                       value={onboarding.googleUser.email} 
                       disabled 
-                      style={{ background: '#f8fafc', color: '#64748b', cursor: 'not-allowed', borderColor: '#e2e8f0', fontWeight: '600' }}
+                      style={{ background: '#faf7f0', color: '#666c60', cursor: 'not-allowed', borderColor: '#e8e1d0', fontWeight: '600' }}
                     />
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#a0a294', marginTop: '4px', display: 'block' }}>{language === 'hi' ? 'आपके सत्यापित गूगल ईमेल से लिंक है।' : 'Synced with your verified Google email.'}</span>
                   </div>
 
                   {/* Full Name & Phone in 2-col on desktop */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                     <div>
-                      <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                         {language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}
                       </label>
                       <input 
@@ -742,7 +742,7 @@ export default function Auth() {
                     </div>
 
                     <div>
-                      <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                         {language === 'hi' ? 'मोबाइल नंबर *' : 'Mobile Phone *'}
                       </label>
                       <input 
@@ -761,13 +761,13 @@ export default function Auth() {
 
                   {/* SHOPKEEPER STORE INFORMATION */}
                   {onboarding.role === 'Shopkeeper' && (
-                    <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.5rem' }}>
-                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#16a34a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ background: '#faf7f0', border: '1.5px solid #e8e1d0', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+                      <div style={{ fontWeight: '800', fontSize: '0.95rem', color: '#1f9d5a', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Store size={18} /> {language === 'hi' ? 'दुकान का विवरण' : 'Store Information'}
                       </div>
 
                       <div style={{ marginBottom: '0.85rem' }}>
-                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                           {language === 'hi' ? 'दुकान का नाम *' : 'Shop Name *'}
                         </label>
                         <input 
@@ -782,7 +782,7 @@ export default function Auth() {
                       </div>
 
                       <div style={{ marginBottom: '0.85rem' }}>
-                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                           {language === 'hi' ? 'दुकान का पता *' : 'Shop Address *'}
                         </label>
                         <input 
@@ -797,7 +797,7 @@ export default function Auth() {
                       </div>
 
                       <div style={{ marginBottom: '0.85rem' }}>
-                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                           {language === 'hi' ? 'दुकान का शहर चुनें *' : 'Choose Shop City *'}
                         </label>
                         <select 
@@ -812,20 +812,20 @@ export default function Auth() {
                             <option key={c} value={c}>{c}</option>
                           ))}
                         </select>
-                        <span style={{ fontSize: '0.74rem', color: '#64748b', display: 'block' }}>
+                        <span style={{ fontSize: '0.74rem', color: '#666c60', display: 'block' }}>
                           {language === 'hi' ? 'दुकान का शहर पंजीकरण के बाद लॉक रहेगा। केवल सुपरएडमिन इसे बदल सकता है।' : 'Store city is locked after registration. Only SuperAdmin can modify it.'}
                         </span>
                       </div>
 
                       <div>
-                        <label style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                        <label style={{ fontSize: '0.84rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                           {language === 'hi' ? 'दुकान खुलने व बंद होने का समय *' : 'Shop Operating Hours *'}
                         </label>
                         
                         {/* 2 Time Pickers (Opens At & Closes At) */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '0.5rem' }}>
                           <div>
-                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                            <span style={{ fontSize: '0.74rem', color: '#666c60', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                               {language === 'hi' ? 'खुलने का समय (Open)' : 'Opens At'}
                             </span>
                             <input 
@@ -843,7 +843,7 @@ export default function Auth() {
                           </div>
 
                           <div>
-                            <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                            <span style={{ fontSize: '0.74rem', color: '#666c60', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                               {language === 'hi' ? 'बंद होने का समय (Close)' : 'Closes At'}
                             </span>
                             <input 
@@ -882,9 +882,9 @@ export default function Auth() {
                                 fontWeight: '600',
                                 padding: '0.2rem 0.45rem',
                                 borderRadius: '6px',
-                                border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #16a34a' : '1px solid #cbd5e1',
-                                background: (timeOpen === p.open && timeClose === p.close) ? '#dcfce7' : '#ffffff',
-                                color: (timeOpen === p.open && timeClose === p.close) ? '#15803d' : '#475569',
+                                border: (timeOpen === p.open && timeClose === p.close) ? '1px solid #1f9d5a' : '1px solid #d5ccb6',
+                                background: (timeOpen === p.open && timeClose === p.close) ? '#dff3e6' : '#ffffff',
+                                color: (timeOpen === p.open && timeClose === p.close) ? '#0f7a43' : '#4a5148',
                                 cursor: 'pointer'
                               }}
                             >
@@ -893,7 +893,7 @@ export default function Auth() {
                           ))}
                         </div>
 
-                        <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <div style={{ fontSize: '0.76rem', color: '#1f9d5a', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                           <Clock size={13} /> {onboardingForm.timings || formatTimings(timeOpen, timeClose)}
                         </div>
                       </div>
@@ -903,7 +903,7 @@ export default function Auth() {
                   {/* CUSTOMER ADDRESS */}
                   {onboarding.role === 'Customer' && (
                     <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
+                      <label style={{ fontSize: '0.85rem', color: '#12201a', fontWeight: '700', display: 'block', marginBottom: '0.4rem' }}>
                         {language === 'hi' ? 'डिलीवरी / घर का पता (वैकल्पिक)' : 'Delivery / Home Address (Optional)'}
                       </label>
                       <input 
@@ -925,9 +925,9 @@ export default function Auth() {
                       padding: '1.1rem',
                       fontSize: '1.08rem',
                       fontWeight: '900',
-                      background: '#16a34a',
+                      background: '#1f9d5a',
                       borderRadius: '14px',
-                      boxShadow: '0 6px 20px rgba(22, 163, 74, 0.35)',
+                      boxShadow: '0 6px 20px rgba(31, 157, 90, 0.35)',
                       cursor: 'pointer'
                     }}
                     disabled={loading}
@@ -976,7 +976,7 @@ export default function Auth() {
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to right, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.88) 42%, rgba(255,255,255,0.45) 70%, rgba(255,255,255,0.08) 100%)',
+          background: 'linear-gradient(to right, rgba(250,247,240,0.97) 0%, rgba(250,247,240,0.9) 42%, rgba(250,247,240,0.45) 70%, rgba(250,247,240,0.08) 100%)',
           pointerEvents: 'none',
           zIndex: 1
         }}></div>
@@ -987,24 +987,25 @@ export default function Auth() {
             <img 
               src={logoImg} 
               alt="GI SHOP Logo" 
+              className="float"
               style={{ 
                 width: '50px', 
                 height: '50px', 
                 borderRadius: '14px', 
                 objectFit: 'contain',
-                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.15)',
-                border: '1px solid #e2e8f0'
+                boxShadow: '0 4px 12px rgba(31, 157, 90, 0.15)',
+                border: '1px solid #e8e1d0'
               }} 
             />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', lineHeight: '1' }}>
-                <span style={{ fontSize: '1.85rem', fontWeight: '900', color: '#16a34a', letterSpacing: '-0.02em' }}>GI</span>
-                <span style={{ fontSize: '1.85rem', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>SHOP</span>
+                <span style={{ fontSize: '1.85rem', fontWeight: '900', color: '#1f9d5a', letterSpacing: '-0.02em' }}>GI</span>
+                <span style={{ fontSize: '1.85rem', fontWeight: '900', color: '#12201a', letterSpacing: '-0.02em' }}>SHOP</span>
               </div>
-              <div style={{ fontSize: '0.88rem', color: '#64748b', fontWeight: '600', marginTop: '3px' }}>
+              <div style={{ fontSize: '0.88rem', color: '#666c60', fontWeight: '600', marginTop: '3px' }}>
                 {t.brandTagline}
               </div>
-              <div style={{ width: '42px', height: '3px', background: '#16a34a', borderRadius: '2px', marginTop: '4px' }}></div>
+              <div style={{ width: '42px', height: '3px', background: '#1f9d5a', borderRadius: '2px', marginTop: '4px' }}></div>
             </div>
           </div>
         </div>
@@ -1014,48 +1015,48 @@ export default function Auth() {
           <h1 style={{ 
             fontSize: '2.75rem', 
             fontWeight: '900', 
-            color: '#0f172a', 
+            color: '#12201a', 
             lineHeight: '1.12', 
             margin: '0 0 0.85rem 0',
             letterSpacing: '-0.03em'
           }}>
             {t.headline1}<br />
             {t.headline2}<br />
-            <span style={{ color: '#16a34a' }}>{t.headline3}</span>
+            <span style={{ color: '#1f9d5a' }}>{t.headline3}</span>
           </h1>
 
-          <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: '1.45', margin: '0 0 2rem 0', fontWeight: '500' }}>
+          <p style={{ fontSize: '1.05rem', color: '#4a5148', lineHeight: '1.45', margin: '0 0 2rem 0', fontWeight: '500' }}>
             {t.subheadline}
           </p>
 
           {/* 6 Feature Badges Grid (Crisp Vector Icons & Glass Cards) */}
-          <div style={{
+          <div className="stagger" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: '0.85rem',
             marginBottom: '2rem'
           }}>
             {[
-              { icon: <Receipt size={22} color="#16a34a" />, label: t.fastBilling },
-              { icon: <BookOpen size={22} color="#16a34a" />, label: t.digitalKhata },
-              { icon: <Users size={22} color="#16a34a" />, label: t.customerMgmt },
-              { icon: <RefreshCw size={22} color="#16a34a" />, label: t.duesSettlements },
-              { icon: <FileText size={22} color="#16a34a" />, label: t.receipts },
-              { icon: <BarChart3 size={22} color="#16a34a" />, label: t.reports }
+              { icon: <Receipt size={22} color="#1f9d5a" />, label: t.fastBilling },
+              { icon: <BookOpen size={22} color="#1f9d5a" />, label: t.digitalKhata },
+              { icon: <Users size={22} color="#1f9d5a" />, label: t.customerMgmt },
+              { icon: <RefreshCw size={22} color="#1f9d5a" />, label: t.duesSettlements },
+              { icon: <FileText size={22} color="#1f9d5a" />, label: t.receipts },
+              { icon: <BarChart3 size={22} color="#1f9d5a" />, label: t.reports }
             ].map((f, i) => (
-              <div key={i} style={{
+              <div key={i} className="lift" style={{
                 background: '#ffffff',
-                borderRadius: '14px',
+                borderRadius: '18px',
                 padding: '1rem 0.75rem',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 textAlign: 'center',
                 boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
-                border: '1.5px solid #f1f5f9'
+                border: '1.5px solid #f3eee2'
               }}>
                 <div style={{ marginBottom: '0.45rem' }}>{f.icon}</div>
-                <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#1e293b', lineHeight: '1.25' }}>{f.label}</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#1b2a22', lineHeight: '1.25' }}>{f.label}</span>
               </div>
             ))}
           </div>
@@ -1069,14 +1070,14 @@ export default function Auth() {
             alignItems: 'center',
             gap: '1rem',
             boxShadow: '0 6px 18px rgba(0,0,0,0.05)',
-            border: '1.5px solid #e2e8f0'
+            border: '1.5px solid #e8e1d0'
           }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#1f9d5a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Shield size={22} />
             </div>
             <div>
-              <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#0f172a' }}>{t.trustTitle}</div>
-              <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: '700', marginTop: '1px' }}>
+              <div style={{ fontWeight: '800', fontSize: '0.92rem', color: '#12201a' }}>{t.trustTitle}</div>
+              <div style={{ fontSize: '0.78rem', color: '#1f9d5a', fontWeight: '700', marginTop: '1px' }}>
                 {t.trustSubtitle}
               </div>
             </div>
@@ -1094,9 +1095,9 @@ export default function Auth() {
           borderRadius: '20px',
           fontSize: '0.78rem',
           fontWeight: '700',
-          color: '#475569',
+          color: '#4a5148',
           boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          border: '1px solid #e2e8f0',
+          border: '1px solid #e8e1d0',
           alignSelf: 'flex-start'
         }}>
           {t.copyright}
@@ -1124,19 +1125,19 @@ export default function Auth() {
             display: 'flex',
             alignItems: 'center',
             gap: '0.4rem',
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
+            background: '#faf7f0',
+            border: '1px solid #e8e1d0',
             borderRadius: '8px',
             padding: '0.35rem 0.75rem',
             fontSize: '0.82rem',
-            color: '#334155',
+            color: '#343c35',
             fontWeight: '600'
           }}>
-            <Globe size={14} color="#64748b" />
+            <Globe size={14} color="#666c60" />
             <select 
               value={language} 
               onChange={e => setLanguage(e.target.value)}
-              style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontWeight: '600', color: '#334155' }}
+              style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontWeight: '600', color: '#343c35' }}
             >
               <option value="en">English</option>
               <option value="hi">हिन्दी (Hindi)</option>
@@ -1174,22 +1175,22 @@ export default function Auth() {
                 height: '56px', 
                 borderRadius: '14px', 
                 objectFit: 'contain',
-                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.15)',
-                border: '1px solid #e2e8f0'
+                boxShadow: '0 4px 12px rgba(31, 157, 90, 0.15)',
+                border: '1px solid #e8e1d0'
               }} 
             />
           </div>
 
           {/* Header Title */}
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#0f172a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: '900', color: '#12201a', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
               {isLogin ? (
-                <>{t.welcome} <span style={{ color: '#16a34a' }}>{t.backWord}</span></>
+                <>{t.welcome} <span style={{ color: '#1f9d5a' }}>{t.backWord}</span></>
               ) : (
-                <>{t.create} <span style={{ color: '#16a34a' }}>{t.accountWord}</span></>
+                <>{t.create} <span style={{ color: '#1f9d5a' }}>{t.accountWord}</span></>
               )}
             </h2>
-            <p style={{ fontSize: '0.92rem', color: '#64748b', margin: 0 }}>
+            <p style={{ fontSize: '0.92rem', color: '#666c60', margin: 0 }}>
               {isLogin ? t.loginSubtitle : t.signupSubtitle}
             </p>
           </div>
@@ -1207,8 +1208,8 @@ export default function Auth() {
               gap: '0.75rem',
               padding: '0.85rem 1.25rem',
               background: '#ffffff',
-              color: '#1e293b',
-              border: '1.5px solid #e2e8f0',
+              color: '#1b2a22',
+              border: '1.5px solid #e8e1d0',
               borderRadius: '12px',
               fontSize: '0.95rem',
               fontWeight: '700',
@@ -1217,8 +1218,8 @@ export default function Auth() {
               marginBottom: passkeyAvailable && isLogin ? '0.75rem' : '1.25rem',
               transition: 'all 0.15s ease'
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#faf7f0'; e.currentTarget.style.borderColor = '#d5ccb6'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#e8e1d0'; }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1243,15 +1244,15 @@ export default function Auth() {
                   setLoginStep('PASSWORD');
                 }}>
                   {/* Divider: or continue with */}
-                  <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#94a3b8', fontSize: '0.8rem', fontWeight: '500' }}>
-                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                  <div style={{ display: 'flex', alignItems: 'center', margin: '1.25rem 0', color: '#a0a294', fontSize: '0.8rem', fontWeight: '500' }}>
+                    <div style={{ flex: 1, height: '1px', background: '#e8e1d0' }}></div>
                     <span style={{ padding: '0 0.85rem' }}>{t.orContinueWith}</span>
-                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
+                    <div style={{ flex: 1, height: '1px', background: '#e8e1d0' }}></div>
                   </div>
 
                   {/* Email ID or Short ID Input */}
                   <div style={{ marginBottom: '1.25rem' }}>
-                    <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.82rem', color: '#343c35', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
                       {t.emailOrShortId}
                     </label>
                     <div style={{ position: 'relative' }}>
@@ -1266,7 +1267,7 @@ export default function Auth() {
                         autoFocus
                         style={{ paddingRight: '2.5rem', borderRadius: '10px' }}
                       />
-                      <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }}>
+                      <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: '#a0a294', pointerEvents: 'none' }}>
                         <User size={18} />
                       </div>
                     </div>
@@ -1281,13 +1282,13 @@ export default function Auth() {
                       padding: '0.9rem',
                       fontSize: '1.05rem',
                       fontWeight: '800',
-                      background: '#16a34a',
+                      background: '#1f9d5a',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.5rem',
-                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                      boxShadow: '0 4px 14px rgba(31, 157, 90, 0.35)',
                       transition: 'all 0.15s ease'
                     }}
                   >
@@ -1302,19 +1303,19 @@ export default function Auth() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
+                    background: '#faf7f0',
+                    border: '1px solid #e8e1d0',
                     borderRadius: '10px',
                     padding: '0.65rem 0.9rem',
                     marginBottom: '1.25rem'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>
-                      <User size={16} color="#16a34a" /> {loginForm.identifier}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', fontWeight: '700', color: '#1b2a22' }}>
+                      <User size={16} color="#1f9d5a" /> {loginForm.identifier}
                     </div>
                     <button 
                       type="button" 
                       onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
-                      style={{ background: 'none', border: 'none', color: '#16a34a', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                      style={{ background: 'none', border: 'none', color: '#1f9d5a', fontWeight: '700', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
                     >
                       {t.change}
                     </button>
@@ -1322,7 +1323,7 @@ export default function Auth() {
 
                   {/* Password Input */}
                   <div style={{ marginBottom: '1.1rem' }}>
-                    <label style={{ fontSize: '0.82rem', color: '#334155', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
+                    <label style={{ fontSize: '0.82rem', color: '#343c35', fontWeight: '700', display: 'block', marginBottom: '0.35rem' }}>
                       {t.password}
                     </label>
                     <div style={{ position: 'relative' }}>
@@ -1338,12 +1339,12 @@ export default function Auth() {
                         autoFocus
                         style={{ paddingRight: '4.5rem', borderRadius: '10px' }}
                       />
-                      <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }}>
+                      <div style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#a0a294' }}>
                         <Lock size={16} />
                         <button 
                               type="button" 
                           onClick={() => setShowPassword(!showPassword)}
-                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
+                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#a0a294', display: 'flex' }}
                         >
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
@@ -1353,17 +1354,17 @@ export default function Auth() {
 
                   {/* Remember Me & Forgot Password Row */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '0.82rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#475569', fontWeight: '600' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', color: '#4a5148', fontWeight: '600' }}>
                       <input 
                         type="checkbox" 
                         checked={rememberMe} 
                         onChange={e => setRememberMe(e.target.checked)}
-                        style={{ accentColor: '#16a34a', width: '15px', height: '15px' }}
+                        style={{ accentColor: '#1f9d5a', width: '15px', height: '15px' }}
                       />
                       {t.rememberMe}
                     </label>
                     <span 
-                      style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
+                      style={{ color: '#1f9d5a', cursor: 'pointer', fontWeight: '600', textDecoration: 'none' }}
                       onClick={() => alert(language === 'hi' ? 'कृपया अपने खाते तक पहुंचने या पासवर्ड रीसेट करने के लिए गूगल से लॉगिन करें।' : 'Please log in with Google to access or reset your account.')}
                     >
                       {t.forgotPassword}
@@ -1379,13 +1380,13 @@ export default function Auth() {
                       padding: '0.9rem',
                       fontSize: '1.05rem',
                       fontWeight: '800',
-                      background: '#16a34a',
+                      background: '#1f9d5a',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '0.5rem',
-                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
+                      boxShadow: '0 4px 14px rgba(31, 157, 90, 0.35)',
                       transition: 'all 0.15s ease'
                     }}
                     disabled={loading}
@@ -1398,7 +1399,7 @@ export default function Auth() {
                     <button
                       type="button"
                       onClick={() => { setLoginStep('IDENTIFIER'); setError(''); }}
-                      style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
+                      style={{ background: 'none', border: 'none', color: '#666c60', fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}
                     >
                       <ArrowLeft size={14} /> {t.backToEmail}
                     </button>
@@ -1410,14 +1411,14 @@ export default function Auth() {
             /* --- SIGN UP ONBOARDING PROMPT --- */
             <div style={{ textAlign: 'center' }}>
               <div style={{
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
+                background: '#eef8f1',
+                border: '1px solid #c4e8d1',
                 borderRadius: '12px',
                 padding: '1rem',
                 textAlign: 'left',
                 marginBottom: '1.5rem',
                 fontSize: '0.86rem',
-                color: '#166534'
+                color: '#0b5e33'
               }}>
                 <div style={{ fontWeight: '800', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Sparkles size={16} /> {language === 'hi' ? '1-क्लिक तेज़ रजिस्ट्रेशन' : '1-Click Fast Registration'}
@@ -1428,10 +1429,10 @@ export default function Auth() {
           )}
 
           {/* Toggle Login / Signup */}
-          <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.92rem', color: '#64748b' }}>
+          <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.92rem', color: '#666c60' }}>
             {isLogin ? t.dontHaveAccount : t.alreadyHaveAccount}{' '}
             <span
-              style={{ color: '#16a34a', cursor: 'pointer', fontWeight: '800' }}
+              style={{ color: '#1f9d5a', cursor: 'pointer', fontWeight: '800' }}
               onClick={() => { setIsLogin(!isLogin); setError(''); }}
             >
               {isLogin ? t.signUp : t.logIn}
@@ -1443,9 +1444,9 @@ export default function Auth() {
             textAlign: 'center', 
             marginTop: '1.75rem', 
             paddingTop: '1rem', 
-            borderTop: '1px solid #f1f5f9', 
+            borderTop: '1px solid #f3eee2', 
             fontSize: '0.78rem', 
-            color: '#94a3b8',
+            color: '#a0a294',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -1453,21 +1454,21 @@ export default function Auth() {
             gap: '0.65rem'
           }}>
             <span 
-              style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
+              style={{ color: '#a0a294', cursor: 'pointer', textDecoration: 'underline' }}
               onClick={() => navigate('/privacy')}
             >
               {t.privacyPolicy}
             </span>
             <span>•</span>
             <span 
-              style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline' }}
+              style={{ color: '#a0a294', cursor: 'pointer', textDecoration: 'underline' }}
               onClick={() => navigate('/terms')}
             >
               {t.terms}
             </span>
             <span>•</span>
             <span 
-              style={{ color: '#94a3b8', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
+              style={{ color: '#a0a294', cursor: 'pointer', textDecoration: 'underline', fontWeight: '600' }}
               onClick={() => setShowContact(true)}
             >
               {t.contactUs}
@@ -1475,7 +1476,7 @@ export default function Auth() {
           </div>
 
           {/* Copyright Text */}
-          <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
+          <div style={{ textAlign: 'center', marginTop: '0.65rem', fontSize: '0.75rem', color: '#d5ccb6' }}>
             {t.footerCopyright}
           </div>
         </div>
@@ -1489,7 +1490,7 @@ export default function Auth() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(15, 23, 42, 0.6)',
+            background: 'rgba(18, 32, 26, 0.6)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -1520,7 +1521,7 @@ export default function Auth() {
                 position: 'absolute',
                 top: '1rem',
                 right: '1rem',
-                background: '#f1f5f9',
+                background: '#f3eee2',
                 border: 'none',
                 borderRadius: '50%',
                 width: '32px',
@@ -1529,7 +1530,7 @@ export default function Auth() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#64748b'
+                color: '#666c60'
               }}
             >
               <X size={16} />
@@ -1540,8 +1541,8 @@ export default function Auth() {
               width: '54px',
               height: '54px',
               borderRadius: '16px',
-              background: '#dcfce7',
-              color: '#16a34a',
+              background: '#dff3e6',
+              color: '#1f9d5a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1550,11 +1551,11 @@ export default function Auth() {
               <Mail size={26} />
             </div>
 
-            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+            <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: '800', color: '#12201a' }}>
               {language === 'hi' ? 'सहायता व संपर्क' : 'Contact & Support'}
             </h3>
             
-            <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.9rem', color: '#64748b', lineHeight: '1.45' }}>
+            <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.9rem', color: '#666c60', lineHeight: '1.45' }}>
               {language === 'hi' ? 'उपयोग या किसी भी प्रश्न के लिए हमें ईमेल करें:' : 'For any queries regarding usage or anything:'}
             </p>
 
@@ -1563,13 +1564,13 @@ export default function Auth() {
               href="mailto:Pay.laxmikant@gmail.com?subject=GI%20SHOP%20Query"
               style={{
                 display: 'block',
-                background: '#f0fdf4',
+                background: '#eef8f1',
                 border: '1.5px solid #86efac',
                 borderRadius: '12px',
                 padding: '0.9rem 1rem',
                 fontWeight: '800',
                 fontSize: '1rem',
-                color: '#16a34a',
+                color: '#1f9d5a',
                 textDecoration: 'none',
                 marginBottom: '1.25rem',
                 wordBreak: 'break-all'
@@ -1585,13 +1586,13 @@ export default function Auth() {
                 width: '100%',
                 padding: '0.85rem',
                 borderRadius: '10px',
-                background: '#16a34a',
+                background: '#1f9d5a',
                 color: '#ffffff',
                 fontWeight: '800',
                 fontSize: '0.95rem',
                 border: 'none',
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
+                boxShadow: '0 4px 12px rgba(31, 157, 90, 0.25)'
               }}
             >
               {language === 'hi' ? 'बंद करें' : 'Close'}

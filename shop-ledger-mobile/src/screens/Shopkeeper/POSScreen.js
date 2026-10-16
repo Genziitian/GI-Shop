@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Search,
@@ -1148,7 +1148,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
   },
   dropdownNewText: {
     fontSize: 13,
@@ -1228,7 +1228,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#fff8e6',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#fde68a',
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   offlineQueueSyncBtn: {
-    backgroundColor: '#d97706',
+    backgroundColor: '#d98a0b',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -1264,10 +1264,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#fffbeb',
+    backgroundColor: '#fff8e6',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#fef3c7',
+    borderColor: '#fdf0cf',
     marginBottom: 10,
   },
   offlineText: {
@@ -1410,7 +1410,7 @@ const styles = StyleSheet.create({
   /* Full-Screen Cart Modal Styles */
   fullCartContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
   },
   fullCartHeader: {
     flexDirection: 'row',
@@ -1419,13 +1419,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: '#e8e1d0',
   },
   fullCartBackBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1469,7 +1469,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     ...shadowStyle,
   },
   custSectionHeading: {
@@ -1494,12 +1494,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    borderColor: '#e8e1d0',
+    backgroundColor: '#faf7f0',
   },
   custTypeButtonActive: {
     borderColor: colors.primary,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   custTypeButtonText: {
     fontSize: 13,
@@ -1513,9 +1513,9 @@ const styles = StyleSheet.create({
   activeCustomerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 12,
     padding: 12,
   },
@@ -1523,19 +1523,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   activeCustomerName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#166534',
+    color: '#0b5e33',
   },
   activeCustomerMeta: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#15803d',
+    color: '#0f7a43',
     marginTop: 2,
   },
   custChangeBtn: {
@@ -1549,7 +1549,7 @@ const styles = StyleSheet.create({
   custChangeBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#166534',
+    color: '#0b5e33',
   },
   custRemoveBtn: {
     padding: 6,
@@ -1560,12 +1560,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
   },
   walkinDot: {
     width: 8,
@@ -1585,7 +1585,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     ...shadowStyle,
   },
   cartItemsHeader: {
@@ -1605,12 +1605,12 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   fullCartItemCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderRadius: 12,
     padding: 12,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
   },
   cartItemTopRow: {
     flexDirection: 'row',
@@ -1645,14 +1645,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     padding: 2,
   },
   spaciousStepperBtn: {
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1681,7 +1681,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     ...shadowStyle,
   },
   summaryCardTitle: {
@@ -1714,10 +1714,10 @@ const styles = StyleSheet.create({
   discountInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     paddingHorizontal: 8,
   },
   discountCurrencySymbol: {
@@ -1736,7 +1736,7 @@ const styles = StyleSheet.create({
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#e8e1d0',
     marginVertical: 12,
   },
   summaryTotalLine: {
@@ -1766,7 +1766,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     ...shadowStyle,
   },
   paymentSectionTitle: {
@@ -1786,21 +1786,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    borderColor: '#e8e1d0',
+    backgroundColor: '#faf7f0',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
   paymentChoiceBtnActive: {
     borderColor: colors.primary,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   paymentChoiceIconWrap: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1823,7 +1823,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    borderTopColor: '#e8e1d0',
   },
   fullCartCheckoutBtn: {
     flexDirection: 'row',

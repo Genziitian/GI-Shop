@@ -4,7 +4,6 @@ import {
   Text,
   Modal,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
   Linking,
   Alert,
@@ -12,6 +11,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
+import { TouchableOpacity } from './ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
@@ -201,34 +201,34 @@ export default function OrderDetailModal({
       case 'RECEIVED':
         return <Clock size={14} color="#0284c7" />;
       case 'ACCEPTED':
-        return <PackageCheck size={14} color="#d97706" />;
+        return <PackageCheck size={14} color="#d98a0b" />;
       case 'ITEMS_UPDATED':
-        return <AlertCircle size={14} color="#d97706" />;
+        return <AlertCircle size={14} color="#d98a0b" />;
       case 'READY':
         return <CheckCircle2 size={14} color="#0284c7" />;
       case 'PAYMENT_REQUESTED':
-        return <CreditCard size={14} color="#2563eb" />;
+        return <CreditCard size={14} color="#0f7a43" />;
       case 'VERIFIED':
-        return <ShieldCheck size={14} color="#16a34a" />;
+        return <ShieldCheck size={14} color="#1f9d5a" />;
       case 'COMPLETED':
-        return <Check size={14} color="#16a34a" />;
+        return <Check size={14} color="#1f9d5a" />;
       case 'DECLINED':
       case 'CANCELLED_BY_CUSTOMER':
         return <AlertCircle size={14} color="#dc2626" />;
       default:
-        return <Clock size={14} color="#64748b" />;
+        return <Clock size={14} color="#666c60" />;
     }
   };
 
   const getStatusBadge = () => {
     switch (currentOrder.status) {
       case 'COMPLETED':
-        return { label: 'Completed', bg: '#dcfce7', text: '#15803d' };
+        return { label: 'Completed', bg: '#dff3e6', text: '#0f7a43' };
       case 'READY':
         return { label: 'Ready for Pickup', bg: '#e0f2fe', text: '#0369a1' };
       case 'PACKING':
       case 'ACCEPTED':
-        return { label: 'Preparing Order', bg: '#fef3c7', text: '#b45309' };
+        return { label: 'Preparing Order', bg: '#fdf0cf', text: '#a8620a' };
       case 'DECLINED':
         return { label: 'Declined', bg: '#fee2e2', text: '#b91c1c' };
       case 'CANCELLED_BY_CUSTOMER':
@@ -236,8 +236,8 @@ export default function OrderDetailModal({
       default:
         return {
           label: isShopkeeper ? t('New Order (Pending)') : t('Pending Confirmation'),
-          bg: '#fef3c7',
-          text: '#b45309',
+          bg: '#fdf0cf',
+          text: '#a8620a',
         };
     }
   };
@@ -277,8 +277,8 @@ export default function OrderDetailModal({
 
     const discountRowHtml = discountAmt > 0 ? `
       <tr>
-        <td style="padding: 2px 0; text-align: left; color: #15803d; font-weight: 700;">DISCOUNT APPLIED:</td>
-        <td style="padding: 2px 0; text-align: right; color: #15803d; font-weight: 700;">-&#8377;${discountAmt.toFixed(2)}</td>
+        <td style="padding: 2px 0; text-align: left; color: #0f7a43; font-weight: 700;">DISCOUNT APPLIED:</td>
+        <td style="padding: 2px 0; text-align: right; color: #0f7a43; font-weight: 700;">-&#8377;${discountAmt.toFixed(2)}</td>
       </tr>
     ` : '';
 
@@ -312,7 +312,7 @@ export default function OrderDetailModal({
           }
           body {
             font-family: 'Courier New', Courier, Consolas, Monaco, monospace;
-            background-color: #f8fafc;
+            background-color: #faf7f0;
             color: #111827;
             margin: 0;
             padding: 14px;
@@ -326,7 +326,7 @@ export default function OrderDetailModal({
             max-width: 380px;
             background: #ffffff;
             padding: 20px 16px;
-            border: 1px dashed #94a3b8;
+            border: 1px dashed #a0a294;
             box-shadow: 0 4px 14px rgba(0,0,0,0.06);
           }
           .center { text-align: center; }
@@ -334,12 +334,12 @@ export default function OrderDetailModal({
           .left { text-align: left; }
           .bold { font-weight: 700; }
           .d-dash {
-            border-top: 1px dashed #1e293b;
+            border-top: 1px dashed #1b2a22;
             margin: 8px 0;
           }
           .d-double {
-            border-top: 2px solid #0f172a;
-            border-bottom: 2px solid #0f172a;
+            border-top: 2px solid #12201a;
+            border-bottom: 2px solid #12201a;
             height: 3px;
             margin: 8px 0;
           }
@@ -352,14 +352,14 @@ export default function OrderDetailModal({
           }
           .store-detail {
             font-size: 10.5px;
-            color: #334155;
+            color: #343c35;
             margin-bottom: 2px;
           }
           .receipt-type-pill {
             display: inline-block;
             margin-top: 6px;
             padding: 3px 12px;
-            border: 1px solid #0f172a;
+            border: 1px solid #12201a;
             font-size: 10px;
             font-weight: 800;
             letter-spacing: 1px;
@@ -378,8 +378,8 @@ export default function OrderDetailModal({
           }
           .items-table th {
             padding: 6px 2px;
-            border-top: 1px dashed #1e293b;
-            border-bottom: 1px dashed #1e293b;
+            border-top: 1px dashed #1b2a22;
+            border-bottom: 1px dashed #1b2a22;
             font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
@@ -397,8 +397,8 @@ export default function OrderDetailModal({
           .pickup-box {
             margin-top: 10px;
             padding: 8px 10px;
-            border: 1px dashed #1e293b;
-            background: #f8fafc;
+            border: 1px dashed #1b2a22;
+            background: #faf7f0;
           }
           .barcode-box {
             margin-top: 16px;
@@ -410,17 +410,17 @@ export default function OrderDetailModal({
             width: 220px;
             background: repeating-linear-gradient(
               90deg,
-              #0f172a 0px, #0f172a 2px,
+              #12201a 0px, #12201a 2px,
               #fff 2px, #fff 4px,
-              #0f172a 4px, #0f172a 6px,
+              #12201a 4px, #12201a 6px,
               #fff 6px, #fff 9px,
-              #0f172a 9px, #0f172a 12px,
+              #12201a 9px, #12201a 12px,
               #fff 12px, #fff 14px,
-              #0f172a 14px, #0f172a 15px,
+              #12201a 14px, #12201a 15px,
               #fff 15px, #fff 18px,
-              #0f172a 18px, #0f172a 21px,
+              #12201a 18px, #12201a 21px,
               #fff 21px, #fff 24px,
-              #0f172a 24px, #0f172a 25px,
+              #12201a 24px, #12201a 25px,
               #fff 25px, #fff 28px
             );
           }
@@ -428,13 +428,13 @@ export default function OrderDetailModal({
             font-size: 9.5px;
             letter-spacing: 2px;
             margin-top: 2px;
-            color: #334155;
+            color: #343c35;
           }
           .receipt-footer {
             margin-top: 14px;
             text-align: center;
             font-size: 10px;
-            color: #475569;
+            color: #4a5148;
             line-height: 1.4;
           }
         </style>
@@ -506,14 +506,14 @@ export default function OrderDetailModal({
 
           <!-- Pickup Customer Card at Last -->
           <div class="pickup-box">
-            <div style="font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #15803d; margin-bottom: 2px;">
+            <div style="font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: #0f7a43; margin-bottom: 2px;">
               &#10003; PICKUP CUSTOMER DETAILS
             </div>
-            <div style="font-size: 11.5px; font-weight: 800; color: #0f172a;">
+            <div style="font-size: 11.5px; font-weight: 800; color: #12201a;">
               ${customerName} ${customerShortId ? `(${customerShortId})` : ''}
             </div>
-            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #334155;">Phone: ${customerPhone}</div>` : ''}
-            <div style="margin-top: 4px; font-size: 10.5px; font-weight: 800; color: #166534;">
+            ${customerPhone ? `<div style="font-size: 10.5px; margin-top: 2px; color: #343c35;">Phone: ${customerPhone}</div>` : ''}
+            <div style="margin-top: 4px; font-size: 10.5px; font-weight: 800; color: #0b5e33;">
               (Customer will pick up the order)
             </div>
           </div>
@@ -528,7 +528,7 @@ export default function OrderDetailModal({
           <div class="receipt-footer">
             <div class="bold">&#9733; THANK YOU FOR SHOPPING WITH US &#9733;</div>
             <div>PLEASE VISIT AGAIN!</div>
-            <div style="font-size: 9px; color: #64748b; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
+            <div style="font-size: 9px; color: #666c60; margin-top: 4px;">Powered by GI SHOP &#8226; Digital Store & Khata</div>
           </div>
         </div>
       </body>
@@ -776,7 +776,7 @@ export default function OrderDetailModal({
           {isShopkeeper ? (
             <View style={styles.shopCard}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
-                <View style={[styles.shopIconCircle, { backgroundColor: '#eff6ff' }]}>
+                <View style={[styles.shopIconCircle, { backgroundColor: '#e9f6ee' }]}>
                   <User size={20} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -788,8 +788,8 @@ export default function OrderDetailModal({
                     </Text>
                   ) : null}
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                    <ShoppingBag size={11} color="#15803d" />
-                    <Text style={{ fontSize: 11, color: '#15803d', fontWeight: '600' }}>
+                    <ShoppingBag size={11} color="#0f7a43" />
+                    <Text style={{ fontSize: 11, color: '#0f7a43', fontWeight: '600' }}>
                       {t('Self-Pickup Order')}
                     </Text>
                   </View>
@@ -1037,7 +1037,7 @@ export default function OrderDetailModal({
               {currentOrder.status === 'PACKING' && (
                 <View>
                   <View style={styles.statusNoticeBox}>
-                    <Clock size={18} color="#b45309" />
+                    <Clock size={18} color="#a8620a" />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.statusNoticeTitle}>Order is Being Packed (~{currentOrder.packingMinutes || 15}m)</Text>
                       <Text style={styles.statusNoticeSub}>
@@ -1125,7 +1125,7 @@ export default function OrderDetailModal({
                   ) : (
                     <View style={styles.otpVerifyCard}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                        <ShieldCheck size={18} color="#15803d" />
+                        <ShieldCheck size={18} color="#0f7a43" />
                         <Text style={styles.otpVerifyTitle}>Customer Handover & OTP Verification</Text>
                       </View>
                       <Text style={styles.otpVerifySub}>
@@ -1246,7 +1246,7 @@ export default function OrderDetailModal({
               ) : null}
 
               <View style={styles.pickupHighlightBox}>
-                <ShoppingBag size={16} color="#15803d" />
+                <ShoppingBag size={16} color="#0f7a43" />
                 <Text style={styles.pickupHighlightText}>
                   (Customer will pick up the order)
                 </Text>
@@ -1365,7 +1365,7 @@ export default function OrderDetailModal({
 const styles = StyleSheet.create({
   fullPageContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
   },
   navBar: {
     flexDirection: 'row',
@@ -1374,14 +1374,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: '#e8e1d0',
     ...shadowMedium,
     zIndex: 10,
   },
   navBackBtn: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
   },
   navTitle: {
     fontSize: 16,
@@ -1425,7 +1425,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     marginBottom: 14,
     ...shadowMedium,
   },
@@ -1433,7 +1433,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1459,9 +1459,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#f3eee2',
     marginTop: 12,
     paddingTop: 10,
   },
@@ -1511,7 +1511,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     paddingHorizontal: 12,
     paddingVertical: 6,
     ...shadowMedium,
@@ -1521,7 +1521,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f3eee2',
   },
   itemRowUnavail: {
     backgroundColor: '#fef2f2',
@@ -1591,7 +1591,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     marginTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    borderTopColor: '#e8e1d0',
   },
   totalLabel: {
     fontSize: 14,
@@ -1616,9 +1616,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 14,
     padding: 14,
     marginTop: 14,
@@ -1627,18 +1627,18 @@ const styles = StyleSheet.create({
   downloadBannerTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   downloadBannerSub: {
     fontSize: 11,
-    color: '#166534',
+    color: '#0b5e33',
     marginTop: 2,
   },
   downloadReceiptBigBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#1f9d5a',
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 10,
@@ -1652,7 +1652,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     padding: 14,
     marginTop: 8,
     ...shadowMedium,
@@ -1669,27 +1669,27 @@ const styles = StyleSheet.create({
     top: 28,
     bottom: 0,
     width: 2,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#e8e1d0',
   },
   stepIconDot: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 2,
-    borderColor: '#94a3b8',
+    borderColor: '#a0a294',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
   stepIconDotLast: {
-    backgroundColor: '#dcfce7',
-    borderColor: '#16a34a',
+    backgroundColor: '#dff3e6',
+    borderColor: '#1f9d5a',
   },
   stepBox: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#faf7f0',
+    borderColor: '#e8e1d0',
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
@@ -1706,14 +1706,14 @@ const styles = StyleSheet.create({
   },
   stepDesc: {
     fontSize: 11,
-    color: '#475569',
+    color: '#4a5148',
     marginTop: 3,
     lineHeight: 15,
   },
   customerPickupCard: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 14,
     padding: 14,
     marginTop: 18,
@@ -1722,7 +1722,7 @@ const styles = StyleSheet.create({
   customerPickupTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#15803d',
+    color: '#0f7a43',
     letterSpacing: 0.5,
   },
   customerFieldRow: {
@@ -1733,19 +1733,19 @@ const styles = StyleSheet.create({
   },
   customerFieldLabel: {
     fontSize: 12,
-    color: '#166534',
+    color: '#0b5e33',
     fontWeight: '600',
   },
   customerFieldVal: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#12201a',
   },
   pickupHighlightBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -1754,7 +1754,7 @@ const styles = StyleSheet.create({
   pickupHighlightText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#166534',
+    color: '#0b5e33',
   },
   actionButtonsRow: {
     flexDirection: 'row',
@@ -1786,7 +1786,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   closeFullBtn: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#e8e1d0',
     paddingVertical: 13,
     borderRadius: 12,
     alignItems: 'center',
@@ -1822,18 +1822,18 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   restoreItemBtn: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderColor: '#86efac',
   },
   restoreItemText: {
-    color: '#15803d',
+    color: '#0f7a43',
     fontSize: 10,
     fontWeight: '800',
   },
   discountControlContainer: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderRadius: 10,
     padding: 10,
     marginVertical: 8,
@@ -1848,7 +1848,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -1864,7 +1864,7 @@ const styles = StyleSheet.create({
   shopkeeperActionCard: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     borderRadius: 14,
     padding: 14,
     marginTop: 14,
@@ -1894,9 +1894,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
   },
   packingChipActive: {
     backgroundColor: '#0284c7',
@@ -1946,7 +1946,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#fdf0cf',
     borderWidth: 1,
     borderColor: '#fde68a',
     borderRadius: 10,
@@ -1955,7 +1955,7 @@ const styles = StyleSheet.create({
   statusNoticeTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#b45309',
+    color: '#a8620a',
   },
   statusNoticeSub: {
     fontSize: 11,
@@ -1986,13 +1986,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     alignItems: 'center',
   },
   paymentModeChipActive: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderColor: colors.primary,
   },
   paymentModeChipText: {
@@ -2020,20 +2020,20 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   otpVerifyCard: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#eef8f1',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: '#c4e8d1',
     borderRadius: 10,
     padding: 12,
   },
   otpVerifyTitle: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   otpVerifySub: {
     fontSize: 11,
-    color: '#166534',
+    color: '#0b5e33',
     marginTop: 1,
   },
   otpInputContainer: {
@@ -2054,7 +2054,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     textAlign: 'center',
     letterSpacing: 3,
-    color: '#0f172a',
+    color: '#12201a',
   },
   verifyOtpBtn: {
     flex: 1,
@@ -2101,9 +2101,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     marginBottom: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
   },
   declineReasonOptionSelected: {
     borderColor: colors.danger,
@@ -2114,7 +2114,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#94a3b8',
+    borderColor: '#a0a294',
   },
   declineRadioCircleSelected: {
     borderColor: colors.danger,
@@ -2131,7 +2131,7 @@ const styles = StyleSheet.create({
   },
   declineReasonInput: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#d5ccb6',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -2144,7 +2144,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 11,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     alignItems: 'center',
   },
   declineCancelBtnText: {

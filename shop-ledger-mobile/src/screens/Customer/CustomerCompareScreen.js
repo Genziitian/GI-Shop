@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   TextInput,
   ActivityIndicator,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   Modal,
   RefreshControl,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Tag, Search, X, Store, Check, Plus, AlertTriangle, MapPin, ChevronDown, Lock, Settings, User } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
@@ -202,7 +202,7 @@ export default function CustomerCompareScreen({ navigation }) {
                       <View style={{ alignItems: 'flex-end', gap: 4 }}>
                         <Text style={styles.offerRate}>₹{(Number(shop?.price) || 0).toFixed(2)}</Text>
                         <TouchableOpacity
-                          style={[styles.shopOrderBtn, !shop.isOpen && { backgroundColor: '#cbd5e1' }]}
+                          style={[styles.shopOrderBtn, !shop.isOpen && { backgroundColor: '#d5ccb6' }]}
                           disabled={!shop.isOpen}
                           onPress={() => handleSelectShop(shop)}
                         >
@@ -293,9 +293,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 5,
     borderRadius: 8,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#f3eee2',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#e8e1d0',
     gap: 4,
   },
   profileAvatar: {
@@ -322,8 +322,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#eff6ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: '#e9f6ee',
+    borderColor: '#bfe3cb',
     borderWidth: 1,
     paddingHorizontal: 10,
     height: 38,
@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+    backgroundColor: '#faf7f0',
+    borderColor: '#d5ccb6',
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
     gap: 4,
   },
   lockBtnText: {
@@ -445,13 +445,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 8,
     marginBottom: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderWidth: 1,
     borderColor: 'transparent',
   },
   cityModalItemActive: {
     backgroundColor: colors.primaryLight,
-    borderColor: '#bfdbfe',
+    borderColor: '#bfe3cb',
   },
   cityModalItemText: {
     fontSize: 14,
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   kwChip: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: 14,
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   kwChipActive: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     borderColor: colors.primary,
   },
   kwChipText: {
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#f3eee2',
     paddingBottom: 8,
   },
   groupName: {
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   storeRow: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#faf7f0',
     borderRadius: 8,
     padding: 10,
     flexDirection: 'row',
@@ -554,8 +554,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   storeRowBest: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#bbf7d0',
+    backgroundColor: '#eef8f1',
+    borderColor: '#c4e8d1',
   },
   storeName: {
     fontSize: 13,
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   shortIdBadge: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4,
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   bestBadge: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   bestBadgeText: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#15803d',
+    color: '#0f7a43',
   },
   storeLoc: {
     fontSize: 11,

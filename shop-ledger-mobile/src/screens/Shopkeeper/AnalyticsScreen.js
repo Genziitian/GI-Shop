@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
   RefreshControl,
   Modal,
 } from 'react-native';
+import { TouchableOpacity } from '../../components/ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   BarChart2,
@@ -29,6 +29,7 @@ import {
   Phone,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
+import { AnimatedNumber } from '../../components/ui/Motion';
 import { getShopSales, updateSaleNote } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LanguageContext';
@@ -205,7 +206,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>{t('Total Sales')}</Text>
               <TrendingUp size={16} color={colors.primary} />
             </View>
-            <Text style={styles.metricValue}>₹{(Number(totalSales) || 0).toFixed(2)}</Text>
+            <AnimatedNumber style={styles.metricValue} value={Number(totalSales) || 0} format={(n) => `₹${n.toFixed(2)}`} />
           </View>
 
           {/* Cash Sales */}
@@ -214,7 +215,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>{t('Cash Sales')}</Text>
               <Banknote size={16} color={colors.success} />
             </View>
-            <Text style={styles.metricValue}>₹{(Number(cashSales) || 0).toFixed(2)}</Text>
+            <AnimatedNumber style={styles.metricValue} value={Number(cashSales) || 0} format={(n) => `₹${n.toFixed(2)}`} />
           </View>
 
           {/* Online / UPI Sales */}
@@ -223,7 +224,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>{t('Online / UPI')}</Text>
               <CreditCard size={16} color={colors.warning} />
             </View>
-            <Text style={styles.metricValue}>₹{(Number(onlineSales) || 0).toFixed(2)}</Text>
+            <AnimatedNumber style={styles.metricValue} value={Number(onlineSales) || 0} format={(n) => `₹${n.toFixed(2)}`} />
           </View>
 
           {/* Khata Sales */}
@@ -232,7 +233,7 @@ export default function AnalyticsScreen() {
               <Text style={styles.metricLabel}>{t('Khata (Credit)')}</Text>
               <BookOpen size={16} color={colors.danger} />
             </View>
-            <Text style={styles.metricValue}>₹{(Number(khataSales) || 0).toFixed(2)}</Text>
+            <AnimatedNumber style={styles.metricValue} value={Number(khataSales) || 0} format={(n) => `₹${n.toFixed(2)}`} />
           </View>
         </View>
 
@@ -542,10 +543,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   paymentTagCash: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#dff3e6',
   },
   paymentTagOnline: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e9f6ee',
   },
   paymentTagKhata: {
     backgroundColor: '#fee2e2',
@@ -555,10 +556,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   paymentTagTextCash: {
-    color: '#15803d',
+    color: '#0f7a43',
   },
   paymentTagTextOnline: {
-    color: '#1d4ed8',
+    color: '#0b5e33',
   },
   paymentTagTextKhata: {
     color: '#b91c1c',
