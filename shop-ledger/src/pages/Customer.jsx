@@ -1193,7 +1193,6 @@ export default function Customer() {
               <h3 className="title" style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Tag size={18} color="var(--primary)" /> Compare Grocery Prices in {selectedCity}
               </h3>
-              <p className="subtitle" style={{ marginBottom: '1rem' }}>Search any item to compare rates across local shops and find the best price!</p>
 
               <div style={{ position: 'relative' }}>
                 <input
@@ -1564,9 +1563,6 @@ export default function Customer() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
                         <BookOpen size={20} color="#38bdf8" />
                         <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#fff', fontWeight: '800' }}>My Khata Ledger</h2>
-                      </div>
-                      <div style={{ fontSize: '0.78rem', color: '#a0a294' }}>
-                        Live synchronized credit ledger across all your local shops
                       </div>
                     </div>
 
@@ -3107,9 +3103,6 @@ export default function Customer() {
                             Register Lock
                           </span>
                         </div>
-                        <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: '#9a3412', lineHeight: '1.35' }}>
-                          Used to secure your account and verify transactions.
-                        </p>
 
                         {pinNotice && (
                           <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -3207,9 +3200,6 @@ export default function Customer() {
                             </span>
                           )}
                         </div>
-                        <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.35' }}>
-                          Set a password to log in directly with your Email or Short ID without Google.
-                        </p>
 
                         {passwordNotice && (
                           <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -3298,9 +3288,6 @@ export default function Customer() {
                         <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f7a43', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
                           <Fingerprint size={18} /> Passkey Biometric Login
                         </div>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#0b5e33' }}>
-                          Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
-                        </p>
                       </div>
 
                       <button
@@ -3355,9 +3342,6 @@ export default function Customer() {
                         </div>
                         <div>
                           <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#12201a' }}>Export Your Orders & Khata Data</h4>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            Download complete personal spreadsheets, ledger statements, and account backups.
-                          </span>
                         </div>
                       </div>
 
@@ -3650,9 +3634,6 @@ export default function Customer() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>Account &amp; Settings</h2>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Manage profile details, security PIN, data export, and session settings
-                </div>
               </div>
               <button type="button" className="btn btn-outline" onClick={handleOpenProfileModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.82rem', padding: '0.4rem 0.75rem' }}>
                 <UserCheck size={15} color="var(--primary)" /> Edit Profile
@@ -3670,9 +3651,6 @@ export default function Customer() {
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
                         {t('more.langCardTitle', 'Choose Language / भाषा चुनें')}
-                      </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        {t('more.langCardSubtitle', 'Select your preferred language for the application')}
                       </div>
                     </div>
                   </div>

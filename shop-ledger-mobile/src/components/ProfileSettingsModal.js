@@ -232,7 +232,6 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
             </View>
             <View>
               <Text style={styles.headerTitle}>Personal & Delivery Details</Text>
-              <Text style={styles.headerSubtitle}>Update your name, phone, city & address</Text>
             </View>
           </View>
           <TouchableOpacity
@@ -329,9 +328,6 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                     maxLength={10}
                   />
                 </View>
-                <Text style={{ fontSize: 11, color: '#666c60', marginTop: 4 }}>
-                  Enter 10 numeric digits. Used for delivery contact, store calls & khata records.
-                </Text>
               </View>
 
               {user?.role === 'Shopkeeper' ? (

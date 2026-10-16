@@ -1449,3 +1449,115 @@ img, video, canvas { max-width: 100%; }
   .filter-grid { grid-template-columns: 1fr; }
   .footer-nav-item { font-size: 0.6rem; }
 }
+
+/* Order card summary */
+.order-meta { font-size: 0.92rem; margin-top: 3px; }
+.order-meta-dim { font-size: 0.82rem; color: var(--text-muted); }
+.order-total-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; margin: 0.5rem 0; background: #f7f5ee; border: 1px solid var(--border); border-radius: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+.order-total-row strong { font-size: 1.15rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.order-items-details { margin: 0.4rem 0; }
+.order-items-details > summary { cursor: pointer; font-size: 0.82rem; font-weight: 700; color: var(--primary-hover); padding: 0.4rem 0; list-style: none; }
+.order-items-details > summary::-webkit-details-marker { display: none; }
+.order-items-details > summary::before { content: '▸ '; }
+.order-items-details[open] > summary::before { content: '▾ '; }
+
+/* ==========================================================================
+   Mobile app feel: bottom-sheet modals, flat pages, no gloss, ledger cards
+   ========================================================================== */
+.btn { background: var(--primary); box-shadow: none; }
+.btn:hover:not(:disabled) { filter: brightness(1.07); box-shadow: none; }
+.btn-success { background: #1a8f4f; }
+.btn-danger { background: var(--danger); box-shadow: none; }
+.btn-whatsapp { background: #1fb457; box-shadow: none; }
+.btn-outline { background: #fff; }
+
+.action-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+.ledger-cards { display: none; }
+.ledger-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; }
+.ledger-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
+.ledger-bill-link { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--primary); cursor: pointer; text-align: left; }
+.ledger-dim { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+.ledger-amount { font-weight: 800; font-size: 1.02rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ledger-card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 0.55rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-muted); }
+.ledger-card-foot strong { color: var(--ink); font-size: 0.92rem; }
+
+@media (max-width: 768px) {
+  /* Pages: sections sit directly on the page, cards are the only white surfaces */
+  .container > .panel { background: transparent; border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+  .container > .panel > [style*="rgb(250, 247, 240)"] { background: #fff !important; box-shadow: var(--shadow-card); }
+  .container > .panel > .title,
+  .container > .panel > h3.title { padding: 0 0.15rem; }
+
+  /* Toolbar: no stretching in column layout (this pushed the search icon away) */
+  .toolbar-search { flex: 0 0 auto; width: 100%; }
+  .toolbar-search .input { padding-left: 2.4rem !important; }
+  .toolbar-select, .toolbar-action { flex: 0 0 auto; }
+
+  .action-bar { display: grid; grid-template-columns: 1fr 1fr; }
+  .action-bar .btn { width: 100%; padding: 0.6rem 0.5rem !important; font-size: 0.82rem; margin: 0 !important; }
+  .action-bar .btn:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+
+  .ledger-table { display: none; }
+  .ledger-cards { display: block; }
+
+  /* Filter pills: iOS segmented feel */
+  .filter-pills-scroll .btn { border-radius: 999px !important; min-height: 34px; padding: 0.3rem 0.85rem !important; }
+
+  /* Bottom-sheet modals */
+  .modal-overlay { align-items: flex-end; padding: 0; background: rgba(18, 32, 26, 0.45); }
+  .modal-dialog, .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    max-height: 92dvh !important;
+    margin: 0 !important;
+    border-radius: 24px 24px 0 0 !important;
+    border: none !important;
+    padding: 1.4rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom, 0px)) !important;
+    animation: sheet-up 380ms var(--ease-out);
+    position: relative;
+    box-shadow: 0 -10px 40px rgba(18, 32, 26, 0.22);
+  }
+  .modal-dialog::before, .modal-content::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 50%;
+    width: 38px; height: 5px;
+    margin-left: -19px;
+    border-radius: 999px;
+    background: #d3d0c4;
+  }
+  /* 2-up stat tiles inside sheets */
+  .modal-dialog [style*="repeat("] { grid-template-columns: 1fr 1fr !important; }
+}
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.pos-search-bar { position: sticky; top: 0; z-index: 10; background: var(--surface); padding-bottom: 0.75rem; }
+@media (max-width: 768px) {
+  .pos-search-bar { background: var(--bg-color); padding: 0.4rem 0 0.7rem; top: 56px; }
+  .pos-mobile-product-tile, .pos-product-card { box-shadow: var(--shadow-card); border-color: var(--border); }
+}
+
+/* Full-page settings (web & mobile): fills the screen like a real page */
+.modal-overlay.modal-fullpage { padding: 0; background: var(--bg-color); align-items: stretch; justify-content: center; -webkit-backdrop-filter: none; backdrop-filter: none; overflow-y: auto; }
+.modal-dialog.modal-full {
+  width: 100% !important; max-width: 100% !important;
+  height: 100%; max-height: none !important;
+  margin: 0 !important; border: none !important; border-radius: 0 !important; box-shadow: none !important;
+  background: var(--bg-color) !important;
+  padding: 0 0 5rem !important;
+  animation: fade-scale-in var(--dur-base) var(--ease-out);
+}
+.modal-dialog.modal-full::before { display: none; }
+.modal-dialog.modal-full > * { width: min(960px, 100%); margin-left: auto; margin-right: auto; padding-left: 1.25rem; padding-right: 1.25rem; }
+/* Sticky page header with the close button */
+.modal-dialog.modal-full > .flex-between {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px);
+  width: 100%; margin: 0 0 1rem !important; padding: 0.85rem max(1.25rem, calc((100% - 960px) / 2)) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+@media (max-width: 768px) {
+  .modal-dialog.modal-full > * { padding-left: 0.85rem; padding-right: 0.85rem; }
+  .modal-dialog.modal-full > .flex-between { padding: 0.75rem 0.85rem !important; }
+}

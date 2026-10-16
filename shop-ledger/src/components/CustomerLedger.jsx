@@ -241,7 +241,7 @@ export default function CustomerLedger({ currentShop }) {
         </div>
 
         {/* Customer Actions Bar */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <div className="action-bar">
           {currentDue > 0 && (
             <>
               <button 
@@ -390,7 +390,7 @@ export default function CustomerLedger({ currentShop }) {
 
           return (
             <div className="table-responsive">
-              <table style={{ width: '100%', fontSize: '0.85rem', minWidth: '600px', borderCollapse: 'collapse' }}>
+              <table className="ledger-table" style={{ width: '100%', fontSize: '0.85rem', minWidth: '600px', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--border)', background: '#faf7f0' }}>
                     <th style={{ textAlign: 'left', padding: '0.5rem' }}>Date &amp; Time</th>
@@ -439,6 +439,37 @@ export default function CustomerLedger({ currentShop }) {
                   ))}
                 </tbody>
               </table>
+
+              {/* Mobile: one card per transaction instead of a wide table */}
+              <div className="ledger-cards">
+                {filteredLedger.map((entry, i) => (
+                  <div key={i} className="ledger-card">
+                    <div className="ledger-card-top">
+                      <div>
+                        {entry.type === 'SALE' ? (
+                          <button
+                            type="button"
+                            className="ledger-bill-link"
+                            onClick={() => setSelectedReceipt({ ...entry, customerPhone: selectedCustomer.phone, customerShortId: selectedCustomer.shortId })}
+                          >
+                            Bill #{entry.id} <span className="ledger-dim">({entry.items?.length || 0} items)</span>
+                          </button>
+                        ) : (
+                          <strong style={{ color: 'var(--success)' }}>Repayment Received <span className="ledger-dim">via {entry.method}</span></strong>
+                        )}
+                        <div className="ledger-dim">{new Date(entry.date).toLocaleDateString()} • {new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                      </div>
+                      <div className="ledger-amount" style={{ color: entry.type === 'SETTLEMENT' ? 'var(--success)' : 'var(--danger)' }}>
+                        {entry.type === 'SETTLEMENT'
+                          ? `− ₹${entry.amount.toFixed(2)}`
+                          : (entry.paymentMethod === 'Add to Book' ? `+ ₹${entry.total.toFixed(2)}` : `₹${entry.total.toFixed(2)}`)}
+                      </div>
+                    </div>
+                    {entry.note && <div className="ledger-dim" style={{ color: '#6366f1' }}>Note: "{entry.note}"</div>}
+                    <div className="ledger-card-foot"><span>Running due</span><strong>₹{entry.runningDue.toFixed(2)}</strong></div>
+                  </div>
+                ))}
+              </div>
               {filteredLedger.length === 0 && (
                 <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>
                   {ledger.length === 0 ? 'No transactions recorded for this customer.' : 'No transactions match selected date filter.'}

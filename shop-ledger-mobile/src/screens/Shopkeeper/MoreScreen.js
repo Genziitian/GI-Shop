@@ -521,9 +521,6 @@ export default function MoreScreen({ navigation }) {
                   <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text }}>
                     {t('more.langCardTitle', 'Choose Language')}
                   </Text>
-                  <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>
-                    {t('more.langCardSubtitle', 'Select your preferred language')}
-                  </Text>
                 </View>
               </View>
 

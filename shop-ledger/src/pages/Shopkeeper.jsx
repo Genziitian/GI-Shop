@@ -1265,9 +1265,11 @@ export default function Shopkeeper() {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      From: <strong>{order.customerName}</strong> ({order.customerShortId || '—'}) • {order.customerPhone} • {new Date(order.createdAt).toLocaleString()}
+                    <div className="order-meta">
+                      <strong>{order.customerName}</strong>
+                      <span className="order-meta-dim"> ({order.customerShortId || '—'}) • {order.customerPhone}</span>
                     </div>
+                    <div className="order-meta-dim">{new Date(order.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</div>
                   </div>
 
                   <div className="order-head-actions">
@@ -1313,6 +1315,14 @@ export default function Shopkeeper() {
                   </div>
                 )}
 
+                <div className="order-total-row">
+                  <span>Total</span>
+                  <strong>₹{(Number(order.estimatedTotal || 0)).toFixed(2)}</strong>
+                </div>
+
+                {(['PENDING', 'PACKING'].includes(order.status)) && (
+                  <details className="order-items-details">
+                    <summary>Review items ({items.length}) &amp; mark unavailable</summary>
                 <div className="order-items">
                   <div style={{ fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span>ORDER ITEMS</span>
@@ -1347,13 +1357,9 @@ export default function Shopkeeper() {
                       </div>
                     );
                   })}
-                  <div className="flex-between" style={{ borderTop: '1px dashed var(--border)', marginTop: '0.5rem', paddingTop: '0.5rem', fontWeight: '700' }}>
-                    <span>Total Payable:</span>
-                    <span style={{ color: 'var(--success)', fontSize: '1.1rem' }}>
-                      ₹{(Number(order.estimatedTotal || 0)).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+                    </div>
+                  </details>
+                )}
 
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   {order.status === 'PENDING' && (
@@ -2095,7 +2101,6 @@ export default function Shopkeeper() {
             </div>
 
             <h3 className="title">Invite Staff / Cashier</h3>
-            <p className="subtitle">Search any customer by their Short ID or Phone number to invite them to join your shop as a Cashier.</p>
 
             <form onSubmit={handleInviteStaff} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', maxWidth: '500px' }}>
               <input 
@@ -2145,9 +2150,6 @@ export default function Shopkeeper() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>Store Operations &amp; Settings</h2>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Manage shop details, operations, staff &amp; account settings
-                </div>
               </div>
               <button type="button" className="btn btn-outline" onClick={handleOpenShopDetails} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.82rem', padding: '0.4rem 0.75rem' }}>
                 <Settings size={15} color="var(--primary)" /> Edit Store Profile
@@ -2197,9 +2199,6 @@ export default function Shopkeeper() {
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
                         {t('more.langCardTitle', 'Choose Language / भाषा चुनें')}
-                      </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        {t('more.langCardSubtitle', 'Select your preferred language for the application')}
                       </div>
                     </div>
                   </div>
@@ -2289,7 +2288,6 @@ export default function Shopkeeper() {
                     </div>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>Shop Management</div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Inventory &amp; staff controls</div>
                     </div>
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#4a5148', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -2433,8 +2431,8 @@ export default function Shopkeeper() {
 
       {/* Shop Details, Linked User & Security Settings Modal */}
       {showShopDetailsModal && (
-        <div className="modal-overlay">
-          <div className="panel modal-dialog" style={{ width: '860px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto', background: '#fff', padding: '1.75rem', borderRadius: '22px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        <div className="modal-overlay modal-fullpage">
+          <div className="panel modal-dialog modal-full">
             {/* Modal Header */}
             <div className="flex-between" style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.85rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -2798,9 +2796,6 @@ export default function Shopkeeper() {
                     <Phone size={18} color="var(--primary)" />
                     <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#12201a' }}>Update Mobile Number & Profile</h4>
                   </div>
-                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    Updating your phone number will synchronize across your account login and your shop contact details.
-                  </p>
 
                   {ownerNotice && (
                     <div style={{ background: '#dff3e6', border: '1px solid #86efac', color: '#0f7a43', padding: '0.65rem 0.85rem', borderRadius: '8px', fontSize: '0.84rem', fontWeight: '600', marginBottom: '1rem' }}>
@@ -2851,9 +2846,6 @@ export default function Shopkeeper() {
                           required
                         />
                       </div>
-                      <small style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-                        Enter 10 numeric digits. Synced with your shop contact.
-                      </small>
                     </div>
                   </div>
 
@@ -2896,9 +2888,6 @@ export default function Shopkeeper() {
                       <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#9a3412', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
                         <Shield size={18} /> 4-Digit Security PIN
                       </div>
-                      <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.8rem', color: '#7c2d12', lineHeight: '1.4' }}>
-                        Used for quick register screen locking and cashier authorization.
-                      </p>
 
                       {pinNotice && (
                         <div style={{ background: '#dff3e6', color: '#0f7a43', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -3107,9 +3096,6 @@ export default function Shopkeeper() {
                       <div style={{ fontWeight: '800', fontSize: '0.96rem', color: '#0f7a43', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
                         <Fingerprint size={18} /> Passkey Biometric Login
                       </div>
-                      <p style={{ margin: 0, fontSize: '0.82rem', color: '#0b5e33' }}>
-                        Enable Face ID, Touch ID, or Device Screen Lock on this browser for instant 1-tap passwordless login.
-                      </p>
                     </div>
 
                     <button
@@ -3164,9 +3150,6 @@ export default function Shopkeeper() {
                       </div>
                       <div>
                         <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#12201a' }}>Export Shop Data & Reports</h4>
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          Download complete Excel/CSV spreadsheets or Full JSON backups with custom date filtering.
-                        </span>
                       </div>
                     </div>
 

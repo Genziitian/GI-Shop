@@ -515,13 +515,13 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
       <div className="pos-billing-grid">
         {/* Product Catalog Column */}
         <div className="panel pos-catalog-panel pos-mobile-section-card">
-          <div style={{ position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 10, paddingBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <Search size={20} color="var(--text-muted)" />
+          <div className="pos-search-bar">
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Search size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', pointerEvents: 'none' }} />
               <input 
                 type="text" 
                 className="input" 
-                style={{ margin: 0, flex: 1, fontSize: '0.95rem', padding: '0.65rem 0.85rem', borderRadius: '10px' }} 
+                style={{ margin: 0, flex: 1, fontSize: '0.95rem', paddingLeft: '2.5rem' }} 
                 placeholder="Search products (e.g. Milk, Rice)..." 
                 value={itemSearch} 
                 onChange={e => setItemSearch(e.target.value)} 
@@ -530,7 +530,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
                 <button 
                   type="button" 
                   onClick={() => setItemSearch('')}
-                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}
+                  style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}
                 >
                   <X size={18} />
                 </button>
