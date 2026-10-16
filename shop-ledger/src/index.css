@@ -1528,7 +1528,6 @@ img, video, canvas { max-width: 100%; }
     background: #d0d5dd;
   }
   /* 2-up stat tiles inside sheets */
-  .modal-dialog [style*="repeat("] { grid-template-columns: 1fr 1fr !important; }
 }
 @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 

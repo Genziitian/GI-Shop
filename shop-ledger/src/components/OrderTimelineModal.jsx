@@ -492,23 +492,20 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
         {isShopView ? (
         <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
           {/* Customer card (shop owner view) */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '180px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.74rem', fontWeight: '800' }}>
-                <User size={14} color="var(--primary)" /> CUSTOMER
-              </div>
-              <div style={{ fontWeight: '800', color: '#101828', fontSize: '1.05rem', marginTop: '2px' }}>
-                {customerName}{customerShortId ? <span className="khata-shortid" style={{ marginLeft: '0.4rem' }}>{customerShortId}</span> : null}
-              </div>
+        <div className="otm-cust">
+          <div className="otm-cust-info">
+            <User size={18} color="var(--primary)" />
+            <div className="otm-cust-name">
+              <strong>{customerName}</strong>
+              {customerShortId ? <span className="khata-shortid">{customerShortId}</span> : null}
             </div>
-            {customerPhone && (
-              <a href={`tel:${customerPhone}`} className="btn btn-sm" style={{ textDecoration: 'none' }}>
-                <Phone size={14} /> {customerPhone}
-              </a>
-            )}
           </div>
+          {customerPhone && (
+            <a href={`tel:${customerPhone}`} className="btn btn-sm otm-call" aria-label={`Call ${customerPhone}`}>
+              <Phone size={15} /> Call
+            </a>
+          )}
         </div>
-
         ) : (
         <div style={{ background: '#f7f8fa', border: '1px solid #e4e7ec', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem', fontSize: '0.84rem' }}>
           {/* Shop Details Card with Contact Number */}
@@ -700,17 +697,17 @@ export default function OrderTimelineModal({ visible, order, onClose, viewer = '
         )}
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
+        <div className="otm-foot" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
           <button
             type="button"
             className="btn btn-outline"
             onClick={handleDownloadReceipt}
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}
           >
-            <Download size={16} /> Download Receipt (PDF)
+            <Download size={16} /> Receipt
           </button>
           <button type="button" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontWeight: '700' }} onClick={onClose}>
-            Close Order Details
+            Close
           </button>
         </div>
 

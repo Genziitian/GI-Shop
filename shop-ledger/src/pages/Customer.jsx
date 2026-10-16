@@ -89,6 +89,7 @@ export default function Customer() {
   // Orders & Purchases State
   const [orders, setOrders] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [invites, setInvites] = useState([]);
 
   // Active Receipt & Order Modals
@@ -2511,15 +2512,16 @@ export default function Customer() {
                       />
                     </div>
 
-                    <div className="flex-between" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div className="flex-between m-savebar" style={{ marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                       <a 
+                        className="m-hide"
                         href="tel:7323809242" 
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0f7a43', background: '#dff3e6', border: '1px solid #c4e8d1', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                       >
                         <Phone size={15} /> Contact Customer Care (7323809242)
                       </a>
 
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="m-savebar-btns" style={{ display: 'flex', gap: '0.5rem' }}>
                         <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
                           Close
                         </button>
@@ -2759,17 +2761,20 @@ export default function Customer() {
                   </div>
 
                   {/* Footer with Contact Admin & Close */}
-                  <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div className="flex-between m-savebar" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <a 
+                      className="m-hide"
                       href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20Customer%20PIN%20%2F%20Security%20Help" 
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                     >
                       <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
                     </a>
 
-                    <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
-                      Close
-                    </button>
+                    <div className="m-savebar-btns" style={{ display: 'flex' }}>
+                      <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -3054,17 +3059,20 @@ export default function Customer() {
                   </div>
 
                   {/* Footer with Contact Admin & Close */}
-                  <div className="flex-between" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div className="flex-between m-savebar" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <a 
+                      className="m-hide"
                       href="mailto:pay.laxmikant@gmail.com?subject=GI%20Shop%20Support%20-%20Customer%20Data%20Export%20Help" 
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1', background: '#f0f9ff', border: '1px solid #bae6fd', padding: '0.45rem 0.85rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '700', textDecoration: 'none' }}
                     >
                       <Mail size={15} /> Contact Admin (pay.laxmikant@gmail.com)
                     </a>
 
-                    <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
-                      Close
-                    </button>
+                    <div className="m-savebar-btns" style={{ display: 'flex' }}>
+                      <button type="button" className="btn btn-outline" onClick={() => setShowProfileModal(false)}>
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

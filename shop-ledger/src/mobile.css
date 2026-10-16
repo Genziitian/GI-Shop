@@ -275,3 +275,28 @@ button.m-row:active { background: #f2f4f7; }
   .m-savebar-btns { width: 100%; display: grid !important; grid-template-columns: 1fr 1.6fr; gap: 0.6rem !important; }
   .m-savebar-btns .btn { width: 100%; }
 }
+
+/* Order details: customer row + footer */
+.otm-cust { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; background: #f7f8fa; border: 1px solid var(--border); border-radius: 14px; padding: 0.7rem 0.85rem; margin-bottom: 1.25rem; }
+.otm-cust-info { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.otm-cust-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; min-width: 0; }
+.otm-cust-name strong { font-size: 1.05rem; font-weight: 800; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.otm-call { flex: 0 0 auto; text-decoration: none; min-height: 38px; padding: 0 1rem; }
+.otm-foot .btn { font-size: 0.9rem; white-space: nowrap; }
+@media (max-width: 768px) { .otm-foot { gap: 0.6rem; } .otm-foot .btn { flex: 1; justify-content: center; } }
+
+/* Full-page settings: never wider than the screen */
+@media (max-width: 768px) {
+  .modal-full { overflow-x: hidden; }
+  .modal-full [style*="grid"] > * { min-width: 0; }
+  .modal-full h3, .modal-full h4 { overflow-wrap: anywhere; }
+  .modal-full .btn { white-space: normal; text-align: center; line-height: 1.25; }
+  .modal-full form .btn[type="submit"], .modal-full form button[type="submit"] { width: 100%; }
+  .modal-full a.btn, .modal-full a[style*="inline-flex"] { max-width: 100%; word-break: break-word; }
+}
+
+/* Wide-minimum grids (cards of 200–350px) and 3-up grids collapse to one column */
+@media (max-width: 768px) {
+  .modal-full [style*="minmax(2"], .modal-full [style*="minmax(3"], .modal-full [style*="1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 768px) { .m-savebar-btns:has(> .btn:only-child) { grid-template-columns: 1fr; } }
