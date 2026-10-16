@@ -15,7 +15,7 @@ import {
   Store, ShoppingCart, Users, Plus, Edit2, Trash2, LogOut, Clock, 
   BarChart2, ShieldCheck, UserPlus, CheckCircle, XCircle, FileText, 
   Search, X, Calendar, AlertCircle, ArrowRight, Sparkles, Check, Info, Lock, MapPin, Phone, AlertTriangle, Fingerprint, Settings, Key, User, Mail, Shield, Eye, EyeOff, Save,
-  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal, MessageSquare, Globe, CreditCard
+  Download, FileSpreadsheet, Database, CheckSquare, Square, Printer, CalendarRange, Menu, MoreHorizontal, MessageSquare, Globe, CreditCard, Receipt
 } from 'lucide-react';
 import { useTranslation } from '../lib/i18n';
 import POSBilling from '../components/POSBilling';
@@ -1667,8 +1667,8 @@ export default function Shopkeeper() {
                             <span className="badge">{sale.paymentMethod}</span>
                           </td>
                           <td style={{ padding: '0.65rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: '0.8rem', color: sale.note ? '#6366f1' : 'var(--text-muted)' }}>
+                            <div className="sale-actions">
+                              <span className="sale-note" style={{ fontSize: '0.8rem', color: sale.note ? '#6366f1' : 'var(--text-muted)' }}>
                                 {sale.note ? `"${sale.note}"` : '—'}
                               </span>
                               <button 

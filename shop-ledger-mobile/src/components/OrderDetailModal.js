@@ -807,7 +807,7 @@ export default function OrderDetailModal({
                     onPress={() => Linking.openURL(`tel:${customerPhone}`)}
                     activeOpacity={0.8}
                   >
-                    <Phone size={14} color="#ffffff" />
+                    <Phone size={16} color="#ffffff" />
                     <Text style={styles.callShopBtnText}>{t('Call Customer')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -833,10 +833,6 @@ export default function OrderDetailModal({
 
               {shopPhone ? (
                 <View style={styles.shopPhoneRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.phoneLabel}>{t('Shop Contact Phone')}</Text>
-                    <Text style={styles.phoneNumber}>{shopPhone}</Text>
-                  </View>
                   <TouchableOpacity
                     style={styles.callShopBtn}
                     onPress={() => Linking.openURL(`tel:${shopPhone}`)}
@@ -1458,12 +1454,7 @@ const styles = StyleSheet.create({
   shopPhoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f7f8fa',
-    borderTopWidth: 1,
-    borderTopColor: '#eff1f4',
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 14,
   },
   phoneLabel: {
     fontSize: 11,
@@ -1477,17 +1468,18 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   callShopBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    height: 46,
+    borderRadius: 14,
   },
   callShopBtnText: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
   },
   sectionHeaderRow: {

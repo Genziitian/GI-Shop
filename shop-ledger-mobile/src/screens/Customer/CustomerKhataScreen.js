@@ -26,6 +26,7 @@ import {
   Store,
   User,
   ChevronRight,
+  ChevronLeft,
 } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { FadeInView } from '../../components/ui/Motion';
@@ -250,7 +251,7 @@ export default function CustomerKhataScreen({ navigation }) {
                       style={styles.circleIconBtn}
                       onPress={() => Linking.openURL(`tel:${st.shopPhone}`)}
                     >
-                      <Phone size={13} color={colors.primary} />
+                      <Phone size={16} color={colors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.circleIconBtn, { backgroundColor: '#eef8f1', borderColor: '#c4e8d1' }]}
@@ -262,7 +263,7 @@ export default function CustomerKhataScreen({ navigation }) {
                         )
                       }
                     >
-                      <MessageCircle size={13} color="#1f9d5a" />
+                      <MessageCircle size={16} color="#1f9d5a" />
                     </TouchableOpacity>
                   </View>
                 ) : null}
@@ -279,43 +280,68 @@ export default function CustomerKhataScreen({ navigation }) {
             <View style={{ flex: 1 }}>
               {/* Header */}
               <View style={styles.statementHeader}>
-                <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedStore(null)}>
-                  <Text style={styles.backBtnText}>{t('← Back to All Stores')}</Text>
+                <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedStore(null)} activeOpacity={0.8}>
+                  <ChevronLeft size={20} color="#ffffff" />
+                  <Text style={styles.backBtnText}>{t('All Stores')}</Text>
                 </TouchableOpacity>
 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 12 }}>
+                  <View style={styles.statementAvatar}>
+                    <Store size={24} color={colors.primary} />
+                  </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.statementShopName}>{selectedStore.shopName}</Text>
+                    <Text style={styles.statementShopName} numberOfLines={1}>{selectedStore.shopName}</Text>
                     <Text style={styles.statementShopSub}>
-                      ID: <Text style={{ color: colors.primary, fontWeight: '700' }}>{selectedStore.shortId}</Text> • {selectedStore.city}
+                      ID: <Text style={{ color: '#ffd37a', fontWeight: '800' }}>{selectedStore.shortId}</Text> • {selectedStore.city}
                     </Text>
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
+                </View>
+
+                <View style={styles.dueCard}>
+                  <View>
+                    <Text style={styles.dueLabel}>{t('Current Due')}</Text>
                     <Text
                       style={[
                         styles.statementDueText,
                         {
                           color:
                             (storeStatement?.totalDue ?? selectedStore.totalDue ?? 0) > 0
-                              ? '#ef4444'
+                              ? '#d93a2f'
                               : '#0f7a43',
                         },
                       ]}
                     >
                       ₹{(Number(storeStatement?.totalDue ?? selectedStore?.totalDue) || 0).toFixed(2)}
                     </Text>
-                    <Text style={{ fontSize: 10, color: colors.textMuted }}>{t('Current Due')}</Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.duePill,
+                      (storeStatement?.totalDue ?? selectedStore.totalDue ?? 0) > 0
+                        ? { backgroundColor: '#fee2e2' }
+                        : { backgroundColor: '#dff3e6' },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '800',
+                        color: (storeStatement?.totalDue ?? selectedStore.totalDue ?? 0) > 0 ? '#b91c1c' : '#0b5e33',
+                      }}
+                    >
+                      {(storeStatement?.totalDue ?? selectedStore.totalDue ?? 0) > 0 ? t('Payment Pending') : `✓ ${t('All Clear')}`}
+                    </Text>
                   </View>
                 </View>
 
                 {/* Actions & Verified Banner */}
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, alignItems: 'center' }}>
+                <View style={styles.actionRow}>
                   <TouchableOpacity
                     style={styles.statementNewOrderBtn}
                     onPress={() => handleStartNewOrder(selectedStore)}
                   >
-                    <Plus size={14} color="#fff" />
-                    <Text style={styles.statementNewOrderText}>{t('+ New Order +')}</Text>
+                    <Plus size={16} color="#fff" />
+                    <Text style={styles.statementNewOrderText}>{t('New Order')}</Text>
                   </TouchableOpacity>
 
                   {selectedStore.shopPhone ? (
@@ -346,7 +372,7 @@ export default function CustomerKhataScreen({ navigation }) {
                 </View>
 
                 {/* Filter Pills */}
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 12 }}>
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
                   {['All', 'Today', 'Yesterday', 'Month'].map((f) => (
                     <TouchableOpacity
                       key={f}
@@ -420,7 +446,7 @@ export default function CustomerKhataScreen({ navigation }) {
                         style={styles.timelineCard}
                       >
                         <View style={styles.timelineHeaderRow}>
-                          <View style={styles.timelineIconBadge}>
+                          <View style={[styles.timelineIconBadge, { backgroundColor: isSale ? '#fef2f2' : isSettlement ? '#eef8f1' : '#e9f6ee' }]}>
                             {isSale ? (
                               <ArrowUpRight size={16} color={colors.danger} />
                             ) : isSettlement ? (
@@ -723,121 +749,178 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   statementHeader: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 18,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   backBtn: {
-    paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 2,
+    paddingVertical: 6,
+    paddingLeft: 4,
+    paddingRight: 12,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   backBtnText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  statementShopName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  statementShopSub: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  statementDueText: {
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  statementNewOrderBtn: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  statementNewOrderText: {
-    color: '#fff',
-    fontSize: 11,
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '700',
   },
-  statementActionBtn: {
-    backgroundColor: '#e9f6ee',
-    borderColor: '#bfe3cb',
-    borderWidth: 1,
+  statementAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statementShopName: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: -0.3,
+  },
+  statementShopSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
+  },
+  dueCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  dueLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  duePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  statementDueText: {
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  statementNewOrderBtn: {
+    flex: 1.3,
+    backgroundColor: '#f2a516',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 46,
+    borderRadius: 14,
+  },
+  statementNewOrderText: {
+    color: '#101828',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  statementActionBtn: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 46,
+    borderRadius: 14,
   },
   statementActionText: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
   },
   filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#eff1f4',
-    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'transparent',
     borderWidth: 1,
   },
   filterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#ffffff',
+    borderColor: '#ffffff',
   },
   filterChipText: {
-    fontSize: 11,
-    color: colors.textSecondary,
+    fontSize: 12,
+    color: '#ffffff',
     fontWeight: '600',
   },
   filterChipTextActive: {
-    color: '#fff',
+    color: colors.primary,
     fontWeight: '700',
   },
   timelineCard: {
     backgroundColor: colors.surface,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 10,
     borderColor: colors.border,
     borderWidth: 1,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   timelineHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   timelineIconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: '#f7f8fa',
     alignItems: 'center',
     justifyContent: 'center',
   },
   timelineTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14.5,
+    fontWeight: '800',
     color: colors.text,
   },
   timelineDate: {
-    fontSize: 10,
+    fontSize: 11.5,
     color: colors.textMuted,
     marginTop: 2,
   },
   timelineAmount: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
   },
   receiptLink: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.primary,
     fontWeight: '600',
     marginTop: 2,

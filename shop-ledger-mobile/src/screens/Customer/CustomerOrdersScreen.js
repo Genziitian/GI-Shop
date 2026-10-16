@@ -395,6 +395,21 @@ export default function CustomerOrdersScreen({ navigation }) {
                         </Text>
                       </View>
 
+                      {order.status === 'COMPLETED' && (
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: '#1f9d5a',
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            borderRadius: 10,
+                          }}
+                          onPress={() => setSelectedDetailOrder(order)}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={{ color: '#ffffff', fontSize: 12.5, fontWeight: '800' }}>{t('Order Details')}</Text>
+                        </TouchableOpacity>
+                      )}
+                      {order.status !== 'COMPLETED' && (
                       <View
                         style={[
                           styles.statusBadge,
@@ -438,6 +453,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                           {order.status === 'DECLINED' && `❌ ${t('Decline')}`}
                         </Text>
                       </View>
+                      )}
                     </View>
 
                     {/* Auto-cancel 45-min live timer banner */}
@@ -462,19 +478,12 @@ export default function CustomerOrdersScreen({ navigation }) {
 
                     {/* Items Box */}
                     <View style={styles.itemsBox}>
-                      {items.map((it, idx) => {
-                        const isUnavail = !!it.isUnavailable;
-                        return (
-                          <View key={idx} style={styles.itemLine}>
-                            <Text style={[styles.itemName, isUnavail && { textDecorationLine: 'line-through', color: '#98a2b3' }]}>
-                              {it.item?.name || it.name} x {it.qty} {it.item?.unit || ''} {isUnavail ? '(Unavailable)' : ''}
-                            </Text>
-                            <Text style={[styles.itemPrice, isUnavail && { textDecorationLine: 'line-through', color: '#98a2b3' }]}>
-                              ₹{(Number(it.amount || (it.rate * it.qty)) || 0).toFixed(2)}
-                            </Text>
-                          </View>
-                        );
-                      })}
+                      <View style={styles.itemLine}>
+                        <Text style={styles.itemName}>{t('Items')}</Text>
+                        <Text style={styles.itemName}>
+                          {items.length} {items.length === 1 ? t('item') : t('items')}
+                        </Text>
+                      </View>
                       <View style={styles.totalLine}>
                         <Text style={styles.totalLabel}>{t('Total Payable:')}</Text>
                         <Text style={styles.totalValue}>₹{(Number(computedTotal) || 0).toFixed(2)}</Text>
@@ -523,6 +532,7 @@ export default function CustomerOrdersScreen({ navigation }) {
 
                     {/* Timeline & Details Action */}
                     <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                      {order.status !== 'COMPLETED' && (
                       <TouchableOpacity
                         style={{
                           backgroundColor: '#e9f6ee',
@@ -539,6 +549,7 @@ export default function CustomerOrdersScreen({ navigation }) {
                           {t('Order Details')}
                         </Text>
                       </TouchableOpacity>
+                      )}
                       {(order.status === 'PENDING' || order.status === 'PACKING') && (
                         <TouchableOpacity
                           style={styles.cancelBtn}

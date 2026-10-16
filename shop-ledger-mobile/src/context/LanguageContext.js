@@ -175,7 +175,7 @@ export const translations = {
     'Profile & Settings': 'प्रोफ़ाइल व सेटिंग्स',
     'Account Password': 'खाता पासवर्ड',
     'Contact Customer Care': 'कस्टमर केयर से संपर्क करें',
-    'Call 7323809242 for instant help': 'तुरंत सहायता के लिए 7323809242 पर कॉल करें',
+    'Tap to call us for instant help': 'तुरंत सहायता के लिए हमें कॉल करें',
     'Privacy Policy': 'गोपनीयता नीति (Privacy Policy)',
     'Terms & Conditions': 'नियम व शर्तें (Terms & Conditions)',
     'Account Deletion Request': 'खाता हटाने का अनुरोध',

@@ -337,31 +337,35 @@ export default function CustomerExploreScreen({ navigation, route }) {
           renderItem={({ item, index }) => (
             <FadeInView index={index} style={styles.shopCard}>
               <View style={styles.shopHeaderRow}>
+                <View style={styles.shopCardAvatar}>
+                  <Store size={22} color={colors.primary} />
+                </View>
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={styles.shopName}>{item.shopName}</Text>
+                  <Text style={styles.shopName} numberOfLines={1}>{item.shopName}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <View style={styles.shortIdBadge}>
-                      <Text style={styles.shortIdBadgeText}>ID: {item.shortId || `shp${item.id}`}</Text>
+                      <Text style={styles.shortIdBadgeText}>{String(item.shortId || `shp${item.id}`).toUpperCase()}</Text>
                     </View>
+                    <Text style={styles.shopCity}>{item.city}</Text>
                   </View>
-                  <Text style={styles.shopCity}>{item.city}</Text>
                 </View>
 
                 <View style={[styles.openStatusBadge, { backgroundColor: item.isOpen ? '#dff3e6' : '#fee2e2' }]}>
-                  <Text style={[styles.openStatusText, { color: item.isOpen ? '#0f7a43' : '#b91c1c' }]}>
-                    {item.isOpen ? `🟢 ${t('OPEN')}` : `🔴 ${t('CLOSED')}`}
+                  <View style={[styles.statusDotSmall, { backgroundColor: item.isOpen ? '#1f9d5a' : '#d93a2f' }]} />
+                  <Text style={[styles.openStatusText, { color: item.isOpen ? '#0b5e33' : '#b91c1c' }]}>
+                    {item.isOpen ? t('OPEN') : t('CLOSED')}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.shopInfoBlock}>
                 <View style={styles.infoLine}>
-                  <MapPin size={13} color={colors.textMuted} />
+                  <MapPin size={14} color={colors.primary} />
                   <Text style={styles.infoLineText} numberOfLines={1}>{item.shopAddress || 'Local Market'}</Text>
                 </View>
                 {item.timings ? (
                   <View style={styles.infoLine}>
-                    <Clock size={13} color={colors.textMuted} />
+                    <Clock size={14} color={colors.primary} />
                     <Text style={styles.infoLineText}>{item.timings}</Text>
                   </View>
                 ) : null}
@@ -373,7 +377,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                   onPress={() => handleOpenShop(item)}
                   activeOpacity={0.8}
                 >
-                  <Store size={14} color="#fff" />
+                  <Store size={16} color="#fff" />
                   <Text style={styles.primaryActionBtnText}>{t('View Catalog & Order →')}</Text>
                 </TouchableOpacity>
 
@@ -383,7 +387,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                       style={styles.iconBtn}
                       onPress={() => Linking.openURL(`tel:${item.shopPhone}`)}
                     >
-                      <Phone size={14} color={colors.primary} />
+                      <Phone size={18} color={colors.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.iconBtn, { backgroundColor: '#eef8f1', borderColor: '#c4e8d1' }]}
@@ -395,7 +399,7 @@ export default function CustomerExploreScreen({ navigation, route }) {
                         )
                       }
                     >
-                      <MessageCircle size={14} color="#1f9d5a" />
+                      <MessageCircle size={18} color="#1f9d5a" />
                     </TouchableOpacity>
                   </View>
                 ) : null}
@@ -425,75 +429,65 @@ export default function CustomerExploreScreen({ navigation, route }) {
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f8fa' }}>
           {activeShop && (
             <View style={{ flex: 1 }}>
-              {/* Top Navigation Bar */}
-              <View style={styles.catalogNavBar}>
-                <TouchableOpacity
-                  style={styles.catalogNavBackBtn}
-                  onPress={() => setActiveShop(null)}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                >
-                  <ArrowLeft size={20} color={colors.text} />
-                  <Text style={styles.catalogNavBackText}>Shops</Text>
-                </TouchableOpacity>
-
-                <View style={styles.catalogNavTitleBox}>
-                  <Text style={styles.catalogNavTitle} numberOfLines={1}>
-                    {activeShop.shopName}
-                  </Text>
-                </View>
-
-                <View style={[styles.openStatusBadge, { backgroundColor: activeShop.isOpen ? '#dff3e6' : '#fee2e2' }]}>
-                  <Text style={[styles.openStatusText, { color: activeShop.isOpen ? '#0f7a43' : '#b91c1c' }]}>
-                    {activeShop.isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Shop Hero Detail Header */}
-              <View style={styles.catalogHeroHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                    <View style={styles.shopAvatarBox}>
-                      <Store size={22} color={colors.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.catalogShopName}>{activeShop.shopName}</Text>
-                      <Text style={styles.catalogShortIdText}>
-                        Shop ID: <Text style={{ color: colors.primary, fontWeight: '700' }}>{activeShop.shortId}</Text>
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.catalogInfoRow}>
-                  <MapPin size={13} color={colors.primary} />
-                  <Text style={styles.catalogInfoText} numberOfLines={1}>
-                    {activeShop.city ? `${activeShop.city} • ` : ''}{activeShop.shopAddress || 'Local Store Location'}
-                  </Text>
-                </View>
-
-                {activeShop.timings && (
-                  <View style={[styles.catalogInfoRow, { marginTop: 4 }]}>
-                    <Clock size={13} color={colors.textMuted} />
-                    <Text style={styles.catalogInfoText}>
-                      {activeShop.timings}
+              {/* Shop Hero Header */}
+              <View style={styles.shopHero}>
+                <View style={styles.shopHeroTop}>
+                  <TouchableOpacity
+                    style={styles.shopHeroBack}
+                    onPress={() => setActiveShop(null)}
+                    activeOpacity={0.8}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  >
+                    <ArrowLeft size={18} color="#ffffff" />
+                    <Text style={styles.shopHeroBackText}>Shops</Text>
+                  </TouchableOpacity>
+                  <View style={[styles.shopHeroStatus, { backgroundColor: activeShop.isOpen ? '#dff3e6' : '#fee2e2' }]}>
+                    <View style={[styles.shopHeroDot, { backgroundColor: activeShop.isOpen ? '#1f9d5a' : '#d93a2f' }]} />
+                    <Text style={[styles.shopHeroStatusText, { color: activeShop.isOpen ? '#0b5e33' : '#b91c1c' }]}>
+                      {activeShop.isOpen ? 'OPEN NOW' : 'CLOSED'}
                     </Text>
                   </View>
-                )}
+                </View>
+
+                <View style={styles.shopHeroIdentity}>
+                  <View style={styles.shopHeroAvatar}>
+                    <Store size={28} color={colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.shopHeroName} numberOfLines={2}>{activeShop.shopName}</Text>
+                    <Text style={styles.shopHeroId}>
+                      Shop ID: <Text style={{ color: '#ffd37a', fontWeight: '800' }}>{String(activeShop.shortId || '').toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.shopHeroChips}>
+                  <View style={styles.shopHeroChip}>
+                    <MapPin size={13} color="#ffffff" />
+                    <Text style={styles.shopHeroChipText} numberOfLines={1}>
+                      {activeShop.city ? `${activeShop.city} • ` : ''}{activeShop.shopAddress || 'Local Store Location'}
+                    </Text>
+                  </View>
+                  {activeShop.timings ? (
+                    <View style={[styles.shopHeroChip, { alignSelf: 'flex-start' }]}>
+                      <Clock size={13} color="#ffffff" />
+                      <Text style={styles.shopHeroChipText}>{activeShop.timings}</Text>
+                    </View>
+                  ) : null}
+                </View>
 
                 {activeShop.shopPhone ? (
                   <View style={styles.catalogActionRow}>
                     <TouchableOpacity
-                      style={styles.catalogCallBtn}
+                      style={styles.heroCallBtn}
                       activeOpacity={0.85}
                       onPress={() => Linking.openURL(`tel:${activeShop.shopPhone}`)}
                     >
-                      <Phone size={16} color="#ffffff" />
-                      <Text style={styles.catalogCallText}>Call Shop</Text>
+                      <Phone size={17} color="#101828" />
+                      <Text style={styles.heroCallText}>Call Shop</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.catalogWaBtn}
+                      style={styles.heroWaBtn}
                       activeOpacity={0.85}
                       onPress={() =>
                         Linking.openURL(
@@ -503,14 +497,16 @@ export default function CustomerExploreScreen({ navigation, route }) {
                         )
                       }
                     >
-                      <MessageCircle size={16} color="#1f9d5a" />
-                      <Text style={styles.catalogWaText}>WhatsApp</Text>
+                      <MessageCircle size={17} color="#1f9d5a" />
+                      <Text style={styles.heroWaText}>WhatsApp</Text>
                     </TouchableOpacity>
                   </View>
                 ) : null}
+              </View>
 
-                {/* Search Input Box */}
-                <View style={[styles.catalogSearchContainer, searchFocused && styles.catalogSearchFocused]}>
+              {/* Search Input Box */}
+              <View style={styles.shopSearchWrap}>
+                <View style={[styles.catalogSearchContainer, { marginTop: 0 }, searchFocused && styles.catalogSearchFocused]}>
                   <Search size={18} color={searchFocused ? colors.primary : colors.textMuted} />
                   <TextInput
                     style={styles.catalogSearchInput}
@@ -849,8 +845,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
+    paddingVertical: 12,
+    gap: 10,
   },
   compactCityBtn: {
     flexDirection: 'row',
@@ -858,10 +854,10 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: '#e9f6ee',
     borderColor: '#bfe3cb',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    height: 38,
-    borderRadius: 8,
+    borderWidth: 1.5,
+    paddingHorizontal: 12,
+    height: 48,
+    borderRadius: 14,
   },
   compactCityLabel: {
     fontSize: 11,
@@ -879,15 +875,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 38,
-    gap: 6,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    height: 48,
+    gap: 8,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 2,
   },
   searchInputInline: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14.5,
     color: colors.text,
     paddingVertical: 0,
   },
@@ -1103,57 +1104,73 @@ const styles = StyleSheet.create({
   },
   shopCard: {
     backgroundColor: colors.surface,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 12,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 14,
     borderColor: colors.border,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
   shopHeaderRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
   },
+  shopCardAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#e9f6ee',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusDotSmall: { width: 7, height: 7, borderRadius: 4 },
   shopName: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '800',
     color: colors.text,
   },
   shortIdBadge: {
     backgroundColor: '#e9f6ee',
     borderColor: '#bfe3cb',
     borderWidth: 1,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 8,
   },
   shortIdBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
     color: colors.primary,
   },
   shopCity: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textMuted,
-    marginTop: 2,
   },
   openStatusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
   },
   openStatusText: {
     fontSize: 10,
     fontWeight: '800',
   },
   shopInfoBlock: {
-    gap: 4,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 14,
+    backgroundColor: '#f7f8fa',
+    borderRadius: 14,
+    padding: 12,
   },
   infoLine: {
     flexDirection: 'row',
@@ -1161,7 +1178,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   infoLineText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
     flex: 1,
   },
@@ -1169,9 +1186,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#eff1f4',
-    paddingTop: 10,
   },
   primaryActionBtn: {
     flex: 1,
@@ -1179,19 +1193,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 6,
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
   primaryActionBtnText: {
     color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '800',
   },
   iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     backgroundColor: '#e9f6ee',
     borderColor: '#bfe3cb',
     borderWidth: 1,
@@ -1244,6 +1263,49 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
   },
+  shopHero: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 52,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  shopHeroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  shopHeroBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    paddingLeft: 8,
+    paddingRight: 14,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  shopHeroBackText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  shopHeroStatus: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20 },
+  shopHeroDot: { width: 8, height: 8, borderRadius: 4 },
+  shopHeroStatusText: { fontSize: 11.5, fontWeight: '900', letterSpacing: 0.5 },
+  shopHeroIdentity: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 18 },
+  shopHeroAvatar: { width: 60, height: 60, borderRadius: 20, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+  shopHeroName: { fontSize: 22, fontWeight: '900', color: '#ffffff', letterSpacing: -0.3 },
+  shopHeroId: { fontSize: 12.5, color: 'rgba(255,255,255,0.85)', marginTop: 3 },
+  shopHeroChips: { marginTop: 14, gap: 8 },
+  shopHeroChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  shopHeroChipText: { color: '#ffffff', fontSize: 12.5, fontWeight: '600', flexShrink: 1 },
+  heroCallBtn: { flex: 1.2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 14, backgroundColor: '#f2a516' },
+  heroCallText: { color: '#101828', fontSize: 14.5, fontWeight: '800' },
+  heroWaBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 14, backgroundColor: '#ffffff' },
+  heroWaText: { color: '#0b5e33', fontSize: 14.5, fontWeight: '800' },
+  shopSearchWrap: { paddingHorizontal: 16, marginTop: -26, zIndex: 2 },
   catalogHeroHeader: {
     backgroundColor: '#ffffff',
     padding: 16,

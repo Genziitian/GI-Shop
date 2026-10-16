@@ -663,7 +663,7 @@ export default function MoreScreen({ navigation }) {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.menuItemTitle, { color: '#0f7a43', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
-                  <Text style={{ fontSize: 11, color: colors.textMuted }}>{t('Call 7323809242 for instant help')}</Text>
+                  <Text style={{ fontSize: 11, color: colors.textMuted }}>{t('Tap to call us for instant help')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </TouchableOpacity>

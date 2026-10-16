@@ -128,18 +128,16 @@ export default function CustomerMoreScreen({ navigation }) {
           </View>
 
           <View style={{ flex: 1 }}>
-            <View style={styles.nameRow}>
-              <Text style={styles.profileName}>{user?.name || 'Customer'}</Text>
-              <View style={styles.editBadge}>
-                <Text style={styles.editBadgeText}>{t('Edit Profile')}</Text>
-              </View>
-            </View>
+            <Text style={styles.profileName} numberOfLines={1}>{user?.name || 'Customer'}</Text>
             <Text style={styles.profileSub}>
-              ID: <Text style={styles.highlightText}>{user?.shortId || 'N/A'}</Text>
+              ID: <Text style={styles.highlightText}>{String(user?.shortId || 'N/A').toUpperCase()}</Text>
             </Text>
+            <View style={styles.editBadge}>
+              <Text style={styles.editBadgeText}>{t('Edit Profile')}</Text>
+            </View>
           </View>
 
-          <ChevronRight size={20} color={colors.textMuted} />
+          <ChevronRight size={22} color="#ffffff" />
         </TouchableOpacity>
 
         {/* APP LANGUAGE SELECTION CARD */}
@@ -162,9 +160,9 @@ export default function CustomerMoreScreen({ navigation }) {
               activeOpacity={0.8}
               style={{
                 flex: 1,
-                paddingVertical: 10,
+                paddingVertical: 14,
                 paddingHorizontal: 12,
-                borderRadius: 10,
+                borderRadius: 16,
                 borderWidth: 1.5,
                 borderColor: language === 'en' ? colors.primary : colors.border,
                 backgroundColor: language === 'en' ? '#e9f6ee' : '#f7f8fa',
@@ -174,7 +172,7 @@ export default function CustomerMoreScreen({ navigation }) {
                 gap: 6,
               }}
             >
-              <Text style={{ fontSize: 14 }}>🇬🇧</Text>
+              <Text style={{ fontSize: 18 }}>🇬🇧</Text>
               <Text
                 style={{
                   fontSize: 13,
@@ -191,9 +189,9 @@ export default function CustomerMoreScreen({ navigation }) {
               activeOpacity={0.8}
               style={{
                 flex: 1,
-                paddingVertical: 10,
+                paddingVertical: 14,
                 paddingHorizontal: 12,
-                borderRadius: 10,
+                borderRadius: 16,
                 borderWidth: 1.5,
                 borderColor: language === 'hi' ? colors.primary : colors.border,
                 backgroundColor: language === 'hi' ? '#e9f6ee' : '#f7f8fa',
@@ -203,7 +201,7 @@ export default function CustomerMoreScreen({ navigation }) {
                 gap: 6,
               }}
             >
-              <Text style={{ fontSize: 14 }}>🇮🇳</Text>
+              <Text style={{ fontSize: 18 }}>🇮🇳</Text>
               <Text
                 style={{
                   fontSize: 13,
@@ -245,7 +243,7 @@ export default function CustomerMoreScreen({ navigation }) {
             </View>
             <View style={styles.menuTextBox}>
               <Text style={[styles.menuText, { color: '#0f7a43', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
-              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>{t('Call 7323809242 for instant help')}</Text>
+              <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 1 }}>{t('Tap to call us for instant help')}</Text>
             </View>
             <ChevronRight size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -375,27 +373,29 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 14,
+    backgroundColor: colors.primary,
+    borderRadius: 24,
+    padding: 18,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 6,
   },
   profileAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
+    width: 68,
+    height: 68,
+    borderRadius: 22,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   profileAvatarText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#fff',
+    fontSize: 28,
+    fontWeight: '900',
+    color: colors.primary,
   },
   nameRow: {
     flexDirection: 'row',
@@ -404,27 +404,28 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   profileName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: -0.3,
   },
   editBadge: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#bfe3cb',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+    marginTop: 8,
   },
   editBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.primaryDark,
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   profileSub: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 3,
   },
   citySub: {
     fontSize: 11,
@@ -432,20 +433,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   highlightText: {
-    color: colors.primary,
-    fontWeight: '700',
+    color: '#ffd37a',
+    fontWeight: '800',
   },
   sectionCard: {
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 22,
+    padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    shadowColor: '#101828',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -454,14 +460,14 @@ const styles = StyleSheet.create({
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eff1f4',
   },
   menuIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -470,7 +476,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: colors.text,
   },
