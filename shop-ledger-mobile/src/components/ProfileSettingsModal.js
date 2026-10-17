@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   ActivityIndicator,
   Alert,
   Switch,
@@ -14,6 +16,7 @@ import {
 import { TouchableOpacity } from './ui/Touchable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  ArrowLeft,
   X,
   User,
   MapPin,
@@ -221,63 +224,56 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
     return name.substring(0, 2).toUpperCase();
   };
 
+  const isShopkeeper = user?.role === 'Shopkeeper';
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f8fa' }}>
-        {/* Top Header */}
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+        {/* Header */}
         <View style={styles.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={styles.headerIconBadge}>
-              <User size={18} color={colors.primary} />
-            </View>
-            <View>
-              <Text style={styles.headerTitle}>Personal & Delivery Details</Text>
-            </View>
-          </View>
           <TouchableOpacity
             onPress={onClose}
-            style={styles.closeBtn}
+            style={styles.backBtn}
             activeOpacity={0.7}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <X size={20} color={colors.text} />
+            <ArrowLeft size={20} color={colors.text} />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <View style={{ width: 36 }} />
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }}>
-          {/* User Hero Identity Card */}
-          <View style={styles.heroCard}>
-            <View style={styles.heroAvatar}>
-              <Text style={styles.heroAvatarText}>{getInitials(user?.name)}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.heroName}>{user?.name || 'Customer'}</Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1, backgroundColor: '#f7f8fa' }}
+        >
+          <ScrollView
+            contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Identity */}
+            <View style={styles.identity}>
+              <View style={styles.heroAvatar}>
+                <Text style={styles.heroAvatarText}>{getInitials(user?.name)}</Text>
+              </View>
+              <Text style={styles.heroName} numberOfLines={1}>{user?.name || 'Customer'}</Text>
+              {user?.email ? <Text style={styles.heroEmail}>{user.email}</Text> : null}
+              <View style={styles.identityChips}>
                 <View style={styles.roleBadge}>
                   <Text style={styles.roleBadgeText}>{user?.role || 'Customer'}</Text>
                 </View>
+                <TouchableOpacity
+                  style={[styles.shortIdBox, copiedId && styles.shortIdBoxCopied]}
+                  onPress={handleCopyShortId}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.shortIdText}>ID: {String(user?.shortId || 'N/A').toUpperCase()}</Text>
+                  {copiedId ? <Check size={12} color="#0f7a43" /> : <Copy size={12} color={colors.primary} />}
+                </TouchableOpacity>
               </View>
-              <Text style={styles.heroPhone}>{user?.phone || 'No phone'}</Text>
-              <Text style={styles.heroEmail}>{user?.email || 'No email'}</Text>
             </View>
 
-            {/* Short ID Card with copy button */}
-            <TouchableOpacity
-              style={[styles.shortIdBox, copiedId && styles.shortIdBoxCopied]}
-              onPress={handleCopyShortId}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.shortIdLabel}>SHORT ID</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={styles.shortIdText}>{user?.shortId || 'N/A'}</Text>
-                {copiedId ? <Check size={12} color="#0f7a43" /> : <Copy size={12} color={colors.primary} />}
-              </View>
-              <Text style={styles.copyHintText}>{copiedId ? 'Copied!' : 'Tap'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* PROFILE DETAILS FORM */}
-          <View>
             {profileNotice ? (
               <View style={styles.successBanner}>
                 <CheckCircle size={15} color="#0f7a43" />
@@ -285,9 +281,8 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
               </View>
             ) : null}
 
+            {/* Form */}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Personal & Delivery Details</Text>
-
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Full Name</Text>
                 <TextInput
@@ -300,20 +295,10 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
               </View>
 
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Mobile Phone</Text>
+                <Text style={styles.fieldLabel}>Mobile Number</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{
-                    backgroundColor: '#eff1f4',
-                    borderWidth: 1,
-                    borderColor: '#d0d5dd',
-                    borderTopLeftRadius: 8,
-                    borderBottomLeftRadius: 8,
-                    paddingHorizontal: 12,
-                    height: 48,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#475467' }}>+91</Text>
+                  <View style={styles.phonePrefix}>
+                    <Text style={styles.phonePrefixText}>+91</Text>
                   </View>
                   <TextInput
                     style={[styles.input, { flex: 1, borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeftWidth: 0 }]}
@@ -330,22 +315,16 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                 </View>
               </View>
 
-              {user?.role === 'Shopkeeper' ? (
+              {isShopkeeper ? (
                 <View style={styles.fieldGroup}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <Text style={styles.fieldLabel}>Shop City / Region</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Lock size={12} color="#98a2b3" />
-                      <Text style={{ fontSize: 11, color: '#98a2b3', fontWeight: '600' }}>Locked (SuperAdmin only)</Text>
-                    </View>
+                  <Text style={styles.fieldLabel}>Shop City</Text>
+                  <View style={styles.lockedField}>
+                    <MapPin size={16} color="#667085" />
+                    <Text style={styles.lockedFieldText}>{form.city || user?.city || 'Delhi'}</Text>
+                    <Lock size={14} color="#98a2b3" />
                   </View>
-                  <View style={[styles.input, { backgroundColor: '#eff1f4', borderColor: '#e4e7ec', justifyContent: 'center' }]}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#475467' }}>
-                      📍 {form.city || user?.city || 'Delhi'}
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>
-                    Store location is locked to protect orders & billing records. Contact SuperAdmin (7323809242) to request a city transfer.
+                  <Text style={styles.helperText}>
+                    City is locked to protect orders and billing records. Contact support to request a transfer.
                   </Text>
                 </View>
               ) : (
@@ -356,10 +335,10 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                 />
               )}
 
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Delivery Address</Text>
+              <View style={[styles.fieldGroup, { marginBottom: 0 }]}>
+                <Text style={styles.fieldLabel}>{isShopkeeper ? 'Address' : 'Delivery Address'}</Text>
                 <TextInput
-                  style={[styles.input, { height: 65, textAlignVertical: 'top' }]}
+                  style={[styles.input, { height: 84, textAlignVertical: 'top', paddingTop: 12 }]}
                   value={form.address}
                   onChangeText={(t) => setForm({ ...form, address: t })}
                   placeholder="Street, flat/house number, landmark"
@@ -367,21 +346,25 @@ export default function ProfileSettingsModal({ visible, onClose, initialTab = 'p
                   multiline
                 />
               </View>
-
-              <TouchableOpacity
-                style={[styles.saveBtn, profileSaving && { opacity: 0.7 }]}
-                disabled={profileSaving}
-                onPress={handleSaveProfile}
-              >
-                {profileSaving ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.saveBtnText}>Save Profile Changes</Text>
-                )}
-              </TouchableOpacity>
             </View>
+          </ScrollView>
+
+          {/* Sticky save */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.saveBtn, profileSaving && { opacity: 0.7 }]}
+              disabled={profileSaving}
+              onPress={handleSaveProfile}
+              activeOpacity={0.85}
+            >
+              {profileSaving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
           </View>
-        </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );
@@ -398,354 +381,116 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.surface,
   },
-  headerIconBadge: {
+  backBtn: {
     width: 36,
     height: 36,
-    borderRadius: 8,
-    backgroundColor: colors.primaryLight,
+    borderRadius: 18,
+    backgroundColor: colors.badgeBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  closeBtn: {
-    padding: 6,
-    backgroundColor: '#eff1f4',
-    borderRadius: 16,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingHorizontal: 8,
-  },
-  tabItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabItemActive: {
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  tabTextActive: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  heroCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderColor: colors.border,
-    borderWidth: 1,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
+  headerTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  identity: { alignItems: 'center', paddingVertical: 8, marginBottom: 14 },
   heroAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#bfe3cb',
+    marginBottom: 10,
   },
-  heroAvatarText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.primaryDark,
-  },
-  heroName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
+  heroAvatarText: { fontSize: 28, fontWeight: '800', color: colors.primary },
+  heroName: { fontSize: 20, fontWeight: '800', color: colors.text },
+  heroEmail: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  identityChips: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   roleBadge: {
-    backgroundColor: '#e9f6ee',
-    borderColor: '#bfe3cb',
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
   },
-  roleBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  heroPhone: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  heroEmail: {
-    fontSize: 11,
-    color: colors.textMuted,
-  },
+  roleBadgeText: { fontSize: 12, fontWeight: '700', color: colors.primaryDark },
   shortIdBox: {
-    backgroundColor: '#f7f8fa',
-    borderColor: '#d0d5dd',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
   },
-  shortIdBoxCopied: {
-    backgroundColor: '#eef8f1',
-    borderColor: '#86efac',
+  shortIdBoxCopied: { borderColor: '#86efac', backgroundColor: '#ecfdf3' },
+  shortIdText: { fontSize: 12, fontWeight: '800', color: colors.primary, letterSpacing: 0.4 },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ecfdf3',
+    borderWidth: 1,
+    borderColor: '#abefc6',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12,
   },
-  shortIdLabel: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: colors.textMuted,
-  },
-  shortIdText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  copyHintText: {
-    fontSize: 9,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
+  successBannerText: { fontSize: 13, fontWeight: '600', color: '#067647', flex: 1 },
   sectionCard: {
     backgroundColor: colors.surface,
     borderRadius: 12,
-    padding: 14,
-    borderColor: colors.border,
+    padding: 16,
     borderWidth: 1,
-    marginBottom: 12,
+    borderColor: colors.border,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  sectionSub: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginBottom: 12,
-  },
-  fieldGroup: {
-    marginBottom: 10,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
+  fieldGroup: { marginBottom: 16 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#344054', marginBottom: 6 },
   input: {
-    backgroundColor: '#f7f8fa',
-    borderColor: colors.border,
+    height: 48,
+    borderRadius: 10,
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    fontSize: 13,
+    borderColor: '#d0d5dd',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 14,
+    fontSize: 15,
     color: colors.text,
+  },
+  phonePrefix: {
+    backgroundColor: '#f2f4f7',
+    borderWidth: 1,
+    borderColor: '#d0d5dd',
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+    paddingHorizontal: 14,
+    height: 48,
+    justifyContent: 'center',
+  },
+  phonePrefixText: { fontSize: 14, fontWeight: '700', color: '#475467' },
+  lockedField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#f2f4f7',
+    borderWidth: 1,
+    borderColor: '#e4e7ec',
+    paddingHorizontal: 14,
+  },
+  lockedFieldText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#475467' },
+  helperText: { fontSize: 12, color: colors.textMuted, marginTop: 6, lineHeight: 17 },
+  footer: {
+    padding: 16,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   saveBtn: {
+    height: 50,
+    borderRadius: 10,
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  saveBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  pinBtn: {
-    backgroundColor: '#101828',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  pinBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  lockNowBtn: {
-    backgroundColor: '#1d2939',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  lockNowBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eff1f4',
-  },
-  toggleLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  toggleSub: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  langChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#f7f8fa',
-  },
-  langChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  langChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  langChipTextActive: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  supportOptionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eff1f4',
-  },
-  supportIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  supportOptionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  supportOptionSub: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  aboutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eff1f4',
-  },
-  aboutLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  aboutValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  bottomActions: {
-    marginTop: 4,
-  },
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#fef2f2',
-    borderColor: '#fca5a5',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-  },
-  logoutBtnText: {
-    color: '#b91c1c',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  successBanner: {
-    backgroundColor: '#eef8f1',
-    borderColor: '#c4e8d1',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-  },
-  successBannerText: {
-    color: '#0f7a43',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  errorBanner: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fca5a5',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
-  },
-  errorBannerText: {
-    color: '#b91c1c',
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  saveBtnText: { fontSize: 16, fontWeight: '800', color: '#ffffff' },
 });

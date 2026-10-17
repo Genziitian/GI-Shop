@@ -50,16 +50,16 @@ import {
   saveSettlement,
   terminateCustomer,
   getShopSales,
-  searchRegisteredCustomer,
 } from '../../api/client';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
+import ApiErrorNotice from '../../components/ApiErrorNotice';
+import ReceiptModal from '../../components/ReceiptModal';
 import SettleDueModal from '../../components/SettleDueModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
-import LinkCustomerModal from '../../components/LinkCustomerModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import { showErrorAlert } from '../../utils/errorHandler';
 import {
@@ -115,6 +115,7 @@ export default function KhataScreen() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -127,6 +128,8 @@ export default function KhataScreen() {
 
   // Settlement, Add Customer & Link Account Modals
   const [settleCustomer, setSettleCustomer] = useState(null);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [showCustMenu, setShowCustMenu] = useState(false);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [linkTargetCustomer, setLinkTargetCustomer] = useState(null);
 
@@ -184,6 +187,7 @@ export default function KhataScreen() {
         getCustomers(),
         getShopSales(),
       ]);
+      setFetchError(customersRes.status === 'rejected' ? customersRes.reason : (salesRes.status === 'rejected' ? salesRes.reason : null));
 
       const data = customersRes.status === 'fulfilled' && Array.isArray(customersRes.value) ? customersRes.value : [];
       const salesRaw = salesRes.status === 'fulfilled' ? (Array.isArray(salesRes.value) ? salesRes.value : (salesRes.value?.sales || [])) : [];
@@ -316,6 +320,7 @@ export default function KhataScreen() {
       saveCachedCustomers(shopId, custsWithDue).catch(() => {});
     } catch (e) {
       console.error('Failed to load customers:', e);
+      setFetchError(e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -572,48 +577,14 @@ export default function KhataScreen() {
                 onPress={handleCloseLedger}
                 activeOpacity={0.7}
               >
-                <ArrowLeft size={16} color={colors.primary} />
-                <Text style={styles.backBtnText}>{t('Back to List')}</Text>
+                <ArrowLeft size={18} color={colors.text} />
+                <Text style={styles.backBtnText}>{t('Customers')}</Text>
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {!profileShortId && (
-                  <TouchableOpacity
-                    style={styles.linkHeaderBtn}
-                    onPress={() => setLinkTargetCustomer(selectedCustomer)}
-                    activeOpacity={0.8}
-                  >
-                    <Link2 size={12} color="#0284c7" />
-                    <Text style={styles.linkHeaderBtnText}>{t('Link App')}</Text>
-                  </TouchableOpacity>
-                )}
-
                 <TouchableOpacity
                   style={styles.profile3DotBtn}
-                  onPress={() => {
-                    Alert.alert(
-                      profileDisplayName,
-                      `${t('Customer Phone:')} ${selectedCustomer.phone || t('Not set')}\n${profileShortId ? `${t('Linked ID:')} #${profileShortId}` : t('Not linked to app')}`,
-                      [
-                        ...(!profileShortId ? [{
-                          text: t('Link to App Account'),
-                          onPress: () => setLinkTargetCustomer(selectedCustomer),
-                        }] : []),
-                        {
-                          text: t('Call Customer'),
-                          onPress: () => handleCallCustomer(selectedCustomer),
-                        },
-                        ...(selectedCustomer.totalDue > 0 ? [{
-                          text: t('Send WhatsApp Reminder'),
-                          onPress: () => handleRemindCustomer(selectedCustomer),
-                        }, {
-                          text: t('Settle Due'),
-                          onPress: () => setSettleCustomer(selectedCustomer),
-                        }] : []),
-                        { text: t('Cancel'), style: 'cancel' },
-                      ]
-                    );
-                  }}
+                  onPress={() => setShowCustMenu(true)}
                   activeOpacity={0.7}
                 >
                   <MoreVertical size={18} color={colors.textSecondary} />
@@ -621,65 +592,59 @@ export default function KhataScreen() {
               </View>
             </View>
 
-            {/* Customer Details Row & Outstanding Due Badge */}
-            <View style={styles.profileMainInfoRow}>
-              <View style={{ flex: 1, paddingRight: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <Text style={styles.profileName} numberOfLines={1}>{profileDisplayName}</Text>
+            {/* Customer identity */}
+            <View style={styles.profileIdentityRow}>
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileAvatarText}>
+                  {(profileDisplayName || 'C').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.profileName} numberOfLines={1}>{profileDisplayName}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                   {profileShortId ? (
                     <View style={styles.shortIdBadge}>
                       <Lock size={9} color={colors.primary} />
-                      <Text style={styles.shortIdText}>#{profileShortId}</Text>
+                      <Text style={styles.shortIdText}>#{String(profileShortId).toUpperCase()}</Text>
                     </View>
                   ) : (
                     <View style={styles.unlinkedPill}>
                       <Text style={styles.unlinkedPillText}>{t('Offline Customer')}</Text>
                     </View>
                   )}
+                  {selectedCustomer.address ? (
+                    <Text style={styles.profileAddress} numberOfLines={1}>{selectedCustomer.address}</Text>
+                  ) : null}
                 </View>
-
-                <View style={styles.metaIconRow}>
-                  {hasRealProfilePhone ? (
-                    <>
-                      <Phone size={13} color={colors.textMuted} />
-                      <Text style={styles.profilePhone}>{selectedCustomer.phone}</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Users size={13} color={colors.textMuted} />
-                      <Text style={styles.profilePhone}>
-                        {selectedCustomer.shortId ? `#${selectedCustomer.shortId}` : t('App Account')}
-                      </Text>
-                    </>
-                  )}
-                </View>
-
-                {selectedCustomer.address ? (
-                  <View style={styles.metaIconRow}>
-                    <MapPin size={13} color={colors.textMuted} />
-                    <Text style={styles.profileAddress} numberOfLines={1}>
-                      {selectedCustomer.address}
-                    </Text>
-                  </View>
-                ) : null}
               </View>
+            </View>
 
-              <View style={[
-                styles.profileDueBox,
-                selectedCustomer.totalDue > 0 ? styles.profileDueBoxRed : styles.profileDueBoxGreen,
-              ]}>
-                <Text style={styles.profileDueLabel}>{t('Current Due')}</Text>
+            {/* Outstanding due */}
+            <View
+              style={[
+                styles.dueStrip,
+                selectedCustomer.totalDue > 0 ? styles.dueStripRed : styles.dueStripGreen,
+              ]}
+            >
+              <View>
+                <Text style={styles.dueStripLabel}>{t('Current Due')}</Text>
                 <Text
                   style={[
-                    styles.profileDueValue,
-                    selectedCustomer.totalDue > 0
-                      ? { color: colors.danger }
-                      : { color: colors.success },
+                    styles.dueStripValue,
+                    { color: selectedCustomer.totalDue > 0 ? colors.danger : colors.success },
                   ]}
                 >
                   ₹{(Number(selectedCustomer?.totalDue) || 0).toFixed(2)}
                 </Text>
               </View>
+              <Text
+                style={[
+                  styles.dueStripStatus,
+                  { color: selectedCustomer.totalDue > 0 ? '#b42318' : '#067647' },
+                ]}
+              >
+                {selectedCustomer.totalDue > 0 ? t('Payment pending') : t('All settled')}
+              </Text>
             </View>
 
             {/* Dedicated Full-Width Action Buttons Row */}
@@ -797,7 +762,21 @@ export default function KhataScreen() {
                 });
 
                 return (
-                  <View key={idx} style={styles.timelineCard}>
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.timelineCard}
+                    activeOpacity={isSale ? 0.7 : 1}
+                    onPress={() => {
+                      if (!isSale) return;
+                      setSelectedReceipt({
+                        ...entry,
+                        items: entry.parsedItems || [],
+                        customerPhone: entry.customerPhone || selectedCustomer?.phone,
+                        shopName: user?.shop?.shopName || 'GI SHOP',
+                        shopAddress: user?.shop?.shopAddress || '',
+                      });
+                    }}
+                  >
                     <View style={styles.timelineHeaderRow}>
                       <View style={styles.timelineIconBadge}>
                         {isSale ? (
@@ -813,7 +792,12 @@ export default function KhataScreen() {
                             ? `${t('Bill')} #${entry.id} (${t(entry.paymentMethod)})`
                             : `${t('Payment Received')} (${entry.method})`}
                         </Text>
-                        <Text style={styles.timelineDate}>{dateStr}</Text>
+                        <Text style={styles.timelineDate}>
+                          {dateStr}
+                          {isSale && entry.parsedItems?.length > 0
+                            ? ` • ${entry.parsedItems.length} ${entry.parsedItems.length === 1 ? t('item') : t('items')}`
+                            : ''}
+                        </Text>
                       </View>
 
                       <View style={{ alignItems: 'flex-end' }}>
@@ -839,23 +823,6 @@ export default function KhataScreen() {
                       </View>
                     </View>
 
-                    {/* Show Itemized list if Sale */}
-                    {isSale && entry.parsedItems?.length > 0 && (
-                      <View style={styles.itemsSubTable}>
-                        {entry.parsedItems.map((pi, pidx) => (
-                          <View key={pidx} style={styles.itemsSubRow}>
-                            <Text style={styles.subItemName}>
-                              • {pi.item?.name}
-                            </Text>
-                            <Text style={styles.subItemDetails}>
-                              {pi.qty} {pi.item?.unit} @ ₹{pi.rate} = ₹
-                              {(Number(pi.amount || pi.qty * pi.rate) || 0).toFixed(2)}
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-
                     {/* Note row if present */}
                     {entry.note ? (
                       <View style={styles.timelineNoteRow}>
@@ -865,22 +832,56 @@ export default function KhataScreen() {
                         </Text>
                       </View>
                     ) : null}
-                  </View>
+                  </TouchableOpacity>
                 );
               });
             })()}
           </View>
 
-          {/* Terminate Action */}
-          <TouchableOpacity
-            style={styles.terminateBtn}
-            onPress={handleTerminate}
-            activeOpacity={0.7}
-          >
-            <UserX size={16} color={colors.danger} />
-            <Text style={styles.terminateBtnText}>{t('Terminate Relationship')}</Text>
-          </TouchableOpacity>
         </ScrollView>
+
+        {/* Customer actions sheet */}
+        <Modal visible={showCustMenu} transparent animationType="slide" onRequestClose={() => setShowCustMenu(false)}>
+          <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowCustMenu(false)}>
+            <View style={styles.menuSheet}>
+              <View style={styles.menuHandle} />
+              <Text style={styles.menuSheetTitle} numberOfLines={1}>{profileDisplayName}</Text>
+              <Text style={styles.menuSheetSub}>
+                {profileShortId ? `${t('Linked ID:')} #${String(profileShortId).toUpperCase()}` : t('Not linked to app')}
+              </Text>
+
+              {!profileShortId && (
+                <TouchableOpacity
+                  style={styles.menuSheetRow}
+                  activeOpacity={0.7}
+                  onPress={() => { setShowCustMenu(false); setLinkTargetCustomer(selectedCustomer); }}
+                >
+                  <View style={styles.menuSheetIcon}><Link2 size={18} color={colors.textSecondary} /></View>
+                  <Text style={styles.menuSheetRowText}>{t('Link to App Account')}</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={styles.menuSheetRow}
+                activeOpacity={0.7}
+                onPress={() => { setShowCustMenu(false); setTimeout(handleTerminate, 250); }}
+              >
+                <View style={[styles.menuSheetIcon, { backgroundColor: '#fef3f2' }]}><UserX size={18} color={colors.danger} /></View>
+                <Text style={[styles.menuSheetRowText, { color: colors.danger }]}>{t('Terminate Relationship')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuSheetCancel} activeOpacity={0.7} onPress={() => setShowCustMenu(false)}>
+                <Text style={styles.menuSheetCancelText}>{t('Cancel')}</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        <ReceiptModal
+          visible={!!selectedReceipt}
+          receipt={selectedReceipt}
+          onClose={() => setSelectedReceipt(null)}
+        />
 
         {/* Settlement Modal */}
         <SettleDueModal
@@ -895,11 +896,13 @@ export default function KhataScreen() {
         />
 
         {/* Link Customer Modal */}
-        <LinkCustomerModal
+        <AddCustomerModal
           visible={!!linkTargetCustomer}
-          customer={linkTargetCustomer}
+          initialLinkTarget={linkTargetCustomer}
+          customers={customers}
           onClose={() => setLinkTargetCustomer(null)}
-          onLinkSuccess={handleLinkSuccess}
+          onCustomerSelected={async customer => { if (customer.shortId || customer.customerShortId) handleLinkSuccess(customer); await handleOpenLedger(customer); }}
+          onCustomerAdded={async customer => { await saveCustomer(customer); await loadCustomers(); }}
         />
       </SafeAreaView>
     );
@@ -911,6 +914,7 @@ export default function KhataScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header subtitle={t('Khata & Udhar Ledger')} />
+      <ApiErrorNotice error={fetchError} context="Khata customers and balances" onRetry={loadCustomers} />
 
       <View style={styles.content}>
         {/* Total Outstanding Hero Card */}
@@ -1182,9 +1186,14 @@ export default function KhataScreen() {
       {/* Add Customer Modal */}
       <AddCustomerModal
         visible={showAddCustomerModal}
+        customers={customers}
+        onCustomerSelected={handleOpenLedger}
         onClose={() => setShowAddCustomerModal(false)}
         onCustomerAdded={async (custData) => {
+          await saveCustomer(custData);
+          const existing = customers.find(c => normalizePhone(c.phone || c.customerPhone) === normalizePhone(custData.phone));
           const newCust = {
+            ...existing,
             id: 'local_' + Date.now(),
             name: custData.name,
             phone: custData.phone,
@@ -1194,9 +1203,9 @@ export default function KhataScreen() {
             email: custData.customerEmail || '',
             customerEmail: custData.customerEmail || '',
             address: custData.address || '',
-            totalDue: 0,
-            totalBook: 0,
-            totalPaid: 0,
+            totalDue: existing?.totalDue || 0,
+            totalBook: existing?.totalBook || 0,
+            totalPaid: existing?.totalPaid || 0,
             status: 'ACTIVE',
           };
 
@@ -1215,21 +1224,18 @@ export default function KhataScreen() {
           setSearch('');
           setFilter('All');
 
-          try {
-            await saveCustomer(custData);
-            await loadCustomers();
-          } catch (err) {
-            console.error('Error saving customer:', err);
-          }
+          await loadCustomers();
         }}
       />
 
       {/* Link Customer Modal */}
-      <LinkCustomerModal
+      <AddCustomerModal
         visible={!!linkTargetCustomer}
-        customer={linkTargetCustomer}
+        initialLinkTarget={linkTargetCustomer}
+        customers={customers}
         onClose={() => setLinkTargetCustomer(null)}
-        onLinkSuccess={handleLinkSuccess}
+        onCustomerSelected={async customer => { if (customer.shortId || customer.customerShortId) handleLinkSuccess(customer); await handleOpenLedger(customer); }}
+          onCustomerAdded={async customer => { await saveCustomer(customer); await loadCustomers(); }}
       />
     </SafeAreaView>
   );
@@ -1643,7 +1649,7 @@ const styles = StyleSheet.create({
   },
   profileHeaderCard: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
@@ -1662,9 +1668,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   backBtnText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.text,
   },
   linkHeaderBtn: {
     flexDirection: 'row',
@@ -1732,6 +1738,66 @@ const styles = StyleSheet.create({
   profileDueBoxGreen: {
     backgroundColor: '#eef8f1',
   },
+  menuOverlay: { flex: 1, backgroundColor: 'rgba(16,24,40,0.5)', justifyContent: 'flex-end' },
+  menuSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 28,
+  },
+  menuHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: '#d0d5dd', marginBottom: 14 },
+  menuSheetTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  menuSheetSub: { fontSize: 13, color: colors.textMuted, marginTop: 2, marginBottom: 10 },
+  menuSheetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eff1f4',
+  },
+  menuSheetIcon: { width: 38, height: 38, borderRadius: 8, backgroundColor: '#f2f4f7', alignItems: 'center', justifyContent: 'center' },
+  menuSheetRowText: { fontSize: 15, fontWeight: '600', color: colors.text },
+  menuSheetCancel: {
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: colors.badgeBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  menuSheetCancelText: { fontSize: 15, fontWeight: '700', color: colors.textSecondary },
+  profileIdentityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  profileAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileAvatarText: { fontSize: 20, fontWeight: '800', color: colors.primary },
+  dueStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 14,
+    borderWidth: 1,
+  },
+  dueStripRed: { backgroundColor: '#fef3f2', borderColor: '#fecdca' },
+  dueStripGreen: { backgroundColor: '#ecfdf3', borderColor: '#abefc6' },
+  dueStripLabel: { fontSize: 11, color: colors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+  dueStripValue: { fontSize: 26, fontWeight: '800', marginTop: 2 },
+  dueStripStatus: { fontSize: 12.5, fontWeight: '700' },
   profileDueLabel: {
     fontSize: 10,
     color: colors.textMuted,
@@ -1751,7 +1817,7 @@ const styles = StyleSheet.create({
   },
   profileCallBtn: {
     flex: 1,
-    height: 40,
+    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1773,9 +1839,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#eef8f1',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#86efac',
+    borderColor: '#d0d5dd',
     borderRadius: 10,
   },
   profileRemindBtnText: {
@@ -1785,7 +1851,7 @@ const styles = StyleSheet.create({
   },
   profileSettleBtn: {
     flex: 1.2,
-    height: 40,
+    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1821,10 +1887,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: '#d0d5dd',
+    borderColor: '#e4e7ec',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadowStyle,
   },
   filterChipActive: {
     backgroundColor: colors.primary,

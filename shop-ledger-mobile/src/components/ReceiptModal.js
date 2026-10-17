@@ -334,12 +334,6 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                     <Text style={styles.metaLabel}>Date & Time:</Text>
                     <Text style={styles.metaValue}>{formattedDate}</Text>
                   </View>
-                  {receipt.customerPhone ? (
-                    <View style={styles.metaRow}>
-                      <Text style={styles.metaLabel}>Customer Phone:</Text>
-                      <Text style={styles.metaValue}>{receipt.customerPhone}</Text>
-                    </View>
-                  ) : null}
                   <View style={styles.metaRow}>
                     <Text style={styles.metaLabel}>Payment Mode:</Text>
                     <View
@@ -435,9 +429,9 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: 8,
-                      paddingVertical: 14,
+                      height: 48,
                       borderRadius: 12,
-                      width: '100%',
+                      flex: 1.6,
                     }}
                     onPress={handleSharePDF}
                     activeOpacity={0.85}
@@ -449,9 +443,7 @@ export default function ReceiptModal({ visible, receipt, onClose, onNewBill }) {
                       <MessageSquare size={18} color="#ffffff" />
                     )}
                     <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '700' }}>
-                      {sharingPdf
-                        ? 'Preparing Bill PDF...'
-                        : `Share Bill on WhatsApp ${receipt.customerPhone ? `(${receipt.customerPhone})` : ''}`}
+                      {sharingPdf ? 'Preparing...' : 'Share on WhatsApp'}
                     </Text>
                   </TouchableOpacity>
 
@@ -661,7 +653,8 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   actionButtons: {
-    gap: 8,
+    flexDirection: 'row',
+    gap: 10,
     marginTop: 16,
   },
   newBillBtn: {
@@ -677,7 +670,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   closeBtn: {
-    height: 42,
+    flex: 1,
+    height: 48,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,

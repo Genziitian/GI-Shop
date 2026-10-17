@@ -26,7 +26,7 @@ import {
   Check,
   X,
   Clock,
-  Phone,
+  User,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
 import { AnimatedNumber } from '../../components/ui/Motion';
@@ -34,6 +34,7 @@ import { getShopSales, updateSaleNote } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
+import ApiErrorNotice from '../../components/ApiErrorNotice';
 import ReceiptModal from '../../components/ReceiptModal';
 import { showErrorAlert } from '../../utils/errorHandler';
 
@@ -45,6 +46,7 @@ export default function AnalyticsScreen() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [dateRange, setDateRange] = useState('Today');
 
   // Receipt Modal
@@ -58,6 +60,7 @@ export default function AnalyticsScreen() {
   const loadSales = useCallback(async () => {
     try {
       const data = await getShopSales();
+      setFetchError(null);
       const rawArray = Array.isArray(data) ? data : (data?.sales || []);
       const salesArray = rawArray.map((s) => ({
         ...s,
@@ -68,7 +71,7 @@ export default function AnalyticsScreen() {
       setSales(salesArray);
     } catch (e) {
       console.error('Failed to load sales:', e);
-      setSales([]);
+      setFetchError(e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -166,6 +169,7 @@ export default function AnalyticsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header subtitle={t('Sales Analytics & Transactions')} />
+      <ApiErrorNotice error={fetchError} context="Sales analytics" onRetry={onRefresh} />
 
       <View style={styles.content}>
         {/* Date Filter Bar */}
@@ -278,10 +282,10 @@ export default function AnalyticsScreen() {
                         <Clock size={12} color={colors.textMuted} />
                         <Text style={styles.saleDateText}>{formattedDate}</Text>
                       </View>
-                      {item.customerPhone ? (
+                      {item.customerShortId ? (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                          <Phone size={12} color={colors.primary} />
-                          <Text style={styles.saleCustPhone}>{item.customerPhone}</Text>
+                          <User size={12} color={colors.primary} />
+                          <Text style={styles.saleCustPhone}>{String(item.customerShortId).toUpperCase()}</Text>
                         </View>
                       ) : null}
                     </View>

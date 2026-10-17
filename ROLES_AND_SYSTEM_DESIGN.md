@@ -150,7 +150,25 @@ graph TD
 
 ---
 
-## 6. Role Comparison Matrix
+## 6. Khata Credit Eligibility (Web, Mobile & Backend)
+
+- **Add to Book requires a registered, active GI SHOP app account.** A name, phone number, imported contact, or shop-only walk-in record does not qualify on its own.
+- Select or link the customer's app account before counter billing. The backend verifies the supplied Customer Short ID against the active account and saves the account's actual details; an unknown or inactive ID is rejected.
+- For online orders, the backend checks the order's customer account both when requesting Khata payment and again before OTP completion records the credit sale.
+- Walk-in customers without an app account can still be billed using Cash or Online. Existing Khata records and repayments remain available.
+- Mobile bills queued offline are subject to the same backend account check when they sync. Local storage alone does not confirm that the account is currently active.
+
+### Customer selection and connecting later
+
+- Billing and Khata use one customer picker: search by name, phone or Customer ID, then explicitly choose a result. Saved customers and matching GI SHOP accounts appear together; a name search never selects the first person automatically.
+- Use Add new customer only when needed. Name and phone are required; address is optional. Saving a walk-in record does not register an app account.
+- An unlinked saved customer has a Connect app option. Search for their active app account, check the name, phone and Customer ID, then confirm connecting their past records.
+- Connecting attaches existing sales, repayments and orders in that shop to the app account. This can include paid bills or legacy Khata from before the registered-account rule. It does not create new debt or change the old amounts.
+- A phone-number match alone must not make an old customer appear linked. Keep their past records available for explicit connection after they register.
+
+---
+
+## 7. Role Comparison Matrix
 
 | Feature / Action | 🛡️ Super Manager | 🏪 Shopkeeper (Owner) | 💼 Cashier (Staff) | 👤 Customer |
 | :--- | :---: | :---: | :---: | :---: |

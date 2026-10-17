@@ -100,6 +100,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'gi-shop-secure-jwt-production-secr
 
 // Connect Database Adapter (Supports MySQL via DB_HOST/DB_TYPE or SQLite fallback)
 const db = require('./db');
+const { isKhataPayment, verifyKhataCustomer } = require('./khata');
 
 // Helper: Push Notification Sender
 async function sendPushNotification(userIds, { title, body, data = {} }) {
@@ -1529,46 +1530,55 @@ app.post('/api/shop/orders/:id/get-payment', authenticate, (req, res) => {
 
   db.get(`SELECT * FROM Orders WHERE (id = ? OR orderNumber = ?) AND shopId = ?`, [orderIdentifier, orderIdentifier, shopId], (err, order) => {
     if (err || !order) return res.status(404).json({ error: 'Order not found' });
-    
-    const discNum = parseFloat(discount || 0);
-    const finalAmount = Math.max(0, (order.estimatedTotal || 0) - discNum);
-    const mode = paymentMethod || 'Cash';
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const nowIso = new Date().toISOString();
+    const savePaymentRequest = () => {
+      const discNum = parseFloat(discount || 0);
+      const finalAmount = Math.max(0, (order.estimatedTotal || 0) - discNum);
+      const mode = isKhataPayment(paymentMethod) ? 'Add to Book' : (paymentMethod || 'Cash');
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+      const nowIso = new Date().toISOString();
 
-    db.run(
-      `UPDATE Orders SET paymentRequested = 1, requestedDiscount = ?, requestedAmount = ?, paymentMethod = ?, otpCode = ?, otpCreatedAt = ? WHERE id = ? AND shopId = ?`,
-      [discNum, finalAmount, mode, otp, nowIso, order.id, shopId],
-      (runErr) => {
-        if (runErr) {
-          console.error('[Get Payment DB Error]', runErr);
-          return res.status(500).json({ error: 'Database update failed: ' + (runErr.message || runErr) });
-        }
-        appendOrderTimeline(order.id, {
-          status: 'PAYMENT_REQUESTED',
-          title: 'Payment Requested',
-          description: `Amount requested: ₹${finalAmount.toFixed(2)}${discNum > 0 ? ` (Discount: ₹${discNum.toFixed(2)})` : ''}. Payment mode: ${mode}`
-        });
-        if (order.customerId) {
-          recordAndSendNotification(order.customerId, {
-            title: 'Payment Request Received',
-            body: `Shopkeeper requested ₹${finalAmount.toFixed(2)} (${mode}) for order #${order.orderNumber}. Click to view 4-digit OTP.`,
-            type: 'PAYMENT_REQUESTED',
-            orderId: order.id,
-            orderNumber: order.orderNumber,
-            data: { type: 'PAYMENT_REQUESTED', orderId: String(order.id), orderNumber: order.orderNumber, requestedAmount: finalAmount, paymentMethod: mode }
+      db.run(
+        `UPDATE Orders SET paymentRequested = 1, requestedDiscount = ?, requestedAmount = ?, paymentMethod = ?, otpCode = ?, otpCreatedAt = ? WHERE id = ? AND shopId = ?`,
+        [discNum, finalAmount, mode, otp, nowIso, order.id, shopId],
+        (runErr) => {
+          if (runErr) {
+            console.error('[Get Payment DB Error]', runErr);
+            return res.status(500).json({ error: 'Database update failed: ' + (runErr.message || runErr) });
+          }
+          appendOrderTimeline(order.id, {
+            status: 'PAYMENT_REQUESTED',
+            title: 'Payment Requested',
+            description: `Amount requested: ₹${finalAmount.toFixed(2)}${discNum > 0 ? ` (Discount: ₹${discNum.toFixed(2)})` : ''}. Payment mode: ${mode}`
+          });
+          if (order.customerId) {
+            recordAndSendNotification(order.customerId, {
+              title: 'Payment Request Received',
+              body: `Shopkeeper requested ₹${finalAmount.toFixed(2)} (${mode}) for order #${order.orderNumber}. Click to view 4-digit OTP.`,
+              type: 'PAYMENT_REQUESTED',
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              data: { type: 'PAYMENT_REQUESTED', orderId: String(order.id), orderNumber: order.orderNumber, requestedAmount: finalAmount, paymentMethod: mode }
+            });
+          }
+          // Do NOT return otpCode to shopkeeper
+          res.json({
+            success: true,
+            paymentRequested: 1,
+            requestedAmount: finalAmount,
+            requestedDiscount: discNum,
+            paymentMethod: mode
           });
         }
-        // Do NOT return otpCode to shopkeeper
-        res.json({
-          success: true,
-          paymentRequested: 1,
-          requestedAmount: finalAmount,
-          requestedDiscount: discNum,
-          paymentMethod: mode
-        });
-      }
-    );
+      );
+    };
+
+    if (isKhataPayment(paymentMethod)) {
+      return verifyKhataCustomer(db, { userId: order.customerId, shortId: order.customerShortId }, (verificationError) => {
+        if (verificationError) return res.status(verificationError.status).json({ error: verificationError.message });
+        savePaymentRequest();
+      });
+    }
+    savePaymentRequest();
   });
 });
 
@@ -1600,103 +1610,114 @@ app.post('/api/shop/orders/:id/verify-otp', authenticate, (req, res) => {
 
     const now = new Date().toISOString();
     const finalTotal = order.requestedAmount > 0 ? order.requestedAmount : (order.estimatedTotal || 0);
-    const mode = order.paymentMethod || 'Cash';
+    const mode = isKhataPayment(order.paymentMethod) ? 'Add to Book' : (order.paymentMethod || 'Cash');
     const disc = order.requestedDiscount || 0;
 
-    // 1. Mark Order as COMPLETED & COLLECTED, immediately clearing OTP so it is never stuck
-    db.run(
-      `UPDATE Orders SET status = 'COMPLETED', collectionStatus = 'COLLECTED', collectedAt = ?, otpCode = NULL WHERE id = ? AND shopId = ?`,
-      [now, order.id, shopId],
-      function() {
-        appendOrderTimeline(order.id, {
-          status: 'VERIFIED',
-          title: 'Customer Verified',
-          description: 'Customer 4-digit OTP successfully verified'
-        }, () => {
+    const completeOrder = (verifiedCustomer) => {
+      // 1. Mark Order as COMPLETED & COLLECTED, immediately clearing OTP so it is never stuck
+      db.run(
+        `UPDATE Orders SET status = 'COMPLETED', collectionStatus = 'COLLECTED', collectedAt = ?, otpCode = NULL WHERE id = ? AND shopId = ?`,
+        [now, order.id, shopId],
+        function() {
           appendOrderTimeline(order.id, {
-            status: 'COMPLETED',
-            title: 'Order Delivered & Completed',
-            description: 'Order handed over and sale completed'
+            status: 'VERIFIED',
+            title: 'Customer Verified',
+            description: 'Customer 4-digit OTP successfully verified'
+          }, () => {
+            appendOrderTimeline(order.id, {
+              status: 'COMPLETED',
+              title: 'Order Delivered & Completed',
+              description: 'Order handed over and sale completed'
+            });
           });
-        });
 
-        // Lookup linked customer user account to guarantee full phone and shortId
-        const custLookupId = order.customerId || 0;
-        const custLookupPhone = (order.customerPhone || '').trim();
-        const custLookupShortId = (order.customerShortId || '').trim();
+          // Lookup linked customer user account to guarantee full phone and shortId
+          const custLookupId = order.customerId || 0;
+          const custLookupPhone = (order.customerPhone || '').trim();
+          const custLookupShortId = (order.customerShortId || '').trim();
 
-        db.get(
-          `SELECT id, phone, shortId, name, email, address FROM Users WHERE id = ? OR (shortId != '' AND shortId = ?) OR (phone != '' AND phone = ?)`,
-          [custLookupId, custLookupShortId, custLookupPhone],
-          (uErr, userRow) => {
-            const activePhone = (userRow?.phone || custLookupPhone || '').trim();
-            const activeShortId = (userRow?.shortId || custLookupShortId || '').trim();
-            const activeName = (userRow?.name || order.customerName || 'Customer').trim();
-            const activeEmail = (userRow?.email || '').trim();
-            const activeAddress = (userRow?.address || order.customerAddress || '').trim();
+          db.get(
+            `SELECT id, phone, shortId, name, email, address FROM Users WHERE id = ? OR (shortId != '' AND shortId = ?) OR (phone != '' AND phone = ?)`,
+            [custLookupId, custLookupShortId, custLookupPhone],
+            (uErr, foundUser) => {
+              const userRow = verifiedCustomer || foundUser;
+              const activePhone = (userRow?.phone || custLookupPhone || '').trim();
+              const activeShortId = (userRow?.shortId || custLookupShortId || '').trim();
+              const activeName = (userRow?.name || order.customerName || 'Customer').trim();
+              const activeEmail = (userRow?.email || '').trim();
+              const activeAddress = (userRow?.address || order.customerAddress || '').trim();
 
-            // 2. Automatically record POS sale in Sales table
-            db.run(
-              `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              [
-                shopId,
-                activePhone,
-                activeShortId,
-                order.itemsJSON,
-                order.estimatedTotal,
-                disc,
-                finalTotal,
-                mode,
-                `Order #${order.orderNumber}`,
-                req.user.name || 'Shopkeeper',
-                now
-              ],
-              function(saleErr) {
-                if (saleErr) {
-                  console.error('[Verify OTP] Sale record error:', saleErr);
-                }
+              // 2. Automatically record POS sale in Sales table
+              db.run(
+                `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  shopId,
+                  activePhone,
+                  activeShortId,
+                  order.itemsJSON,
+                  order.estimatedTotal,
+                  disc,
+                  finalTotal,
+                  mode,
+                  `Order #${order.orderNumber}`,
+                  req.user.name || 'Shopkeeper',
+                  now
+                ],
+                function(saleErr) {
+                  if (saleErr) {
+                    console.error('[Verify OTP] Sale record error:', saleErr);
+                  }
 
-                // If payment mode is Add to Book (or credit), guarantee customer exists in ShopCustomers
-                if (mode === 'Add to Book' || mode.includes('Book')) {
-                  const checkPhone = activePhone || activeShortId;
-                  db.get(
-                    `SELECT * FROM ShopCustomers WHERE shopId = ? AND ((customerPhone != '' AND customerPhone = ?) OR (customerShortId != '' AND customerShortId = ?))`,
-                    [shopId, activePhone, activeShortId],
-                    (scErr, existingSc) => {
-                      if (existingSc) {
-                        db.run(
-                          `UPDATE ShopCustomers SET status = 'ACTIVE', customerPhone = COALESCE(NULLIF(?, ''), customerPhone), customerShortId = COALESCE(NULLIF(?, ''), customerShortId), customerEmail = COALESCE(NULLIF(?, ''), customerEmail), name = COALESCE(NULLIF(?, ''), name), address = COALESCE(NULLIF(?, ''), address) WHERE shopId = ? AND ((customerPhone != '' AND customerPhone = ?) OR (customerShortId != '' AND customerShortId = ?))`,
-                          [activePhone, activeShortId, activeEmail, activeName, activeAddress, shopId, activePhone, activeShortId]
-                        );
-                      } else {
-                        db.run(
-                          `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')`,
-                          [shopId, checkPhone, activeShortId, activeEmail, activeName, activeAddress]
-                        );
+                  // If payment mode is Add to Book (or credit), guarantee customer exists in ShopCustomers
+                  if (mode === 'Add to Book' || mode.includes('Book')) {
+                    const checkPhone = activePhone || activeShortId;
+                    db.get(
+                      `SELECT * FROM ShopCustomers WHERE shopId = ? AND ((customerPhone != '' AND customerPhone = ?) OR (customerShortId != '' AND customerShortId = ?))`,
+                      [shopId, activePhone, activeShortId],
+                      (scErr, existingSc) => {
+                        if (existingSc) {
+                          db.run(
+                            `UPDATE ShopCustomers SET status = 'ACTIVE', customerPhone = COALESCE(NULLIF(?, ''), customerPhone), customerShortId = COALESCE(NULLIF(?, ''), customerShortId), customerEmail = COALESCE(NULLIF(?, ''), customerEmail), name = COALESCE(NULLIF(?, ''), name), address = COALESCE(NULLIF(?, ''), address) WHERE shopId = ? AND ((customerPhone != '' AND customerPhone = ?) OR (customerShortId != '' AND customerShortId = ?))`,
+                            [activePhone, activeShortId, activeEmail, activeName, activeAddress, shopId, activePhone, activeShortId]
+                          );
+                        } else {
+                          db.run(
+                            `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status) VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')`,
+                            [shopId, checkPhone, activeShortId, activeEmail, activeName, activeAddress]
+                          );
+                        }
                       }
-                    }
-                  );
-                }
+                    );
+                  }
 
-                if (order.customerId) {
-                  recordAndSendNotification(order.customerId, {
-                    title: 'Order Completed & Collected',
-                    body: `Order #${order.orderNumber} has been verified and handed over! Thank you for shopping with us.`,
-                    type: 'ORDER_COMPLETED',
-                    orderId: order.id,
-                    orderNumber: order.orderNumber,
-                    data: { type: 'ORDER_COMPLETED', orderId: String(order.id), orderNumber: order.orderNumber }
-                  });
-                }
+                  if (order.customerId) {
+                    recordAndSendNotification(order.customerId, {
+                      title: 'Order Completed & Collected',
+                      body: `Order #${order.orderNumber} has been verified and handed over! Thank you for shopping with us.`,
+                      type: 'ORDER_COMPLETED',
+                      orderId: order.id,
+                      orderNumber: order.orderNumber,
+                      data: { type: 'ORDER_COMPLETED', orderId: String(order.id), orderNumber: order.orderNumber }
+                    });
+                  }
 
-                res.json({ success: true, status: 'COMPLETED', collectionStatus: 'COLLECTED', otpCode: null, message: 'OTP verified! Order completed and sale recorded.' });
-              }
-            );
-          }
-        );
-      }
-    );
+                  res.json({ success: true, status: 'COMPLETED', collectionStatus: 'COLLECTED', otpCode: null, message: 'OTP verified! Order completed and sale recorded.' });
+                }
+              );
+            }
+          );
+        }
+      );
+    };
+
+    if (isKhataPayment(mode)) {
+      return verifyKhataCustomer(db, { userId: order.customerId, shortId: order.customerShortId }, (verificationError, user) => {
+        if (verificationError) return res.status(verificationError.status).json({ error: verificationError.message });
+        completeOrder(user);
+      });
+    }
+    completeOrder();
   });
 });
 
@@ -1706,32 +1727,29 @@ app.get('/api/shop/customers/search-registered', authenticate, (req, res) => {
   if (!rawQuery) return res.json([]);
 
   const cleanQuery = rawQuery.replace(/^(#|ID:\s*)/i, '').trim().toLowerCase();
-  const cleanPhone = rawQuery.replace(/\D/g, '').slice(-10);
-  const searchPattern = `%${cleanQuery}%`;
-  const phonePattern = cleanPhone ? `%${cleanPhone}%` : `%${rawQuery}%`;
+  const cleanPhone = /^[+\d\s().-]+$/.test(rawQuery) ? rawQuery.replace(/\D/g, '').slice(-10) : '';
+  const searchPattern = `%${cleanQuery.replace(/[!%_]/g, '!$&')}%`;
+  const phonePattern = cleanPhone ? `%${cleanPhone}%` : null;
 
-  const sql = `SELECT u.id, u.shortId, u.name, u.phone, u.city, u.role, s.shopName, s.shortId as shopShortId 
+  const sql = `SELECT u.id, u.shortId, u.name, u.phone, u.email, u.address, u.city, u.role
                FROM Users u 
-               LEFT JOIN Shops s ON s.ownerId = u.id
                WHERE (u.status = 'ACTIVE' OR u.status IS NULL OR u.status = 'active') 
                AND (
                  LOWER(u.shortId) = ? 
-                 OR LOWER(u.shortId) LIKE ? 
-                 OR (s.shortId IS NOT NULL AND (LOWER(s.shortId) = ? OR LOWER(s.shortId) LIKE ?))
+                 OR LOWER(u.shortId) LIKE ? ESCAPE '!'
                  OR u.phone LIKE ? 
-                 OR LOWER(u.name) LIKE ?
-                 OR (s.shopName IS NOT NULL AND LOWER(s.shopName) LIKE ?)
+                 OR LOWER(u.name) LIKE ? ESCAPE '!'
+                 OR LOWER(u.email) = ?
                )
+               ORDER BY CASE WHEN LOWER(u.shortId) = ? OR LOWER(u.email) = ? OR u.phone = ? THEN 0 ELSE 1 END, u.name
                LIMIT 20`;
 
   db.all(
     sql,
     [
       cleanQuery, searchPattern,
-      cleanQuery, searchPattern,
-      phonePattern,
-      searchPattern,
-      searchPattern
+      phonePattern, searchPattern, cleanQuery,
+      cleanQuery, cleanQuery, cleanPhone
     ],
     (err, rows) => {
       if (err) {
@@ -1759,8 +1777,7 @@ app.get('/api/shop/customers', authenticate, (req, res) => {
             COALESCE(NULLIF(ShopCustomers.customerPhone, ''), Users.phone, ShopCustomers.customerShortId) as phone,
             (SELECT COUNT(*) FROM ShopBlockedCustomers WHERE ShopBlockedCustomers.shopId = ? AND ShopBlockedCustomers.customerPhone = ShopCustomers.customerPhone) as isBlocked
      FROM ShopCustomers 
-     LEFT JOIN Users ON (ShopCustomers.customerPhone != '' AND ShopCustomers.customerPhone = Users.phone) 
-                     OR (ShopCustomers.customerShortId IS NOT NULL AND ShopCustomers.customerShortId != '' AND ShopCustomers.customerShortId = Users.shortId)
+     LEFT JOIN Users ON (ShopCustomers.customerShortId IS NOT NULL AND ShopCustomers.customerShortId != '' AND ShopCustomers.customerShortId = Users.shortId)
      WHERE ShopCustomers.shopId = ? AND ShopCustomers.status = 'ACTIVE'`,
     [shopId, shopId],
     (err, directCustomers) => {
@@ -1905,9 +1922,7 @@ app.get('/api/shop/customers', authenticate, (req, res) => {
               const key = (p || s).toLowerCase();
               if (customerMap.has(key)) return;
 
-              const matchedUser = (allUsers || []).find(
-                (u) => (p && u.phone === p) || (s && u.shortId === s)
-              );
+              const matchedUser = s ? (allUsers || []).find(u => u.shortId === s) : null;
 
               const finalPhone = matchedUser?.phone || p || s;
               const finalShortId = matchedUser?.shortId || s || '';
@@ -2022,6 +2037,7 @@ app.post('/api/shop/customers/link-account', authenticate, (req, res) => {
     `SELECT * FROM ShopCustomers WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
     [shopId, cleanPhone, rawPhone],
     (custErr, existingCust) => {
+      if (custErr) return res.status(500).json({ error: 'Could not check the existing customer link. Please try again.' });
       if (existingCust && existingCust.customerShortId && existingCust.customerShortId.trim()) {
         return res.status(400).json({
           error: `This customer is already linked to app account #${existingCust.customerShortId} and cannot be modified.`,
@@ -2046,55 +2062,47 @@ app.post('/api/shop/customers/link-account', authenticate, (req, res) => {
             ? existingCust.name
             : matchedUser.name;
 
-          // 3. Update or Insert into ShopCustomers
-          db.run(
-            `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status)
-             VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
-             ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?`,
-            [shopId, cleanPhone, activeShortId, activeEmail, activeName, activeShortId, activeEmail, activeName],
-            (updateCustErr) => {
-              if (updateCustErr) {
-                console.error('[link-account] ShopCustomers update error:', updateCustErr);
-              }
-
-              // 4. Update all past Sales for this customer in this shop
-              db.run(
-                `UPDATE Sales SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
+          // Attach history first and only lock in the account link after every
+          // write succeeds. A failed history update can then be retried safely.
+          const historyUpdates = ['Sales', 'Settlements', 'Orders'];
+          const attachHistory = (index) => {
+            if (index < historyUpdates.length) {
+              const table = historyUpdates[index];
+              return db.run(
+                `UPDATE ${table} SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
                 [activeShortId, shopId, cleanPhone, rawPhone],
-                () => {}
+                (historyErr) => {
+                  if (historyErr) return res.status(500).json({ error: 'Could not connect all past records. Please retry connecting the account.' });
+                  attachHistory(index + 1);
+                }
               );
-
-              // 5. Update all past Settlements for this customer in this shop
-              db.run(
-                `UPDATE Settlements SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
-                [activeShortId, shopId, cleanPhone, rawPhone],
-                () => {}
-              );
-
-              // 6. Update all past Orders for this customer in this shop
-              db.run(
-                `UPDATE Orders SET customerShortId = ? WHERE shopId = ? AND (customerPhone = ? OR customerPhone = ?)`,
-                [activeShortId, shopId, cleanPhone, rawPhone],
-                () => {}
-              );
-
-              res.json({
-                success: true,
-                message: `Successfully linked customer to GI SHOP account #${activeShortId}.`,
-                customer: {
-                  shopId,
-                  phone: cleanPhone,
-                  customerPhone: cleanPhone,
-                  customerShortId: activeShortId,
-                  shortId: activeShortId,
-                  customerEmail: activeEmail,
-                  email: activeEmail,
-                  name: activeName,
-                  status: 'ACTIVE',
-                },
-              });
             }
-          );
+            db.run(
+              `INSERT INTO ShopCustomers (shopId, customerPhone, customerShortId, customerEmail, name, address, status)
+               VALUES (?, ?, ?, ?, ?, '', 'ACTIVE')
+               ON CONFLICT(shopId, customerPhone) DO UPDATE SET status='ACTIVE', customerShortId=?, customerEmail=?, name=?`,
+              [shopId, cleanPhone, activeShortId, activeEmail, activeName, activeShortId, activeEmail, activeName],
+              (updateCustErr) => {
+                if (updateCustErr) return res.status(500).json({ error: 'Could not save the account link. Please try again.' });
+                res.json({
+                  success: true,
+                  message: `Successfully linked customer to GI SHOP account #${activeShortId}.`,
+                  customer: {
+                    shopId,
+                    phone: cleanPhone,
+                    customerPhone: cleanPhone,
+                    customerShortId: activeShortId,
+                    shortId: activeShortId,
+                    customerEmail: activeEmail,
+                    email: activeEmail,
+                    name: activeName,
+                    status: 'ACTIVE',
+                  },
+                });
+              }
+            );
+          };
+          attachHistory(0);
         }
       );
     }
@@ -2104,37 +2112,26 @@ app.post('/api/shop/customers/link-account', authenticate, (req, res) => {
 // --- SALES & KHATA APIs ---
 app.post('/api/shop/sales', authenticate, (req, res) => {
   const shopId = req.user.shopId;
-  const { customerPhone, customerShortId, customerEmail, itemsJSON, subtotal, discount, total, paymentMethod, note } = req.body;
+  const { customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note } = req.body;
   const date = new Date().toISOString();
   const cashierName = req.user.role === 'Shopkeeper' ? 'Shopkeeper' : (req.user.staffRole || 'Cashier');
 
   // Verify 20-char note limit
   const sanitizedNote = (note || '').slice(0, 20);
 
-  if (paymentMethod === 'Add to Book') {
-    const cleanPhone = (customerPhone || '').replace(/\D/g, '').slice(-10) || (customerPhone || '').trim();
-    const sId = (customerShortId || '').trim();
-
-    if (!cleanPhone && !sId) {
-      return res.status(400).json({ error: 'Customer mobile number is required for Khata credit billing ("Add to Book").' });
-    }
-
-    // Attempt to link to registered app user if available (optional)
-    const findQuery = sId 
-      ? `SELECT id, shortId, email, phone, name FROM Users WHERE shortId = ? AND status = 'ACTIVE'`
-      : `SELECT id, shortId, email, phone, name FROM Users WHERE phone = ? AND status = 'ACTIVE'`;
-    const findParam = sId || cleanPhone;
-
-    db.get(findQuery, [findParam], (err, user) => {
-      const activeShortId = user?.shortId || sId || null;
-      const activeEmail = user?.email || customerEmail || null;
-      const activePhone = user?.phone || cleanPhone || '';
-      const finalCustName = (user?.name || req.body.customerName || 'Customer').trim();
+  if (isKhataPayment(paymentMethod)) {
+    verifyKhataCustomer(db, { shortId: customerShortId }, (verificationError, user) => {
+      if (verificationError) return res.status(verificationError.status).json({ error: verificationError.message });
+      const activeShortId = user.shortId;
+      const activeEmail = user.email;
+      const activePhone = user.phone || '';
+      const finalCustName = user.name;
+      const creditMethod = 'Add to Book';
 
       db.run(
         `INSERT INTO Sales (shopId, customerPhone, customerShortId, itemsJSON, subtotal, discount, total, paymentMethod, note, cashierName, date)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [shopId, activePhone, activeShortId, itemsJSON, subtotal, discount, total, paymentMethod, sanitizedNote, cashierName, date],
+        [shopId, activePhone, activeShortId, itemsJSON, subtotal, discount, total, creditMethod, sanitizedNote, cashierName, date],
         function(err) {
           if (err) {
             console.error('[POST /api/shop/sales Add to Book] Error:', err);
@@ -2157,7 +2154,7 @@ app.post('/api/shop/sales', authenticate, (req, res) => {
             id: saleId,
             date,
             total,
-            paymentMethod,
+            paymentMethod: creditMethod,
             note: sanitizedNote,
             customerPhone: activePhone,
             customerShortId: activeShortId,
@@ -2373,13 +2370,22 @@ app.get('/api/shop/sales', authenticate, (req, res) => {
   let query = `SELECT * FROM Sales WHERE shopId = ?`;
   const params = [shopId];
 
+  // Day boundaries follow the viewer's local time (tzOffset = JS getTimezoneOffset(), default IST),
+  // not UTC, so "Today"/"Yesterday" match what the user sees on screen.
+  const tzOffsetMin = Number.isFinite(Number(req.query.tzOffset)) ? Number(req.query.tzOffset) : -330;
+  const localDayStartUtc = (daysAgo) => {
+    const localNow = new Date(Date.now() - tzOffsetMin * 60000);
+    const startLocalMs = Date.UTC(localNow.getUTCFullYear(), localNow.getUTCMonth(), localNow.getUTCDate() - daysAgo);
+    return new Date(startLocalMs + tzOffsetMin * 60000).toISOString();
+  };
+
   if (isCashier || range === 'Today') {
     // Cashier restricted to Today
-    const today = new Date().toISOString().split('T')[0];
-    query += ` AND date LIKE '${today}%'`;
+    query += ` AND date >= ? AND date < ?`;
+    params.push(localDayStartUtc(0), localDayStartUtc(-1));
   } else if (range === 'Yesterday') {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    query += ` AND date LIKE '${yesterday}%'`;
+    query += ` AND date >= ? AND date < ?`;
+    params.push(localDayStartUtc(1), localDayStartUtc(0));
   } else if (range === '7Days') {
     const past = new Date(Date.now() - 7 * 86400000).toISOString();
     query += ` AND date >= ?`;

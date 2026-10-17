@@ -824,7 +824,7 @@ export default function Shopkeeper() {
 
   const loadSalesData = async (range, start, end) => {
     try {
-      const params = {};
+      const params = { tzOffset: new Date().getTimezoneOffset() };
       if (range === 'Custom' && start && end) {
         params.startDate = start;
         params.endDate = end;

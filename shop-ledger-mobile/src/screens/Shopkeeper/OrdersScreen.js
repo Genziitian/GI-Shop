@@ -44,6 +44,7 @@ import {
   verifyShopOrderOTP,
 } from '../../api/client';
 import Header from '../../components/Header';
+import ApiErrorNotice from '../../components/ApiErrorNotice';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import { showErrorAlert } from '../../utils/errorHandler';
 import { useTranslation } from '../../context/LanguageContext';
@@ -69,6 +70,7 @@ export default function OrdersScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [nowTick, setNowTick] = useState(Date.now());
 
   // Modal State
@@ -180,6 +182,7 @@ export default function OrdersScreen({ navigation }) {
         setLoading(true);
       }
       const data = await getShopOrders();
+      setFetchError(null);
       const validOrders = Array.isArray(data) ? data : [];
       setOrders(validOrders);
       setSelectedDetailOrder((prevSelected) => {
@@ -189,7 +192,7 @@ export default function OrdersScreen({ navigation }) {
       });
     } catch (e) {
       console.error('Failed to load orders:', e);
-      if (!silent) setOrders([]);
+      setFetchError(e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -349,7 +352,7 @@ export default function OrdersScreen({ navigation }) {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
               <User size={13} color={colors.textMuted} />
               <Text style={styles.orderCustName} numberOfLines={1}>
-                {ord.customerName} ({ord.customerPhone})
+                {ord.customerName}
               </Text>
             </View>
 
@@ -484,6 +487,7 @@ export default function OrdersScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header subtitle={t('Incoming Orders & Live Packing')} />
+      <ApiErrorNotice error={fetchError} context="Orders" onRetry={() => loadOrders()} />
 
       <View style={styles.content}>
         {/* Order Summary Stats */}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getCustomers, saveCustomer, saveSale, searchRegisteredCustomer } from '../lib/api';
+import { getCustomers, saveCustomer, saveSale } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
 import { 
-  Search, Plus, Trash2, X, Receipt, UserCheck, AlertCircle, ShieldAlert, MessageSquare,
-  ShoppingCart, ArrowRight, Minus, UserPlus, CreditCard, Banknote, BookOpen, Check
+  Search, Plus, Trash2, X, UserCheck, MessageSquare,
+  ShoppingCart, ArrowRight, Minus, CreditCard, Banknote, BookOpen, Check
 } from 'lucide-react';
 import { ProductGridSkeleton } from './SkeletonLoader';
+import CustomerPicker from './CustomerPicker';
 
 const QuickButton = ({ label, onClick }) => (
   <button type="button" className="btn btn-outline" style={{ padding: '0.5rem', flex: 1 }} onClick={onClick}>
@@ -16,38 +17,7 @@ const QuickButton = ({ label, onClick }) => (
 export default function POSBilling({ items, onSaleComplete, prefilledOrder = null, onClearPrefill = null }) {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [searchCustomer, setSearchCustomer] = useState('');
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [showMobileCartModal, setShowMobileCartModal] = useState(false);
-
-  // App Customer Search Modal State (Email / Short ID)
   const [showAppSearchModal, setShowAppSearchModal] = useState(false);
-  const [appQuery, setAppQuery] = useState('');
-  const [appSearchResults, setAppSearchResults] = useState([]);
-  const [appSearchLoading, setAppSearchLoading] = useState(false);
-  const [appSearchNotice, setAppSearchNotice] = useState('');
-
-  const [inlineAppResults, setInlineAppResults] = useState([]);
-  const [inlineAppLoading, setInlineAppLoading] = useState(false);
-
-  useEffect(() => {
-    if (!searchCustomer || searchCustomer.trim().length < 2) {
-      setInlineAppResults([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setInlineAppLoading(true);
-      try {
-        const results = await searchRegisteredCustomer(searchCustomer.trim());
-        setInlineAppResults(results || []);
-      } catch (e) {
-        setInlineAppResults([]);
-      } finally {
-        setInlineAppLoading(false);
-      }
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [searchCustomer]);
 
   const [itemSearch, setItemSearch] = useState('');
   
@@ -85,7 +55,6 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
       setCart(formattedCart);
 
       if (prefilledOrder.customerPhone) {
-        setSearchCustomer(prefilledOrder.customerPhone);
         setSelectedCustomer({
           name: prefilledOrder.customerName,
           phone: prefilledOrder.customerPhone,
@@ -96,28 +65,15 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
     }
   }, [prefilledOrder]);
 
-  const handleSelectCustomer = (c) => {
-    setSelectedCustomer(c);
-    setSearchCustomer(c.phone || c.customerPhone);
-    setShowCustomerDropdown(false);
-  };
-
-  const handleAddNewCustomer = async () => {
-    if (!searchCustomer) return;
-    await saveCustomer({ phone: searchCustomer, name: 'New Customer', address: '' });
-    const custs = await getCustomers();
-    setCustomers(custs);
-    const newC = custs.find(c => (c.phone || c.customerPhone) === searchCustomer);
-    if (newC) handleSelectCustomer(newC);
+  const handleSavePickedCustomer = async data => {
+    await saveCustomer(data);
+    const existing = customers.find(c => (c.phone || c.customerPhone) === data.phone);
+    const customer = { ...existing, ...data, customerPhone: data.phone, shortId: data.customerShortId || '', email: data.customerEmail || '' };
+    setCustomers(previous => [customer, ...previous.filter(c => (c.phone || c.customerPhone) !== data.phone)]);
+    setSelectedCustomer(customer);
   };
 
   const filteredItems = items.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase()));
-  const filteredCustomers = customers.filter(c => {
-    const p = c.phone || c.customerPhone || '';
-    const sId = c.shortId || '';
-    const name = c.name || '';
-    return p.includes(searchCustomer) || sId.toLowerCase().includes(searchCustomer.toLowerCase()) || name.toLowerCase().includes(searchCustomer.toLowerCase());
-  });
 
   const openModal = (product) => {
     setSelectedProduct(product);
@@ -230,45 +186,6 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
 
   const handleClearCustomer = () => {
     setSelectedCustomer(null);
-    setSearchCustomer('');
-  };
-
-  const handleSearchAppCustomer = async () => {
-    if (!appQuery.trim()) return;
-    setAppSearchLoading(true);
-    setAppSearchNotice('');
-    try {
-      const results = await searchRegisteredCustomer(appQuery.trim());
-      setAppSearchResults(results);
-      if (results.length === 0) {
-        setAppSearchNotice('No active customer account found with that Email, Short ID, or Phone number on GI SHOP.');
-      }
-    } catch (e) {
-      setAppSearchNotice('Error searching registered customer.');
-    } finally {
-      setAppSearchLoading(false);
-    }
-  };
-
-  const handleAssignAppCustomer = async (user) => {
-    try {
-      await saveCustomer({
-        phone: user.phone,
-        customerShortId: user.shortId,
-        customerEmail: user.email,
-        name: user.name,
-        address: ''
-      });
-      const updatedList = await getCustomers();
-      setCustomers(updatedList);
-      const newlySaved = updatedList.find(c => (c.phone === user.phone) || (c.shortId === user.shortId));
-      handleSelectCustomer(newlySaved || { name: user.name, phone: user.phone, shortId: user.shortId, email: user.email });
-      setShowAppSearchModal(false);
-      setAppQuery('');
-      setAppSearchResults([]);
-    } catch (e) {
-      notifyError(e, 'Khata Link Error');
-    }
   };
 
   const handleCheckout = async () => {
@@ -278,7 +195,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
         return;
       }
       if (!selectedCustomer.shortId) {
-        notifyError('Khata Restriction: "Add to Book" (Khata credit) is strictly restricted to app-registered customers with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.\n\nPlease click "Link Email / Short ID" to search and assign the customer\'s app account.', 'Registered App Account Required');
+        notifyError('Khata Restriction: "Add to Book" (Khata credit) is strictly restricted to app-registered customers with a Short ID / Email. Walk-in customers without an app account cannot be added to Khata.\n\nChoose the customer\'s registered GI SHOP account first.', 'Registered App Account Required');
         return;
       }
     }
@@ -312,7 +229,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
     setCart([]); 
     setDiscount(0); 
     setSelectedCustomer(null); 
-    setSearchCustomer(''); 
+
     setReceiptData(null); 
     setItemSearch('');
     setSaleNote('');
@@ -403,101 +320,13 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
 
   return (
     <div>
-      {/* Mobile Customer Account Card (Matches Native App Image 1) */}
       <div className="pos-mobile-section-card mobile-only-block">
         <div className="pos-mobile-customer-input-row">
-          <div style={{ flex: 1, position: 'relative' }}>
-            <input 
-              type="text"
-              className="pos-mobile-customer-input"
-              placeholder="Customer phone or name"
-              value={selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.phone || selectedCustomer.customerPhone})` : searchCustomer}
-              onChange={e => {
-                setSearchCustomer(e.target.value);
-                setSelectedCustomer(null);
-                setShowCustomerDropdown(true);
-              }}
-              onFocus={() => setShowCustomerDropdown(true)}
-            />
-          </div>
-
-          {selectedCustomer && (
-            <button type="button" className="pos-mobile-customer-clear" onClick={handleClearCustomer} aria-label="Clear customer">
-              <X size={16} />
-            </button>
-          )}
-          <button 
-            type="button" 
-            className="pos-mobile-customer-btn"
-            onClick={() => { setShowAppSearchModal(true); setShowCustomerDropdown(false); }}
-            title="Link Customer Account"
-          >
-            <UserPlus size={18} />
+          <button type="button" className="btn btn-outline" style={{ flex: 1, justifyContent: 'flex-start', minHeight: 48 }} onClick={() => setShowAppSearchModal(true)}>
+            <UserCheck size={18} /> {selectedCustomer ? `${selectedCustomer.name} · ${selectedCustomer.phone || selectedCustomer.customerPhone}` : 'Choose customer · name, phone or ID'}
           </button>
+          {selectedCustomer && <button type="button" className="pos-mobile-customer-clear" aria-label="Clear customer" onClick={handleClearCustomer}><X size={16} /></button>}
         </div>
-
-        {/* Dropdown for customer search on mobile */}
-        {showCustomerDropdown && searchCustomer && !selectedCustomer && (
-          <div className="panel" style={{ marginTop: '0.4rem', padding: '0.5rem', maxHeight: '240px', overflowY: 'auto', background: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', borderRadius: '10px' }}>
-            {filteredCustomers.map(c => (
-              <div 
-                key={c.id || c.phone} 
-                style={{ padding: '0.55rem', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem' }} 
-                onClick={() => handleSelectCustomer(c)}
-              >
-                <strong>{c.name}</strong> • 📞 {c.phone} {c.shortId ? <span style={{ color: 'var(--primary)', fontWeight: '700', marginLeft: '4px' }}>(ID: {c.shortId})</span> : '(Walk-in)'}
-              </div>
-            ))}
-
-            {inlineAppResults.length > 0 && (
-              <div style={{ background: '#f7f8fa', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d0d5dd' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.35rem' }}>
-                  🌐 Registered GI SHOP Accounts ({inlineAppResults.length})
-                </div>
-                {inlineAppResults.map(user => (
-                  <div 
-                    key={user.id} 
-                    style={{ 
-                      padding: '0.45rem', 
-                      cursor: 'pointer', 
-                      borderRadius: '6px', 
-                      border: '1px solid #e4e7ec', 
-                      marginBottom: '0.35rem', 
-                      background: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                    onClick={() => handleAssignAppCustomer(user)}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>
-                        {user.name} <span className="badge" style={{ fontSize: '0.68rem' }}>{user.shortId}</span>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📞 {user.phone}</div>
-                    </div>
-                    <button 
-                      type="button" 
-                      className="btn btn-success" 
-                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', fontWeight: '700' }}
-                    >
-                      Select
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!filteredCustomers.find(c => (c.phone || c.customerPhone) === searchCustomer) && (
-              <div 
-                style={{ padding: '0.5rem', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '600' }} 
-                onClick={handleAddNewCustomer}
-              >
-                + Add "{searchCustomer}" as Walk-in Customer
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="pos-billing-grid">
@@ -561,124 +390,14 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
       {/* POS Cart & Payment Panel */}
       <div className="panel pos-cart-panel">
         
-        {/* Customer Search & Selection */}
-        <div style={{ position: 'relative', zIndex: 20 }}>
-          <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.4rem' }}>
-            <input 
-              type="text" 
-              className="input" 
-              style={{ margin: 0, flex: 1, fontSize: '0.9rem' }} 
-              placeholder="Search Saved Customer (Phone, Short ID, Name)" 
-              value={searchCustomer} 
-              onChange={e => { setSearchCustomer(e.target.value); setShowCustomerDropdown(true); setSelectedCustomer(null); }} 
-              onFocus={() => setShowCustomerDropdown(true)} 
-            />
-            <button 
-              type="button" 
-              className="btn btn-outline" 
-              style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-              onClick={() => { setShowAppSearchModal(true); setShowCustomerDropdown(false); }}
-            >
-              <UserCheck size={14} /> Link Email / Short ID
-            </button>
-          </div>
-
-          {selectedCustomer && (
-            <div style={{ 
-              padding: '0.5rem 0.75rem', 
-              borderRadius: '8px', 
-              fontSize: '0.85rem', 
-              marginBottom: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: selectedCustomer.shortId ? '#ecfdf5' : '#fff7ed',
-              border: `1px solid ${selectedCustomer.shortId ? '#6ee7b7' : '#fdba74'}`
-            }}>
-              <div>
-                <strong>{selectedCustomer.name}</strong> ({selectedCustomer.phone || selectedCustomer.customerPhone})
-                {selectedCustomer.shortId ? (
-                  <span className="badge" style={{ background: '#10b981', color: '#fff', marginLeft: '0.4rem' }}>
-                    Short ID: {selectedCustomer.shortId} (Khata Eligible)
-                  </span>
-                ) : (
-                  <span className="badge" style={{ background: '#f97316', color: '#fff', marginLeft: '0.4rem' }}>
-                    Walk-in (Cash/Online Only)
-                  </span>
-                )}
-              </div>
-              <X size={16} style={{ cursor: 'pointer' }} onClick={() => { setSelectedCustomer(null); setSearchCustomer(''); }} />
-            </div>
-          )}
-
-          {showCustomerDropdown && searchCustomer && !selectedCustomer && (
-            <div className="panel" style={{ position: 'absolute', top: '100%', left: 0, right: 0, padding: '0.5rem', maxHeight: '280px', overflowY: 'auto', background: '#fff', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', borderRadius: '10px' }}>
-              {/* Local Saved Shop Customers */}
-              {filteredCustomers.map(c => (
-                <div key={c.id || c.phone} style={{ padding: '0.55rem', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem' }} onClick={() => handleSelectCustomer(c)}>
-                  <strong>{c.name}</strong> • 📞 {c.phone} {c.shortId ? <span style={{ color: 'var(--primary)', fontWeight: '700', marginLeft: '4px' }}>(ID: {c.shortId})</span> : '(Walk-in)'}
-                </div>
-              ))}
-
-              {/* Registered GI SHOP Accounts matching query (e.g. rajjgd59) */}
-              {inlineAppResults.length > 0 && (
-                <div style={{ background: '#f7f8fa', padding: '0.5rem', marginTop: '0.35rem', borderRadius: '8px', border: '1px solid #d0d5dd' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', marginBottom: '0.35rem' }}>
-                    🌐 Registered GI SHOP App Accounts ({inlineAppResults.length})
-                  </div>
-                  {inlineAppResults.map(user => (
-                    <div 
-                      key={user.id} 
-                      style={{ 
-                        padding: '0.5rem', 
-                        cursor: 'pointer', 
-                        borderRadius: '6px', 
-                        border: '1px solid #e4e7ec', 
-                        marginBottom: '0.35rem', 
-                        background: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      }}
-                      onClick={() => handleAssignAppCustomer(user)}
-                    >
-                      <div>
-                        <div style={{ fontWeight: '700', fontSize: '0.88rem' }}>
-                          {user.name} 
-                          <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#e9f6ee', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.7rem', marginLeft: '6px' }}>
-                            {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          ID: <strong style={{ color: 'var(--primary)' }}>{user.shortId}</strong> • 📞 {user.phone}
-                        </div>
-                      </div>
-                      <button 
-                        type="button"
-                        className="btn btn-success" 
-                        style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem', fontWeight: '700', whiteSpace: 'nowrap' }}
-                        onClick={(e) => { e.stopPropagation(); handleAssignAppCustomer(user); }}
-                      >
-                        Link &amp; Select
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {inlineAppLoading && (
-                <div style={{ padding: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Searching GI SHOP registered accounts...
-                </div>
-              )}
-
-              {!filteredCustomers.find(c => (c.phone || c.customerPhone) === searchCustomer) && (
-                <div style={{ padding: '0.5rem', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.85rem' }} onClick={handleAddNewCustomer}>
-                  + Add "{searchCustomer}" as Walk-in Customer (No Khata)
-                </div>
-              )}
-            </div>
-          )}
+        <div style={{ marginBottom: '0.75rem' }}>
+          <button type="button" className="btn btn-outline" style={{ width: '100%', justifyContent: 'flex-start', minHeight: 48 }} onClick={() => setShowAppSearchModal(true)}>
+            <UserCheck size={18} /> {selectedCustomer ? `${selectedCustomer.name} · ${selectedCustomer.phone || selectedCustomer.customerPhone}` : 'Choose customer · name, phone or ID'}
+          </button>
+          {selectedCustomer && <div className="flex-between" style={{ marginTop: 8, gap: 8 }}>
+            <span style={{ fontSize: '0.78rem', color: selectedCustomer.shortId ? 'var(--primary)' : '#9a6700' }}>{selectedCustomer.shortId ? `GI SHOP account · ${selectedCustomer.shortId}` : 'Cash / Online only · connect app account for Khata'}</span>
+            <button type="button" className="btn btn-sm btn-outline" onClick={handleClearCustomer}>Remove</button>
+          </div>}
         </div>
 
         {/* Cart Itemized Table */}
@@ -1109,89 +828,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
         </div>
       )}
 
-      {/* App Registered Customer Link Modal */}
-      {showAppSearchModal && (
-        <div className="modal-overlay" style={{ zIndex: 1000 }}>
-          <div className="modal-content" style={{ maxWidth: '480px', width: '100%' }}>
-            <div className="flex-between" style={{ marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <UserCheck size={20} color="var(--primary)" /> Assign Registered App Customer
-              </h3>
-              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowAppSearchModal(false)} />
-            </div>
-
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 0, marginBottom: '1rem' }}>
-              Search GI SHOP customer by their <strong>Email ID</strong> or <strong>Short ID</strong> (e.g. <code>ayu32</code>) to link them to Khata.
-            </p>
-
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-              <input 
-                type="text" 
-                className="input" 
-                style={{ margin: 0, flex: 1 }}
-                placeholder="Enter Email ID or Short ID (e.g. ayu32)..." 
-                value={appQuery} 
-                onChange={e => setAppQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearchAppCustomer()}
-              />
-              <button type="button" className="btn" onClick={handleSearchAppCustomer} disabled={appSearchLoading}>
-                {appSearchLoading ? 'Searching...' : 'Search'}
-              </button>
-            </div>
-
-            {appSearchNotice && (
-              <div style={{ background: '#fff7ed', border: '1px solid #fdba74', padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', color: '#c2410c', marginBottom: '1rem' }}>
-                {appSearchNotice}
-              </div>
-            )}
-
-            <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
-              {appSearchResults.map(user => (
-                <div 
-                  key={user.id} 
-                  style={{ 
-                    padding: '0.75rem', 
-                    borderRadius: '10px', 
-                    border: '1px solid var(--border)', 
-                    marginBottom: '0.5rem', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    background: '#f7f8fa' 
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      {user.name} 
-                      <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#e9f6ee', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.72rem' }}>
-                        {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
-                      </span>
-                      <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem' }}>ID: {user.shortId}</span>
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      📞 <strong>{user.phone}</strong> {user.email ? `• ✉️ ${user.email}` : ''} {user.city ? `• 📍 ${user.city}` : ''}
-                    </div>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="btn btn-success" 
-                    style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 700 }}
-                    onClick={() => handleAssignAppCustomer(user)}
-                  >
-                    Select &amp; Link
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button type="button" className="btn btn-outline" onClick={() => setShowAppSearchModal(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showAppSearchModal && <CustomerPicker customers={customers} onClose={() => setShowAppSearchModal(false)} onSelect={setSelectedCustomer} onSave={handleSavePickedCustomer} />}
       </div>
     </div>
   );

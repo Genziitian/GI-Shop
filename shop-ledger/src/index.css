@@ -1857,3 +1857,10 @@ img, video, canvas { max-width: 100%; }
 .bill-wa { min-height: 46px; background: #ecfdf3 !important; color: #067647 !important; border: 1px solid #abefc6 !important; box-shadow: none !important; font-weight: 600; gap: 0.45rem; display: flex; align-items: center; justify-content: center; }
 .bill-wa:hover { background: #d1fadf !important; filter: none; }
 .bill-foot .btn { min-height: 46px; white-space: nowrap; }
+
+/* Khata (shop): summary, filters, link pill */
+.khata-summary { margin-bottom: 1rem; }
+.khata-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: -0.25rem 0 1rem; }
+.khata-link { display: inline-flex; align-items: center; gap: 0.25rem; font: inherit; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px dashed #f79009; background: #fffaeb; color: #b54708; cursor: pointer; }
+.khata-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+@media (min-width: 769px) { .khata-summary .m-hero { max-width: 420px; } .toolbar-select.m-only { display: none !important; } }

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
   ScrollView,
   StyleSheet,
   Alert,
@@ -31,18 +30,18 @@ import {
   X,
   Plus,
   Minus,
-  ChevronUp,
   RefreshCw,
   WifiOff,
 } from 'lucide-react-native';
 import { colors, shadowStyle, shadowLarge } from '../../theme/colors';
-import { getItems, getCustomers, saveSale, saveCustomer, searchRegisteredCustomer } from '../../api/client';
+import { getItems, getCustomers, saveSale, saveCustomer } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
 import ProductUnitModal from '../../components/ProductUnitModal';
 import ReceiptModal from '../../components/ReceiptModal';
 import AddCustomerModal from '../../components/AddCustomerModal';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import ApiErrorNotice from '../../components/ApiErrorNotice';
 import { showErrorAlert } from '../../utils/errorHandler';
 import { useTranslation } from '../../context/LanguageContext';
 import {
@@ -61,7 +60,7 @@ const PAYMENT_MODES = [
   { id: 'Add to Book', label: 'Add to Book', icon: BookOpen },
 ];
 
-export default function POSScreen({ navigation }) {
+export default function POSScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const shopId = user?.shopId || user?.shop?.id || user?.staffRole?.shopId || 'default';
@@ -72,6 +71,7 @@ export default function POSScreen({ navigation }) {
   const [syncing, setSyncing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+  const [customersError, setCustomersError] = useState(null);
 
   // Search & Cart State
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,8 +82,6 @@ export default function POSScreen({ navigation }) {
 
   // Customer Selector State
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
 
   // Modals
@@ -150,48 +148,25 @@ export default function POSScreen({ navigation }) {
     }
 
     try {
-      const [itemsData, customersData] = await Promise.all([
-        getItems().catch((err) => {
-          console.warn('[POS] getItems failed:', err);
-          return null;
-        }),
-        getCustomers().catch((err) => {
-          console.warn('[POS] getCustomers failed:', err);
-          return null;
-        }),
-      ]);
-
-      const safeItems = Array.isArray(itemsData)
-        ? itemsData
-        : (itemsData?.items || itemsData?.data || (Array.isArray(itemsData?.results) ? itemsData.results : null));
-
-      const safeCustomers = Array.isArray(customersData)
-        ? customersData
-        : (customersData?.customers || customersData?.data || (Array.isArray(customersData?.results) ? customersData.results : null));
-
-      if (safeItems && Array.isArray(safeItems)) {
-        setItems(safeItems);
+      const [itemsResult, customersResult] = await Promise.allSettled([getItems(), getCustomers()]);
+      if (itemsResult.status === 'fulfilled') {
+        setItems(itemsResult.value);
         setFetchError(null);
-        if (safeItems.length > 0) {
-          await saveCachedItems(shopId, safeItems);
-        }
+        await saveCachedItems(shopId, itemsResult.value).catch(err => console.warn('[POS] Catalog cache write failed:', err));
       } else {
-        // Fallback to cached items
+        setFetchError(itemsResult.reason);
         const cached = await loadCachedItems(shopId);
         if (cached && cached.length > 0) {
           setItems(cached);
-          setFetchError(null);
-        } else if (itemsData === null) {
-          setFetchError('Unable to refresh latest items. Working with saved catalog.');
         }
       }
 
-      if (safeCustomers && Array.isArray(safeCustomers)) {
-        setCustomers(safeCustomers);
-        if (safeCustomers.length > 0) {
-          await saveCachedCustomers(shopId, safeCustomers);
-        }
+      if (customersResult.status === 'fulfilled') {
+        setCustomers(customersResult.value);
+        setCustomersError(null);
+        await saveCachedCustomers(shopId, customersResult.value).catch(err => console.warn('[POS] Customer cache write failed:', err));
       } else {
+        setCustomersError(customersResult.reason);
         const cachedCust = await loadCachedCustomers(shopId);
         if (cachedCust && cachedCust.length > 0) {
           setCustomers(cachedCust);
@@ -199,16 +174,14 @@ export default function POSScreen({ navigation }) {
       }
     } catch (e) {
       console.warn('POS load/sync error:', e);
+      setFetchError(previous => previous || e);
       try {
         const cached = await loadCachedItems(shopId);
         if (cached && cached.length > 0) {
           setItems(cached);
-          setFetchError(null);
-        } else {
-          setFetchError('Unable to refresh latest items. Working with saved catalog.');
         }
       } catch (cacheErr) {
-        setFetchError('Unable to refresh latest items. Working with saved catalog.');
+        console.warn('[POS] Catalog cache read failed:', cacheErr);
       }
     } finally {
       setLoading(false);
@@ -263,81 +236,8 @@ export default function POSScreen({ navigation }) {
     ((i?.name || i?.title || '') + '').toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
-  const filteredCustomers = customers.filter((c) => {
-    const p = c.phone || c.customerPhone || '';
-    const n = c.name || '';
-    return (
-      p.includes(customerSearch) ||
-      n.toLowerCase().includes(customerSearch.toLowerCase())
-    );
-  });
-
   const handleSelectCustomer = (c) => {
     setSelectedCustomer(c);
-    setCustomerSearch(c.phone || c.customerPhone);
-    setShowCustomerDropdown(false);
-  };
-
-  const handleClearCustomer = () => {
-    setSelectedCustomer(null);
-    setCustomerSearch('');
-  };
-
-  const handleForceSearch = async () => {
-    const query = customerSearch.trim();
-    if (!query) {
-      Alert.alert(t('Search Customer'), t('Please enter a phone number or name to search.'));
-      return;
-    }
-    const matches = customers.filter((c) => {
-      const p = (c.phone || c.customerPhone || '').toLowerCase();
-      const n = (c.name || '').toLowerCase();
-      const q = query.toLowerCase();
-      return p.includes(q) || n.includes(q);
-    });
-    if (matches.length === 1) {
-      handleSelectCustomer(matches[0]);
-      Alert.alert(t('Customer Found'), `${matches[0].name} (${matches[0].phone || matches[0].customerPhone})`);
-      return;
-    } else if (matches.length > 1) {
-      setShowCustomerDropdown(true);
-      return;
-    }
-
-    // Not found in local store list -> query central GI SHOP accounts directory!
-    try {
-      setSyncing(true);
-      const appResults = await searchRegisteredCustomer(query);
-      if (appResults && appResults.length > 0) {
-        const found = appResults[0];
-        const newCust = {
-          name: found.name || 'Customer',
-          phone: found.phone || query,
-          customerPhone: found.phone || query,
-          shortId: found.shortId,
-          email: found.email,
-        };
-        // Auto-save to shop customers so future lookups are local and instantaneous
-        try {
-          await saveCustomer(newCust);
-          loadData(false);
-        } catch (saveErr) {
-          console.warn('[POS] Auto-save customer error:', saveErr);
-        }
-        handleSelectCustomer(newCust);
-        Alert.alert(
-          t('Customer Found'),
-          `${newCust.name} (${newCust.phone || newCust.shortId || ''})\n\n✓ Linked GI SHOP Account: ${newCust.shortId ? 'ID ' + newCust.shortId : ''}`
-        );
-        return;
-      }
-    } catch (searchErr) {
-      console.warn('[POS] searchRegisteredCustomer error:', searchErr);
-    } finally {
-      setSyncing(false);
-    }
-
-    Alert.alert(t('Not Found'), t('No customer found with that phone or name.'));
   };
 
   const handleAddToCart = (cartItem) => {
@@ -390,13 +290,26 @@ export default function POSScreen({ navigation }) {
       if (!selectedCustomer) {
         Alert.alert(
           t('Customer Required'),
-          t('Khata credit ("Add to Book") requires selecting or adding a customer.'),
+          t('Khata credit ("Add to Book") requires selecting a registered GI SHOP app customer.'),
           [
             { text: t('Add / Select Customer'), onPress: () => setShowAddCustomerModal(true) },
             { text: t('Cancel'), style: 'cancel' }
           ]
         );
         setShowAddCustomerModal(true);
+        return;
+      }
+
+      const customerShortId = (selectedCustomer.shortId || selectedCustomer.customerShortId || '').trim();
+      if (!customerShortId) {
+        Alert.alert(
+          t('Registered App Account Required'),
+          t('Walk-in customers cannot receive Khata credit. Select or link their registered GI SHOP app account first, or choose Cash or Online.'),
+          [
+            { text: t('Select App Customer'), onPress: () => setShowAddCustomerModal(true) },
+            { text: t('Cancel'), style: 'cancel' },
+          ]
+        );
         return;
       }
 
@@ -483,11 +396,19 @@ export default function POSScreen({ navigation }) {
     }
   };
 
+  // Khata credit is only for registered (app-linked) customers
+  const khataEligible = !!(selectedCustomer && (selectedCustomer.shortId || selectedCustomer.customerShortId));
+
+  useEffect(() => {
+    if (paymentMethod === 'Add to Book' && !khataEligible) {
+      setPaymentMethod('Cash');
+    }
+  }, [khataEligible, paymentMethod]);
+
   const resetPOS = () => {
     setCart([]);
     setDiscount('');
     setSelectedCustomer(null);
-    setCustomerSearch('');
     setPaymentMethod('Cash');
     setShowCartModal(false);
   };
@@ -513,8 +434,46 @@ export default function POSScreen({ navigation }) {
         >
 
 
+          {/* Customer quick row */}
+          <View style={styles.posCustRow}>
+            <TouchableOpacity
+              style={styles.posCustField}
+              onPress={() => setShowAddCustomerModal(true)}
+              activeOpacity={0.8}
+            >
+              {selectedCustomer ? (
+                <UserCheck size={18} color={colors.primary} />
+              ) : (
+                <User size={18} color={colors.textMuted} />
+              )}
+              <Text
+                style={[styles.posCustText, selectedCustomer && { color: colors.text, fontWeight: '700' }]}
+                numberOfLines={1}
+              >
+                {selectedCustomer
+                  ? (selectedCustomer.name || t('Customer Account'))
+                  : t('Walk-in / Cash Customer')}
+              </Text>
+              {selectedCustomer ? (
+                <TouchableOpacity
+                  onPress={() => setSelectedCustomer(null)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <X size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              ) : null}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.posCustAddBtn}
+              onPress={() => setShowAddCustomerModal(true)}
+              activeOpacity={0.85}
+            >
+              <UserPlus size={20} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
+
           {/* Product Search & Grid */}
-          <View style={styles.sectionCard}>
+          <View>
             <View style={styles.searchBar}>
               <Search size={18} color={colors.textMuted} />
               <TextInput
@@ -562,13 +521,9 @@ export default function POSScreen({ navigation }) {
               </View>
             )}
 
-            {/* Offline / Sync Notice Banner */}
-            {fetchError && items.length > 0 && (
-              <TouchableOpacity onPress={() => loadData(true)} style={styles.offlineBanner} activeOpacity={0.8}>
-                <Text style={styles.offlineText}>{fetchError}</Text>
-                <Text style={styles.offlineRetry}>↻ Retry</Text>
-              </TouchableOpacity>
-            )}
+            <ApiErrorNotice error={fetchError} context="POS products" onRetry={() => loadData(true)}
+              hint={items.length > 0 ? 'Showing saved products. The latest server update failed.' : undefined} />
+            <ApiErrorNotice error={customersError} context="POS customers" onRetry={() => loadData(true)} />
 
             {/* Product Grid */}
             {loading && items.length === 0 ? (
@@ -585,10 +540,14 @@ export default function POSScreen({ navigation }) {
                   <Text style={styles.productTileName} numberOfLines={2}>
                     {item.name}
                   </Text>
-                  <View style={styles.productTileBadge}>
-                    <Text style={styles.productTilePrice}>
-                      ₹{item.price}/{item.unit}
-                    </Text>
+                  <View style={styles.productTileFooter}>
+                    <View>
+                      <Text style={styles.productTilePrice}>₹{item.price}</Text>
+                      <Text style={styles.productTileUnit}>/ {item.unit}</Text>
+                    </View>
+                    <View style={styles.productTileAdd}>
+                      <Plus size={18} color={colors.primary} />
+                    </View>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -598,12 +557,12 @@ export default function POSScreen({ navigation }) {
                   <Text style={styles.emptyProductsText}>
                     {searchQuery.length > 0
                       ? `No matching products for "${searchQuery}"`
-                      : (fetchError ? t('Unable to load products from server') : t('No products in store yet'))}
+                      : (fetchError ? t('Products could not be loaded') : t('No products in store yet'))}
                   </Text>
                   <Text style={styles.emptyProductsSub}>
                     {searchQuery.length > 0
                       ? t('Try searching with another keyword')
-                      : (fetchError ? t('Please check your connection and tap to retry') : t('Add products from Inventory or More tab'))}
+                      : (fetchError ? t('Open Error details above to see why this request failed.') : t('Add products from Inventory or More tab'))}
                   </Text>
                   {searchQuery.length > 0 ? (
                     <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
@@ -714,97 +673,43 @@ export default function POSScreen({ navigation }) {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Customer Account Section: Walk-in vs Search Customer Buttons */}
-            <View style={styles.custSectionCard}>
-              <Text style={styles.custSectionHeading}>{t('Billing Customer')}</Text>
-
-              <View style={styles.custTypeButtonGroup}>
-                <TouchableOpacity
-                  style={[
-                    styles.custTypeButton,
-                    !selectedCustomer && styles.custTypeButtonActive,
-                  ]}
-                  onPress={() => setSelectedCustomer(null)}
-                  activeOpacity={0.8}
-                >
-                  <User
-                    size={18}
-                    color={!selectedCustomer ? colors.primary : colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.custTypeButtonText,
-                      !selectedCustomer && styles.custTypeButtonTextActive,
-                    ]}
-                  >
-                    {t('Walk-in Customer')}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.custTypeButton,
-                    !!selectedCustomer && styles.custTypeButtonActive,
-                  ]}
-                  onPress={() => setShowAddCustomerModal(true)}
-                  activeOpacity={0.8}
-                >
-                  <Search
-                    size={18}
-                    color={!!selectedCustomer ? colors.primary : colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.custTypeButtonText,
-                      !!selectedCustomer && styles.custTypeButtonTextActive,
-                    ]}
-                  >
-                    {t('Search Customer')}
-                  </Text>
-                </TouchableOpacity>
+            {/* Billing Customer card (tap to add / change) */}
+            <TouchableOpacity
+              style={styles.billingCustCard}
+              onPress={() => setShowAddCustomerModal(true)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.billingCustIcon}>
+                {selectedCustomer ? (
+                  <UserCheck size={20} color={colors.primary} />
+                ) : (
+                  <User size={20} color={colors.textSecondary} />
+                )}
               </View>
-
-              {/* Active Customer Details or Walk-in Notice */}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.billingCustLabel}>{t('Billing Customer')}</Text>
+                <Text style={styles.billingCustName} numberOfLines={1}>
+                  {selectedCustomer
+                    ? `${selectedCustomer.name || t('Customer Account')}${(selectedCustomer.shortId || selectedCustomer.customerShortId) ? ` • ${String(selectedCustomer.shortId || selectedCustomer.customerShortId).toUpperCase()}` : ''}`
+                    : t('Walk-in / Cash Customer')}
+                </Text>
+              </View>
               {selectedCustomer ? (
-                <View style={styles.activeCustomerCard}>
-                  <View style={styles.activeCustomerAvatar}>
-                    <UserCheck size={20} color={colors.primary} />
-                  </View>
-                  <View style={{ flex: 1, marginHorizontal: 10 }}>
-                    <Text style={styles.activeCustomerName} numberOfLines={1}>
-                      {selectedCustomer.name || t('Customer Account')}
-                    </Text>
-                    <Text style={styles.activeCustomerMeta}>
-                      {selectedCustomer.phone || selectedCustomer.customerPhone || ''}
-                      {(selectedCustomer.shortId || selectedCustomer.customerShortId) ? ` • ID: ${selectedCustomer.shortId || selectedCustomer.customerShortId}` : ''}
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                    <TouchableOpacity
-                      style={styles.custChangeBtn}
-                      onPress={() => setShowAddCustomerModal(true)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.custChangeBtnText}>{t('Change')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.custRemoveBtn}
-                      onPress={() => setSelectedCustomer(null)}
-                      activeOpacity={0.7}
-                    >
-                      <X size={15} color={colors.danger} />
-                    </TouchableOpacity>
-                  </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={styles.billingCustAction}>{t('Edit')}</Text>
+                  <TouchableOpacity
+                    style={styles.custRemoveBtn}
+                    onPress={() => setSelectedCustomer(null)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    activeOpacity={0.7}
+                  >
+                    <X size={15} color={colors.danger} />
+                  </TouchableOpacity>
                 </View>
               ) : (
-                <View style={styles.walkinInfoBadge}>
-                  <View style={styles.walkinDot} />
-                  <Text style={styles.walkinInfoText}>
-                    {t('Walk-in customer selected. Cash & Online UPI payments supported.')}
-                  </Text>
-                </View>
+                <Text style={styles.billingCustAction}>+ {t('Add')}</Text>
               )}
-            </View>
+            </TouchableOpacity>
 
             {/* Cart Items List */}
             <View style={styles.cartItemsSection}>
@@ -912,30 +817,17 @@ export default function POSScreen({ navigation }) {
                 {PAYMENT_MODES.map((mode) => {
                   const Icon = mode.icon;
                   const active = paymentMethod === mode.id;
+                  const locked = mode.id === 'Add to Book' && !khataEligible;
                   return (
                     <TouchableOpacity
                       key={mode.id}
                       style={[
                         styles.paymentChoiceBtn,
                         active && styles.paymentChoiceBtnActive,
+                        locked && { opacity: 0.45 },
                       ]}
-                      onPress={() => {
-                        setPaymentMethod(mode.id);
-                        if (mode.id === 'Add to Book' && !selectedCustomer) {
-                          Alert.alert(
-                            t('Customer Required'),
-                            t('Khata credit ("Add to Book") requires selecting or adding a customer.'),
-                            [
-                              {
-                                text: t('Add / Select Customer'),
-                                onPress: () => setShowAddCustomerModal(true),
-                              },
-                              { text: t('Cancel'), style: 'cancel' }
-                            ]
-                          );
-                          setShowAddCustomerModal(true);
-                        }
-                      }}
+                      disabled={locked}
+                      onPress={() => setPaymentMethod(mode.id)}
                       activeOpacity={0.8}
                     >
                       <View style={[styles.paymentChoiceIconWrap, active && styles.paymentChoiceIconWrapActive]}>
@@ -956,6 +848,11 @@ export default function POSScreen({ navigation }) {
                   );
                 })}
               </View>
+              {!khataEligible && (
+                <Text style={styles.khataHint}>
+                  {t('Add to Book is only available for registered GI SHOP customers.')}
+                </Text>
+              )}
             </View>
           </ScrollView>
 
@@ -1004,8 +901,11 @@ export default function POSScreen({ navigation }) {
       {/* Add Customer Modal */}
       <AddCustomerModal
         visible={showAddCustomerModal}
+        customers={customers}
+        onCustomerSelected={handleSelectCustomer}
         onClose={() => setShowAddCustomerModal(false)}
         onCustomerAdded={async (custData) => {
+          await saveCustomer(custData);
           const cleanPhone = (custData.phone || '').replace(/\D/g, '').slice(-10);
           const targetShortId = (custData.customerShortId || '').toLowerCase();
           const existingCust = customers.find((c) => {
@@ -1034,14 +934,7 @@ export default function POSScreen({ navigation }) {
             return updated;
           });
           setSelectedCustomer(newCust);
-          setShowCustomerDropdown(false);
-          setCustomerSearch(newCust.phone || newCust.customerPhone || '');
-          try {
-            await saveCustomer(custData);
-            await loadData();
-          } catch (e) {
-            console.warn('saveCustomer error:', e);
-          }
+          await loadData();
         }}
       />
     </SafeAreaView>
@@ -1049,6 +942,30 @@ export default function POSScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  khataHint: { fontSize: 12, color: colors.textMuted, marginTop: 10, lineHeight: 17 },
+  billingCustCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  billingCustIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  billingCustLabel: { fontSize: 11.5, color: colors.textMuted, fontWeight: '600' },
+  billingCustName: { fontSize: 15, fontWeight: '700', color: colors.text, marginTop: 1 },
+  billingCustAction: { fontSize: 13.5, fontWeight: '800', color: colors.primary },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1158,53 +1075,91 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: 10,
-    paddingHorizontal: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    height: 42,
+    height: 50,
     marginBottom: 12,
-    gap: 8,
+    gap: 10,
+    ...shadowStyle,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 15,
     color: colors.text,
     paddingVertical: 0,
+  },
+  posCustRow: { flexDirection: 'row', gap: 10 },
+  posCustField: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    height: 50,
+    paddingHorizontal: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadowStyle,
+  },
+  posCustText: { flex: 1, fontSize: 15, color: colors.textMuted },
+  posCustAddBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
+    rowGap: 10,
   },
   productTile: {
-    width: '48%',
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 12,
+    width: '48.5%',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    minHeight: 86,
+    minHeight: 118,
     justifyContent: 'space-between',
+    ...shadowStyle,
   },
   productTileName: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14.5,
+    fontWeight: '700',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: 10,
+    lineHeight: 19,
   },
-  productTileBadge: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
+  productTileFooter: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
   productTilePrice: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  productTileUnit: {
     fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  productTileAdd: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   syncBadge: {
     flexDirection: 'row',

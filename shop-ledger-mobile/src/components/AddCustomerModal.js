@@ -1,90 +1,111 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  TextInput,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Modal, TextInput, StyleSheet, TouchableWithoutFeedback, KeyboardAvoidingView, Platform, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { TouchableOpacity } from './ui/Touchable';
-import { X, UserPlus, Contact, Lock, RotateCcw, UserCheck, Search } from 'lucide-react-native';
+import { X, UserPlus, Contact, UserCheck, Search, ArrowLeft, ChevronRight } from 'lucide-react-native';
 import { colors, shadowLarge } from '../theme/colors';
-import { searchRegisteredCustomer, syncContacts } from '../api/client';
-import { showErrorAlert, validatePhone } from '../utils/errorHandler';
+import { getCustomers, searchRegisteredCustomer, syncContacts, linkCustomerAccount } from '../api/client';
+import { validatePhone } from '../utils/errorHandler';
+import { customerDraftFromQuery, getCustomerPhone, getCustomerShortId, mergeCustomerResults } from '../utils/customerSearch';
 
-export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) {
+const EMPTY_CUSTOMERS = [];
+
+export default function AddCustomerModal({ visible, onClose, onCustomerAdded, onCustomerSelected, initialLinkTarget = null, customers = EMPTY_CUSTOMERS }) {
+  const [mode, setMode] = useState('search');
+  const [linkTarget, setLinkTarget] = useState(null);
+  const [query, setQuery] = useState('');
+  const [savedCustomers, setSavedCustomers] = useState(customers);
+  const [appResults, setAppResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [savedLoading, setSavedLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [savedError, setSavedError] = useState('');
+  const [retry, setRetry] = useState(0);
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [customerShortId, setCustomerShortId] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
   const [isImported, setIsImported] = useState(false);
   const [importedContactName, setImportedContactName] = useState('');
 
-  // App Customer Search State
-  const [appSearchQuery, setAppSearchQuery] = useState('');
-  const [appSearchResults, setAppSearchResults] = useState([]);
-  const [appSearchLoading, setAppSearchLoading] = useState(false);
-  const [appSearchNotice, setAppSearchNotice] = useState('');
+  useEffect(() => {
+    if (!visible) return;
+    setMode('search'); setLinkTarget(initialLinkTarget); setQuery(initialLinkTarget ? getCustomerPhone(initialLinkTarget) : ''); setAppResults([]); setFormError('');
+    setName(''); setPhone(''); setAddress(''); setCustomerEmail('');
+    setIsImported(false); setImportedContactName('');
+  }, [visible, initialLinkTarget]);
 
-  const handleSearchAppCustomer = async () => {
-    if (!appSearchQuery.trim()) return;
-    setAppSearchLoading(true);
-    setAppSearchNotice('');
-    try {
-      const results = await searchRegisteredCustomer(appSearchQuery.trim());
-      setAppSearchResults(results || []);
-      if (!results || results.length === 0) {
-        setAppSearchNotice('No registered customer account found with that Short ID or Phone on GI SHOP.');
-      }
-    } catch (e) {
-      setAppSearchNotice(e.message || 'Search failed. Check network or server.');
-    } finally {
-      setAppSearchLoading(false);
-    }
+  useEffect(() => { if (visible) setSavedCustomers(customers); }, [visible, customers]);
+
+  useEffect(() => {
+    if (!visible) return;
+    let current = true;
+    setSavedLoading(true); setSavedError('');
+    getCustomers().then(data => { if (current) setSavedCustomers(data); })
+      .catch(error => { if (current) setSavedError(error.message || 'Could not refresh saved customers.'); })
+      .finally(() => { if (current) setSavedLoading(false); });
+    return () => { current = false; };
+  }, [visible, retry]);
+
+  useEffect(() => {
+    let current = true;
+    setAppResults([]); setSearchError('');
+    if (!visible || mode !== 'search' || query.trim().length < 2) { setSearching(false); return; }
+    setSearching(true);
+    const timer = setTimeout(() => {
+      searchRegisteredCustomer(query.trim())
+        .then(data => { if (current) setAppResults(data || []); })
+        .catch(error => { if (current) setSearchError(error.message || 'Could not search GI SHOP accounts.'); })
+        .finally(() => { if (current) setSearching(false); });
+    }, 300);
+    return () => { current = false; clearTimeout(timer); };
+  }, [query, visible, mode, retry]);
+
+  const results = (linkTarget
+    ? appResults.map(c => ({ ...c, _needsSave: true, _linkExistingPhone: getCustomerPhone(linkTarget) }))
+    : mergeCustomerResults(savedCustomers, appResults, query)).slice(0, 30);
+  const close = () => { if (!submitting) onClose(); };
+  const addNew = () => {
+    const draft = customerDraftFromQuery(query);
+    setName(draft.name); setPhone(draft.phone); setAddress(''); setCustomerEmail('');
+    setIsImported(false); setImportedContactName(''); setFormError(''); setMode('new');
   };
 
-  const handleSelectAppCustomer = async (user) => {
-    const rawPhone = (user.phone || '').trim();
-    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
-    const finalPhone = cleanPhone.length === 10 ? cleanPhone : (rawPhone || user.shortId || '');
-    const finalName = (user.name || 'Customer').trim();
-    const finalShortId = (user.shortId || user.shopShortId || '').trim();
-
-    const customerData = {
-      phone: finalPhone,
-      name: finalName,
-      address: (user.address || '').trim(),
-      customerShortId: finalShortId || undefined,
-      customerEmail: user.email || undefined,
-    };
-
-    setAppSearchResults([]);
-    setAppSearchQuery('');
-
-    if (onCustomerAdded) {
-      setSubmitting(true);
-      try {
-        await onCustomerAdded(customerData);
-        handleResetModal();
-        onClose();
-      } catch (e) {
-        showErrorAlert(e, 'Select Customer', 'Failed to add customer.');
-      } finally {
-        setSubmitting(false);
+  const performSelection = async (customer) => {
+    if (submitting) return;
+    setSubmitting(true); setFormError('');
+    try {
+      if (customer._linkExistingPhone) {
+        const response = await linkCustomerAccount({ phone: customer._linkExistingPhone, customerId: getCustomerShortId(customer), email: customer.email || customer.customerEmail });
+        const linked = { ...(linkTarget || customer), ...response.customer, shortId: response.customer.customerShortId };
+        if (onCustomerSelected) await onCustomerSelected(linked);
+      } else if (!customer._needsSave && onCustomerSelected) {
+        await onCustomerSelected(customer);
+      } else {
+        await onCustomerAdded({
+          phone: getCustomerPhone(customer), name: customer.name,
+          address: customer.address || '', customerShortId: getCustomerShortId(customer) || undefined,
+          customerEmail: customer.email || customer.customerEmail || undefined,
+        });
       }
-    } else {
-      handleResetModal();
       onClose();
-    }
+    } catch (error) { setFormError(error.message || 'Could not select this customer. Please try again.'); }
+    finally { setSubmitting(false); }
+  };
+
+  const selectCustomer = (customer) => {
+    if (submitting) return;
+    if (customer._linkExistingPhone) {
+      Alert.alert('Connect app account?', `Connect past bills and any existing Khata for ${linkTarget?.name || customer.name} (${customer._linkExistingPhone}) to ${customer._appAccountName || customer.name}, ID ${getCustomerShortId(customer)}? Check that this is the same person.`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Connect & select', onPress: () => performSelection(customer) },
+      ]);
+    } else performSelection(customer);
   };
 
   const handleImportContact = async () => {
+    if (submitting) return;
     try {
       let Contacts = null;
       try {
@@ -213,232 +234,84 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
     }
   };
 
-  const handleDiscardContact = () => {
-    setIsImported(false);
-    setPhone('');
-    setName('');
-    setCustomerShortId('');
-    setCustomerEmail('');
-    setImportedContactName('');
-  };
-
-  const handleResetModal = () => {
-    setPhone('');
-    setName('');
-    setAddress('');
-    setCustomerShortId('');
-    setCustomerEmail('');
-    setIsImported(false);
-    setImportedContactName('');
-  };
-
   const handleSubmit = async () => {
+    if (submitting) return;
     const phoneCheck = validatePhone(phone);
-    if (!phoneCheck.valid) {
-      return showErrorAlert(phoneCheck.error, 'Invalid Mobile Number');
+    if (!phoneCheck.valid) return setFormError(phoneCheck.error);
+    if (!name.trim()) return setFormError('Enter the customer name.');
+    const existing = savedCustomers.find(c => getCustomerPhone(c).replace(/\D/g, '').slice(-10) === phoneCheck.phone);
+    if (existing) {
+      setMode('search'); setQuery(phoneCheck.phone);
+      setFormError('This phone is already saved. Select the customer below.');
+      return;
     }
-    if (!name.trim()) {
-      return showErrorAlert('Customer full name is required.', 'Name Required');
-    }
-
-    setSubmitting(true);
+    setSubmitting(true); setFormError('');
     try {
-      await onCustomerAdded({
-        phone: phoneCheck.phone,
-        name: name.trim(),
-        address: address.trim(),
-        customerShortId: customerShortId || undefined,
-        customerEmail: customerEmail || undefined,
-      });
-      handleResetModal();
+      await onCustomerAdded({ phone: phoneCheck.phone, name: name.trim(), address: address.trim(), customerEmail: customerEmail || undefined });
       onClose();
-    } catch (e) {
-      showErrorAlert(e, 'Customer Enrollment Error', 'Failed to add customer.');
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (error) { setFormError(error.message || 'Could not save the customer. Please try again.'); }
+    finally { setSubmitting(false); }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
+      <TouchableWithoutFeedback onPress={close}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={() => {}}>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              style={styles.modalContent}
-            >
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalContent}>
+              <View style={styles.handle} />
               <View style={styles.header}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <UserPlus size={22} color={colors.primary} />
-                  <Text style={styles.title}>Add New Customer</Text>
+                <View style={styles.heading}>
+                  {mode === 'new' || linkTarget ? <TouchableOpacity accessibilityLabel="Back to customer search" onPress={() => { setMode('search'); setLinkTarget(null); setQuery(''); setFormError(''); }} disabled={submitting} style={styles.closeBtn}><ArrowLeft size={18} color={colors.text} /></TouchableOpacity> : null}
+                  <Text style={styles.title}>{mode === 'new' ? 'New customer' : linkTarget ? 'Connect app account' : 'Choose customer'}</Text>
                 </View>
-                <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-                  <X size={20} color={colors.textMuted} />
-                </TouchableOpacity>
+                <TouchableOpacity accessibilityLabel="Close customer picker" onPress={close} disabled={submitting} style={styles.closeBtn}><X size={18} color={colors.textMuted} /></TouchableOpacity>
               </View>
-
-              {/* Registered App User Search Bar */}
-              <View style={styles.appSearchBox}>
-                <Text style={styles.appSearchTitle}>Link GI SHOP Account (Short ID / Phone)</Text>
-                <View style={styles.appSearchRow}>
-                  <TextInput
-                    style={styles.appSearchInput}
-                    placeholder="Short ID or Phone..."
-                    value={appSearchQuery}
-                    onChangeText={setAppSearchQuery}
-                    onSubmitEditing={handleSearchAppCustomer}
-                  />
-                  <TouchableOpacity
-                    style={styles.appSearchBtn}
-                    onPress={handleSearchAppCustomer}
-                    disabled={appSearchLoading}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.appSearchBtnText}>
-                      {appSearchLoading ? '...' : 'Search'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {appSearchNotice ? (
-                  <Text style={styles.appSearchNoticeText}>{appSearchNotice}</Text>
-                ) : null}
-
-                {appSearchResults.length > 0 && (
-                  <View style={styles.searchResultsList}>
-                    {appSearchResults.map((user) => (
-                      <View key={user.id} style={styles.userCard}>
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <Text style={styles.userNameText}>{user.name}</Text>
-                            <View style={[styles.roleBadge, user.role === 'Shopkeeper' ? styles.roleShopkeeper : styles.roleCustomer]}>
-                              <Text style={[styles.roleBadgeText, user.role === 'Shopkeeper' ? styles.roleShopkeeperText : styles.roleCustomerText]}>
-                                {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
-                              </Text>
-                            </View>
-                            <Text style={styles.userShortIdText}>ID: {user.shortId || user.shopShortId}</Text>
-                          </View>
-                          <Text style={styles.userSubText}>
-                            {user.phone || 'Registered Customer'}
-                          </Text>
-                        </View>
-
-                        <TouchableOpacity
-                          style={styles.selectUserBtn}
-                          onPress={() => handleSelectAppCustomer(user)}
-                          activeOpacity={0.7}
-                        >
-                          <Text style={styles.selectUserBtnText}>Select</Text>
-                        </TouchableOpacity>
+              <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
+                {mode === 'search' ? <>
+                  <Text style={styles.subtitle}>{linkTarget ? `Find ${linkTarget.name}'s registered account to connect their past bills and any existing Khata.` : 'Find a saved customer or someone on GI SHOP.'}</Text>
+                  <View style={styles.searchBox}>
+                    <Search size={18} color={colors.primary} />
+                    <TextInput accessibilityLabel="Search customers" style={styles.searchInput} placeholder="Name, phone or Customer ID" value={query} onChangeText={value => { setQuery(value); setFormError(''); }} autoCapitalize="none" autoCorrect={false} editable={!submitting} />
+                    {(searching || savedLoading) && <ActivityIndicator size="small" color={colors.primary} />}
+                  </View>
+                  {query.trim().length === 1 && <Text style={styles.hint}>Type at least 2 characters to search GI SHOP accounts.</Text>}
+                  {!!(searchError || savedError) && <View style={styles.notice}>
+                    <Text style={styles.error}>{searchError || savedError} Saved results may still be available.</Text>
+                    <TouchableOpacity onPress={() => setRetry(n => n + 1)} disabled={submitting}><Text style={styles.link}>Retry search</Text></TouchableOpacity>
+                  </View>}
+                  {!!formError && <Text accessibilityRole="alert" style={styles.error}>{formError}</Text>}
+                  <Text style={styles.sectionLabel}>{linkTarget ? 'Registered app accounts' : query.trim() ? 'Matching customers' : 'Saved customers'}</Text>
+                  {results.map((customer, index) => <View key={`${getCustomerShortId(customer)}:${getCustomerPhone(customer)}:${index}`} style={styles.customerRow}>
+                    <TouchableOpacity style={styles.customerChoice} onPress={() => selectCustomer(customer)} disabled={submitting} accessibilityLabel={`Select ${customer.name}, ${getCustomerPhone(customer)}`}>
+                      <View style={styles.avatar}><Text style={styles.avatarText}>{(customer.name || '?').slice(0, 1).toUpperCase()}</Text></View>
+                      <View style={styles.customerInfo}>
+                        <Text style={styles.customerName}>{customer.name}</Text>
+                        <Text style={styles.customerMeta}>{getCustomerPhone(customer)}{getCustomerShortId(customer) ? ` · ${getCustomerShortId(customer)}` : ''}</Text>
+                        <Text style={[styles.accountState, !getCustomerShortId(customer) && styles.cashOnly]}>{getCustomerShortId(customer) ? 'GI SHOP account' : 'Cash / Online only'}</Text>
                       </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Import from Contacts Banner / Button */}
-              {!isImported ? (
-                <TouchableOpacity
-                  style={styles.importContactsBtn}
-                  onPress={handleImportContact}
-                  activeOpacity={0.8}
-                >
-                  <Contact size={18} color="#0f7a43" />
-                  <Text style={styles.importContactsBtnText}>Import from Device Contacts</Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.importedBanner}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                    <Lock size={14} color="#1f9d5a" />
-                    <Text style={styles.importedBannerText} numberOfLines={1}>
-                      Imported: <Text style={{ fontWeight: '700' }}>{importedContactName}</Text>
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.discardBtn}
-                    onPress={handleDiscardContact}
-                    activeOpacity={0.7}
-                  >
-                    <RotateCcw size={13} color="#b91c1c" />
-                    <Text style={styles.discardBtnText}>Discard / Pick Other</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Phone Number Input (Locked if Imported) */}
-              <View style={styles.inputGroup}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.inputLabel}>Phone Number *</Text>
-                  {isImported && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Lock size={12} color="#1f9d5a" />
-                      <Text style={{ fontSize: 11, color: '#1f9d5a', fontWeight: '700' }}>
-                        Locked (Imported)
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <TextInput
-                  style={[styles.input, isImported && styles.inputLocked]}
-                  placeholder="e.g. 9876543210"
-                  keyboardType="phone-pad"
-                  value={phone}
-                  onChangeText={setPhone}
-                  editable={!isImported}
-                />
-              </View>
-
-              {/* Customer Name Input (Always Editable!) */}
-              <View style={styles.inputGroup}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={styles.inputLabel}>Customer Name *</Text>
-                  {isImported && (
-                    <Text style={{ fontSize: 11, color: '#0f7a43', fontWeight: '600' }}>
-                      Editable Name
-                    </Text>
-                  )}
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Ramesh Kumar"
-                  value={name}
-                  onChangeText={setName}
-                  editable={true}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Address / Area (Optional)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. House 44, Sector 2"
-                  value={address}
-                  onChangeText={setAddress}
-                />
-              </View>
-
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={onClose}
-                  disabled={submitting}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.submitBtn}
-                  onPress={handleSubmit}
-                  disabled={submitting}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.submitBtnText}>
-                    {submitting ? 'Saving...' : 'Save Customer'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                      <ChevronRight size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                    {!getCustomerShortId(customer) && <TouchableOpacity accessibilityLabel={`Connect app account for ${customer.name}`} onPress={() => { setLinkTarget(customer); setQuery(getCustomerPhone(customer)); setFormError(''); }} disabled={submitting} style={styles.connectButton}><Text style={styles.link}>Connect app</Text></TouchableOpacity>}
+                  </View>)}
+                  {!results.length && !searching && !savedLoading && !searchError && !savedError && <Text style={styles.empty}>{query.trim() ? 'No matching customers found.' : 'No saved customers yet. Search GI SHOP or add someone new.'}</Text>}
+                  {!linkTarget && <TouchableOpacity style={styles.addButton} onPress={addNew} disabled={submitting}><UserPlus size={18} color={colors.primary} /><Text style={styles.link}>Add new customer</Text></TouchableOpacity>}
+                  {!linkTarget && <TouchableOpacity style={styles.walkIn} onPress={close} disabled={submitting}><Text style={styles.hint}>Close</Text></TouchableOpacity>}
+                  {submitting && <ActivityIndicator color={colors.primary} />}
+                </> : <>
+                  <Text style={styles.subtitle}>Save their details once for faster billing next time.</Text>
+                  <TouchableOpacity style={styles.addButton} onPress={handleImportContact} disabled={submitting}><Contact size={18} color={colors.primary} /><Text style={styles.link}>{isImported ? `Imported: ${importedContactName}` : 'Fill from phone contacts'}</Text></TouchableOpacity>
+                  <Text style={styles.label}>Customer name *</Text>
+                  <TextInput accessibilityLabel="Customer name" style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Ramesh Kumar" editable={!submitting} />
+                  <Text style={styles.label}>Phone number *</Text>
+                  <TextInput accessibilityLabel="Phone number" style={styles.input} value={phone} onChangeText={setPhone} placeholder="10-digit mobile number" keyboardType="phone-pad" editable={!submitting} />
+                  <Text style={styles.label}>Address / area (optional)</Text>
+                  <TextInput accessibilityLabel="Address or area" style={styles.input} value={address} onChangeText={setAddress} placeholder="e.g. Gandhi Nagar" editable={!submitting} />
+                  <View style={styles.notice}><Text style={styles.hint}>Cash / Online billing is available. For Khata credit, select or link their registered GI SHOP account.</Text></View>
+                  {!!formError && <Text accessibilityRole="alert" style={styles.error}>{formError}</Text>}
+                  <TouchableOpacity style={styles.saveButton} onPress={handleSubmit} disabled={submitting}><Text style={styles.saveText}>{submitting ? 'Saving…' : 'Save & select customer'}</Text></TouchableOpacity>
+                </>}
+              </ScrollView>
             </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
@@ -448,249 +321,37 @@ export default function AddCustomerModal({ visible, onClose, onCustomerAdded }) 
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(16, 24, 40, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 20,
-    ...shadowLarge,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  closeBtn: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: colors.badgeBg,
-  },
-  importContactsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#e9f6ee',
-    borderWidth: 1,
-    borderColor: '#bfe3cb',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: 14,
-  },
-  importContactsBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0f7a43',
-  },
-  importedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#eef8f1',
-    borderWidth: 1,
-    borderColor: '#c4e8d1',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 14,
-  },
-  importedBannerText: {
-    fontSize: 12,
-    color: '#0b5e33',
-  },
-  discardBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#fee2e2',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  discardBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#b91c1c',
-  },
-  inputGroup: {
-    marginBottom: 14,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 15,
-    backgroundColor: colors.background,
-    color: colors.text,
-  },
-  inputLocked: {
-    backgroundColor: '#eff1f4',
-    borderColor: '#d0d5dd',
-    color: '#344054',
-    fontWeight: '700',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  cancelBtn: {
-    flex: 1,
-    height: 46,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  submitBtn: {
-    flex: 1.5,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  appSearchBox: {
-    backgroundColor: '#f7f8fa',
-    borderWidth: 1,
-    borderColor: '#e4e7ec',
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 14,
-  },
-  appSearchTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 8,
-  },
-  appSearchRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  appSearchInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    fontSize: 13,
-    backgroundColor: '#ffffff',
-  },
-  appSearchBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  appSearchBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  appSearchNoticeText: {
-    fontSize: 12,
-    color: '#c2410c',
-    marginTop: 6,
-  },
-  searchResultsList: {
-    marginTop: 10,
-    maxHeight: 180,
-  },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e4e7ec',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 6,
-  },
-  userNameText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  userShortIdText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  userSubText: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  roleBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  roleShopkeeper: {
-    backgroundColor: '#f5f3ff',
-  },
-  roleShopkeeperText: {
-    color: '#7c3aed',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  roleCustomer: {
-    backgroundColor: '#e9f6ee',
-  },
-  roleCustomerText: {
-    color: colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  selectUserBtn: {
-    backgroundColor: '#1f9d5a',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  selectUserBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(16,24,40,0.55)', justifyContent: 'flex-end' },
+  modalContent: { width: '100%', maxHeight: '88%', backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden', paddingTop: 10, ...shadowLarge },
+  handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: '#d0d5dd', marginBottom: 6 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10 },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  title: { fontSize: 19, fontWeight: '800', color: colors.text },
+  closeBtn: { padding: 8, borderRadius: 18, backgroundColor: colors.badgeBg },
+  body: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 28 },
+  subtitle: { color: colors.textMuted, fontSize: 13.5, lineHeight: 20, marginBottom: 12 },
+  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 14, backgroundColor: colors.background },
+  searchInput: { flex: 1, height: 50, fontSize: 15, color: colors.text },
+  sectionLabel: { color: colors.textMuted, fontSize: 11.5, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 18, marginBottom: 4 },
+  customerChoice: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  connectButton: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1, borderColor: '#bfe3cb', marginLeft: 6 },
+  customerRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eff1f4' },
+  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontWeight: '800', fontSize: 17, color: colors.primary },
+  customerInfo: { flex: 1 },
+  customerName: { fontSize: 15, fontWeight: '700', color: colors.text },
+  customerMeta: { fontSize: 12.5, color: colors.textMuted, marginTop: 2 },
+  accountState: { color: colors.primary, fontSize: 11.5, fontWeight: '700', marginTop: 3 },
+  cashOnly: { color: '#9a6700' },
+  empty: { color: colors.textMuted, textAlign: 'center', paddingVertical: 24, lineHeight: 21 },
+  addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 50, borderRadius: 12, borderWidth: 1, borderColor: '#bfe3cb', backgroundColor: '#eef8f1', marginTop: 16 },
+  link: { color: colors.primary, fontWeight: '700', fontSize: 14 },
+  walkIn: { alignItems: 'center', paddingTop: 14, paddingBottom: 4 },
+  hint: { color: colors.textSecondary, fontSize: 12, lineHeight: 19 },
+  notice: { padding: 12, backgroundColor: colors.background, borderRadius: 10, marginTop: 12, gap: 6 },
+  error: { color: '#b42318', fontSize: 13, lineHeight: 20, marginTop: 8 },
+  label: { color: '#344054', fontSize: 13, fontWeight: '600', marginTop: 16, marginBottom: 6 },
+  input: { height: 50, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 14, fontSize: 15, color: colors.text, backgroundColor: colors.background },
+  saveButton: { alignItems: 'center', justifyContent: 'center', height: 52, borderRadius: 12, backgroundColor: colors.primary, marginTop: 18 },
+  saveText: { color: '#fff', fontWeight: '800', fontSize: 16 },
 });

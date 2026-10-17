@@ -26,6 +26,7 @@ import { FadeInView } from '../../components/ui/Motion';
 import { getItems, saveItem, editItem, deleteItem } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/Header';
+import ApiErrorNotice from '../../components/ApiErrorNotice';
 import EditProductModal from '../../components/EditProductModal';
 import { showErrorAlert } from '../../utils/errorHandler';
 import {
@@ -43,6 +44,7 @@ export default function InventoryScreen() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [search, setSearch] = useState('');
 
   // Modal State
@@ -58,11 +60,13 @@ export default function InventoryScreen() {
 
     try {
       const data = await getItems();
+      setFetchError(null);
       const safeItems = Array.isArray(data) ? data : [];
       setItems(safeItems);
       await saveCachedItems(shopId, safeItems);
     } catch (e) {
       console.warn('Failed to load inventory from server:', e);
+      setFetchError(e);
     } finally {
       setLoading(false);
       setSyncing(false);
@@ -172,6 +176,7 @@ export default function InventoryScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Header subtitle="Manage Store Items & Rates" />
+      <ApiErrorNotice error={fetchError} context="Inventory" onRetry={() => loadInventory(true)} />
 
       <View style={styles.content}>
         {/* Items Summary Card */}

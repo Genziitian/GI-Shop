@@ -100,7 +100,7 @@ export const getSupportSettings = async () => {
   return await fetchWithAuth('/support-settings');
 };
 
-import { parseError } from '../utils/errorHandler';
+import { createApiError } from '../utils/apiErrors';
 
 // Generic Authenticated Fetch Wrapper
 export const fetchWithAuth = async (endpoint, options = {}) => {
@@ -112,6 +112,8 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
   };
 
   const url = `${currentBaseUrl}${endpoint}`;
+  const startedAt = Date.now();
+  const details = { url, method: options.method || 'GET', hasSession: Boolean(token) };
 
   // 15-second request timeout
   const controller = new AbortController();
@@ -123,42 +125,47 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
       headers,
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      const serverMsg = data.error || data.message || `Request failed with status ${response.status}`;
-      const parsed = parseError({ status: response.status, message: serverMsg });
-      const error = new Error(parsed.message);
-      error.title = parsed.title;
-      error.status = response.status;
-      error.type = parsed.type;
-      throw error;
+    const contentType = response.headers.get('content-type') || '';
+    const requestId = response.headers.get('x-request-id') || response.headers.get('rndr-id') || '';
+    const body = await response.text();
+    let data;
+    try {
+      data = body ? JSON.parse(body) : (response.status === 204 || response.status === 205 ? {} : null);
+    } catch (parseFailure) {
+      if (parseFailure.name === 'AbortError') throw parseFailure;
     }
-
+    const responseDetails = { ...details, status: response.status, contentType, requestId, elapsedMs: Date.now() - startedAt };
+    if (!response.ok) {
+      throw createApiError({ ...responseDetails, serverMessage: typeof data?.error === 'string' ? data.error
+        : (typeof data?.message === 'string' ? data.message : `Server returned HTTP ${response.status}${/html/i.test(contentType) ? ' with an HTML page instead of JSON' : ''}.`) });
+    }
+    if (data === undefined || data === null) {
+      throw createApiError({ ...responseDetails, kind: 'response', serverMessage:
+        /html/i.test(contentType) || /^\s*</.test(body) ? 'Received an HTML page instead of API JSON. Check the backend server address.'
+          : 'The response was empty or was not valid JSON.' });
+    }
     return data;
   } catch (error) {
-    clearTimeout(timeoutId);
+    if (error.isApiError) throw error;
     if (error.name === 'AbortError') {
-      const timeoutErr = new Error('Connection timeout: Server took too long to respond. Please check your network.');
-      timeoutErr.title = 'Connection Timeout';
-      timeoutErr.type = 'network';
-      throw timeoutErr;
+      throw createApiError({ ...details, kind: 'timeout', elapsedMs: Date.now() - startedAt,
+        serverMessage: 'The app stopped waiting after 15 seconds.' });
     }
-    if (error.message && error.message.includes('Network request failed')) {
-      const netErr = new Error(`Cannot connect to server at ${currentBaseUrl}. Please check your internet connection or server settings.`);
-      netErr.title = 'Connection Error';
-      netErr.type = 'network';
-      throw netErr;
-    }
-    const parsed = parseError(error);
-    const enrichedError = new Error(parsed.message);
-    enrichedError.title = parsed.title;
-    enrichedError.status = error.status;
-    enrichedError.type = parsed.type;
-    throw enrichedError;
+    throw createApiError({ ...details, kind: 'network', elapsedMs: Date.now() - startedAt,
+      serverMessage: error.message || 'The device could not complete the connection.' });
+  } finally {
+    clearTimeout(timeoutId);
   }
+};
+
+const fetchList = async (endpoint, keys) => {
+  const data = await fetchWithAuth(endpoint);
+  if (Array.isArray(data)) return data;
+  for (const key of keys) {
+    if (Array.isArray(data?.[key])) return data[key];
+  }
+  throw createApiError({ url: `${currentBaseUrl}${endpoint}`, status: 200, kind: 'response',
+    serverMessage: 'Expected a list of records, but the API returned a different JSON structure.' });
 };
 
 // --- AUTH APIs ---
@@ -206,7 +213,7 @@ export const changePassword = async (currentPassword, newPassword) => {
 
 // --- SHOPKEEPER APIs ---
 export const getItems = async () => {
-  return await fetchWithAuth('/api/shop/items');
+  return await fetchList('/api/shop/items', ['items', 'data', 'results']);
 };
 
 export const saveItem = async (itemData) => {
@@ -230,7 +237,7 @@ export const deleteItem = async (id) => {
 };
 
 export const getCustomers = async () => {
-  return await fetchWithAuth('/api/shop/customers');
+  return await fetchList('/api/shop/customers', ['customers', 'data', 'results']);
 };
 
 export const searchRegisteredCustomer = async (query) => {
@@ -284,7 +291,7 @@ export const getCustomerLedger = async (phone) => {
 };
 
 export const getShopSales = async () => {
-  return await fetchWithAuth('/api/shop/sales');
+  return await fetchList('/api/shop/sales', ['sales', 'data', 'results']);
 };
 
 export const updateSaleNote = async (saleId, note) => {
@@ -295,7 +302,7 @@ export const updateSaleNote = async (saleId, note) => {
 };
 
 export const getShopOrders = async () => {
-  return await fetchWithAuth('/api/shop/orders');
+  return await fetchList('/api/shop/orders', ['orders', 'data', 'results']);
 };
 
 export const acceptShopOrder = async (orderId, packingMinutes) => {

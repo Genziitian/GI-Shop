@@ -1,10 +1,21 @@
-import { Alert } from 'react-native';
+import { Alert, Platform, Share } from 'react-native';
+import appConfig from '../../app.json';
+import { formatApiErrorReport } from './apiErrors';
+
+export const getErrorReport = (error, context = '') => formatApiErrorReport(error, {
+  context,
+  app: `${appConfig.expo.version} (build ${appConfig.expo.android.versionCode})`,
+  platform: `${Platform.OS} ${Platform.Version}`,
+});
 
 /**
  * Categorizes and formats errors into user-friendly, descriptive messages
  * with appropriate titles, explanations, and actionable guidance.
  */
 export const parseError = (error, fallbackMessage = 'An unexpected error occurred. Please try again.') => {
+  if (error?.isApiError) {
+    return { title: error.title, message: error.message, type: error.type };
+  }
   if (!error) {
     return {
       title: 'Notice',
@@ -145,7 +156,17 @@ export const parseError = (error, fallbackMessage = 'An unexpected error occurre
  */
 export const showErrorAlert = (error, defaultTitle = 'Notice', defaultMessage = 'An unexpected error occurred.') => {
   const parsed = parseError(error, defaultMessage);
-  Alert.alert(parsed.title || defaultTitle, parsed.message);
+  const buttons = [{ text: 'Close' }];
+  if (error?.diagnostics) {
+    buttons.push({ text: 'Error details', onPress: () => {
+      const report = getErrorReport(error, defaultTitle);
+      Alert.alert('Error details', report, [
+        { text: 'Close' },
+        { text: 'Share details', onPress: () => Share.share({ message: report }).catch(() => {}) },
+      ]);
+    } });
+  }
+  Alert.alert(parsed.title || defaultTitle, parsed.message, buttons);
 };
 
 /**

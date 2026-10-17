@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MHero, MGroup, MRow } from './MobileKit';
-import { getCustomers, getCustomerLedger, saveSettlement, terminateCustomer, blockCustomer, unblockCustomer, getMyDetailedShop, searchRegisteredCustomer, saveCustomer } from '../lib/api';
+import { getCustomers, getCustomerLedger, saveSettlement, terminateCustomer, blockCustomer, unblockCustomer, getMyDetailedShop, saveCustomer } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
-import { ArrowLeft, Search, Plus, Ban, CheckCircle, ShieldAlert, X, MessageCircle, UserCheck, Receipt, Printer } from 'lucide-react';
+import { ArrowLeft, Search, Ban, ShieldAlert, X, MessageCircle, Receipt, Printer, UserPlus, Link2 } from 'lucide-react';
 import { CustomerListSkeleton } from './SkeletonLoader';
+import CustomerPicker from './CustomerPicker';
 
 export default function CustomerLedger({ currentShop }) {
   const [customers, setCustomers] = useState([]);
@@ -19,10 +20,6 @@ export default function CustomerLedger({ currentShop }) {
 
   // App Customer Search & Link Modal State
   const [showAddModal, setShowAddModal] = useState(false);
-  const [appQuery, setAppQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchNotice, setSearchNotice] = useState('');
 
   // Timeline Date Filter State (All, Today, Yesterday, Month, Custom)
   const [timelineFilter, setTimelineFilter] = useState('All');
@@ -32,6 +29,9 @@ export default function CustomerLedger({ currentShop }) {
   // Settlement Modal State
   const [showSettleModal, setShowSettleModal] = useState(false);
   const [settleSaving, setSettleSaving] = useState(false);
+
+  // New walk-in customer / link-account / add menu state
+  const [linkTarget, setLinkTarget] = useState(null);
   const [settleAmount, setSettleAmount] = useState('');
   const [settleMethod, setSettleMethod] = useState('Cash');
   const [settleCustomer, setSettleCustomer] = useState(null);
@@ -221,6 +221,14 @@ export default function CustomerLedger({ currentShop }) {
   if (filter === 'Highest') displayedCustomers.sort((a, b) => b.totalDue - a.totalDue);
   if (filter === 'Lowest') displayedCustomers.sort((a, b) => a.totalDue - b.totalDue);
   if (filter === 'No Due') displayedCustomers = displayedCustomers.filter(c => c.totalDue <= 0);
+
+  const extraModals = (showAddModal || linkTarget) && <CustomerPicker
+    customers={customers}
+    initialLinkTarget={linkTarget}
+    onClose={() => { setShowAddModal(false); setLinkTarget(null); }}
+    onSelect={async customer => { await loadData(); await handleOpenLedger(customer); }}
+    onSave={async customer => { await saveCustomer(customer); setSearch(''); setFilter('All'); await loadData(); }}
+  />;
 
   const settleModal = showSettleModal ? (
           <div className="modal-overlay">
@@ -667,51 +675,15 @@ export default function CustomerLedger({ currentShop }) {
     );
   }
 
-  const handleSearchAppUser = async () => {
-    if (!appQuery.trim()) return;
-    setSearchLoading(true);
-    setSearchNotice('');
-    try {
-      const res = await searchRegisteredCustomer(appQuery.trim());
-      setSearchResults(res);
-      if (res.length === 0) {
-        setSearchNotice('No registered customer account found on GI SHOP with that Email, Short ID, or Phone.');
-      }
-    } catch (e) {
-      setSearchNotice('Failed to search customer.');
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  const handleLinkAppUser = async (user) => {
-    try {
-      await saveCustomer({
-        phone: user.phone,
-        customerShortId: user.shortId,
-        customerEmail: user.email,
-        name: user.name,
-        address: ''
-      });
-      setShowAddModal(false);
-      setAppQuery('');
-      setSearchResults([]);
-      await loadData();
-      alert(`Successfully assigned ${user.name} (${user.shortId}) to Khata!`);
-    } catch (e) {
-      notifyError(e, 'Khata Link Error');
-    }
-  };
-
   return (
     <div className="panel">
-      {/* Phone: total-to-collect hero */}
-      <div className="m-only">
+      {/* Total to collect */}
+      <div className="khata-summary">
         <MHero
           tone="red"
           label="Total to collect"
           value={`₹${customers.reduce((sum, c) => sum + (Number(c.totalDue) > 0 ? Number(c.totalDue) : 0), 0).toFixed(2)}`}
-          meta={`${customers.filter(c => Number(c.totalDue) > 0).length} customers with dues`}
+          meta={`${customers.filter(c => Number(c.totalDue) > 0).length} of ${customers.length} customers have dues`}
         />
       </div>
 
@@ -729,20 +701,22 @@ export default function CustomerLedger({ currentShop }) {
           <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
         </div>
 
-        <select className="select toolbar-select" style={{ margin: 0 }} value={filter} onChange={e => setFilter(e.target.value)}>
+        <select className="select toolbar-select m-only" style={{ margin: 0 }} value={filter} onChange={e => setFilter(e.target.value)}>
           <option value="All">All</option>
           <option value="Highest">Highest Due</option>
           <option value="Lowest">Lowest Due</option>
           <option value="No Due">No Due</option>
         </select>
 
-        <button 
-          type="button" 
-          className="btn toolbar-action"
-          onClick={() => setShowAddModal(true)}
-        >
-          <UserCheck size={16} /> Assign Customer by Email / Short ID
+        <button type="button" className="btn btn-outline toolbar-action" onClick={() => setShowAddModal(true)}>
+          <UserPlus size={16} /> Choose / add customer
         </button>
+      </div>
+
+      <div className="khata-filters m-hide">
+        {[['All', 'All'], ['Highest', 'Highest due'], ['Lowest', 'Lowest due'], ['No Due', 'No due']].map(([v, label]) => (
+          <button key={v} type="button" className={`cx-chip ${filter === v ? 'on' : ''}`} onClick={() => setFilter(v)}>{label}</button>
+        ))}
       </div>
 
       {/* Customer Cards List */}
@@ -761,7 +735,9 @@ export default function CustomerLedger({ currentShop }) {
             <div className="khata-main">
               <div className="khata-name">
                 <span className="khata-name-text">{customer.name}</span>
-                {customer.shortId && <span className="khata-shortid">{customer.shortId}</span>}
+                {customer.shortId
+                  ? <span className="khata-shortid">{customer.shortId}</span>
+                  : <button type="button" className="khata-link" onClick={(e) => { e.stopPropagation(); setLinkTarget(customer); }}><Link2 size={11} /> Link</button>}
                 {customer.isBlocked === 1 && <span className="badge" style={{ background: '#fee2e2', color: '#b91c1c' }}>Blocked</span>}
               </div>
               <div className="khata-phone">{customer.phone}</div>
@@ -790,94 +766,14 @@ export default function CustomerLedger({ currentShop }) {
       </div>
       )}
 
-      <button type="button" className="m-only m-fab" aria-label="Assign customer" onClick={() => setShowAddModal(true)}>
-        <UserCheck size={24} />
+      <button type="button" className="m-only m-fab" aria-label="Add customer" onClick={() => setShowAddModal(true)}>
+        <UserPlus size={24} />
       </button>
-
-      {/* Assign Registered App Customer Modal */}
-      {showAddModal && (
-        <div className="modal-overlay" style={{ zIndex: 1000 }}>
-          <div className="modal-content" style={{ maxWidth: '480px', width: '100%' }}>
-            <div className="flex-between" style={{ marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <UserCheck size={20} color="var(--primary)" /> Assign App Customer to Khata
-              </h3>
-              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowAddModal(false)} />
-            </div>
-
-
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-              <input 
-                type="text" 
-                className="input" 
-                style={{ margin: 0, flex: 1 }}
-                placeholder="Enter Email ID or Short ID..." 
-                value={appQuery} 
-                onChange={e => setAppQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearchAppUser()}
-              />
-              <button type="button" className="btn" onClick={handleSearchAppUser} disabled={searchLoading}>
-                {searchLoading ? 'Searching...' : 'Search'}
-              </button>
-            </div>
-
-            {searchNotice && (
-              <div style={{ background: '#fff7ed', border: '1px solid #fdba74', padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem', color: '#c2410c', marginBottom: '1rem' }}>
-                {searchNotice}
-              </div>
-            )}
-
-            <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
-              {searchResults.map(user => (
-                <div 
-                  key={user.id} 
-                  style={{ 
-                    padding: '0.75rem', 
-                    borderRadius: '10px', 
-                    border: '1px solid var(--border)', 
-                    marginBottom: '0.5rem', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    background: '#f7f8fa' 
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: '700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      {user.name} 
-                      <span className="badge" style={{ background: user.role === 'Shopkeeper' ? '#f5f3ff' : '#e9f6ee', color: user.role === 'Shopkeeper' ? '#7c3aed' : 'var(--primary)', fontSize: '0.72rem' }}>
-                        {user.role === 'Shopkeeper' ? 'Shopkeeper' : 'Customer'}
-                      </span>
-                      <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem' }}>ID: {user.shortId}</span>
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      📞 <strong>{user.phone}</strong> {user.email ? `• ✉️ ${user.email}` : ''} {user.city ? `• 📍 ${user.city}` : ''}
-                    </div>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="btn btn-success" 
-                    style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 700 }}
-                    onClick={() => handleLinkAppUser(user)}
-                  >
-                    Assign to Khata
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button type="button" className="btn btn-outline" onClick={() => setShowAddModal(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* DIGITAL RECEIPT MODAL */}
       {receiptModal}
       {settleModal}
+      {extraModals}
     </div>
   );
 }

@@ -124,6 +124,7 @@ export const updateOrderCollection = (id, collectionStatus) => request(`/custome
 export const getCustomers = () => request('/shop/customers');
 export const searchRegisteredCustomer = (query) => request(`/shop/customers/search-registered?query=${encodeURIComponent(query)}`);
 export const saveCustomer = (data) => request('/shop/customers', { method: 'POST', body: JSON.stringify(data) });
+export const linkCustomerAccount = (data) => request('/shop/customers/link-account', { method: 'POST', body: JSON.stringify(data) });
 export const blockCustomer = (phone, reason) => request('/shop/customers/block', { method: 'PUT', body: JSON.stringify({ phone, reason }) });
 export const unblockCustomer = (phone) => request('/shop/customers/unblock', { method: 'PUT', body: JSON.stringify({ phone }) });
 export const terminateCustomer = (phone) => request('/shop/customers/terminate', { method: 'PUT', body: JSON.stringify({ phone }) });

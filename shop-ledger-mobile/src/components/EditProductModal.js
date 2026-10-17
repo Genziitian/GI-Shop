@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { TouchableOpacity } from './ui/Touchable';
-import { X, Package, Check, Sparkles } from 'lucide-react-native';
+import { X, Sparkles } from 'lucide-react-native';
 import { colors, shadowLarge, shadowStyle } from '../theme/colors';
 import { MASTER_GROCERY_CATALOG } from '../data/masterGroceryCatalog';
 import { showErrorAlert, validatePrice } from '../utils/errorHandler';
@@ -82,7 +82,7 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback onPress={() => {}}>
@@ -90,13 +90,11 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={styles.modalContent}
             >
+              <View style={styles.handle} />
               <View style={styles.header}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Package size={22} color={colors.primary} />
-                  <Text style={styles.title}>{isEditing ? 'Edit Item' : 'Add New Item'}</Text>
-                </View>
+                <Text style={styles.title}>{isEditing ? 'Edit Item' : 'New Item'}</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-                  <X size={20} color={colors.textMuted} />
+                  <X size={18} color={colors.textMuted} />
                 </TouchableOpacity>
               </View>
 
@@ -164,19 +162,23 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
 
                 {/* Selling Price */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Selling Price (₹) *</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="0.00"
-                    keyboardType="decimal-pad"
-                    value={price}
-                    onChangeText={setPrice}
-                  />
+                  <Text style={styles.inputLabel}>Selling Price *</Text>
+                  <View style={styles.priceWrap}>
+                    <Text style={styles.priceSymbol}>₹</Text>
+                    <TextInput
+                      style={styles.priceInput}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="decimal-pad"
+                      value={price}
+                      onChangeText={setPrice}
+                    />
+                  </View>
                 </View>
 
                 {/* Unit Selector */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Selling Unit</Text>
+                  <Text style={styles.inputLabel}>Sold per</Text>
                   <View style={styles.unitRow}>
                     {UNITS.map((u) => {
                       const active = unit === u;
@@ -187,7 +189,6 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
                           onPress={() => setUnit(u)}
                           activeOpacity={0.7}
                         >
-                          {active && <Check size={14} color={colors.primary} style={{ marginRight: 4 }} />}
                           <Text style={[styles.unitBtnText, active && styles.unitBtnTextActive]}>
                             {u}
                           </Text>
@@ -198,23 +199,16 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
                 </View>
               </ScrollView>
 
-              {/* Actions */}
-              <View style={styles.actions}>
-                <TouchableOpacity onPress={onClose} style={styles.cancelBtn} activeOpacity={0.7}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={handleSubmit}
-                  style={[styles.saveBtn, submitting && { opacity: 0.7 }]}
-                  disabled={submitting}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.saveBtnText}>
-                    {submitting ? 'Saving...' : isEditing ? 'Update Item' : 'Add Item'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={handleSubmit}
+                style={[styles.saveBtn, submitting && { opacity: 0.7 }]}
+                disabled={submitting}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.saveBtnText}>
+                  {submitting ? 'Saving...' : isEditing ? 'Update Item' : 'Add Item'}
+                </Text>
+              </TouchableOpacity>
             </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
@@ -226,16 +220,38 @@ export default function EditProductModal({ visible, product, onClose, onSave }) 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(16, 24, 40, 0.55)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 22,
     ...shadowLarge,
   },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#d0d5dd',
+    marginBottom: 14,
+  },
+  priceWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    paddingHorizontal: 14,
+  },
+  priceSymbol: { fontSize: 18, fontWeight: '700', color: colors.textMuted, marginRight: 6 },
+  priceInput: { flex: 1, fontSize: 18, fontWeight: '700', color: colors.text, padding: 0 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -248,7 +264,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   closeBtn: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 18,
+    backgroundColor: colors.badgeBg,
   },
   inputGroup: {
     marginBottom: 14,
@@ -260,11 +278,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    height: 46,
+    height: 50,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
+    borderRadius: 10,
+    paddingHorizontal: 14,
     backgroundColor: colors.background,
     fontSize: 14,
     color: colors.text,
@@ -326,22 +344,24 @@ const styles = StyleSheet.create({
 
   unitRow: {
     flexDirection: 'row',
-    gap: 8,
+    backgroundColor: colors.badgeBg,
+    borderRadius: 10,
+    padding: 3,
   },
   unitBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 44,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    backgroundColor: colors.background,
+    height: 40,
+    borderRadius: 8,
   },
   unitBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   unitBtnText: {
     fontSize: 13,
@@ -373,9 +393,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   saveBtn: {
-    flex: 2,
-    height: 46,
+    height: 52,
     borderRadius: 12,
+    marginTop: 8,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',

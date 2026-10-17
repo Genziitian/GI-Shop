@@ -56,6 +56,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '../../context/LanguageContext';
 import Header from '../../components/Header';
+import ApiErrorNotice from '../../components/ApiErrorNotice';
 import EditProductModal from '../../components/EditProductModal';
 import ProfileSettingsModal from '../../components/ProfileSettingsModal';
 import ChangePasswordModal from '../../components/ChangePasswordModal';
@@ -182,20 +183,23 @@ export default function MoreScreen({ navigation }) {
   const [pinNotice, setPinNotice] = useState('');
   const [pinError, setPinError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
 
   const loadAllMoreData = useCallback(async () => {
     try {
-      const [itemsData, staffData, detailedShopData] = await Promise.all([
-        getItems().catch(() => []),
-        isOwner ? getStaff().catch(() => []) : Promise.resolve([]),
-        getMyDetailedShop().catch(() => null),
+      const results = await Promise.allSettled([
+        getItems(),
+        isOwner ? getStaff() : Promise.resolve([]),
+        getMyDetailedShop(),
       ]);
+      setFetchError(results.find(result => result.status === 'rejected')?.reason || null);
+      const [itemsData, staffData, detailedShopData] = results.map(result => result.status === 'fulfilled' ? result.value : null);
       const safeItems = Array.isArray(itemsData) ? itemsData : (itemsData?.items || []);
-      setItems(safeItems);
-      if (safeItems.length > 0) {
-        saveCachedItems(shopId, safeItems);
+      if (itemsData !== null) {
+        setItems(safeItems);
+        saveCachedItems(shopId, safeItems).catch(() => {});
       }
-      setStaffList(Array.isArray(staffData) ? staffData : (staffData?.staff || staffData?.cashiers || []));
+      if (staffData !== null) setStaffList(Array.isArray(staffData) ? staffData : (staffData?.staff || staffData?.cashiers || []));
       if (detailedShopData) {
         setDetailedShop(detailedShopData);
         setIsOpen(detailedShopData.isOpen === 1);
@@ -209,6 +213,7 @@ export default function MoreScreen({ navigation }) {
       }
     } catch (e) {
       console.error('MoreScreen load error:', e);
+      setFetchError(e);
     }
   }, [isOwner, user, shopId]);
 
@@ -444,6 +449,7 @@ export default function MoreScreen({ navigation }) {
         }
         showLock={true}
       />
+      <ApiErrorNotice error={fetchError} context="Store settings and inventory" onRetry={loadAllMoreData} />
 
       <ScrollView
         style={styles.scroll}
@@ -532,8 +538,8 @@ export default function MoreScreen({ navigation }) {
                     flex: 1,
                     paddingVertical: 10,
                     paddingHorizontal: 12,
-                    borderRadius: 10,
-                    borderWidth: 1.5,
+                    borderRadius: 8,
+                    borderWidth: 1,
                     borderColor: language === 'en' ? colors.primary : colors.border,
                     backgroundColor: language === 'en' ? '#e9f6ee' : '#f7f8fa',
                     alignItems: 'center',
@@ -542,8 +548,7 @@ export default function MoreScreen({ navigation }) {
                     gap: 6,
                   }}
                 >
-                  <Text style={{ fontSize: 14 }}>🇬🇧</Text>
-                  <Text
+                                    <Text
                     style={{
                       fontSize: 13,
                       fontWeight: language === 'en' ? '800' : '600',
@@ -561,8 +566,8 @@ export default function MoreScreen({ navigation }) {
                     flex: 1,
                     paddingVertical: 10,
                     paddingHorizontal: 12,
-                    borderRadius: 10,
-                    borderWidth: 1.5,
+                    borderRadius: 8,
+                    borderWidth: 1,
                     borderColor: language === 'hi' ? colors.primary : colors.border,
                     backgroundColor: language === 'hi' ? '#e9f6ee' : '#f7f8fa',
                     alignItems: 'center',
@@ -571,8 +576,7 @@ export default function MoreScreen({ navigation }) {
                     gap: 6,
                   }}
                 >
-                  <Text style={{ fontSize: 14 }}>🇮🇳</Text>
-                  <Text
+                                    <Text
                     style={{
                       fontSize: 13,
                       fontWeight: language === 'hi' ? '800' : '600',
@@ -593,8 +597,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => navigateToSubView('items')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#e9f6ee' }]}>
-                  <Package size={22} color="#0f7a43" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <Package size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -613,8 +617,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => navigateToSubView('staff')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#eef8f1' }]}>
-                  <Users size={22} color="#1f9d5a" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <Users size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Staff Management')}</Text>
@@ -628,8 +632,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => setShowProfileModal(true)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#e0f2fe' }]}>
-                  <Settings size={22} color="#0284c7" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <Settings size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Profile & Settings')}</Text>
@@ -643,8 +647,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => setShowPasswordModal(true)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#fdf4ff' }]}>
-                  <KeyRound size={22} color="#a855f7" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <KeyRound size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Account Password')}</Text>
@@ -658,11 +662,11 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => Linking.openURL('tel:7323809242')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#dff3e6' }]}>
-                  <Phone size={22} color="#0f7a43" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <Phone size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.menuItemTitle, { color: '#0f7a43', fontWeight: '700' }]}>{t('Contact Customer Care')}</Text>
+                  <Text style={styles.menuItemTitle}>{t('Contact Customer Care')}</Text>
                   <Text style={{ fontSize: 11, color: colors.textMuted }}>{t('Tap to call us for instant help')}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
@@ -674,8 +678,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => Linking.openURL('https://gi-shop.genziitian.in/privacy')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#eef8f1' }]}>
-                  <Shield size={22} color="#1f9d5a" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <Shield size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Privacy Policy')}</Text>
@@ -689,8 +693,8 @@ export default function MoreScreen({ navigation }) {
                 onPress={() => Linking.openURL('https://gi-shop.genziitian.in/terms')}
                 activeOpacity={0.7}
               >
-                <View style={[styles.menuIconBox, { backgroundColor: '#e9f6ee' }]}>
-                  <FileText size={22} color="#0284c7" />
+                <View style={[styles.menuIconBox, { backgroundColor: '#f2f4f7' }]}>
+                  <FileText size={20} color="#475467" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuItemTitle}>{t('Terms & Conditions')}</Text>
@@ -1166,7 +1170,7 @@ const styles = StyleSheet.create({
   },
   shopStatusCard: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
@@ -1181,7 +1185,7 @@ const styles = StyleSheet.create({
   storeIconBox: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 10,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1197,15 +1201,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   editPill: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     paddingVertical: 2,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 6,
   },
   editPillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: colors.primaryDark,
+    color: colors.primary,
   },
   statusSwitchBar: {
     flexDirection: 'row',
@@ -1232,9 +1234,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statusToggleBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 6,
     borderWidth: 1,
   },
   statusToggleBtnOpen: {
@@ -1257,7 +1259,7 @@ const styles = StyleSheet.create({
   },
   menuSection: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
@@ -1266,7 +1268,8 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: 12,
@@ -1275,15 +1278,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   menuIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuItemTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 14.5,
+    fontWeight: '600',
     color: colors.text,
   },
   menuItemSub: {
@@ -1292,13 +1295,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   itemsCountBadge: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: '#f2f4f7',
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   itemsCountText: {
-    color: colors.primaryDark,
+    color: colors.textSecondary,
     fontSize: 11,
     fontWeight: '700',
   },
