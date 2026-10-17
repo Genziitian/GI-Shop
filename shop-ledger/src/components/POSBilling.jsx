@@ -370,8 +370,7 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.25rem' }}>
           <button 
             type="button" 
-            className="btn" 
-            style={{ background: '#25D366', color: '#fff', borderColor: '#25D366', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.65rem' }} 
+            className="btn btn-whatsapp bill-wa" 
             onClick={() => {
               const rawPhone = (selectedCustomer?.phone || receiptData.customerPhone || '').toString().trim();
               const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
@@ -391,10 +390,10 @@ export default function POSBilling({ items, onSaleComplete, prefilledOrder = nul
               window.open(whatsappUrl, '_blank');
             }}
           >
-            <MessageSquare size={18} /> Share Bill on WhatsApp {selectedCustomer?.phone ? `(${selectedCustomer.phone})` : ''}
+            <MessageSquare size={18} /> Send on WhatsApp
           </button>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => window.print()}>Print / Save PDF</button>
+            <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => window.print()}>Print</button>
             <button type="button" className="btn" style={{ flex: 1 }} onClick={resetPOS}>New Bill</button>
           </div>
         </div>

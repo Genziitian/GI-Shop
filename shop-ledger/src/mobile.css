@@ -307,3 +307,14 @@ button.m-row:active { background: #f2f4f7; }
   .otm-foot { display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.5rem; }
   .otm-foot .btn { min-height: 46px; padding: 0 0.5rem !important; font-size: 0.9rem; gap: 0.35rem; }
 }
+@media (max-width: 768px) {
+  .toolbar-select { width: 138px !important; padding-left: 0.85rem !important; padding-right: 1.9rem !important; font-size: 0.9rem !important; background-position: right 0.7rem center; text-overflow: clip; }
+  .toolbar-search .input { text-overflow: ellipsis; }
+}
+
+/* ID chip + enlarge sheet */
+.m-chip-id { text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; font-family: inherit; }
+.id-sheet { width: 360px; max-width: 100%; text-align: center; padding: 1.75rem 1.25rem 1.25rem; }
+.id-sheet-kind { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.id-sheet-value { font-size: 2.6rem; font-weight: 800; letter-spacing: 0.08em; color: var(--ink); margin: 0.6rem 0 1.4rem; font-variant-numeric: tabular-nums; word-break: break-all; line-height: 1.1; }
+.id-sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }

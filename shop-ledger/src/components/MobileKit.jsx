@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
@@ -85,5 +85,39 @@ export function MHero({ label, value, meta, tone = 'green' }) {
       <div className="m-hero-value">{value}</div>
       {meta && <div className="m-hero-meta">{meta}</div>}
     </div>
+  );
+}
+
+// Tap-to-enlarge ID chip (shop ID / customer ID), always upper-case.
+export function IdChip({ id, kind = 'ID' }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  if (!id) return null;
+  const text = String(id).toUpperCase();
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    } catch (e) { /* clipboard unavailable */ }
+  };
+
+  return (
+    <>
+      <button type="button" className="m-chip-id" onClick={() => setOpen(true)}>{text}</button>
+      {open && (
+        <div className="modal-overlay" style={{ zIndex: 1300 }} onClick={() => setOpen(false)}>
+          <div className="panel modal-dialog id-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="id-sheet-kind">{kind}</div>
+            <div className="id-sheet-value">{text}</div>
+            <div className="id-sheet-actions">
+              <button type="button" className="btn btn-outline" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+              <button type="button" className="btn" onClick={() => setOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

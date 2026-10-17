@@ -31,6 +31,7 @@ export default function CustomerLedger({ currentShop }) {
 
   // Settlement Modal State
   const [showSettleModal, setShowSettleModal] = useState(false);
+  const [settleSaving, setSettleSaving] = useState(false);
   const [settleAmount, setSettleAmount] = useState('');
   const [settleMethod, setSettleMethod] = useState('Cash');
   const [settleCustomer, setSettleCustomer] = useState(null);
@@ -170,6 +171,8 @@ export default function CustomerLedger({ currentShop }) {
     const amt = parseFloat(settleAmount);
     if (!amt || amt <= 0) return notifyError('Please enter a valid repayment amount greater than ₹0.', 'Invalid Amount');
     
+    if (settleSaving) return;
+    setSettleSaving(true);
     try {
       await saveSettlement({
         customerPhone: settleCustomer.phone,
@@ -184,6 +187,8 @@ export default function CustomerLedger({ currentShop }) {
       }
     } catch (e) {
       notifyError(e, 'Settlement Error');
+    } finally {
+      setSettleSaving(false);
     }
   };
 
@@ -216,6 +221,138 @@ export default function CustomerLedger({ currentShop }) {
   if (filter === 'Highest') displayedCustomers.sort((a, b) => b.totalDue - a.totalDue);
   if (filter === 'Lowest') displayedCustomers.sort((a, b) => a.totalDue - b.totalDue);
   if (filter === 'No Due') displayedCustomers = displayedCustomers.filter(c => c.totalDue <= 0);
+
+  const settleModal = showSettleModal ? (
+          <div className="modal-overlay">
+            <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', padding: '1.25rem' }}>
+              <h3 className="title" style={{ fontSize: '1.15rem' }}>Settle Due for {settleCustomer?.name}</h3>
+              <p className="subtitle" style={{ marginBottom: '1rem' }}>Outstanding: <strong>₹{settleCustomer?.totalDue.toFixed(2)}</strong></p>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Amount Paying Now (₹):</label>
+                <input type="number" className="input" value={settleAmount} onChange={e => setSettleAmount(e.target.value)} />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                {['Cash', 'Online'].map(m => (
+                  <button key={m} type="button" className={`btn ${settleMethod === m ? '' : 'btn-outline'}`} style={{ flex: 1, padding: '0.45rem' }} onClick={() => setSettleMethod(m)}>
+                    {m}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-between">
+                <button type="button" className="btn btn-outline" onClick={() => setShowSettleModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-success" onClick={handleSettleSubmit} disabled={settleSaving}>{settleSaving ? 'Saving…' : 'Record Payment'}</button>
+              </div>
+            </div>
+          </div>
+  ) : null;
+
+  const receiptModal = selectedReceipt ? (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="panel modal-dialog" style={{ width: '440px', maxWidth: '95vw', padding: '1.25rem', background: '#fff' }}>
+            <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 className="title" style={{ margin: 0, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Receipt size={20} color="var(--primary)" /> Sale Bill #{selectedReceipt.id}
+              </h3>
+              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setSelectedReceipt(null)} />
+            </div>
+
+            <div style={{ textAlign: 'center', borderBottom: '1px dashed var(--border)', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ fontWeight: '700', fontSize: '1.15rem', color: 'var(--text)' }}>
+                {shopInfo?.shopName || currentShop?.shopName || 'GI Shop Store'}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {shopInfo?.shopAddress || currentShop?.shopAddress || ''}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', marginTop: '2px' }}>
+                Date: {new Date(selectedReceipt.date).toLocaleString()}
+              </div>
+            </div>
+
+            {/* Customer Info */}
+            <div style={{ background: '#f7f8fa', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Customer Details</div>
+              <div style={{ fontWeight: '700' }}>
+                {selectedReceipt.customerPhone || selectedCustomer?.name || 'Customer'}
+                {selectedReceipt.customerShortId && (
+                  <span style={{ color: 'var(--primary)', marginLeft: '0.35rem' }}>
+                    ({selectedReceipt.customerShortId})
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Items Breakdown Table */}
+            <div style={{ marginBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                Items Breakdown
+              </div>
+              {(() => {
+                const items = selectedReceipt.items || JSON.parse(selectedReceipt.itemsJSON || '[]');
+                return items.map((c, i) => {
+                  const itemName = c.item?.name || c.name || 'Item';
+                  const qty = c.qty || 1;
+                  const unit = c.item?.unit || c.unit || '';
+                  const rate = c.rate || c.item?.price || 0;
+                  const lineTotal = (c.amount || (rate * qty)) || 0;
+
+                  return (
+                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #eff1f4' }}>
+                      <div>
+                        <div style={{ fontWeight: '600' }}>{itemName}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {qty} {unit} @ ₹{Number(rate).toFixed(2)}
+                        </div>
+                      </div>
+                      <div style={{ fontWeight: '700' }}>
+                        ₹{Number(lineTotal).toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Payment Summary */}
+            <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.75rem', fontSize: '0.9rem' }}>
+              <div className="flex-between" style={{ marginBottom: '0.25rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
+                <span>₹{(Number(selectedReceipt.subtotal || selectedReceipt.total) || 0).toFixed(2)}</span>
+              </div>
+              {selectedReceipt.discount > 0 && (
+                <div className="flex-between" style={{ marginBottom: '0.25rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Discount:</span>
+                  <span style={{ color: 'var(--danger)' }}>-₹{(Number(selectedReceipt.discount) || 0).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex-between" style={{ fontWeight: '800', fontSize: '1.15rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
+                <span>Total Amount:</span>
+                <span style={{ color: 'var(--success)' }}>₹{(Number(selectedReceipt.total) || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex-between" style={{ marginTop: '0.5rem', fontSize: '0.82rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Payment Method:</span>
+                <span className="badge" style={{ fontSize: '0.8rem' }}>{selectedReceipt.paymentMethod}</span>
+              </div>
+              {selectedReceipt.note && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6366f1', background: '#eef2ff', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
+                  📝 Note: "{selectedReceipt.note}"
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
+              <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSelectedReceipt(null)}>
+                Close
+              </button>
+              <button type="button" className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }} onClick={() => window.print()}>
+                <Printer size={16} /> Print
+              </button>
+            </div>
+          </div>
+        </div>
+  ) : null;
 
   if (selectedCustomer) {
     return (
@@ -522,33 +659,10 @@ export default function CustomerLedger({ currentShop }) {
           </MGroup>
         </div>
 
-        {/* Settle Modal */}
-        {showSettleModal && (
-          <div className="modal-overlay">
-            <div className="panel modal-dialog" style={{ width: '380px', maxWidth: '100%', padding: '1.25rem' }}>
-              <h3 className="title" style={{ fontSize: '1.15rem' }}>Settle Due for {settleCustomer?.name}</h3>
-              <p className="subtitle" style={{ marginBottom: '1rem' }}>Outstanding: <strong>₹{settleCustomer?.totalDue.toFixed(2)}</strong></p>
-              
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Amount Paying Now (₹):</label>
-                <input type="number" className="input" value={settleAmount} onChange={e => setSettleAmount(e.target.value)} />
-              </div>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                {['Cash', 'Online'].map(m => (
-                  <button key={m} type="button" className={`btn ${settleMethod === m ? '' : 'btn-outline'}`} style={{ flex: 1, padding: '0.45rem' }} onClick={() => setSettleMethod(m)}>
-                    {m}
-                  </button>
-                ))}
-              </div>
+        {receiptModal}
 
-              <div className="flex-between">
-                <button type="button" className="btn btn-outline" onClick={() => setShowSettleModal(false)}>Cancel</button>
-                <button type="button" className="btn btn-success" onClick={handleSettleSubmit}>Record Payment</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Settle Modal */}
+        {settleModal}
       </div>
     );
   }
@@ -608,7 +722,7 @@ export default function CustomerLedger({ currentShop }) {
             type="text"
             className="input"
             style={{ margin: 0, paddingLeft: '2.25rem' }}
-            placeholder="Search customer (Name, Phone, Short ID)..."
+            placeholder="Search customers"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -616,7 +730,7 @@ export default function CustomerLedger({ currentShop }) {
         </div>
 
         <select className="select toolbar-select" style={{ margin: 0 }} value={filter} onChange={e => setFilter(e.target.value)}>
-          <option value="All">All Customers</option>
+          <option value="All">All</option>
           <option value="Highest">Highest Due</option>
           <option value="Lowest">Lowest Due</option>
           <option value="No Due">No Due</option>
@@ -762,110 +876,8 @@ export default function CustomerLedger({ currentShop }) {
       )}
 
       {/* DIGITAL RECEIPT MODAL */}
-      {selectedReceipt && (
-        <div className="modal-overlay" style={{ zIndex: 1100 }}>
-          <div className="panel modal-dialog" style={{ width: '440px', maxWidth: '95vw', padding: '1.25rem', background: '#fff' }}>
-            <div className="flex-between" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-              <h3 className="title" style={{ margin: 0, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Receipt size={20} color="var(--primary)" /> Sale Bill #{selectedReceipt.id}
-              </h3>
-              <X size={20} style={{ cursor: 'pointer' }} onClick={() => setSelectedReceipt(null)} />
-            </div>
-
-            <div style={{ textAlign: 'center', borderBottom: '1px dashed var(--border)', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
-              <div style={{ fontWeight: '700', fontSize: '1.15rem', color: 'var(--text)' }}>
-                {shopInfo?.shopName || currentShop?.shopName || 'GI Shop Store'}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                {shopInfo?.shopAddress || currentShop?.shopAddress || ''}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', marginTop: '2px' }}>
-                Date: {new Date(selectedReceipt.date).toLocaleString()}
-              </div>
-            </div>
-
-            {/* Customer Info */}
-            <div style={{ background: '#f7f8fa', padding: '0.65rem 0.85rem', borderRadius: '8px', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Customer Details</div>
-              <div style={{ fontWeight: '700' }}>
-                {selectedReceipt.customerPhone || selectedCustomer?.name || 'Customer'}
-                {selectedReceipt.customerShortId && (
-                  <span style={{ color: 'var(--primary)', marginLeft: '0.35rem' }}>
-                    ({selectedReceipt.customerShortId})
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Items Breakdown Table */}
-            <div style={{ marginBottom: '0.75rem' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-                Items Breakdown
-              </div>
-              {(() => {
-                const items = selectedReceipt.items || JSON.parse(selectedReceipt.itemsJSON || '[]');
-                return items.map((c, i) => {
-                  const itemName = c.item?.name || c.name || 'Item';
-                  const qty = c.qty || 1;
-                  const unit = c.item?.unit || c.unit || '';
-                  const rate = c.rate || c.item?.price || 0;
-                  const lineTotal = (c.amount || (rate * qty)) || 0;
-
-                  return (
-                    <div key={i} className="flex-between" style={{ fontSize: '0.85rem', padding: '0.35rem 0', borderBottom: '1px solid #eff1f4' }}>
-                      <div>
-                        <div style={{ fontWeight: '600' }}>{itemName}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {qty} {unit} @ ₹{Number(rate).toFixed(2)}
-                        </div>
-                      </div>
-                      <div style={{ fontWeight: '700' }}>
-                        ₹{Number(lineTotal).toFixed(2)}
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
-
-            {/* Payment Summary */}
-            <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '0.75rem', fontSize: '0.9rem' }}>
-              <div className="flex-between" style={{ marginBottom: '0.25rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Subtotal:</span>
-                <span>₹{(Number(selectedReceipt.subtotal || selectedReceipt.total) || 0).toFixed(2)}</span>
-              </div>
-              {selectedReceipt.discount > 0 && (
-                <div className="flex-between" style={{ marginBottom: '0.25rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Discount:</span>
-                  <span style={{ color: 'var(--danger)' }}>-₹{(Number(selectedReceipt.discount) || 0).toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex-between" style={{ fontWeight: '800', fontSize: '1.15rem', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.5rem' }}>
-                <span>Total Amount:</span>
-                <span style={{ color: 'var(--success)' }}>₹{(Number(selectedReceipt.total) || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex-between" style={{ marginTop: '0.5rem', fontSize: '0.82rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Payment Method:</span>
-                <span className="badge" style={{ fontSize: '0.8rem' }}>{selectedReceipt.paymentMethod}</span>
-              </div>
-              {selectedReceipt.note && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6366f1', background: '#eef2ff', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
-                  📝 Note: "{selectedReceipt.note}"
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
-              <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSelectedReceipt(null)}>
-                Close
-              </button>
-              <button type="button" className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }} onClick={() => window.print()}>
-                <Printer size={16} /> Print / Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {receiptModal}
+      {settleModal}
     </div>
   );
 }

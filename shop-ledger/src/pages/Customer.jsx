@@ -7,7 +7,7 @@ import {
   cancelCustomerOrder, updateOrderCollection
 } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
-import { MobileTopBar, MGroup, MRow, MSegment } from '../components/MobileKit';
+import { MobileTopBar, MGroup, MRow, MSegment, IdChip } from '../components/MobileKit';
 import { registerPasskey, loginWithPasskey } from '../lib/passkey';
 import { 
   Store, ShoppingCart, Receipt, Clock, MapPin, Search, Plus, Minus, 
@@ -1037,7 +1037,7 @@ export default function Customer() {
       {/* Phone app bar */}
       <MobileTopBar
         title={{ explore: 'Explore', compare: 'Compare', khata: 'My Khata', orders: 'Orders', more: 'Account' }[activeTab] || 'GI SHOP'}
-        right={currentUser?.shortId ? <span className="m-chip-id">{currentUser.shortId}</span> : null}
+        right={currentUser?.shortId ? <IdChip kind="Customer ID" id={currentUser.shortId} /> : null}
       />
 
       {/* Desktop Top Header */}
@@ -1083,7 +1083,7 @@ export default function Customer() {
                 borderRadius: '8px' 
               }}
             >
-              ID: {currentUser.shortId}
+              ID: {String(currentUser.shortId).toUpperCase()}
             </span>
           )}
 

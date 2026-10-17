@@ -23,7 +23,7 @@ import CustomerLedger from '../components/CustomerLedger';
 import OrderTimelineModal from '../components/OrderTimelineModal';
 import logoImg from '../assets/logo.png';
 import { CountUp } from '../components/Motion';
-import { MobileTopBar, MGroup, MRow, MSegment, MChips } from '../components/MobileKit';
+import { MobileTopBar, MGroup, MRow, MSegment, MChips, IdChip } from '../components/MobileKit';
 
 export default function Shopkeeper() {
   const navigate = useNavigate();
@@ -1061,7 +1061,7 @@ export default function Shopkeeper() {
       {/* Phone app bar */}
       <MobileTopBar
         title={{ pos: 'Billing', khata: 'Khata', orders: 'Orders', transactions: 'Sales', more: 'Settings' }[activeTab] || ''}
-        right={<span className="m-chip-id">{currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}</span>}
+        right={<IdChip kind="Shop ID" id={currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')} />}
       />
 
       {/* Desktop Header */}
@@ -1132,7 +1132,7 @@ export default function Shopkeeper() {
               borderRadius: '8px' 
             }}
           >
-            Shop ID: {currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')}
+            Shop ID: {String(currentShop?.shortId || (currentShop?.id ? `shp${currentShop.id}` : 'shp')).toUpperCase()}
           </span>
 
           {/* Quick Language Toggle Button */}
@@ -1696,111 +1696,48 @@ export default function Shopkeeper() {
                 </table>
               </div>
 
-              {/* Mobile-Optimized Sales Cards (Zero Table Cut-Off) */}
-              <div className="mobile-only-block">
+              {/* Phone: one clean card per bill (details open on tap) */}
+              <div className="mobile-only-block sale-list">
                 {sales.map(sale => {
-                  const items = JSON.parse(sale.itemsJSON || '[]');
-                  const methodColor = sale.paymentMethod === 'Cash' ? '#1f9d5a' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#7c3aed' : '#d98a0b';
-                  const methodBg = sale.paymentMethod === 'Cash' ? '#dff3e6' : sale.paymentMethod === 'Online' || sale.paymentMethod === 'UPI' ? '#f5f3ff' : '#fdf0cf';
-
+                  const method = sale.paymentMethod || 'Cash';
+                  const methodKey = method === 'Cash' ? 'cash' : (method === 'Online' || method === 'UPI' ? 'online' : 'book');
                   return (
-                    <div 
-                      key={sale.id}
-                      style={{ 
-                        background: '#ffffff', 
-                        border: '1px solid var(--border)', 
-                        borderRadius: '12px', 
-                        padding: '0.85rem', 
-                        marginBottom: '0.65rem',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => setSelectedReceipt(sale)}
-                    >
-                      {/* Card Header: Bill ID & Amount */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.45rem' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--primary)' }}>
-                              #{sale.id}
-                            </span>
-                            <span style={{ 
-                              fontSize: '0.7rem', 
-                              fontWeight: 700, 
-                              color: methodColor, 
-                              background: methodBg, 
-                              padding: '2px 6px', 
-                              borderRadius: '4px' 
-                            }}>
-                              {sale.paymentMethod || 'Cash'}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            {new Date(sale.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                          </div>
-                        </div>
-
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--success)' }}>
-                            ₹{(Number(sale?.total) || 0).toFixed(2)}
-                          </div>
-                          {sale.discount > 0 && (
-                            <div style={{ fontSize: '0.7rem', color: 'var(--danger)' }}>
-                              -₹{Number(sale.discount).toFixed(2)} off
-                            </div>
-                          )}
-                        </div>
+                    <div key={sale.id} className="sale-card" onClick={() => setSelectedReceipt(sale)}>
+                      <div className="sale-top">
+                        <span className="sale-id">Bill #{sale.id}</span>
+                        <span className={`sale-pill sale-${methodKey}`}>{method}</span>
                       </div>
 
-                      {/* Customer Info */}
-                      <div style={{ fontSize: '0.8rem', color: '#344054', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span>👤 {sale.customerPhone || 'Walk-in Customer'}</span>
-                        {sale.customerShortId && (
-                          <span className="badge" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>
-                            {sale.customerShortId}
-                          </span>
-                        )}
+                      <div className="sale-mid">
+                        <div className="sale-cust">
+                          <strong>{sale.customerPhone || 'Walk-in customer'}</strong>
+                          {sale.customerShortId && <span className="khata-shortid">{sale.customerShortId}</span>}
+                        </div>
+                        <div className="sale-total">₹{(Number(sale?.total) || 0).toFixed(2)}</div>
                       </div>
 
-                      {/* Items Summary */}
-                      <div style={{ background: '#f7f8fa', borderRadius: '8px', padding: '0.45rem 0.6rem', marginBottom: '0.5rem', fontSize: '0.78rem', color: '#475467' }}>
-                        {items.slice(0, 3).map((c, i) => (
-                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: i < 2 ? '2px' : 0 }}>
-                            <span>{c.item?.name || c.name} ({c.qty} {c.item?.unit || ''})</span>
-                            <span style={{ fontWeight: 600 }}>₹{(Number(c.qty) * Number(c.rate || c.item?.price || 0)).toFixed(2)}</span>
-                          </div>
-                        ))}
-                        {items.length > 3 && (
-                          <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, marginTop: '2px' }}>
-                            + {items.length - 3} more items
-                          </div>
-                        )}
+                      <div className="sale-meta">
+                        <span><Clock size={13} /> {new Date(sale.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                        {sale.discount > 0 && <span className="sale-off">−₹{Number(sale.discount).toFixed(2)} off</span>}
                       </div>
 
-                      {/* Notes & Actions */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <div style={{ fontSize: '0.75rem', color: sale.note ? '#4f46e5' : 'var(--text-muted)', fontStyle: sale.note ? 'italic' : 'normal', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {sale.note ? `Note: "${sale.note}"` : ''}
-                        </div>
+                      {sale.note && <div className="sale-note-line">“{sale.note}”</div>}
 
-                        <div style={{ display: 'flex', gap: '0.35rem' }}>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline" 
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem' }}
-                            onClick={(e) => { e.stopPropagation(); setSelectedSaleForNote(sale); setNoteInput(sale.note || ''); }}
-                          >
-                            Note
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline" 
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
-                            onClick={(e) => { e.stopPropagation(); setSelectedReceipt(sale); }}
-                          >
-                            Bill →
-                          </button>
-                        </div>
+                      <div className="sale-btns">
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={(e) => { e.stopPropagation(); setSelectedSaleForNote(sale); setNoteInput(sale.note || ''); }}
+                        >
+                          {sale.note ? 'Edit note' : 'Add note'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          onClick={(e) => { e.stopPropagation(); setSelectedReceipt(sale); }}
+                        >
+                          View bill
+                        </button>
                       </div>
                     </div>
                   );
@@ -3929,11 +3866,10 @@ export default function Shopkeeper() {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.25rem' }}>
+            <div className="bill-foot" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.25rem' }}>
               <button 
                 type="button" 
-                className="btn" 
-                style={{ background: '#25D366', color: '#fff', borderColor: '#25D366', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.65rem' }} 
+                className="btn btn-whatsapp bill-wa" 
                 onClick={() => {
                   const rawPhone = (selectedReceipt.customerPhone || selectedReceipt.phone || '').toString().trim();
                   const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
@@ -3954,14 +3890,14 @@ export default function Shopkeeper() {
                   window.open(whatsappUrl, '_blank');
                 }}
               >
-                <MessageSquare size={18} /> Share Bill on WhatsApp {selectedReceipt.customerPhone ? `(${selectedReceipt.customerPhone})` : ''}
+                <MessageSquare size={18} /> Send on WhatsApp
               </button>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSelectedReceipt(null)}>
                   Close
                 </button>
                 <button type="button" className="btn" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }} onClick={() => window.print()}>
-                  <Printer size={16} /> Print / Save PDF
+                  <Printer size={16} /> Print
                 </button>
               </div>
             </div>
