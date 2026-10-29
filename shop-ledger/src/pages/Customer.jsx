@@ -60,7 +60,7 @@ export default function Customer() {
     }
   });
   const [staffRole, setStaffRole] = useState(null);
-  const [activeTab, setActiveTab] = useState('explore'); // 'explore' | 'compare' | 'khata' | 'orders'
+  const [activeTab, setActiveTab] = useState(() => { const t = new URLSearchParams(window.location.search).get('tab'); return ['explore', 'compare', 'khata', 'orders', 'more'].includes(t) ? t : 'explore'; }); // 'explore' | 'compare' | 'khata' | 'orders'
   
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState('Delhi');
@@ -1033,7 +1033,7 @@ export default function Customer() {
   const totalSpentAll = safePurchases.reduce((sum, p) => sum + (Number(p?.total) || 0), 0);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
+    <div className="customer-shell" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-color)' }}>
       {/* Phone app bar */}
       <MobileTopBar
         title={{ explore: 'Explore', compare: 'Compare', khata: 'My Khata', orders: 'Orders', more: 'Account' }[activeTab] || 'GI SHOP'}
@@ -1172,36 +1172,42 @@ export default function Customer() {
             {shopsLoading ? (
               <ShopCardSkeleton count={6} />
             ) : (
-              <div className="cx-list cx-grid">
-                {filteredShops.map(shop => {
-                  const k = `shop-${shop.id}`;
-                  const open = !!openCards[k];
-                  return (
-                    <div key={shop.id} className={`cx-card ${open ? 'open' : ''}`}>
-                      <button type="button" className="cx-card-head" onClick={() => toggleCard(k)}>
-                        <span className="cx-avatar"><Store size={18} /></span>
-                        <span className="cx-main">
-                          <span className="cx-title">{shop.shopName}</span>
-                          <span className="cx-sub">{shop.shopAddress || shop.city}</span>
-                        </span>
-                        <span className="cx-end">
-                          <span className={`cx-pill ${shop.isOpen ? 'cx-green' : 'cx-red'}`}>{shop.isOpen ? 'Open' : 'Closed'}</span>
-                        </span>
-                      </button>
-                      {open && (
-                        <div className="cx-body">
-                          <div className="cx-meta"><Clock size={14} /> {shop.timings || '—'}</div>
-                          {shop.shopPhone && <div className="cx-meta"><Phone size={14} /> {shop.shopPhone}</div>}
-                          <div className="cx-meta"><MapPin size={14} /> {shop.city} · ID {shop.shortId}</div>
-                          <div className="cx-actions">
-                            <button type="button" className="btn btn-sm" onClick={() => handleOpenShop(shop)}>View catalog &amp; order <ArrowRight size={14} /></button>
-                            {shop.shopPhone && <a href={`tel:${shop.shopPhone}`} className="btn btn-outline btn-sm"><Phone size={14} /> Call</a>}
-                          </div>
-                        </div>
-                      )}
+              <div className="shop-grid">
+                <style>{`
+                  .shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+                  .shop-tile{background:#fff;border:1px solid var(--border);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(16,24,40,.05);transition:transform .15s,box-shadow .15s}
+                  .shop-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,24,40,.1)}
+                  .shop-tile.closed{opacity:.8}
+                  .shop-band{height:64px;background:linear-gradient(135deg,#0f7a43,#34b873);position:relative}
+                  .shop-band.closed{background:linear-gradient(135deg,#667085,#98a2b3)}
+                  .shop-status{position:absolute;top:10px;right:10px;font-size:.7rem;font-weight:800;padding:.2rem .6rem;border-radius:999px;background:#fff;color:#0f7a43}
+                  .shop-status.closed{color:#b91c1c}
+                  .shop-logo{position:absolute;left:16px;bottom:-22px;width:48px;height:48px;border-radius:14px;background:#fff;color:#0f7a43;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem}
+                  .shop-info{padding:1.7rem 1rem .9rem;display:flex;flex-direction:column;gap:.45rem;flex:1}
+                  .shop-name{font-weight:800;font-size:1.05rem;overflow-wrap:anywhere}
+                  .shop-line{display:flex;gap:.45rem;align-items:flex-start;font-size:.82rem;color:var(--text-muted)}
+                  .shop-line svg{flex-shrink:0;margin-top:2px}
+                  .shop-acts{display:flex;gap:.5rem;padding:0 1rem 1rem}
+                  .shop-acts .btn{flex:1;justify-content:center}
+                  @media(max-width:560px){.shop-grid{grid-template-columns:1fr}}
+                `}</style>
+                {filteredShops.map(shop => (
+                  <div key={shop.id} className={`shop-tile ${shop.isOpen ? '' : 'closed'}`}>
+                    <div className={`shop-band ${shop.isOpen ? '' : 'closed'}`}>
+                      <span className={`shop-status ${shop.isOpen ? '' : 'closed'}`}>{shop.isOpen ? '● Open' : 'Closed'}</span>
+                      <span className="shop-logo">{(shop.shopName || '?').trim().charAt(0).toUpperCase()}</span>
                     </div>
-                  );
-                })}
+                    <div className="shop-info">
+                      <div className="shop-name">{shop.shopName}</div>
+                      <div className="shop-line"><MapPin size={14} /> {shop.shopAddress || shop.city}</div>
+                      {shop.timings && <div className="shop-line"><Clock size={14} /> {shop.timings}</div>}
+                    </div>
+                    <div className="shop-acts">
+                      <button type="button" className="btn btn-sm" onClick={() => handleOpenShop(shop)}>Order <ArrowRight size={14} /></button>
+                      {shop.shopPhone && <a href={`tel:${shop.shopPhone}`} className="btn btn-outline btn-sm" aria-label="Call shop"><Phone size={14} /> Call</a>}
+                    </div>
+                  </div>
+                ))}
               {filteredShops.length === 0 && (
                 <div className="cx-empty" style={{ gridColumn: '1 / -1' }}>
                   <span className="cx-empty-title">No shops found in {selectedCity}</span>
@@ -1214,7 +1220,7 @@ export default function Customer() {
 
         {/* TAB 2: PRICE COMPARISON & SEARCH ITEMS */}
         {activeTab === 'compare' && (
-          <div className="cx-stack">
+          <div className="cx-stack" style={{ maxWidth: 'none' }}>
             <div className="cmp-search">
               <Search size={18} />
               <input
@@ -1228,7 +1234,7 @@ export default function Customer() {
             {compareLoading ? (
               <ProductGridSkeleton count={6} />
             ) : (
-              <div className="cx-list">
+              <div className="cx-list cx-grid">
                 {Object.keys(groupedCompare).map(key => {
                   const group = groupedCompare[key];
                   const sortedOffers = [...group.offers].sort((a, b) => a.price - b.price);
@@ -1287,7 +1293,7 @@ export default function Customer() {
                                     type="button"
                                     className="btn btn-sm"
                                     disabled={!offer.isOpen}
-                                    onClick={() => handleAddItemToCart({ id: offer.id, name: offer.name, price: offer.price, unit: offer.unit }, { id: offer.shopId, shopName: offer.shopName })}
+                                    onClick={() => handleAddItemToCart({ id: offer.id, name: offer.name, price: offer.price, unit: offer.unit }, { id: offer.shopId, shopName: offer.shopName, isOpen: offer.isOpen })}
                                   >
                                     + Add
                                   </button>
@@ -1835,12 +1841,12 @@ export default function Customer() {
                 </button>
 
                 {order.status === 'READY' && (
-                  <div className="cx-otp">
+                  <div className="cx-otp" style={order.otpCode ? undefined : { borderColor: '#f59e0b', background: '#fffbeb' }}>
                     <div>
                       <div className="cx-otp-label">Pickup OTP</div>
-                      <div className="cx-otp-code">{order.otpCode || '----'}</div>
+                      <div className="cx-otp-code" style={order.otpCode ? undefined : { color: '#b45309', fontSize: '1rem', letterSpacing: 0 }}>{order.otpCode || 'Expired'}</div>
                     </div>
-                    <span className="cx-otp-hint">Show this code to the shopkeeper</span>
+                    <span className="cx-otp-hint">{order.otpCode ? 'Show this code to the shopkeeper' : 'Valid for 24 hours. Ask the shop to re-issue it.'}</span>
                   </div>
                 )}
 

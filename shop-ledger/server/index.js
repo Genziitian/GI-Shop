@@ -1145,6 +1145,15 @@ app.delete('/api/shop/items/:id', authenticate, (req, res) => {
 });
 
 // --- CUSTOMER ORDERS / "MAKE A LIST" APIs ---
+// Random 6-digit order number; re-roll on collision (column is UNIQUE)
+const genUniqueOrderNumber = (cb, attempt = 0) => {
+  const num = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+  db.get(`SELECT 1 FROM Orders WHERE orderNumber = ?`, [num], (err, row) => {
+    if (row && attempt < 5) return genUniqueOrderNumber(cb, attempt + 1);
+    cb(num);
+  });
+};
+
 app.post('/api/orders', authenticate, (req, res) => {
   const { shopId, items, estimatedTotal } = req.body;
   if (!shopId || !items || items.length === 0) return res.status(400).json({ error: 'Invalid order request' });
@@ -1164,7 +1173,7 @@ app.post('/api/orders', authenticate, (req, res) => {
 
       // Fetch customer details
       db.get(`SELECT shortId, name, phone, address FROM Users WHERE id = ?`, [req.user.id], (err, cust) => {
-        const orderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+       genUniqueOrderNumber((orderNumber) => {
         const now = new Date().toISOString();
         const initialTimeline = JSON.stringify([
           {
@@ -1208,6 +1217,7 @@ app.post('/api/orders', authenticate, (req, res) => {
 
             res.json({ success: true, orderId: newOrderId, orderNumber, message: 'Order sent to shopkeeper!' });
         });
+       });
       });
     });
   });
@@ -1284,7 +1294,13 @@ app.get('/api/customer/orders', authenticate, (req, res) => {
     db.all(`SELECT Orders.*, Shops.shortId as shopShortId, Shops.shopName, Shops.shopPhone, Shops.shopAddress, Shops.city as shopCity, Shops.timings as shopTimings FROM Orders 
             JOIN Shops ON Orders.shopId = Shops.id 
             WHERE Orders.customerId = ? ORDER BY Orders.id DESC`, [req.user.id], (err, rows) => {
-      res.json(rows || []);
+      // OTP is only valid for 24h (same rule as verify-otp); never hand out a dead code
+      const OTP_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+      res.json((rows || []).map(r => {
+        if (!r.otpCode) return r;
+        const t = new Date(r.otpCreatedAt || r.createdAt).getTime();
+        return Date.now() - t > OTP_MAX_AGE_MS ? { ...r, otpCode: null, otpExpired: true } : r;
+      }));
     });
   });
 });
