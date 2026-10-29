@@ -1,3 +1,4 @@
+import CityPicker from '../components/CityPicker';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -79,6 +80,7 @@ export default function Customer() {
   const [orderErrorMsg, setOrderErrorMsg] = useState('');
 
   // Cart Conflict Modal (Single-Shop Rule)
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [cartConflict, setCartConflict] = useState(null); // { pendingItem, pendingShop }
 
   // Compare Tab State
@@ -1149,20 +1151,9 @@ export default function Customer() {
           <div>
             {/* Filter Row: City Selector & Search Bar in 1 Single Row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#e9f6ee', border: '1px solid #bfe3cb', padding: '0.35rem 0.65rem', borderRadius: '10px' }}>
-                <MapPin size={16} color="var(--primary)" />
-                <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)' }}>City:</span>
-                <select 
-                  className="select" 
-                  style={{ width: 'auto', margin: 0, padding: '0.2rem 0.4rem', fontSize: '0.88rem', fontWeight: '700', border: 'none', background: 'transparent' }}
-                  value={selectedCity}
-                  onChange={e => { setSelectedCity(e.target.value); setActiveShop(null); }}
-                >
-                  {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
+              <CityPicker value={selectedCity} options={cities} onChange={c => { setSelectedCity(c); setActiveShop(null); }} />
 
-              <div style={{ flex: '1 1 200px', position: 'relative' }}>
+              <div className="cx-search" style={{ flex: '1 1 200px', position: 'relative' }}>
                 <input
                   type="text"
                   className="input"
@@ -1253,10 +1244,6 @@ export default function Customer() {
                           <span className="cx-title">{group.displayName}</span>
                           <span className="cx-sub">per {group.unit}</span>
                         </div>
-                        <div className="cmp-best">
-                          <span>Best price</span>
-                          <strong>₹{(Number(lowestPrice) || 0).toFixed(2)}</strong>
-                        </div>
                       </div>
 
                       <div className="cmp-offers">
@@ -1326,26 +1313,31 @@ export default function Customer() {
         {activeTab === 'explore' && activeShop && (
           <div>
             {/* Shop header */}
-            <div className="shop-head">
-              <button type="button" className="m-back-btn" onClick={() => setActiveShop(null)}>← Shops</button>
-              <div className="shop-head-card">
-                <div className="shop-head-top">
-                  <div className="cx-main">
-                    <span className="shop-name">{activeShop.shopName}</span>
-                    <span className="cx-sub">{[activeShop.shopAddress, activeShop.timings].filter(Boolean).join(' • ')}</span>
+            <button type="button" className="m-back-btn" onClick={() => setActiveShop(null)}>← Shops</button>
+            <div className="sd-head">
+              <div className={`sd-band ${activeShop.isOpen ? '' : 'closed'}`} />
+              <div className="sd-head-body">
+                <span className="sd-logo">{(activeShop.shopName || '?').trim().charAt(0).toUpperCase()}</span>
+                <div className="sd-head-info">
+                  <div className="sd-title-row">
+                    <h2 className="sd-title">{activeShop.shopName}</h2>
+                    <span className={`cx-pill ${activeShop.isOpen ? 'cx-green' : 'cx-red'}`}>{activeShop.isOpen ? '● Open' : 'Closed'}</span>
                   </div>
-                  <span className={`cx-pill ${activeShop.isOpen ? 'cx-green' : 'cx-red'}`}>{activeShop.isOpen ? 'Open' : 'Closed'}</span>
+                  <div className="sd-meta">
+                    {activeShop.shopAddress && <span><MapPin size={13} /> {activeShop.shopAddress}</span>}
+                    {activeShop.timings && <span><Clock size={13} /> {activeShop.timings}</span>}
+                  </div>
                 </div>
                 {activeShop.shopPhone && (
-                  <div className="shop-head-actions">
-                    <a href={`tel:${activeShop.shopPhone}`} className="btn btn-sm"><Phone size={15} /> Call</a>
+                  <div className="sd-head-actions">
+                    <a href={`tel:${activeShop.shopPhone}`} className="btn btn-sm"><Phone size={14} /> Call</a>
                     <a
                       href={`https://wa.me/91${activeShop.shopPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${activeShop.shopName}, I found your shop on GI Shop and would like to ask about grocery items.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn btn-outline btn-sm"
                     >
-                      <MessageCircle size={15} /> WhatsApp
+                      <MessageCircle size={14} /> WhatsApp
                     </a>
                   </div>
                 )}
@@ -1379,7 +1371,8 @@ export default function Customer() {
                   />
                 </div>
 
-                <div className="item-list">
+                <div className="sd-catalog-head"><span>Items</span><em>{filteredShopItems.length}</em></div>
+                <div className="item-list sd-items">
                   {filteredShopItems.map(item => {
                     const currentEntry = orderList[item.id];
                     const currentQty = currentEntry?.qty || 0;
@@ -1393,9 +1386,10 @@ export default function Customer() {
                       >
                         <div className="item-info">
                           <div className="item-name">{item.name}</div>
-                          <div className="item-price"><strong>₹{(Number(item?.price) || 0).toFixed(2)}</strong> / {item.unit}</div>
+                          <div className="item-price">per {item.unit}</div>
                         </div>
 
+                        <div className="sd-price">₹{(Number(item?.price) || 0).toFixed(2)}</div>
                         {isAdded ? (
                           <span className="item-qty">{currentQty} {item.unit}</span>
                         ) : (
@@ -1406,7 +1400,7 @@ export default function Customer() {
                             disabled={!activeShop.isOpen}
                             onClick={(e) => { e.stopPropagation(); openItemModal(item, activeShop); }}
                           >
-                            <Plus size={18} />
+                            <Plus size={14} /> Add
                           </button>
                         )}
                       </div>
@@ -1419,43 +1413,34 @@ export default function Customer() {
               </div>
 
               {/* Shopping List / Send Order Box */}
-              <div className="panel desktop-only-block" style={{ position: 'sticky', top: '1rem' }}>
-                <div className="flex-between" style={{ marginBottom: '0.75rem' }}>
-                  <h3 className="title" style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <ShoppingCart size={18} /> Cart / Order List
-                  </h3>
-                  {activeCartShop && (
-                    <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)' }}>
-                      {activeCartShop.name}
-                    </span>
-                  )}
+              <div className="sd-cart desktop-only-block">
+                <div className="sd-cart-head">
+                  <h3><ShoppingCart size={16} /> Your order</h3>
+                  <span className="cx-pill cx-green">{Object.keys(orderList).length} {Object.keys(orderList).length === 1 ? 'item' : 'items'}</span>
                 </div>
 
                 <div style={{ maxHeight: '250px', overflowY: 'auto', marginBottom: '1rem' }}>
                   {Object.values(orderList).length === 0 ? (
-                    <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem 0', fontSize: '0.9rem' }}>
-                      Your cart is empty.<br/>Tap "+ Add to List" on products.
-                    </div>
+                    <div className="sd-cart-empty"><ShoppingCart size={26} /><span>Your cart is empty</span><small>Add items from the list</small></div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {Object.values(orderList).map(entry => (
-                        <div key={entry.item.id} className="flex-between" style={{ fontSize: '0.85rem', paddingBottom: '0.35rem', borderBottom: '1px solid #eff1f4' }}>
-                          <div>
+                        <div key={entry.item.id} className="sd-cart-row">
+                          <div className="sd-cart-name">
                             <div>{entry.item.name}</div>
-                            <small style={{ color: 'var(--text-muted)' }}>{entry.qty} x ₹{entry.rate}</small>
+                            <small>{entry.qty} {entry.item.unit} × ₹{entry.rate}</small>
                           </div>
                           <strong>₹{(Number(entry?.amount) || 0).toFixed(2)}</strong>
+                          <button type="button" className="sd-x" aria-label={`Remove ${entry.item.name}`} onClick={() => handleUpdateItemQty(entry.item, -entry.qty)}><X size={14} /></button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                <div style={{ borderTop: '2px solid var(--border)', paddingTop: '0.75rem', marginBottom: '1rem' }}>
-                  <div className="flex-between" style={{ fontSize: '1.1rem', fontWeight: '700' }}>
-                    <span>Estimated Total:</span>
-                    <span style={{ color: 'var(--success)' }}>₹{(Number(totalOrderAmount) || 0).toFixed(2)}</span>
-                  </div>
+                <div className="sd-total">
+                  <span>Estimated total</span>
+                  <strong>₹{(Number(totalOrderAmount) || 0).toFixed(2)}</strong>
                 </div>
 
                 <button 
@@ -1463,7 +1448,7 @@ export default function Customer() {
                   className="btn" 
                   style={{ width: '100%', padding: '0.85rem' }}
                   disabled={!activeShop.isOpen || Object.keys(orderList).length === 0 || orderSubmitting}
-                  onClick={handleSendOrder}
+                  onClick={() => setShowSendConfirm(true)}
                 >
                   {orderSubmitting ? 'Sending...' : (!activeShop.isOpen ? 'Shop is Closed' : `Send Order to ${activeCartShop?.name || 'Shop'}`)}
                 </button>
@@ -2246,9 +2231,7 @@ export default function Customer() {
                   className="btn" 
                   style={{ width: '100%', padding: '0.85rem', fontSize: '1rem' }}
                   disabled={orderSubmitting || Object.keys(orderList).length === 0}
-                  onClick={async () => {
-                    await handleSendOrder();
-                  }}
+                  onClick={() => setShowSendConfirm(true)}
                 >
                   {orderSubmitting ? 'Sending Order...' : `Send Order to ${activeCartShop.name}`}
                 </button>
@@ -2264,6 +2247,36 @@ export default function Customer() {
                   }}
                 >
                   Clear Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CONFIRM BEFORE SENDING ORDER */}
+        {showSendConfirm && activeCartShop && (
+          <div className="modal-overlay" style={{ zIndex: 1100 }} onClick={() => !orderSubmitting && setShowSendConfirm(false)}>
+            <div className="panel modal-dialog sd-confirm" style={{ width: '420px', maxWidth: '100%', padding: '1.25rem', background: '#fff', borderRadius: '16px' }} onClick={e => e.stopPropagation()}>
+              <h3 style={{ margin: '0 0 0.2rem', fontSize: '1.15rem', fontWeight: 800 }}>Send this order?</h3>
+              <p style={{ margin: '0 0 0.9rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Your order goes to <strong style={{ color: 'var(--text)' }}>{activeCartShop.name}</strong>. They will accept it and mark it ready for pickup.
+              </p>
+              <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.25rem 0.85rem' }}>
+                {Object.values(orderList).map(entry => (
+                  <div key={entry.item.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', padding: '0.55rem 0', borderBottom: '1px solid #eff1f4', fontSize: '0.88rem' }}>
+                    <span>{entry.item.name} <small style={{ color: 'var(--text-muted)' }}>· {entry.qty} {entry.item.unit}</small></span>
+                    <strong>₹{(Number(entry.amount) || 0).toFixed(2)}</strong>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '0.9rem 0' }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>Estimated total</span>
+                <strong style={{ fontSize: '1.4rem' }}>₹{(Number(totalOrderAmount) || 0).toFixed(2)}</strong>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '0.6rem' }}>
+                <button type="button" className="btn btn-outline" disabled={orderSubmitting} onClick={() => setShowSendConfirm(false)}>Cancel</button>
+                <button type="button" className="btn" disabled={orderSubmitting} onClick={async () => { await handleSendOrder(); setShowSendConfirm(false); }}>
+                  {orderSubmitting ? 'Sending...' : 'Yes, send order'}
                 </button>
               </div>
             </div>
