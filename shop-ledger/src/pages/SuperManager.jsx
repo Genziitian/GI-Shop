@@ -6,7 +6,7 @@ import {
   changeAdminShopCity, deleteAdminShop, getSupportSettings, updateSupportSettings, getAdminSyncedContacts
 } from '../lib/api';
 import { notifyError } from '../lib/errorHandler';
-import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, Smartphone, UserCheck, AlertOctagon, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
+import { Shield, Store, Users, MapPin, Plus, Trash2, LogOut, Search, CheckCircle, XCircle, AlertTriangle, KeyRound, Headphones, Phone, Mail, Clock, Save, Contact, RefreshCw, IndianRupee, UserCheck, AlertOctagon, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import { CountUp } from '../components/Motion';
 
@@ -45,13 +45,16 @@ export default function SuperManager() {
   const [isDeletingShop, setIsDeletingShop] = useState(false);
   const [shopDeleteNotice, setShopDeleteNotice] = useState('');
 
+  const [loadError, setLoadError] = useState('');
+
   const loadData = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const [s, u, c, supp, contacts] = await Promise.all([
-        getAdminShops().catch(err => { console.error('getAdminShops error:', err); return []; }),
-        getAdminUsers().catch(err => { console.error('getAdminUsers error:', err); return []; }),
-        getAdminCities().catch(err => { console.error('getAdminCities error:', err); return []; }),
+        getAdminShops().catch(err => { console.error('getAdminShops error:', err); setLoadError(err?.message || 'Failed to load data'); return []; }),
+        getAdminUsers().catch(err => { console.error('getAdminUsers error:', err); setLoadError(err?.message || 'Failed to load data'); return []; }),
+        getAdminCities().catch(err => { console.error('getAdminCities error:', err); setLoadError(err?.message || 'Failed to load data'); return []; }),
         getSupportSettings().catch(() => ({ supportPhone: '', supportWhatsapp: '', supportEmail: '', supportHours: '09:00 AM - 09:00 PM' })),
         getAdminSyncedContacts().catch(() => [])
       ]);
@@ -260,675 +263,296 @@ export default function SuperManager() {
     );
   });
 
+  const totalRevenue = safeShops.reduce((a, s) => a + (Number(s?.totalRevenue) || 0), 0);
+
+  const filteredContacts = safeContacts.filter(c => {
+    if (!c) return false;
+    return (
+      (c.contactName || '').toLowerCase().includes(searchQuery) ||
+      String(c.contactPhone || '').includes(searchQuery) ||
+      (c.shopName || '').toLowerCase().includes(searchQuery) ||
+      (c.city || '').toLowerCase().includes(searchQuery)
+    );
+  });
+
   const filteredCities = safeCities.filter(c => {
     if (!c) return false;
     return (c.name || '').toLowerCase().includes(searchQuery);
   });
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Admin Top Navigation */}
-      <div className="nav-bar" style={{ background: '#1e1b4b', color: '#fff', borderBottom: '1px solid #312e81' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img src={logoImg} alt="GI SHOP" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }} />
-          <div>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>Super Manager Portal</h3>
-            <div style={{ fontSize: '0.75rem', color: '#a5b4fc' }}>GI SHOP • Platform Governance</div>
-          </div>
-        </div>
+    <div className="sm-page">
+      <style>{`
+        .sm-page{min-height:100vh;display:flex;flex-direction:column;background:#f4f6f8}
+        .sm-head{background:#1e1b4b;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.75rem clamp(.85rem,3vw,2rem);position:sticky;top:0;z-index:20;box-shadow:0 2px 12px rgba(30,27,75,.25)}
+        .sm-brand{display:flex;align-items:center;gap:.65rem;min-width:0}
+        .sm-brand img{width:38px;height:38px;border-radius:10px;object-fit:contain;background:#fff}
+        .sm-brand b{font-size:1.05rem;white-space:nowrap}
+        .sm-act{display:flex;gap:.5rem;align-items:center}
+        .sm-call{display:inline-flex;align-items:center;gap:.4rem;background:#16a34a;color:#fff;border-radius:10px;padding:.55rem .95rem;font-weight:700;font-size:.85rem;text-decoration:none;border:0}
+        .sm-call:hover{background:#15803d}
+        .sm-icon{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:.55rem .8rem;font-weight:600;font-size:.85rem;cursor:pointer}
+        .sm-icon:hover{background:rgba(255,255,255,.2)}
+        .sm-wrap{width:100%;max-width:1200px;margin:0 auto;padding:1.25rem clamp(.85rem,3vw,2rem) 2.5rem;flex:1}
+        .sm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.1rem}
+        .sm-stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:.9rem 1rem;display:flex;align-items:center;gap:.75rem}
+        .sm-stat i{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .sm-stat b{display:block;font-size:1.35rem;line-height:1.1}
+        .sm-stat span{font-size:.75rem;color:var(--text-muted)}
+        .sm-bar{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+        .sm-tabs{display:flex;gap:.4rem;overflow-x:auto;padding:2px;flex:1 1 auto;scrollbar-width:none}
+        .sm-tabs::-webkit-scrollbar{display:none}
+        .sm-tab{display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;border:1px solid var(--border);background:#fff;color:#344054;border-radius:999px;padding:.5rem .95rem;font-weight:600;font-size:.85rem;cursor:pointer}
+        .sm-tab.on{background:#0f7a43;border-color:#0f7a43;color:#fff}
+        .sm-tab em{font-style:normal;font-size:.72rem;background:rgba(0,0,0,.08);border-radius:999px;padding:0 .45rem}
+        .sm-tab.on em{background:rgba(255,255,255,.25)}
+        .sm-search{position:relative;flex:0 1 300px;min-width:200px}
+        .sm-search input{margin:0!important;padding-left:2.4rem!important;border-radius:999px!important}
+        .sm-search svg{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+        .sm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.9rem}
+        .sm-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:1rem;display:flex;flex-direction:column;gap:.7rem}
+        .sm-card.off{opacity:.65}
+        .sm-top{display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start}
+        .sm-name{font-weight:800;font-size:1rem;overflow-wrap:anywhere}
+        .sm-sub{font-size:.75rem;color:var(--text-muted);overflow-wrap:anywhere}
+        .sm-pill{font-size:.7rem;font-weight:700;border-radius:999px;padding:.2rem .6rem;white-space:nowrap}
+        .sm-ok{background:#dff3e6;color:#0f7a43}.sm-bad{background:#fee2e2;color:#b91c1c}.sm-blue{background:#e0f2fe;color:#0369a1}.sm-grey{background:#eff1f4;color:#475467}.sm-vio{background:#f5f3ff;color:#7c3aed}
+        .sm-meta{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+        .sm-rev{display:flex;justify-content:space-between;align-items:center;background:#f7f8fa;border-radius:10px;padding:.55rem .75rem;font-size:.8rem;color:var(--text-muted)}
+        .sm-rev b{color:#0f7a43;font-size:1rem}
+        .sm-btns{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:auto}
+        .sm-b{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;border-radius:9px;border:1px solid #d0d5dd;background:#fff;color:#344054;padding:.45rem .7rem;font-size:.78rem;font-weight:700;cursor:pointer;text-decoration:none}
+        .sm-b:hover{background:#f7f8fa}
+        .sm-b.call{background:#e9f6ee;border-color:#bfe3cb;color:#0f7a43}
+        .sm-b.red{background:#fff1f2;border-color:#fca5a5;color:#dc2626}
+        .sm-b.solid{background:#dc2626;border-color:#dc2626;color:#fff}
+        .sm-b.sky{border-color:#7dd3fc;color:#0284c7}
+        .sm-empty{text-align:center;color:var(--text-muted);padding:3rem 1rem;background:#fff;border:1px dashed var(--border);border-radius:16px}
+        .sm-toast{background:#dff3e6;border:1px solid #c4e8d1;color:#0f7a43;border-radius:12px;padding:.75rem 1rem;margin-bottom:1rem;display:flex;gap:.5rem;align-items:center;font-weight:600;font-size:.9rem}
+        .sm-form{background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.1rem;margin-bottom:1rem}
+        .sm-row{display:flex;gap:.6rem}
+        .sm-row input{margin:0!important;flex:1}
+        .sm-fields{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1rem}
+        @media(max-width:760px){
+          .sm-stats{grid-template-columns:repeat(2,1fr)}
+          .sm-grid{grid-template-columns:1fr}
+          .sm-fields{grid-template-columns:1fr}
+          .sm-brand small,.sm-btxt{display:none}
+          .sm-search{flex:1 1 100%}
+        }
+      `}</style>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <a
-            href="tel:7323809242"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#4ade80', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '0.35rem 0.75rem', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700', textDecoration: 'none' }}
-          >
-            <Phone size={14} /> Contact Customer Care (7323809242)
+      {/* Header */}
+      <header className="sm-head">
+        <div className="sm-brand">
+          <img src={logoImg} alt="GI SHOP" />
+          <div><b>Super Manager</b><br /><small style={{ color: '#a5b4fc', fontSize: '.72rem' }}>GI SHOP</small></div>
+        </div>
+        <div className="sm-act">
+          <a className="sm-call" href={`tel:${(supportForm.supportPhone || '7323809242').replace(/[^\d+]/g, '')}`} aria-label="Call customer care">
+            <Phone size={16} /> <span>Call</span>
           </a>
-          <button className="btn btn-outline" onClick={handleLogout} style={{ color: '#fff', borderColor: '#4338ca' }}>
-            <LogOut size={16} /> Logout
+          <button type="button" className="sm-icon" onClick={loadData} aria-label="Refresh" disabled={loading}>
+            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+          </button>
+          <button type="button" className="sm-icon" onClick={handleLogout} aria-label="Logout">
+            <LogOut size={16} /> <span className="sm-btxt">Logout</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="container" style={{ flex: 1, marginTop: '1.5rem', marginBottom: '2rem' }}>
-        {/* Governance Notice */}
-        <div style={{ background: '#e9f6ee', border: '1px solid #bfe3cb', borderRadius: '8px', padding: '0.85rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', color: '#0b5e33' }}>
-          <AlertTriangle size={18} />
-          <div>
-            <strong>Super Admin Role:</strong> You have platform-wide governance to manage allowed cities, audit registered shops, and terminate/reactivate accounts.
+      <main className="sm-wrap">
+        {loadError && (
+          <div className="sm-toast" style={{ background: '#fee2e2', borderColor: '#fecaca', color: '#b91c1c', justifyContent: 'space-between' }}>
+            <span><AlertTriangle size={16} style={{ verticalAlign: '-3px' }} /> {loadError}</span>
+            <button type="button" className="sm-b" onClick={loadData}>Retry</button>
           </div>
+        )}
+
+        {/* Stats */}
+        <div className="sm-stats">
+          <div className="sm-stat"><i style={{ background: '#e9f6ee', color: '#0f7a43' }}><Store size={20} /></i><div><b><CountUp value={safeShops.filter(s => s?.status === 'ACTIVE').length} /></b><span>Active shops</span></div></div>
+          <div className="sm-stat"><i style={{ background: '#e0f2fe', color: '#0284c7' }}><Users size={20} /></i><div><b><CountUp value={safeUsers.length} /></b><span>Users</span></div></div>
+          <div className="sm-stat"><i style={{ background: '#fdf0cf', color: '#b45309' }}><MapPin size={20} /></i><div><b><CountUp value={safeCities.length} /></b><span>Cities</span></div></div>
+          <div className="sm-stat"><i style={{ background: '#f5f3ff', color: '#7c3aed' }}><IndianRupee size={20} /></i><div><b>₹{Math.round(totalRevenue).toLocaleString('en-IN')}</b><span>Revenue</span></div></div>
         </div>
 
-        {/* Tab & Search Bar */}
-        <div className="panel" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
-          <div className="flex-between" style={{ flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className={`btn ${activeTab === 'shops' ? '' : 'btn-outline'}`}
-                style={{ padding: '0.6rem 1.25rem' }}
-                onClick={() => setActiveTab('shops')}
-              >
-                <Store size={18} /> All Shops ({shops.length})
+        {/* Tabs + search */}
+        <div className="sm-bar">
+          <div className="sm-tabs" role="tablist">
+            {[
+              ['shops', Store, 'Shops', safeShops.length],
+              ['users', Users, 'Users', safeUsers.length],
+              ['cities', MapPin, 'Cities', safeCities.length],
+              ['contacts', Contact, 'Contacts', safeContacts.length],
+              ['support', Headphones, 'Support', null]
+            ].map(([key, Icon, label, count]) => (
+              <button key={key} type="button" role="tab" aria-selected={activeTab === key} className={`sm-tab ${activeTab === key ? 'on' : ''}`} onClick={() => { setActiveTab(key); setSearch(''); }}>
+                <Icon size={15} /> {label} {count !== null && <em>{count}</em>}
               </button>
-
-              <button
-                type="button"
-                className={`btn ${activeTab === 'users' ? '' : 'btn-outline'}`}
-                style={{ padding: '0.6rem 1.25rem' }}
-                onClick={() => setActiveTab('users')}
-              >
-                <Users size={18} /> All Users ({users.length})
-              </button>
-
-              <button
-                type="button"
-                className={`btn ${activeTab === 'cities' ? '' : 'btn-outline'}`}
-                style={{ padding: '0.6rem 1.25rem' }}
-                onClick={() => setActiveTab('cities')}
-              >
-                <MapPin size={18} /> Manage Cities ({cities.length})
-              </button>
-
-              <button
-                type="button"
-                className={`btn ${activeTab === 'support' ? '' : 'btn-outline'}`}
-                style={{ padding: '0.6rem 1.25rem' }}
-                onClick={() => setActiveTab('support')}
-              >
-                <Headphones size={18} /> Support Settings
-              </button>
-
-              <button
-                type="button"
-                className={`btn ${activeTab === 'contacts' ? '' : 'btn-outline'}`}
-                style={{ padding: '0.6rem 1.25rem' }}
-                onClick={() => setActiveTab('contacts')}
-              >
-                <Contact size={18} /> Synced Contacts ({syncedContacts.length})
-              </button>
-            </div>
-
-            <div style={{ position: 'relative', minWidth: '240px', flex: '1', maxWidth: '360px' }}>
-              <input
-                type="text"
-                className="input"
-                style={{ margin: 0, paddingLeft: '2.5rem' }}
-                placeholder={`Search ${activeTab}...`}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-              <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-            </div>
+            ))}
           </div>
+          {activeTab !== 'support' && (
+            <div className="sm-search">
+              <input type="text" className="input" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+              <Search size={16} />
+            </div>
+          )}
         </div>
 
-        {/* TAB 1: SHOPS */}
+        {/* SHOPS */}
         {activeTab === 'shops' && (
-          <div className="panel">
-            {shopDeleteNotice && (
-              <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', borderRadius: '10px', padding: '0.85rem 1.15rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.65rem', fontWeight: '600' }}>
-                <CheckCircle size={20} /> {shopDeleteNotice}
+          <>
+            {shopDeleteNotice && <div className="sm-toast"><CheckCircle size={18} /> {shopDeleteNotice}</div>}
+            {filteredShops.length === 0 ? <div className="sm-empty">No shops found.</div> : (
+              <div className="sm-grid">
+                {filteredShops.map(shop => {
+                  const active = shop.status === 'ACTIVE';
+                  return (
+                    <div key={shop.id} className={`sm-card ${active ? '' : 'off'}`}>
+                      <div className="sm-top">
+                        <div>
+                          <div className="sm-name">{shop.shopName}</div>
+                          <div className="sm-sub">{shop.shortId}{shop.shopAddress ? ` • ${shop.shopAddress}` : ''}</div>
+                        </div>
+                        <span className={`sm-pill ${active ? 'sm-ok' : 'sm-bad'}`}>{shop.status}</span>
+                      </div>
+                      <div className="sm-meta">
+                        <span className="sm-pill sm-blue"><MapPin size={11} style={{ verticalAlign: '-1px' }} /> {shop.city}</span>
+                        {shop.timings && <span className="sm-pill sm-grey"><Clock size={11} style={{ verticalAlign: '-1px' }} /> {shop.timings}</span>}
+                      </div>
+                      <div className="sm-rev">
+                        <span>{shop.ownerName || 'Owner'}</span>
+                        <span><b>₹{(Number(shop.totalRevenue) || 0).toFixed(2)}</b> · {Number(shop.totalSalesCount) || 0} bills</span>
+                      </div>
+                      <div className="sm-btns">
+                        {shop.ownerPhone && <a className="sm-b call" href={`tel:${shop.ownerPhone}`}><Phone size={13} /> Call</a>}
+                        <button type="button" className="sm-b sky" onClick={() => handleChangeShopCity(shop)}>Change City</button>
+                        <button type="button" className="sm-b" onClick={() => handleResetPin(shop)}><KeyRound size={13} /> PIN</button>
+                        <button type="button" className={`sm-b ${active ? 'solid' : ''}`} onClick={() => handleToggleShop(shop)}>{active ? 'Terminate' : 'Reactivate'}</button>
+                        <button type="button" className="sm-b red" aria-label="Delete shop" onClick={() => handleOpenDeleteModal(shop)}><Trash2 size={13} /></button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            <h3 className="title" style={{ marginBottom: '1rem' }}>Registered Shops across Cities</h3>
-            <div className="table-responsive">
-              <table style={{ width: '100%', minWidth: '650px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>Shop Info</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>City & Timings</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>Owner Info</th>
-                    <th style={{ textAlign: 'right', padding: '0.75rem' }}>Revenue</th>
-                    <th style={{ textAlign: 'center', padding: '0.75rem' }}>Status</th>
-                    <th style={{ textAlign: 'right', padding: '0.75rem' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredShops.map(shop => (
-                    <tr key={shop.id} style={{ borderBottom: '1px solid var(--border)', opacity: shop.status === 'TERMINATED' ? 0.6 : 1 }}>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <div style={{ fontWeight: '700', fontSize: '1rem' }}>{shop.shopName}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          ID: <strong style={{ color: 'var(--primary)' }}>{shop.shortId}</strong> • {shop.shopAddress}
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd' }}>{shop.city}</span>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{shop.timings}</div>
-                      </td>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <div style={{ fontWeight: '600' }}>{shop.ownerName}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{shop.ownerPhone}</div>
-                      </td>
-                      <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem', fontWeight: '700', color: 'var(--success)' }}>
-                        ₹{(Number(shop.totalRevenue) || 0).toFixed(2)}
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '400' }}>{Number(shop.totalSalesCount) || 0} bills</div>
-                      </td>
-                      <td style={{ textAlign: 'center', padding: '0.85rem 0.75rem' }}>
-                        <span className="badge" style={{
-                          background: shop.status === 'ACTIVE' ? '#dff3e6' : '#fee2e2',
-                          color: shop.status === 'ACTIVE' ? '#0f7a43' : '#b91c1c',
-                          borderColor: shop.status === 'ACTIVE' ? '#c4e8d1' : '#fecaca'
-                        }}>
-                          {shop.status}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#38bdf8', color: '#0284c7' }}
-                            title="Change Shop City"
-                            onClick={() => handleChangeShopCity(shop)}
-                          >
-                            Change City
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#d0d5dd', color: '#475467' }}
-                            title="Reset 4-Digit Security PIN"
-                            onClick={() => handleResetPin(shop)}
-                          >
-                            Reset PIN
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn ${shop.status === 'ACTIVE' ? 'btn-danger' : 'btn-outline'}`}
-                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                            onClick={() => handleToggleShop(shop)}
-                          >
-                            {shop.status === 'ACTIVE' ? 'Terminate' : 'Reactivate'}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.65rem', fontSize: '0.78rem', borderColor: '#fca5a5', color: '#dc2626', background: '#fff1f2', display: 'flex', alignItems: 'center', gap: '3px' }}
-                            title="Permanently Delete Shop (3-Step Confirmation)"
-                            onClick={() => handleOpenDeleteModal(shop)}
-                          >
-                            <Trash2 size={13} /> Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredShops.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No shops found.</p>}
-            </div>
-          </div>
+          </>
         )}
 
-        {/* TAB 2: USERS */}
+        {/* USERS */}
         {activeTab === 'users' && (
-          <div className="panel">
-            <h3 className="title" style={{ marginBottom: '1rem' }}>Platform Users Directory</h3>
-            <div className="table-responsive">
-              <table style={{ width: '100%', minWidth: '650px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>User Info</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>Role</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>Contact</th>
-                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>City</th>
-                    <th style={{ textAlign: 'center', padding: '0.75rem' }}>Status</th>
-                    <th style={{ textAlign: 'right', padding: '0.75rem' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map(user => (
-                    <tr key={user.id} style={{ borderBottom: '1px solid var(--border)', opacity: user.status === 'TERMINATED' ? 0.6 : 1 }}>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <div style={{ fontWeight: '700' }}>{user.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          Short ID: <strong style={{ color: 'var(--primary)' }}>{user.shortId}</strong>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <span className="badge" style={{
-                          background: user.role === 'Shopkeeper' ? '#e9f6ee' : (user.role === 'SuperManager' ? '#f5f3ff' : '#eef8f1'),
-                          color: user.role === 'Shopkeeper' ? '#0b5e33' : (user.role === 'SuperManager' ? '#7c3aed' : '#0f7a43'),
-                          borderColor: 'transparent'
-                        }}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>
-                        <div>{user.phone}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
-                      </td>
-                      <td style={{ padding: '0.85rem 0.75rem' }}>{user.city || '—'}</td>
-                      <td style={{ textAlign: 'center', padding: '0.85rem 0.75rem' }}>
-                        <span className="badge" style={{
-                          background: user.status === 'ACTIVE' ? '#dff3e6' : '#fee2e2',
-                          color: user.status === 'ACTIVE' ? '#0f7a43' : '#b91c1c'
-                        }}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: '#d0d5dd', color: '#475467' }}
-                            title="Reset 4-Digit Security PIN"
-                            onClick={() => handleResetPin(user)}
-                          >
-                            Reset PIN
-                          </button>
-                          {user.role !== 'SuperManager' && (
-                            <button
-                              type="button"
-                              className={`btn ${user.status === 'ACTIVE' ? 'btn-danger' : 'btn-outline'}`}
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                              onClick={() => handleToggleUser(user)}
-                            >
-                              {user.status === 'ACTIVE' ? 'Terminate' : 'Reactivate'}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredUsers.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No users found.</p>}
+          filteredUsers.length === 0 ? <div className="sm-empty">No users found.</div> : (
+            <div className="sm-grid">
+              {filteredUsers.map(user => {
+                const active = user.status === 'ACTIVE';
+                return (
+                  <div key={user.id} className={`sm-card ${active ? '' : 'off'}`}>
+                    <div className="sm-top">
+                      <div>
+                        <div className="sm-name">{user.name}</div>
+                        <div className="sm-sub">{user.shortId}{user.email ? ` • ${user.email}` : ''}</div>
+                      </div>
+                      <span className={`sm-pill ${active ? 'sm-ok' : 'sm-bad'}`}>{user.status}</span>
+                    </div>
+                    <div className="sm-meta">
+                      <span className={`sm-pill ${user.role === 'SuperManager' ? 'sm-vio' : user.role === 'Shopkeeper' ? 'sm-ok' : 'sm-grey'}`}>{user.role}</span>
+                      {user.city && <span className="sm-pill sm-blue"><MapPin size={11} style={{ verticalAlign: '-1px' }} /> {user.city}</span>}
+                    </div>
+                    <div className="sm-btns">
+                      {user.phone && <a className="sm-b call" href={`tel:${user.phone}`}><Phone size={13} /> Call</a>}
+                      <button type="button" className="sm-b" onClick={() => handleResetPin(user)}><KeyRound size={13} /> PIN</button>
+                      {user.role !== 'SuperManager' && (
+                        <button type="button" className={`sm-b ${active ? 'solid' : ''}`} onClick={() => handleToggleUser(user)}>{active ? 'Terminate' : 'Reactivate'}</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )
         )}
 
-        {/* TAB 3: MANAGE CITIES (SUPER ADMIN ONLY) */}
+        {/* CITIES */}
         {activeTab === 'cities' && (
-          <div>
-            {cityNotice && (
-              <div style={{ background: '#dff3e6', border: '1px solid #c4e8d1', color: '#0f7a43', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
-                <CheckCircle size={18} /> {cityNotice}
+          <>
+            {cityNotice && <div className="sm-toast"><CheckCircle size={18} /> {cityNotice}</div>}
+            <form className="sm-form sm-row" onSubmit={handleAddCity}>
+              <input className="input" placeholder="New city name" value={newCityName} onChange={e => setNewCityName(e.target.value)} required />
+              <button type="submit" className="btn"><Plus size={16} /> Add</button>
+            </form>
+            {filteredCities.length === 0 ? <div className="sm-empty">No cities found.</div> : (
+              <div className="sm-grid">
+                {filteredCities.map(city => {
+                  const count = Number(city.shopCount || 0);
+                  return (
+                    <div key={city.id} className="sm-card" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div className="sm-name"><MapPin size={15} color="var(--primary)" style={{ verticalAlign: '-2px' }} /> {city.name}</div>
+                        <div className="sm-sub">{count} {count === 1 ? 'shop' : 'shops'}{city.createdAt ? ` • ${new Date(city.createdAt).toLocaleDateString()}` : ''}</div>
+                      </div>
+                      {count > 0
+                        ? <button type="button" className="sm-b" onClick={() => handleDeleteCity(city)}><Lock size={13} /> In use</button>
+                        : <button type="button" className="sm-b red" onClick={() => handleDeleteCity(city)}><Trash2 size={13} /> Remove</button>}
+                    </div>
+                  );
+                })}
               </div>
             )}
-
-            {/* Add City Form */}
-            <div className="panel" style={{ marginBottom: '1.5rem' }}>
-              <h3 className="title" style={{ fontSize: '1.15rem', marginBottom: '0.5rem' }}>Add New Platform City</h3>
-              <p className="subtitle" style={{ marginBottom: '1rem' }}>
-                Add a new city to the platform directory. Once added, customers can choose this city to discover local shops and shopkeepers can register stores here.
-              </p>
-
-              <form onSubmit={handleAddCity} style={{ display: 'flex', gap: '0.75rem', maxWidth: '500px' }}>
-                <input
-                  className="input"
-                  style={{ margin: 0, flex: 1 }}
-                  placeholder="Enter city name (e.g. Chandigarh, Patna, Surat, Kochi)..."
-                  value={newCityName}
-                  onChange={e => setNewCityName(e.target.value)}
-                  required
-                />
-                <button type="submit" className="btn">
-                  <Plus size={16} /> Add City
-                </button>
-              </form>
-            </div>
-
-            {/* Cities Directory Table */}
-            <div className="panel">
-              <h3 className="title" style={{ fontSize: '1.15rem', marginBottom: '1rem' }}>Active Platform Cities ({cities.length})</h3>
-              <div className="table-responsive">
-                <table style={{ width: '100%', minWidth: '500px', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid var(--border)', background: '#f7f8fa' }}>
-                      <th style={{ textAlign: 'left', padding: '0.75rem' }}>City Name</th>
-                      <th style={{ textAlign: 'center', padding: '0.75rem' }}>Active Shops</th>
-                      <th style={{ textAlign: 'left', padding: '0.75rem' }}>Date Created</th>
-                      <th style={{ textAlign: 'right', padding: '0.75rem' }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCities.map(city => (
-                      <tr key={city.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '0.85rem 0.75rem', fontWeight: '700', fontSize: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <MapPin size={16} color="var(--primary)" />
-                            {city.name}
-                          </div>
-                        </td>
-                        <td style={{ textAlign: 'center', padding: '0.85rem 0.75rem' }}>
-                          <span className="badge" style={{ background: '#e9f6ee', color: 'var(--primary)' }}>
-                            {city.shopCount || 0} active shops
-                          </span>
-                        </td>
-                        <td style={{ padding: '0.85rem 0.75rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                          {city.createdAt ? new Date(city.createdAt).toLocaleDateString() : 'System Default'}
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '0.85rem 0.75rem' }}>
-                          {Number(city.shopCount || 0) > 0 ? (
-                            <button
-                              type="button"
-                              className="btn btn-outline"
-                              style={{
-                                color: '#667085',
-                                borderColor: '#d0d5dd',
-                                background: '#f7f8fa',
-                                padding: '0.35rem 0.65rem',
-                                fontSize: '0.8rem',
-                                opacity: 0.8,
-                                cursor: 'not-allowed',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.35rem'
-                              }}
-                              title={`Cannot remove ${city.name} because ${city.shopCount} active shop(s) are registered here`}
-                              onClick={() => {
-                                const count = Number(city.shopCount || 0);
-                                alert(`Cannot remove ${city.name} because ${count} active ${count === 1 ? 'shop is' : 'shops are'} registered here. Please reassign the shops first.`);
-                              }}
-                            >
-                              <Lock size={13} /> In Use ({city.shopCount})
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn btn-outline"
-                              style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.35rem 0.65rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                              onClick={() => handleDeleteCity(city)}
-                            >
-                              <Trash2 size={14} /> Remove
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredCities.length === 0 && <p className="subtitle" style={{ textAlign: 'center', margin: '2rem 0' }}>No cities found matching search.</p>}
-              </div>
-            </div>
-          </div>
+          </>
         )}
 
-        {/* ================= TAB 4: SUPPORT CONTACT SETTINGS ================= */}
+        {/* CONTACTS */}
+        {activeTab === 'contacts' && (
+          filteredContacts.length === 0 ? <div className="sm-empty">No synced contacts.</div> : (
+            <div className="sm-grid">
+              {filteredContacts.map((c, idx) => (
+                <div key={c.id || idx} className="sm-card">
+                  <div className="sm-top">
+                    <div>
+                      <div className="sm-name">{c.contactName || 'Unnamed'}</div>
+                      <div className="sm-sub">{c.shopName || `Shop #${c.shopId}`}{c.city ? ` • ${c.city}` : ''}</div>
+                    </div>
+                    <span className="sm-pill sm-grey">{c.syncedAt ? new Date(c.syncedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Recent'}</span>
+                  </div>
+                  <div className="sm-btns">
+                    {c.contactPhone && <a className="sm-b call" href={`tel:+91${c.contactPhone}`}><Phone size={13} /> Call</a>}
+                    {c.contactPhone && <a className="sm-b" href={`https://wa.me/91${c.contactPhone}`} target="_blank" rel="noreferrer">WhatsApp</a>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+
+        {/* SUPPORT */}
         {activeTab === 'support' && (
-          <div className="panel" style={{ padding: '1.75rem', maxWidth: '720px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#e9f6ee', color: '#0f7a43', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Headphones size={22} />
+          <form className="sm-form" onSubmit={handleSaveSupport} style={{ maxWidth: 720 }}>
+            {supportNotice && <div className="sm-toast"><CheckCircle size={18} /> {supportNotice}</div>}
+            <div className="sm-fields">
+              <div>
+                <label className="label">Phone</label>
+                <input className="input" placeholder="+91 98765 43210" value={supportForm.supportPhone} onChange={e => setSupportForm({ ...supportForm, supportPhone: e.target.value })} />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800' }}>Platform Support Contact Settings</h3>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Configure the customer support helpline, WhatsApp number, and email displayed to all app & web users.</p>
+                <label className="label">WhatsApp</label>
+                <input className="input" placeholder="919876543210" value={supportForm.supportWhatsapp} onChange={e => setSupportForm({ ...supportForm, supportWhatsapp: e.target.value })} />
+              </div>
+              <div>
+                <label className="label">Email</label>
+                <input type="email" className="input" placeholder="support@example.com" value={supportForm.supportEmail} onChange={e => setSupportForm({ ...supportForm, supportEmail: e.target.value })} />
+              </div>
+              <div>
+                <label className="label">Hours</label>
+                <input className="input" placeholder="09:00 AM - 09:00 PM" value={supportForm.supportHours} onChange={e => setSupportForm({ ...supportForm, supportHours: e.target.value })} />
               </div>
             </div>
-
-            {supportNotice && (
-              <div style={{ background: '#eef8f1', border: '1px solid #c4e8d1', color: '#0b5e33', padding: '0.85rem 1rem', borderRadius: '10px', marginBottom: '1.25rem', fontSize: '0.9rem', fontWeight: '600' }}>
-                ✓ {supportNotice}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveSupport}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                <div>
-                  <label className="label" style={{ fontWeight: '700' }}>Support Phone Helpline</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      className="input"
-                      style={{ paddingLeft: '2.5rem' }}
-                      placeholder="e.g. +91 98765 43210"
-                      value={supportForm.supportPhone}
-                      onChange={e => setSupportForm({ ...supportForm, supportPhone: e.target.value })}
-                    />
-                    <Phone size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="label" style={{ fontWeight: '700' }}>Support WhatsApp Number</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      className="input"
-                      style={{ paddingLeft: '2.5rem' }}
-                      placeholder="e.g. 919876543210 (digits only)"
-                      value={supportForm.supportWhatsapp}
-                      onChange={e => setSupportForm({ ...supportForm, supportWhatsapp: e.target.value })}
-                    />
-                    <Phone size={16} color="#1f9d5a" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                <div>
-                  <label className="label" style={{ fontWeight: '700' }}>Support Email Address</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="email"
-                      className="input"
-                      style={{ paddingLeft: '2.5rem' }}
-                      placeholder="e.g. support@yourdomain.com"
-                      value={supportForm.supportEmail}
-                      onChange={e => setSupportForm({ ...supportForm, supportEmail: e.target.value })}
-                    />
-                    <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="label" style={{ fontWeight: '700' }}>Operational Hours / Timings</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="text"
-                      className="input"
-                      style={{ paddingLeft: '2.5rem' }}
-                      placeholder="e.g. 09:00 AM - 09:00 PM IST"
-                      value={supportForm.supportHours}
-                      onChange={e => setSupportForm({ ...supportForm, supportHours: e.target.value })}
-                    />
-                    <Clock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={supportSaving}
-                style={{ width: '100%', padding: '0.85rem', fontWeight: '700', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-              >
-                <Save size={18} />
-                {supportSaving ? 'Saving Changes...' : 'Save Support Contact Settings'}
-              </button>
-            </form>
-          </div>
+            <button type="submit" className="btn btn-primary" disabled={supportSaving} style={{ width: '100%', padding: '.8rem', fontWeight: 700 }}>
+              <Save size={17} /> {supportSaving ? 'Saving...' : 'Save'}
+            </button>
+          </form>
         )}
-
-        {/* TAB 5: SYNCED CONTACTS DIRECTORY */}
-        {activeTab === 'contacts' && (
-          <div>
-            {/* Quick Metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
-              <div className="card" style={{ padding: '1.25rem', background: '#e9f6ee', border: '1px solid #bfe3cb' }}>
-                <div style={{ fontSize: '0.85rem', color: '#0b5e33', fontWeight: '600', marginBottom: '0.35rem' }}>
-                  Total Synced Contacts
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0b5e33' }}>
-                  <CountUp value={safeContacts.length} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#1f9d5a', marginTop: '0.2rem' }}>
-                  Imported via Device Contacts
-                </div>
-              </div>
-
-              <div className="card" style={{ padding: '1.25rem', background: '#eef8f1', border: '1px solid #c4e8d1' }}>
-                <div style={{ fontSize: '0.85rem', color: '#0b5e33', fontWeight: '600', marginBottom: '0.35rem' }}>
-                  Unique Phone Numbers
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#14532d' }}>
-                  <CountUp value={new Set(safeContacts.map(c => c?.contactPhone).filter(Boolean)).size} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#22c55e', marginTop: '0.2rem' }}>
-                  Distinct customer leads
-                </div>
-              </div>
-
-              <div className="card" style={{ padding: '1.25rem', background: '#faf5ff', border: '1px solid #e9d5ff' }}>
-                <div style={{ fontSize: '0.85rem', color: '#6b21a8', fontWeight: '600', marginBottom: '0.35rem' }}>
-                  Contributing Shops
-                </div>
-                <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#581c87' }}>
-                  <CountUp value={new Set(safeContacts.map(c => c?.shopId || c?.shopName).filter(Boolean)).size} />
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#a855f7', marginTop: '0.2rem' }}>
-                  Shops syncing device contacts
-                </div>
-              </div>
-            </div>
-
-            <div className="panel">
-              <div className="flex-between" style={{ marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div>
-                  <h3 className="title" style={{ margin: 0 }}>Device Contacts Central Directory</h3>
-                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Contacts imported by shopkeepers from their mobile phone address books into GI SHOP.
-                  </p>
-                </div>
-                <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: '700', padding: '0.35rem 0.75rem' }}>
-                  {safeContacts.filter(c => {
-                    const q = searchQuery;
-                    return (
-                      (c?.contactName || '').toLowerCase().includes(q) ||
-                      String(c?.contactPhone || '').includes(q) ||
-                      (c?.shopName || '').toLowerCase().includes(q) ||
-                      (c?.shopkeeperName || '').toLowerCase().includes(q) ||
-                      (c?.city || '').toLowerCase().includes(q)
-                    );
-                  }).length} Matching Contacts
-                </span>
-              </div>
-
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '40px' }}>#</th>
-                      <th>Customer Contact</th>
-                      <th>Phone Number</th>
-                      <th>Importing Shop</th>
-                      <th>City</th>
-                      <th>Shopkeeper</th>
-                      <th>Source</th>
-                      <th>Synced Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {safeContacts
-                      .filter(c => {
-                        const q = searchQuery;
-                        return (
-                          (c?.contactName || '').toLowerCase().includes(q) ||
-                          String(c?.contactPhone || '').includes(q) ||
-                          (c?.shopName || '').toLowerCase().includes(q) ||
-                          (c?.shopkeeperName || '').toLowerCase().includes(q) ||
-                          (c?.city || '').toLowerCase().includes(q)
-                        );
-                      })
-                      .map((c, idx) => (
-                        <tr key={c.id || idx}>
-                          <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{idx + 1}</td>
-                          <td>
-                            <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>
-                              {c.contactName || 'Unnamed Contact'}
-                            </strong>
-                            {c.contactEmail ? (
-                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{c.contactEmail}</div>
-                            ) : null}
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              <strong style={{ fontFamily: 'monospace', fontSize: '0.92rem' }}>
-                                📞 +91 {c.contactPhone}
-                              </strong>
-                              <a
-                                href={`https://wa.me/91${c.contactPhone}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  fontSize: '0.75rem',
-                                  padding: '0.15rem 0.4rem',
-                                  borderRadius: '4px',
-                                  background: '#dff3e6',
-                                  color: '#0f7a43',
-                                  fontWeight: '700',
-                                  textDecoration: 'none'
-                                }}
-                              >
-                                WhatsApp
-                              </a>
-                            </div>
-                          </td>
-                          <td>
-                            <strong>{c.shopName || 'Shop #' + c.shopId}</strong>
-                          </td>
-                          <td>
-                            <span className="badge" style={{ background: '#eff1f4', color: '#475467' }}>
-                              📍 {c.city || 'N/A'}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ fontSize: '0.85rem' }}>
-                              {c.shopkeeperName || 'Shopkeeper'}
-                            </div>
-                            {c.shopkeeperPhone ? (
-                              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                                {c.shopkeeperPhone}
-                              </div>
-                            ) : null}
-                          </td>
-                          <td>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.3rem',
-                                padding: '0.2rem 0.5rem',
-                                borderRadius: '6px',
-                                fontSize: '0.78rem',
-                                fontWeight: '700',
-                                background: '#e9f6ee',
-                                color: '#0f7a43'
-                              }}
-                            >
-                              <Smartphone size={13} />
-                              {c.source === 'DEVICE_IMPORT' ? 'Device Contacts' : c.source}
-                            </span>
-                          </td>
-                          <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {c.syncedAt ? new Date(c.syncedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently'}
-                          </td>
-                        </tr>
-                      ))}
-
-                    {syncedContacts.length === 0 && (
-                      <tr>
-                        <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                          <Smartphone size={40} style={{ margin: '0 auto 0.75rem auto', display: 'block', color: '#d0d5dd' }} />
-                          <strong style={{ display: 'block', fontSize: '1rem', color: '#475467', marginBottom: '0.25rem' }}>
-                            No Synced Contacts Yet
-                          </strong>
-                          When shopkeepers tap "Import from Device Contacts" on their phone, contacts will sync and display here.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      </main>
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
