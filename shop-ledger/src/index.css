@@ -2100,3 +2100,68 @@ button, a, [role="button"], .footer-nav-item, .cx-chip, .cx-card-head { touch-ac
 .sd-confirm { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important; }
 .sd-confirm, .cp-list, .sd-items { overscroll-behavior: contain; }
 .sd-confirm *[style*="overflow-y"] { overscroll-behavior: contain; }
+
+/* ==========================================================================
+   Customer — "old website" layout: top-bar nav, full-width content, tiles
+   ========================================================================== */
+@media (min-width: 1024px) {
+  /* Sidebar -> nav inside the header */
+  .customer-shell .mobile-footer-nav {
+    position: fixed; top: 0; bottom: auto; right: auto; left: 190px; transform: none;
+    width: auto; height: 65px; flex-direction: row; align-items: center; gap: 0.15rem;
+    padding: 0 0.5rem; background: transparent; border: 0; box-shadow: none; z-index: 110;
+  }
+  .customer-shell .footer-nav-item { height: 40px; padding: 0 0.8rem; flex-direction: row; gap: 0.45rem; font-size: 0.86rem; border-radius: 10px; }
+  .customer-shell .footer-nav-item.active { background: var(--role-tint); box-shadow: none; }
+  /* Use the whole width */
+  .customer-shell .container { width: 100%; max-width: 1360px; margin: 0 auto; padding: 1.25rem 2rem 3rem; }
+  .customer-shell .container > *:not(.modal-overlay),
+  .customer-shell .cx-stack, .customer-shell .cx-hero, .customer-shell .cx-stats, .customer-shell .cx-pagehead,
+  .customer-shell .cx-list:not(.cx-grid) { max-width: none; }
+}
+@media (min-width: 1024px) and (max-width: 1180px) {
+  .customer-shell .footer-nav-item:not(.active) span { display: none; }
+}
+
+/* Tiles everywhere on the customer site (equal-height, no table rows) */
+@media (min-width: 1024px) {
+  .customer-shell .cx-list:not(.cx-grid) {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.85rem;
+    align-items: stretch; background: none; border: 0; border-radius: 0; overflow: visible;
+  }
+  .customer-shell .cx-list:not(.cx-grid) > .cx-card { border: 1px solid var(--border); border-radius: 14px; background: #fff; }
+  .customer-shell .cx-list:not(.cx-grid) > .cx-card.cx-due { border-left: 4px solid #e0503f; }
+  .customer-shell .cx-list:not(.cx-grid) > .cx-card.cx-clear { border-left: 4px solid #1fb457; }
+  .customer-shell .cx-list:not(.cx-grid) .cx-end { flex-direction: column; align-items: flex-end; gap: 3px; }
+  .customer-shell .cx-list:not(.cx-grid) .cx-amount, .customer-shell .cx-list:not(.cx-grid) .cx-pill { min-width: 0; }
+  .customer-shell .cx-list:not(.cx-grid) .cx-otp { margin: 0 0.85rem 0.75rem; }
+}
+
+/* Shop detail: tiles, search in the toolbar, Call/WhatsApp on the right */
+.sd-catalog-head { gap: 0.5rem; margin: 0 0 0.75rem; }
+.sd-catalog-head .cmp-search { margin-left: auto; flex: 0 1 340px; max-width: 340px; }
+.sd-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.75rem; background: none; border: 0; border-radius: 0; overflow: visible; }
+.sd-items .item-row { position: relative; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 0.6rem; min-height: 104px; padding: 0.9rem 1rem; background: #fff; border: 1px solid var(--border); border-radius: 14px; }
+.sd-items .item-row:last-child { border-bottom: 1px solid var(--border); }
+.sd-items .item-row.added { border-color: #1fb457; background: #f3fbf6; }
+.sd-items .item-row.disabled { opacity: 0.55; cursor: not-allowed; }
+.sd-items .item-name { font-weight: 700; font-size: 0.95rem; line-height: 1.25; }
+.sd-price { text-align: left; min-width: 0; font-size: 1.15rem; color: #0f7a43; }
+.sd-items .item-qty { position: absolute; top: 0.6rem; right: 0.6rem; min-width: 0; }
+@media (hover: hover) and (pointer: fine) { .sd-items .item-row:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(16, 24, 40, 0.08); background: #fff; } }
+@media (max-width: 560px) { .sd-items { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 768px) {
+  .sd-head-actions { flex: 0 0 auto; margin-left: auto; padding-top: 0.6rem; }
+}
+
+/* Orders: equal-width tiles with a status-coloured edge (fixes ragged rows) */
+.cx-list > .cx-card { width: 100%; min-width: 0; }
+.cx-t-green { border-left: 4px solid #1fb457 !important; }
+.cx-t-blue { border-left: 4px solid #0284c7 !important; }
+.cx-t-amber { border-left: 4px solid #f2a516 !important; }
+.cx-t-red { border-left: 4px solid #e0503f !important; }
+.cx-t-grey { border-left: 4px solid #98a2b3 !important; }
+@media (min-width: 1024px) {
+  .customer-shell .cx-list:not(.cx-grid) { align-items: stretch; justify-items: stretch; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+  .customer-shell .cx-list:not(.cx-grid) > .cx-card { height: 100%; }
+}

@@ -1361,17 +1361,18 @@ export default function Customer() {
               
               {/* Product Catalog */}
               <div className="shop-catalog">
-                <div className="cmp-search" style={{ marginBottom: '0.75rem' }}>
-                  <Search size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search items"
-                    value={itemSearch}
-                    onChange={e => setItemSearch(e.target.value)}
-                  />
+                <div className="sd-catalog-head">
+                  <span>Items</span><em>{filteredShopItems.length}</em>
+                  <div className="cmp-search">
+                    <Search size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search items"
+                      value={itemSearch}
+                      onChange={e => setItemSearch(e.target.value)}
+                    />
+                  </div>
                 </div>
-
-                <div className="sd-catalog-head"><span>Items</span><em>{filteredShopItems.length}</em></div>
                 <div className="item-list sd-items">
                   {filteredShopItems.map(item => {
                     const currentEntry = orderList[item.id];
@@ -1381,8 +1382,11 @@ export default function Customer() {
                     return (
                       <div
                         key={item.id}
-                        className={`item-row ${isAdded ? 'added' : ''}`}
+                        className={`item-row ${isAdded ? 'added' : ''} ${activeShop.isOpen ? '' : 'disabled'}`}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => openItemModal(item, activeShop)}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openItemModal(item, activeShop); } }}
                       >
                         <div className="item-info">
                           <div className="item-name">{item.name}</div>
@@ -1390,19 +1394,7 @@ export default function Customer() {
                         </div>
 
                         <div className="sd-price">₹{(Number(item?.price) || 0).toFixed(2)}</div>
-                        {isAdded ? (
-                          <span className="item-qty">{currentQty} {item.unit}</span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="item-add"
-                            aria-label={`Add ${item.name}`}
-                            disabled={!activeShop.isOpen}
-                            onClick={(e) => { e.stopPropagation(); openItemModal(item, activeShop); }}
-                          >
-                            <Plus size={14} /> Add
-                          </button>
-                        )}
+                        {isAdded && <span className="item-qty">{currentQty} {item.unit}</span>}
                       </div>
                     );
                   })}
@@ -1818,7 +1810,7 @@ export default function Customer() {
             const open = !!openCards[key];
             const canCancel = order.status === 'PENDING' || order.status === 'PACKING';
             return (
-              <div key={key} className={`cx-card ${open ? 'open' : ''}`}>
+              <div key={key} className={`cx-card cx-t-${meta.tone} ${open ? "open" : ""}`}>
                 <button type="button" className="cx-card-head" onClick={() => toggleCard(key)}>
                   <span className="cx-avatar"><Receipt size={18} /></span>
                   <span className="cx-main">
