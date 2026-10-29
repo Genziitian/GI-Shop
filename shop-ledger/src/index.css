@@ -1892,7 +1892,11 @@ img, video, canvas { max-width: 100%; }
     max-width: none; width: calc(100% - 232px); margin: 0 0 0 232px;
     padding: 1.75rem clamp(1.5rem, 3vw, 3rem) 3rem;
   }
-  .customer-shell .container > * { max-width: 1180px; margin-inline: auto; }
+  .customer-shell .container > *:not(.modal-overlay) { max-width: 1180px; margin-inline: auto; }
+  .customer-shell .m-back-btn { width: auto; display: inline-flex; padding: 0.45rem 0.9rem; margin-bottom: 0.75rem; }
+  .customer-shell .cx-pagehead { display: block; max-width: 1180px; margin: 0 auto 1.25rem; }
+  .customer-shell .cx-pagehead h1 { margin: 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+  .customer-shell .cx-pagehead p { margin: 0.2rem 0 0; font-size: 0.9rem; color: var(--text-muted); }
   .customer-shell .cx-stack,
   .customer-shell .cx-hero { max-width: 1180px; }
   .customer-shell .cx-list:not(.cx-grid) {
@@ -1919,3 +1923,5 @@ html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
 button, a, [role="button"], .footer-nav-item, .cx-chip, .cx-card-head { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .cx-card-head:active, .footer-nav-item:active, .cx-chip:active { transform: scale(0.98); }
 .cx-card-head, .cx-chip { transition: transform 100ms ease-out, background 100ms; }
+
+.cx-pagehead { display: none; }

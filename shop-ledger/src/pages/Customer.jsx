@@ -1115,6 +1115,12 @@ export default function Customer() {
       </div>
 
       <div className="container" style={{ flex: 1, marginTop: '1rem' }}>
+        {!activeShop && !selectedKhataStore && (
+          <div className="cx-pagehead">
+            <h1>{{ explore: 'Shops', compare: 'Compare prices', khata: 'My Khata', orders: 'Orders', more: 'Account' }[activeTab] || 'GI SHOP'}</h1>
+            <p>{{ explore: `Discover shops in ${selectedCity}`, compare: `Find the lowest price in ${selectedCity}`, khata: 'Your dues and payments, store by store', orders: 'Track pickups and past purchases', more: 'Profile, security and backup' }[activeTab]}</p>
+          </div>
+        )}
         
         {/* Pending Staff Invites Banner */}
         {invites.map(inv => (
